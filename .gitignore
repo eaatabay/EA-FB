@@ -6,3 +6,6 @@ local.properties
 secrets.properties
 *.apk
 *.cs3
+
+# Locally cloned pinned LGPL-3.0 build tool (never committed)
+/vendor/cloudstream-gradle/

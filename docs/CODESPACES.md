@@ -46,3 +46,16 @@ bash scripts/build-codespace.sh
 ```
 
 yeterlidir. Codespace silinirse yeni bir Codespace açıp Android SDK lisans/kurulum adımını bir kez daha yaparsın.
+
+## Gradle eklentisi bağımlılığı
+
+CloudStream'in Gradle eklentisinin JitPack'te hazır paket olarak bulunamaması üzerine derleme betiği artık resmi GitHub kaynağının `69fdb8fc4be2815cbdf5ecec7f407727001cc7` commit'ini `vendor/cloudstream-gradle/` klasörüne indirip yerel Gradle composite build kullanır. Bu klasör GitHub'a yüklenmez; proje açıldığında tekrar oluşturulabilir. Üçüncü taraf `jadb` bağımlılığı gibi başka ağ sorunları çıkarsa ayrı incelenecektir. Upstream Gradle kaynağı LGPL-3.0 lisanslıdır.
+
+Mevcut Codespace terminalinde düzeltmeyi almak için:
+
+```bash
+git pull
+bash scripts/build-codespace.sh
+```
+
+`bash scripts/build-codespace.sh` ilk çalıştırmada kaynak indirmesini kendisi yapar. Gerçek `.cs3` oluştuğunu terminaldeki başarı mesajıyla doğrula.

@@ -15,6 +15,8 @@ test -f "$ANDROID_HOME/platforms/android-35/android.jar" || {
 java -version
 gradle --version | head -n 8
 
+bash scripts/prepare-cloudstream-gradle.sh
+
 gradle :EA-FB:make makePluginsJson --no-daemon
 
 python3 scripts/stage-release.py
