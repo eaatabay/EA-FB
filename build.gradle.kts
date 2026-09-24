@@ -11,7 +11,9 @@ buildscript {
     }
     dependencies {
         classpath("com.android.tools.build:gradle:8.7.3")
-        classpath("com.github.recloudstream:gradle:-SNAPSHOT")
+        // Pinned upstream revision uses AGP 8.7.3 / Kotlin 2.0-compatible Gradle APIs.
+        // Avoid an unresolvable/dynamic -SNAPSHOT lookup; JitPack is still required.
+        classpath("com.github.recloudstream:gradle:69fdb8fc4b")
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:2.1.0")
     }
 }
