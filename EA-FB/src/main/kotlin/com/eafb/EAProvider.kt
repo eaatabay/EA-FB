@@ -123,6 +123,9 @@ class EAProvider : MainAPI() {
     }
 
     private fun newItem(item: JSONObject, fallback: MediaKind): SearchResponse? {
+        // Mixed TMDb feeds also include people; never render actors as movie cards.
+        val type = item.optString("media_type")
+        if (type.isNotBlank() && type != "movie" && type != "tv") return null
         val id = item.optInt("id").takeIf { it > 0 } ?: return null
         val kind = mediaKind(item, fallback)
         val title = item.optString(if (kind == MediaKind.SERIES) "name" else "title").ifBlank { return null }
