@@ -3,10 +3,14 @@ set -euo pipefail
 
 # Fetch the upstream LGPL-3.0 CloudStream Gradle plugin at a fixed revision.
 # It lives in an ignored directory, isolated from the user's other projects.
-readonly REVISION="69fdb8fc4be2815cbdf5ecec7f407727001cc7"
+readonly REVISION="69fdb8fc4be2815cbdf5ecec7f407727001cc7c7"
 readonly DIR="vendor/cloudstream-gradle"
 
 cd "$(dirname "$0")/.."
+if [[ ! "$REVISION" =~ ^[0-9a-f]{40}$ ]]; then
+  echo "CloudStream plugin pin must be a complete 40-character Git SHA" >&2
+  exit 2
+fi
 command -v git >/dev/null || { echo "git is required" >&2; exit 2; }
 
 if [ ! -d "$DIR/.git" ]; then
