@@ -1,0 +1,23 @@
+[
+  {
+    "fileHash": "sha256-a76d3eae5a0e2a9abeed7b82b84b8c82066fc65ac03752fc44b1369042064ddf",
+    "apiVersion": 1,
+    "repositoryUrl": "https://github.com/eaatabay/EA-FB",
+    "fileSize": 41644,
+    "status": 3,
+    "language": "tr",
+    "authors": [
+      "EA-FB"
+    ],
+    "tvTypes": [
+      "Movie",
+      "TvSeries",
+      "Live"
+    ],
+    "version": 1,
+    "internalName": "EA-FB",
+    "description": "EA-FB: tek arayüzde film, dizi ve izinli canlı TV - gelistirme onizlemesi",
+    "url": "https://raw.githubusercontent.com/eaatabay/EA-FB/main/dist/EA-FB.cs3",
+    "name": "EA-FB"
+  }
+]

@@ -1,0 +1,8 @@
+{
+  "name": "EA-FB",
+  "description": "Tek eklentide film, dizi ve izinli canlı TV",
+  "manifestVersion": 1,
+  "pluginLists": [
+    "https://raw.githubusercontent.com/eaatabay/EA-FB/main/dist/plugins.json"
+  ]
+}
