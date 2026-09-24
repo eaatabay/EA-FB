@@ -100,6 +100,14 @@ class EAProvider : MainAPI() {
         else if (item.optString("media_type") == "movie") MediaKind.MOVIE
         else fallback
 
+    /** TMDb premiere year for cards and the planned visual year badge. */
+    private fun mediaYear(item: JSONObject, kind: MediaKind): Int? {
+        val primary = if (kind == MediaKind.SERIES) "first_air_date" else "release_date"
+        val fallback = if (kind == MediaKind.SERIES) "release_date" else "first_air_date"
+        val date = item.optString(primary).ifBlank { item.optString(fallback) }
+        return date.take(4).toIntOrNull()?.takeIf { it in 1888..2100 }
+    }
+
     private fun newItem(item: JSONObject, fallback: MediaKind): SearchResponse? {
         val id = item.optInt("id").takeIf { it > 0 } ?: return null
         val kind = mediaKind(item, fallback)
@@ -108,6 +116,7 @@ class EAProvider : MainAPI() {
         val poster = item.optString("poster_path").takeIf { it.startsWith("/") }
         return newMovieSearchResponse(title, "$mainUrl/$path/$id", if (kind == MediaKind.SERIES) TvType.TvSeries else TvType.Movie) {
             posterUrl = poster?.let { "https://image.tmdb.org/t/p/w500$it" }
+            year = mediaYear(item, kind)
         }
     }
 
@@ -171,16 +180,22 @@ class EAProvider : MainAPI() {
         val title = item.optString(if (isSeries) "name" else "title")
         val overview = item.optString("overview")
         val poster = item.optString("poster_path").takeIf { it.startsWith("/") }
+        val backdrop = item.optString("backdrop_path").takeIf { it.startsWith("/") }
+        val detailYear = mediaYear(item, if (isSeries) MediaKind.SERIES else MediaKind.MOVIE)
         return if (isSeries) {
             // Episodes and supported source adapters will be populated in the next milestone.
             newTvSeriesLoadResponse(title, url, kind, emptyList()) {
                 plot = overview
+                year = detailYear
                 posterUrl = poster?.let { "https://image.tmdb.org/t/p/w500$it" }
+                backgroundPosterUrl = backdrop?.let { "https://image.tmdb.org/t/p/w1280$it" }
             }
         } else {
             newMovieLoadResponse(title, url, kind, "") {
                 plot = overview
+                year = detailYear
                 posterUrl = poster?.let { "https://image.tmdb.org/t/p/w500$it" }
+                backgroundPosterUrl = backdrop?.let { "https://image.tmdb.org/t/p/w1280$it" }
             }
         }
     }
