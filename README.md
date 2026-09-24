@@ -49,3 +49,9 @@ Bu testler **Android/CloudStream derlemesi veya gerçek yayın testi yerine geç
 ## GitHub Actions olmadan yerel derleme
 
 Tek eklentilik `.cs3` dosyasını Windows bilgisayarda derlemek, `dist/plugins.json` ve `dist/repo.json` üretmek için [yerel derleme talimatları](docs/LOCAL-BUILD.md) hazırlandı. `scripts/stage-release.py` yalnız gerçek Gradle çıktısından paket hazırlar; Android cihaz testi ve gerçek `.cs3` derlemesi henüz tamamlanmadı.
+
+## Deneme filmi görselleri
+
+Big Buck Bunny afişi ve arka planı Wikimedia Commons üzerinden gösterilir. Afiş: https://commons.wikimedia.org/wiki/File:Big_buck_bunny_poster_big.jpg ; arka plan: https://commons.wikimedia.org/wiki/File:Bbb-splash.png . Her ikisi de Blender Foundation'ın CC BY 3.0 eserleridir. Atıf: © Blender Foundation | www.bigbuckbunny.org .
+
+İlk test sürümünün deneme afişi eksikti; geliştirme kodunda kart ve detay sayfası için afiş ile detay arka planı eklendi. Bu düzeltme CloudStream'e ancak yeniden `.cs3` derlenip yayımlandıktan sonra ulaşır. TMDb'ye bağlı diğer film/dizi kategorileri için cihazdaki EA-FB ayarlarına kişisel TMDb tokenı girilmesi gereklidir; henüz otomatik katalog anahtarı yoktur.

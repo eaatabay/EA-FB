@@ -34,6 +34,9 @@ class EAProvider : MainAPI() {
     private val openMovieData = "ea-fb:open:big-buck-bunny"
     private val openMovieUrl = "$mainUrl/ea-fb-open/big-buck-bunny"
     private val openMovieStream = "https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+    // Attribution: (c) copyright Blender Foundation | www.bigbuckbunny.org (CC BY 3.0)
+    private val openMoviePoster = "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Big_buck_bunny_poster_big.jpg/500px-Big_buck_bunny_poster_big.jpg"
+    private val openMovieBackdrop = "https://upload.wikimedia.org/wikipedia/commons/c/ca/Bbb-splash.png"
     private val livePrefix = "$mainUrl/ea-fb-live/"
     private val channelsUrl = "https://raw.githubusercontent.com/eaatabay/EA-FB/main/config/channels.json"
     private val categories = HomeCategories.all.filter { it.tmdbPath != null }
@@ -45,7 +48,10 @@ class EAProvider : MainAPI() {
 
     private fun demoMovie(): SearchResponse = newMovieSearchResponse(
         "Big Buck Bunny (Deneme)", openMovieUrl, TvType.Movie
-    ) { year = 2008 }
+    ) {
+        year = 2008
+        posterUrl = openMoviePoster
+    }
 
     /** Repository-curated sources: "authorized" is a manual record, not proof of distribution rights. */
     private suspend fun liveChannels(): List<Channel> {
@@ -139,7 +145,9 @@ class EAProvider : MainAPI() {
         if (url == openMovieUrl) {
             return newMovieLoadResponse("Big Buck Bunny", url, TvType.Movie, openMovieData) {
                 year = 2008
-                plot = "Blender Foundation © 2008. Açık lisans: CC BY 3.0; filmin orijinal jeneriği korunur."
+                posterUrl = openMoviePoster
+                backgroundPosterUrl = openMovieBackdrop
+                plot = "© 2008 Blender Foundation | www.bigbuckbunny.org. CC BY 3.0; filmin orijinal jeneriği korunur."
             }
         }
         if (url.startsWith(livePrefix)) {
