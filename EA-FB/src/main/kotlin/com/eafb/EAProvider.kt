@@ -33,10 +33,15 @@ class EAProvider : MainAPI() {
     // Open movie by Blender Foundation (CC BY 3.0); retain original closing credits.
     private val openMovieData = "ea-fb:open:big-buck-bunny"
     private val openMovieUrl = "$mainUrl/ea-fb-open/big-buck-bunny"
-    private val openMovieStream = "https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+    // The former Google GTV sample now returns HTTP 403. Prefer the public Mux
+    // HLS Big Buck Bunny test stream, with an independent MP4 option.
+    private val openMovieHls = "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8"
+    private val openMovieMp4 = "https://uploads.video-commander.com/sample/BigBuckBunny.mp4"
     // Attribution: (c) copyright Blender Foundation | www.bigbuckbunny.org (CC BY 3.0)
     private val openMoviePoster = "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Big_buck_bunny_poster_big.jpg/500px-Big_buck_bunny_poster_big.jpg"
-    private val openMovieBackdrop = "https://upload.wikimedia.org/wikipedia/commons/c/ca/Bbb-splash.png"
+    // Use the same JPG confirmed to load in the film card for the large banner.
+    // The earlier standalone PNG was not displaying on the user's TV.
+    private val openMovieBackdrop = openMoviePoster
     private val livePrefix = "$mainUrl/ea-fb-live/"
     private val channelsUrl = "https://raw.githubusercontent.com/eaatabay/EA-FB/main/config/channels.json"
     private val categories = HomeCategories.all.filter { it.tmdbPath != null }
@@ -187,8 +192,20 @@ class EAProvider : MainAPI() {
         callback: (ExtractorLink) -> Unit
     ): Boolean {
         if (data == openMovieData) {
-            callback(newExtractorLink("Blender Foundation", "Big Buck Bunny • 180p", openMovieStream) {
-                quality = 180
+            // Two independently hosted formats are selectable in CloudStream's source list;
+            // availability of either stream still depends on the viewer's network.
+            callback(newExtractorLink(
+                "Mux (HLS)", "Big Buck Bunny • Otomatik kalite", openMovieHls,
+                type = ExtractorLinkType.M3U8
+            ) {
+                quality = 0
+                referer = ""
+            })
+            callback(newExtractorLink(
+                "Video Commander (MP4)", "Big Buck Bunny • MP4 alternatif", openMovieMp4,
+                type = ExtractorLinkType.VIDEO
+            ) {
+                quality = 720
                 referer = ""
             })
             return true
