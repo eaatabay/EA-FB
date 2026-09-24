@@ -102,6 +102,8 @@ class MultiSourceEngine(
 
     private fun sameContent(query: MediaQuery, offer: MediaOffer): Boolean {
         if (query.kind != offer.kind) return false
+        // An equal external ID must not override a contradicting known release year.
+        if (query.year != null && offer.year != null && query.year != offer.year) return false
         if (query.tmdbId != null && offer.tmdbId != null) return query.tmdbId == offer.tmdbId
         if (Identity.normalize(query.title) != Identity.normalize(offer.title)) return false
         return query.year == null || (offer.year != null && offer.year == query.year)
