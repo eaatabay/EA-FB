@@ -55,3 +55,11 @@ Tek eklentilik `.cs3` dosyasını Windows bilgisayarda derlemek, `dist/plugins.j
 Big Buck Bunny afişi ve arka planı Wikimedia Commons üzerinden gösterilir. Afiş: https://commons.wikimedia.org/wiki/File:Big_buck_bunny_poster_big.jpg ; arka plan: https://commons.wikimedia.org/wiki/File:Bbb-splash.png . Her ikisi de Blender Foundation'ın CC BY 3.0 eserleridir. Atıf: © Blender Foundation | www.bigbuckbunny.org .
 
 İlk test sürümünün deneme afişi eksikti; geliştirme kodunda kart ve detay sayfası için afiş ile detay arka planı eklendi. Bu düzeltme CloudStream'e ancak yeniden `.cs3` derlenip yayımlandıktan sonra ulaşır. TMDb'ye bağlı diğer film/dizi kategorileri için cihazdaki EA-FB ayarlarına kişisel TMDb tokenı girilmesi gereklidir; henüz otomatik katalog anahtarı yoktur.
+
+## IMDb puanları — afiş sağ üst köşe (planlanan)
+
+- Ürün kararı (25.09.2026): Film ve dizi afişlerinde sağ üst köşede 10 üzerinden gerçek IMDb puanı gösterilecek; veri yoksa rozet boş kalacak. TMDb ortalaması asla IMDb etiketi altında gösterilmeyecek.
+- CloudStream uygulamasında afiş kartları `SearchResponse.score` alanını `Score.from10(...)` ile okuyabiliyor ve afişin sağında yerleşik puan rozeti var. Kullanıcının CloudStream afiş ayarlarında puan görünürlüğü açık olmalı. Yerleşik rozet yalnız sayı gösterir; görsel üzerinde ayrıca IMDb markalı rozet istenirse özel görsel işleme ya da bağımsız APK gerekip gerekmediği ayrıca değerlendirilecek.
+- Bağlanacak ve kullanım izni doğrulanmış site adaptörleri IMDb kimliğini ve varsa gerçek IMDb puanını ayrı alanlarda getirmeli. Başlık+yıl+IMDb kimliği eşleşmesi olmadan yanlış filmin puanı aktarılmamalı. Birden çok adayda kaynağı ve güncellik tarihini saklayıp güvenilir değeri seç; ortak kaynak puanları ayrı tut.
+- Film kartı ve detay sayfası aynı doğrulanmış IMDb puanını kullanmalı. Büyük tanıtım alanında puan için ek UI ihtiyacı gerçek cihaz testinden sonra değerlendirilecek.
+- **Durum:** İstek kaydedildi, kaynak adaptörleri ve puan aktarımı henüz kodlanmadı. Yeni sürüm derlenmedi; mevcut yayın v3 ve Big Buck Bunny deneme filmi çalışıyor.
