@@ -28,8 +28,8 @@ object HomeCategories {
         CatalogCategory("apple-tv", "Apple TV Dizileri", MediaKind.SERIES, "/discover/tv?with_watch_providers=350&watch_region=TR&with_watch_monetization_types=flatrate"),
         CatalogCategory("max-movie", "HBO Max Filmleri", MediaKind.MOVIE, "/discover/movie?with_watch_providers=1899&watch_region=TR&with_watch_monetization_types=flatrate"),
         CatalogCategory("max-tv", "HBO Max Dizileri", MediaKind.SERIES, "/discover/tv?with_watch_providers=1899&watch_region=TR&with_watch_monetization_types=flatrate"),
-        CatalogCategory("paramount-tv", "Paramount+ Dizileri", MediaKind.SERIES),
-        CatalogCategory("mubi-movie", "MUBI Filmleri", MediaKind.MOVIE),
+        CatalogCategory("paramount-tv", "Paramount+ Dizileri", MediaKind.SERIES, "/discover/tv?with_watch_providers=531&watch_region=TR&with_watch_monetization_types=flatrate"),
+        CatalogCategory("mubi-movie", "MUBI Filmleri", MediaKind.MOVIE, "/discover/movie?with_watch_providers=11&watch_region=TR&with_watch_monetization_types=flatrate"),
         CatalogCategory("action", "Aksiyon Filmleri", MediaKind.MOVIE, "/discover/movie?with_genres=28"),
         CatalogCategory("sci-fi", "Bilim Kurgu Filmleri", MediaKind.MOVIE, "/discover/movie?with_genres=878"),
         CatalogCategory("horror", "Korku & Gerilim", MediaKind.MOVIE, "/discover/movie?with_genres=27,53"),
@@ -72,7 +72,7 @@ data class SourceLink(
 
 /** Do not store user-specific links in a shared cache. Cache implementation is postponed. */
 object SourcePicker {
-    fun unique(links: List<SourceLink>): List<SourceLink> = links.distinctBy { it.provider to it.url }
+    fun unique(links: List<SourceLink>): List<SourceLink> = links.distinctBy { Triple(it.provider, it.url, it.audioLanguage) }
 
     fun preferred(
         links: List<SourceLink>,
@@ -82,8 +82,9 @@ object SourcePicker {
     ): List<SourceLink> = unique(links)
         .filter { it.expiresAtMillis == null || it.expiresAtMillis > nowMillis }
         .sortedWith(
-            compareByDescending<SourceLink> { it.audioLanguage == preferredLanguage }
-                .thenByDescending { (it.quality ?: 0).coerceAtMost(maxQuality) }
+            compareByDescending<SourceLink> { it.audioLanguage?.equals(preferredLanguage, ignoreCase = true) == true }
+                .thenByDescending { it.quality != null && it.quality in 1..maxQuality }
+                .thenByDescending { it.quality?.takeIf { q -> q <= maxQuality } ?: 0 }
                 .thenBy { it.provider }
         )
 }

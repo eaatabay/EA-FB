@@ -52,6 +52,7 @@ subprojects {
         val implementation by configurations
         cloudstream("com.lagradost:cloudstream3:pre-release")
         implementation(kotlin("stdlib"))
+        implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0")
         implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.13.1")
     }
 }
