@@ -268,8 +268,7 @@ class EAProvider : MainAPI() {
                             val text = entry.optString("overview")
                             newEpisode(
                                 "$mainUrl/tv/$id/season/$number/episode/$episodeNo",
-                                fix = false
-                            ) {
+                                initializer = {
                                 name = entry.optString("name").ifBlank { "Bölüm $episodeNo" }
                                 this.season = number
                                 this.episode = episodeNo
@@ -282,7 +281,9 @@ class EAProvider : MainAPI() {
                                 } else text
                                 runTime = entry.optInt("runtime").takeIf { it > 0 }
                                 addDate(date)
-                            }
+                                },
+                                fix = false
+                            )
                         }
                     }
                 }.awaitAll().flatten()
