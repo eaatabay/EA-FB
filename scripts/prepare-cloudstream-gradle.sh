@@ -20,10 +20,17 @@ if [ ! -d "$DIR/.git" ]; then
   git -C "$DIR" checkout --quiet --detach "$REVISION"
 fi
 
-current="$(git -C "$DIR" rev-parse HEAD)"
-if [ "$current" != "$REVISION" ]; then
-  echo "Wrong CloudStream plugin revision: $current (expected $REVISION)" >&2
+# Normalize shell/Git output before comparing the pinned full commit hash.
+current="$(git -C "$DIR" rev-parse --verify HEAD^{commit} | tr -d '\\r\\n')"
+expected="$(printf '%s' "$REVISION" | tr -d '\\r\\n')"
+if [ "$current" != "$expected" ]; then
+  echo "CloudStream plugin checkout differs from pinned revision; repairing checkout..."
+  git -C "$DIR" fetch --quiet origin "$expected"
+  git -C "$DIR" checkout --quiet --detach "$expected"
+  current="$(git -C "$DIR" rev-parse --verify HEAD^{commit} | tr -d '\\r\\n')"
+fi
+if [ "$current" != "$expected" ]; then
+  printf 'CloudStream revision check still failed. Actual <%q>, expected <%q>\\n' "$current" "$expected" >&2
   exit 2
 fi
-
 echo "CloudStream Gradle source ready: $current"
