@@ -1,5 +1,19 @@
 package com.eafb
 
+import com.lagradost.cloudstream3.Actor
+import com.lagradost.cloudstream3.ActorData
+import com.lagradost.cloudstream3.Episode
+import com.lagradost.cloudstream3.NextAiring
+import com.lagradost.cloudstream3.Score
+import com.lagradost.cloudstream3.ShowStatus
+import com.lagradost.cloudstream3.addDate
+import com.lagradost.cloudstream3.newEpisode
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
+import org.json.JSONArray
+import java.text.SimpleDateFormat
+import java.util.Locale
 import com.lagradost.cloudstream3.HomePageList
 import com.lagradost.cloudstream3.HomePageResponse
 import com.lagradost.cloudstream3.LoadResponse
@@ -85,11 +99,11 @@ class EAProvider : MainAPI() {
         channel.name, "$livePrefix${Identity.channelKey(channel.name)}", TvType.Live, fix = false
     )
 
-    private suspend fun getJson(path: String, page: Int? = null): JSONObject? {
+    private suspend fun getJson(path: String, page: Int? = null, language: String = "tr-TR"): JSONObject? {
         val catalogToken = EASettings.tmdbToken()
         if (catalogToken.isBlank()) return null
         val join = if ('?' in path) '&' else '?'
-        val url = "$mainUrl$path${join}language=tr-TR${if (page != null) "&page=$page" else ""}"
+        val url = "$mainUrl$path${join}language=$language${if (page != null) "&page=$page" else ""}"
         return runCatching {
             JSONObject(app.get(url, headers = mapOf("Authorization" to "Bearer $catalogToken")).text)
         }.getOrNull()
@@ -155,6 +169,127 @@ class EAProvider : MainAPI() {
         return demo + live + catalog
     }
 
+
+    private fun image(path: String?, width: String): String? =
+        path?.takeIf { it.startsWith("/") }?.let { "https://image.tmdb.org/t/p/$width$it" }
+
+    private fun genres(item: JSONObject): List<String> {
+        val rows = item.optJSONArray("genres") ?: return emptyList()
+        return (0 until rows.length()).mapNotNull { i ->
+            rows.optJSONObject(i)?.optString("name")?.takeIf { it.isNotBlank() }
+        }
+    }
+
+    private fun cast(item: JSONObject, series: Boolean): List<ActorData> {
+        val section = if (series) "aggregate_credits" else "credits"
+        val people = item.optJSONObject(section)?.optJSONArray("cast") ?: return emptyList()
+        return (0 until minOf(people.length(), 18)).mapNotNull { i ->
+            val person = people.optJSONObject(i) ?: return@mapNotNull null
+            val personName = person.optString("name").takeIf { it.isNotBlank() }
+                ?: return@mapNotNull null
+            val role = if (series) {
+                person.optJSONArray("roles")?.optJSONObject(0)?.optString("character")
+            } else person.optString("character")
+            ActorData(
+                Actor(personName, image(person.optString("profile_path"), "w185")),
+                roleString = role?.takeIf { it.isNotBlank() }
+            )
+        }
+    }
+
+    private fun creators(item: JSONObject, series: Boolean): String? {
+        if (series) {
+            val rows = item.optJSONArray("created_by") ?: return null
+            val names = (0 until rows.length()).mapNotNull { i ->
+                rows.optJSONObject(i)?.optString("name")?.takeIf { it.isNotBlank() }
+            }.distinct().take(5)
+            return names.takeIf { it.isNotEmpty() }?.joinToString(", ", prefix = "Yaratıcı: ")
+        }
+        val rows = item.optJSONObject("credits")?.optJSONArray("crew") ?: return null
+        val names = (0 until rows.length()).mapNotNull { i ->
+            val crew = rows.optJSONObject(i) ?: return@mapNotNull null
+            if (crew.optString("job") != "Director") return@mapNotNull null
+            crew.optString("name").takeIf { it.isNotBlank() }
+        }.distinct().take(5)
+        return names.takeIf { it.isNotEmpty() }?.joinToString(", ", prefix = "Yönetmen: ")
+    }
+
+    private fun recommendations(item: JSONObject, kind: MediaKind, ownId: Int): List<SearchResponse> {
+        val rows = item.optJSONObject("recommendations")?.optJSONArray("results")
+            ?: return emptyList()
+        val seen = mutableSetOf(ownId)
+        return (0 until rows.length()).mapNotNull { i ->
+            val next = rows.optJSONObject(i) ?: return@mapNotNull null
+            if (!seen.add(next.optInt("id"))) return@mapNotNull null
+            newItem(next, kind)
+        }.take(18)
+    }
+
+    private fun nextEpisode(item: JSONObject): NextAiring? {
+        val upcoming = item.optJSONObject("next_episode_to_air") ?: return null
+        val episode = upcoming.optInt("episode_number").takeIf { it > 0 } ?: return null
+        val airDate = upcoming.optString("air_date").takeIf { it.length >= 10 }
+            ?: return null
+        val seconds = runCatching {
+            SimpleDateFormat("yyyy-MM-dd", Locale.ROOT).apply { isLenient = false }
+                .parse(airDate)?.time?.div(1000)
+        }.getOrNull() ?: return null
+        if (seconds <= System.currentTimeMillis() / 1000) return null
+        return NextAiring(
+            episode = episode,
+            unixTime = seconds,
+            season = upcoming.optInt("season_number").takeIf { it > 0 }
+        )
+    }
+
+    /** Only metadata: actual episode sources will be resolved by adapters later. */
+    private suspend fun tvEpisodes(id: Int, seasonList: JSONArray?): List<Episode> {
+        if (seasonList == null) return emptyList()
+        val seasons = (0 until seasonList.length()).mapNotNull { i ->
+            seasonList.optJSONObject(i)?.optInt("season_number", -1)?.takeIf { it >= 0 }
+        }.distinct().sorted()
+        return seasons.chunked(4).flatMap { batch ->
+            coroutineScope {
+                batch.map { number ->
+                    async {
+                        val season = getJson("/tv/$id/season/$number")
+                            ?: return@async emptyList<Episode>()
+                        val episodeRows = season.optJSONArray("episodes")
+                            ?: return@async emptyList<Episode>()
+                        (0 until episodeRows.length()).mapNotNull { i ->
+                            val entry = episodeRows.optJSONObject(i)
+                                ?: return@mapNotNull null
+                            val episodeNo = entry.optInt("episode_number")
+                                .takeIf { it > 0 } ?: return@mapNotNull null
+                            val date = entry.optString("air_date")
+                            val rating = entry.optDouble("vote_average", 0.0)
+                                .takeIf { it > 0.1 && it <= 10.0 &&
+                                    entry.optInt("vote_count") > 0 }
+                            val text = entry.optString("overview")
+                            newEpisode(
+                                "$mainUrl/tv/$id/season/$number/episode/$episodeNo",
+                                fix = false
+                            ) {
+                                name = entry.optString("name").ifBlank { "Bölüm $episodeNo" }
+                                this.season = number
+                                this.episode = episodeNo
+                                posterUrl = image(entry.optString("still_path"), "w500")
+                                score = rating?.let { Score.from10(it) }
+                                description = if (rating != null) {
+                                    text + (if (text.isBlank()) "" else "\n\n") +
+                                        "Bölüm puanı: TMDb " +
+                                        String.format(Locale.ROOT, "%.1f", rating) + "/10"
+                                } else text
+                                runTime = entry.optInt("runtime").takeIf { it > 0 }
+                                addDate(date)
+                            }
+                        }
+                    }
+                }.awaitAll().flatten()
+            }
+        }.sortedWith(compareBy({ it.season ?: 0 }, { it.episode ?: 0 }))
+    }
+
     override suspend fun load(url: String): LoadResponse {
         if (url == openMovieUrl) {
             return newMovieLoadResponse("Big Buck Bunny", url, TvType.Movie, openMovieData) {
@@ -176,26 +311,56 @@ class EAProvider : MainAPI() {
         val path = url.substringAfter(mainUrl)
         val isSeries = path.startsWith("/tv/")
         val kind = if (isSeries) TvType.TvSeries else TvType.Movie
-        val item = getJson(path) ?: error("EA-FB: TMDb anahtarı ayarlanmadı veya katalog erişilemiyor")
+        val tmdbId = path.substringAfterLast('/').toIntOrNull()
+            ?: error("Geçersiz TMDb kimliği")
+        val append = if (isSeries) "aggregate_credits,recommendations,external_ids"
+                     else "credits,recommendations,external_ids"
+        val item = getJson("$path?append_to_response=$append")
+            ?: error("EA-FB: TMDb anahtarı ayarlanmadı veya katalog erişilemiyor")
         val title = item.optString(if (isSeries) "name" else "title")
-        val overview = item.optString("overview")
-        val poster = item.optString("poster_path").takeIf { it.startsWith("/") }
-        val backdrop = item.optString("backdrop_path").takeIf { it.startsWith("/") }
-        val detailYear = mediaYear(item, if (isSeries) MediaKind.SERIES else MediaKind.MOVIE)
+        val primaryOverview = item.optString("overview")
+        val fallbackOverview = if (primaryOverview.isBlank()) {
+            getJson(path, language = "en-US")?.optString("overview").orEmpty()
+        } else ""
+        val overview = primaryOverview.ifBlank { fallbackOverview }
+            .ifBlank { "Açıklama bulunamadı" }
+        val poster = image(item.optString("poster_path"), "w500")
+        val backdrop = image(item.optString("backdrop_path"), "w1280")
+        val media = if (isSeries) MediaKind.SERIES else MediaKind.MOVIE
+        val yearValue = mediaYear(item, media)
+        val people = cast(item, isSeries)
+        val director = creators(item, isSeries)
+        val combinedPlot = listOfNotNull(overview, director).joinToString("\n\n")
+        val recs = recommendations(item, media, tmdbId)
         return if (isSeries) {
-            // Episodes and supported source adapters will be populated in the next milestone.
-            newTvSeriesLoadResponse(title, url, kind, emptyList()) {
-                plot = overview
-                year = detailYear
-                posterUrl = poster?.let { "https://image.tmdb.org/t/p/w500$it" }
-                backgroundPosterUrl = backdrop?.let { "https://image.tmdb.org/t/p/w1280$it" }
+            val episodes = tvEpisodes(tmdbId, item.optJSONArray("seasons"))
+            newTvSeriesLoadResponse(title, url, kind, episodes) {
+                plot = combinedPlot
+                year = yearValue
+                posterUrl = poster
+                backgroundPosterUrl = backdrop
+                actors = people
+                tags = genres(item)
+                recommendations = recs
+                nextAiring = nextEpisode(item)
+                showStatus = when (item.optString("status")) {
+                    "Ended", "Canceled" -> ShowStatus.Completed
+                    "Returning Series", "In Production" -> ShowStatus.Ongoing
+                    else -> null
+                }
+                duration = item.optJSONArray("episode_run_time")?.optInt(0)
+                    ?.takeIf { it > 0 }
             }
         } else {
             newMovieLoadResponse(title, url, kind, "") {
-                plot = overview
-                year = detailYear
-                posterUrl = poster?.let { "https://image.tmdb.org/t/p/w500$it" }
-                backgroundPosterUrl = backdrop?.let { "https://image.tmdb.org/t/p/w1280$it" }
+                plot = combinedPlot
+                year = yearValue
+                posterUrl = poster
+                backgroundPosterUrl = backdrop
+                actors = people
+                tags = genres(item)
+                recommendations = recs
+                duration = item.optInt("runtime").takeIf { it > 0 }
             }
         }
     }
