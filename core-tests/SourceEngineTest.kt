@@ -41,6 +41,8 @@ fun main() = runBlocking {
     val engine = MultiSourceEngine(listOf(adapterA, adapterB, failed, slow), maxConcurrent = 4, perAdapterTimeoutMs = 200)
     val offers = engine.find(q)
     check(offers.size == 2 && offers.map { it.providerId }.toSet() == setOf("alpha", "beta"))
+    check(contradicted !in offers)
+    check(wrongId !in offers)
     check(engine.resolve(offers, nowMillis = 1000).map { it.url }.toSet() == setOf(hd.url, tooLarge.url))
     val links = engine.resolve(offers, nowMillis = 1000)
     check(links.size == 3)
