@@ -56,10 +56,10 @@ Big Buck Bunny afişi ve arka planı Wikimedia Commons üzerinden gösterilir. A
 
 İlk test sürümünün deneme afişi eksikti; geliştirme kodunda kart ve detay sayfası için afiş ile detay arka planı eklendi. Bu düzeltme CloudStream'e ancak yeniden `.cs3` derlenip yayımlandıktan sonra ulaşır. TMDb'ye bağlı diğer film/dizi kategorileri için cihazdaki EA-FB ayarlarına kişisel TMDb tokenı girilmesi gereklidir; henüz otomatik katalog anahtarı yoktur.
 
-## IMDb puanları — afiş sağ üst köşe (planlanan)
+## Çift puan rozeti — IMDb ve TMDb (planlanan)
 
-- Ürün kararı (25.09.2026): Film ve dizi afişlerinde sağ üst köşede 10 üzerinden gerçek IMDb puanı gösterilecek; veri yoksa rozet boş kalacak. TMDb ortalaması asla IMDb etiketi altında gösterilmeyecek.
-- CloudStream uygulamasında afiş kartları `SearchResponse.score` alanını `Score.from10(...)` ile okuyabiliyor ve afişin sağında yerleşik puan rozeti var. Kullanıcının CloudStream afiş ayarlarında puan görünürlüğü açık olmalı. Yerleşik rozet yalnız sayı gösterir; görsel üzerinde ayrıca IMDb markalı rozet istenirse özel görsel işleme ya da bağımsız APK gerekip gerekmediği ayrıca değerlendirilecek.
-- Bağlanacak ve kullanım izni doğrulanmış site adaptörleri IMDb kimliğini ve varsa gerçek IMDb puanını ayrı alanlarda getirmeli. Başlık+yıl+IMDb kimliği eşleşmesi olmadan yanlış filmin puanı aktarılmamalı. Birden çok adayda kaynağı ve güncellik tarihini saklayıp güvenilir değeri seç; ortak kaynak puanları ayrı tut.
-- Film kartı ve detay sayfası aynı doğrulanmış IMDb puanını kullanmalı. Büyük tanıtım alanında puan için ek UI ihtiyacı gerçek cihaz testinden sonra değerlendirilecek.
-- **Durum:** İstek kaydedildi, kaynak adaptörleri ve puan aktarımı henüz kodlanmadı. Yeni sürüm derlenmedi; mevcut yayın v3 ve Big Buck Bunny deneme filmi çalışıyor.
+- 25.09.2026 karar güncellemesi: Film ve dizi afişlerinde **iki ayrı puan** göster: üstte sarı yıldızlı gerçek IMDb, hemen altında farklı renkli TMDb puanı. Her biri 10 üzerinden tek ondalık basamaklı. Yerleşim hedefi afişin sağ üst köşesinde kompakt iki rozet. Film detay sayfasında da kaynaklarıyla ayrı ayrı sun.
+- IMDb ve TMDb puanları kesinlikle birbirinin yerine geçmez. Elde olmayan veya güvenilir şekilde doğrulanamayan puanı gizle; örnek sayı üretme. IMDb puanının gerçek veri kaynağı ve kullanım koşulları ayrıca doğrulanacak; TMDb ortalaması TMDb API'den alınabilir. Sağlayıcı sitenin etiketsiz puanını IMDb sayma.
+- **Teknik kısıt:** Mevcut CloudStream kart arayüzü yalnız bir `SearchResponse.score` alanı ve tek yerleşik rozet sunuyor. Bu nedenle iki ayrı markalı rozeti doğrudan eklenti verisi göndererek oluşturamıyoruz. Seçenekler: dinamik hazırlanmış poster görselinde iki rozet (görsel kullanım koşulları, ölçekleme, önbellek ve güncellik kontrolü gerekir), ya da bir yerleşik rozet + detay sayfasında ikinci puan; gelecekteki bağımsız Android APK'da iki gerçek UI rozeti.
+- İlk prototipte rozetleri dinamik görsel üstünde üretmenin güvenilirlik, görüntü kalitesi ve yükleme hızı testleri yapılacak. Bulunan film için yıl/IMDb kimliği eşleşmesi doğrulanmadan puan aktarılmayacak. Özel afiş hazırlanırsa CloudStream'in yerleşik puan rozeti aynı anda açılıp çakışmamalı.
+- **Durum:** Ürün isteği kaydedildi; henüz kodlanmadı veya Android TV'de test edilmedi. Yayındaki EA-FB v3 değişmedi.
