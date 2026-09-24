@@ -45,3 +45,7 @@ bash scripts/test-core.sh
 ```
 
 Bu testler **Android/CloudStream derlemesi veya gerçek yayın testi yerine geçmez**. Kurulabilir `.cs3` için Gradle ve Android SDK ile yerel derleme ayrıca yapılacak.
+
+## GitHub Actions olmadan yerel derleme
+
+Tek eklentilik `.cs3` dosyasını Windows bilgisayarda derlemek, `dist/plugins.json` ve `dist/repo.json` üretmek için [yerel derleme talimatları](docs/LOCAL-BUILD.md) hazırlandı. `scripts/stage-release.py` yalnız gerçek Gradle çıktısından paket hazırlar; Android cihaz testi ve gerçek `.cs3` derlemesi henüz tamamlanmadı.
