@@ -14,7 +14,9 @@ buildscript {
         // Resolved from locally included, revision-pinned upstream source in
         // settings.gradle.kts; it does not request CloudStream's JitPack binary.
         classpath("com.github.recloudstream:gradle:69fdb8fc4b")
-        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:2.1.0")
+        // Current CloudStream pre-release stubs contain Kotlin 2.4 metadata.
+        // Kotlin 2.4 supports Gradle 8.12 and AGP 8.7.3.
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:2.4.0")
     }
 }
 allprojects {

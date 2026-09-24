@@ -35,7 +35,7 @@ Bu işlem yalnız **derleme** yapar; dosyaları GitHub'a otomatik yüklemez ve G
 
 ## Neden Java 17?
 
-CloudStream'in resmi TestPlugins şablonundaki derleme akışı JDK 17 kullanıyor. EA-FB de aynı AGP 8.7.3 / Kotlin 2.1.0 hattını izlediği için Codespaces tarafında JDK 17 sabitlendi.
+CloudStream'in resmi TestPlugins şablonundaki derleme akışı JDK 17 kullanıyor. EA-FB, CloudStream pre-release kütüphanesinin Kotlin 2.4.0 metadata sürümünü derlemek için Kotlin 2.4.0 ve AGP 8.7.3 kullanır; Codespaces tarafında JDK 17 sabittir.
 
 ## Sonraki derlemeler
 
@@ -59,3 +59,7 @@ bash scripts/build-codespace.sh
 ```
 
 `bash scripts/build-codespace.sh` ilk çalıştırmada kaynak indirmesini kendisi yapar. Gerçek `.cs3` oluştuğunu terminaldeki başarı mesajıyla doğrula.
+
+## Hata çıktıları
+
+Derleme başarısız olursa terminal önce önemli derleyici hatalarını tekrar gösterir. Tam çıktı `build/codespace-build.log` dosyasına kaydedilir; sadece `BUILD FAILED` ekran görüntüsü yerine ilgili `e:` satırlarını paylaşmak yeterlidir.

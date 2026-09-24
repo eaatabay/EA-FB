@@ -17,7 +17,19 @@ gradle --version | head -n 8
 
 bash scripts/prepare-cloudstream-gradle.sh
 
-gradle :EA-FB:make makePluginsJson --no-daemon
+# Save the full Gradle output so Kotlin compiler errors never get lost when
+# the terminal shows only the final BUILD FAILED summary.
+mkdir -p build
+logfile="build/codespace-build.log"
+if gradle :EA-FB:make makePluginsJson --no-daemon --console=plain 2>&1 | tee "$logfile"; then
+  echo "Gradle build succeeded. Full log: $logfile"
+else
+  echo
+  echo "========== FIRST COMPILER / ERROR LINES =========="
+  grep -n -m 35 -E '(^e:|^> Task .*FAILED|Unresolved reference|incompatible version of Kotlin|Could not resolve|Could not find|^\\* What went wrong:)' "$logfile" || true
+  echo "Full build output saved in: $logfile"
+  exit 1
+fi
 
 python3 scripts/stage-release.py
 
