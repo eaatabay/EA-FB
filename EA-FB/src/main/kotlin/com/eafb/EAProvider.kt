@@ -33,7 +33,7 @@ class EAProvider : MainAPI() {
     // Open movie by Blender Foundation (CC BY 3.0); retain original closing credits.
     private val openMovieData = "ea-fb:open:big-buck-bunny"
     private val openMovieUrl = "$mainUrl/ea-fb-open/big-buck-bunny"
-    private val openMovieStream = "https://download.blender.org/peach/bigbuckbunny_movies/BigBuckBunny_320x180.mp4"
+    private val openMovieStream = "https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
     private val livePrefix = "$mainUrl/ea-fb-live/"
     private val channelsUrl = "https://raw.githubusercontent.com/eaatabay/EA-FB/main/config/channels.json"
     private val categories = HomeCategories.all.filter { it.tmdbPath != null }
