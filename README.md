@@ -1,6 +1,6 @@
 # EA-FB — tek CloudStream eklentisi
 
-**Durum: geliştirme ön izlemesi (v0.2), henüz kurulabilir `.cs3` veya Android cihaz testi yok.** Bu repo, film/dizi katalogları ve izinli canlı TV yayınlarını tek görünen `EA-FB` eklentisinde toplama amacıyla oluşturuldu.
+**Durum (25.09.2026): EA-FB v3 yayımlandı; Android TV'de afişler, MP4 720p oynatma ve alternatif HLS kaynak listesi doğrulandı.** HLS'nin baştan sona oynatılması, TMDb katalog kurulumu ve gerçek film/dizi adaptörleri ayrıca test edilecek. Bu repo, film/dizi katalogları ve izinli canlı TV yayınlarını tek görünen `EA-FB` eklentisinde toplama amacıyla oluşturuldu.
 
 ## Kapsam
 
@@ -44,11 +44,11 @@ Bu repo `TJK-BOT` ve `THORP-BIST50` projelerinden tamamen bağımsızdır. Bu pr
 bash scripts/test-core.sh
 ```
 
-Bu testler **Android/CloudStream derlemesi veya gerçek yayın testi yerine geçmez**. Kurulabilir `.cs3` için Gradle ve Android SDK ile yerel derleme ayrıca yapılacak.
+Çekirdek testleri Android/CloudStream derlemesinin yerine geçmez. İlk `.cs3` Codespaces üzerinde üretildi ve v3 Android TV'de MP4 720p ile denendi; yeni kod değişiklikleri yeniden derlenip cihazda test edilmelidir.
 
 ## GitHub Actions olmadan yerel derleme
 
-Tek eklentilik `.cs3` dosyasını Windows bilgisayarda derlemek, `dist/plugins.json` ve `dist/repo.json` üretmek için [yerel derleme talimatları](docs/LOCAL-BUILD.md) hazırlandı. `scripts/stage-release.py` yalnız gerçek Gradle çıktısından paket hazırlar; Android cihaz testi ve gerçek `.cs3` derlemesi henüz tamamlanmadı.
+Tek eklentilik `.cs3` dosyasını Windows bilgisayarda derlemek, `dist/plugins.json` ve `dist/repo.json` üretmek için [yerel derleme talimatları](docs/LOCAL-BUILD.md) hazırlandı. `scripts/stage-release.py` yalnız gerçek Gradle çıktısından paket hazırlar; İlk `.cs3` derlemesi, GitHub üzerinden yayımlama ve v3 Android TV oynatma testi tamamlandı.
 
 ## Deneme filmi görselleri
 
@@ -63,3 +63,19 @@ Big Buck Bunny afişi ve arka planı Wikimedia Commons üzerinden gösterilir. A
 - **Teknik kısıt:** Mevcut CloudStream kart arayüzü yalnız bir `SearchResponse.score` alanı ve tek yerleşik rozet sunuyor. Bu nedenle iki ayrı markalı rozeti doğrudan eklenti verisi göndererek oluşturamıyoruz. Seçenekler: dinamik hazırlanmış poster görselinde iki rozet (görsel kullanım koşulları, ölçekleme, önbellek ve güncellik kontrolü gerekir), ya da bir yerleşik rozet + detay sayfasında ikinci puan; gelecekteki bağımsız Android APK'da iki gerçek UI rozeti.
 - İlk prototipte rozetleri dinamik görsel üstünde üretmenin güvenilirlik, görüntü kalitesi ve yükleme hızı testleri yapılacak. Bulunan film için yıl/IMDb kimliği eşleşmesi doğrulanmadan puan aktarılmayacak. Özel afiş hazırlanırsa CloudStream'in yerleşik puan rozeti aynı anda açılıp çakışmamalı.
 - **Durum:** Ürün isteği kaydedildi; henüz kodlanmadı veya Android TV'de test edilmedi. Yayındaki EA-FB v3 değişmedi.
+
+## İçerik mimarisi — 25.09.2026 son kararı (önceki metadata planlarını geçersiz kılar)
+
+**Ürün kararı:** Ortak katalog ve görsellerin birincil kaynağı TMDb. Film/dizi siteleri, kendilerinden film başlığı/afiş/açıklama toplamak yerine **yalnızca izinli oynatma sayfası veya yayın URL'sini** çözmek için kullanılacak. Kaynak URL'leri filme güvenli şekilde IMDb/TMDb kimliği, tür ve çıkış yılıyla bağlanacak. Kaynaklar aynı oynatılabilir URL ise tekilleştirilecek; farklı altyazı/dublaj/kalite seçenekleri korunacak. Film kartı tek, kaynak seçenekleri çok olacak.
+
+**TMDb metadata (öncelikli):** `language=tr-TR` ile Türkçe ad ve `overview`; `poster_path` ve `backdrop_path`; `images?include_image_language=tr,en,null` ile mümkünse Türkçe yazılı afiş, yoksa orijinal/İngilizce afiş; tarih/yıl, tür, oyuncular ve dizi sezon/bölüm verileri. Türkçe açıklama boşsa İngilizce alternatif, boşsa "Açıklama bulunamadı"; otomatik uydurma çeviri yok. TMDb kaynak atıf ve görsel kullanım şartlarına uy.
+
+**Puan önceliği:** İlk afiş rozeti **gerçek IMDb puanı**. TMDb `external_ids.imdb_id` veya film detayındaki IMDb kimliği eşleştirme içindir; TMDb API IMDb *puanını* döndürmez. IMDb puanı için kullanım hakkı uygun ayrı puan API'si/verisi (örneğin uygun anahtarla OMDb) bağlanmalı. IMDb puanı bulunamazsa sahte puan gösterme. Önceki iki rozet talebi ikinci aşamada korunur: TMDb `vote_average` ayrı bir TMDb etiketiyle ikinci rozet/detay bilgisi olabilir; tek `SearchResponse.score` alanı nedeniyle yerleşik CloudStream posterinde iki rozet doğrudan mümkün değil. Veri kaynaklarını karıştırma, tarih ve önbellek tutarlılığını kontrol et.
+
+**Netflix / Prime Video / Disney+ gibi platformlar:** TMDb `watch/providers` ile hedef ülkede hangi hizmette *mevcut olduğunu* gösterebilir ve `discover` ile platform kategorileri oluşturabilir. Bu uç nokta Netflix/Amazon'a ait tam film URL'si, katalogdaki dahili başlık kodu veya oynatılabilir yayın URL'si döndürmez. Hizmetin kendisinin kamuya açık ve izin verilen resmî başlık bağlantısı bulunursa uygulamaya yönlendirme ekle; abonelik gerektiren yayınları DRM aşmadan üçüncü taraf oynatıcıda açmaya çalışma. JustWatch kaynak atfı gereklidir. Bölgesel katalog farkları ve farklı film/dizi kimlikleri dikkate alınacak.
+
+**Uygulama sırası:** (1) kişisel TMDb anahtarıyla Türkçe katalog/afiş/özet ve büyük görseli tamamla; (2) TMDb'den IMDb kimliğini al, ayrı uygun puan kaynağı üzerinden gerçek IMDb skorunu getir ve kartın ilk rozeti yap; (3) bölgeye göre hizmet/platform bilgilerini ve mümkünse resmî yönlendirmeleri göster; (4) izinli yayın adaptörleriyle yalnız gerçek film/bölüm oynatma bağlantılarını bulup tekilleştir; (5) ikinci TMDb rozetini yerleşim testinden sonra ekle.
+
+**Bugünkü kod durumu:** v3'te TMDb token ayar ekranı, TMDb poster ve Türkçe `overview` çağrıları mevcut ama kullanıcının TMDb anahtarını cihaza girip katalogları denemesi henüz doğrulanmadı. Büyük TMDb arka planı, dış IMDb kimliği, gerçek IMDb puanı, platform bilgileri, gerçek film/dizi kaynak adaptörleri henüz uygulanmadı. Çalışan Big Buck Bunny açık lisanslı deneme kaynağını koru. Bu doküman değişikliği yeni bir `.cs3` üretmez ve GitHub Actions eklemez.
+
+Kaynaklar: https://developer.themoviedb.org/reference/movie-details ; https://developer.themoviedb.org/reference/movie-external-ids ; https://developer.themoviedb.org/reference/tv-series-external-ids ; https://developer.themoviedb.org/reference/movie-watch-providers ; https://developer.themoviedb.org/reference/movie-images ; https://www.omdbapi.com/
