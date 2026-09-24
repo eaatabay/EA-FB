@@ -1,0 +1,8 @@
+.gradle/
+**/build/
+.idea/
+local.properties
+*.jks
+secrets.properties
+*.apk
+*.cs3

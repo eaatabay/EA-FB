@@ -1,0 +1,18 @@
+{
+  "description": "Only add authorized broadcaster endpoints or personally licensed streams.",
+  "channels": [
+    {
+      "id": "example-tv",
+      "name": "Örnek TV",
+      "aliases": ["Örnek TV HD", "ÖrnekTV"],
+      "sources": [
+        {
+          "provider": "Resmî yayın",
+          "url": "https://example.org/stream.m3u8",
+          "quality": 1080,
+          "authorized": false
+        }
+      ]
+    }
+  ]
+}
