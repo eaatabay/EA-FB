@@ -1,0 +1,28 @@
+# EA-FB v6: main detail title ratings (feature branch)
+
+Status: **source only**, NOT compiled or published. Production `main/dist` remains EA-FB v5.
+
+## Requested UI and native CloudStream constraints
+
+User wants film/series ratings near the release year (Silo: 2023): separate **IMDb** and **TMDb** scores, no mislabeling.
+
+CloudStream's ordinary `MovieLoadResponse` and `TvSeriesLoadResponse` expose **one** native `score` next to other title metadata. Plugins cannot demand two independent same-row native rating badges. v6 therefore sets native score to independent IMDb when available, otherwise TMDb, and prints the explicitly labeled **IMDb x.x/10 | TMDb y.y/10** line immediately before the Turkish plot. A custom CloudStream app/UI modification would be necessary to guarantee two same-row badges.
+
+## Real data provenance
+
+- **TMDb**: `vote_average` only when `vote_count>0` from the TMDb detail response. The CloudStream episode scores in v5/v6 are also **TMDb's episode `vote_average`**, only for episodes with votes; the current description explicitly says `Bölüm puanı: TMDb`.
+- **IMDb**: never derive from TMDb rating. TMDb `external_ids.imdb_id` identifies a movie or series only. Server-side Cloudflare Worker optionally requests **OMDb API** by a validated IMDb title ID using secret `OMDB_API_KEY`. Only a verified score with matching ID and `Response=True` is returned as `ea_fb_ratings.imdb`.
+- No IMDb score is displayed when OMDb is unconfigured, fails, rate limited, or does not have a score. Native score and labeled line still show TMDb when available.
+- OMDb API's free key currently has a **1,000/day** limit across our entire public service. Cloudflare caches the enriched title detail, but a public rollout may require higher quota. Review OMDb's applicable licensing/attribution terms before scaling. Neither the OMDb nor TMDb key goes to a user/device or public `.cs3`.
+
+## Release checklist
+
+1. Finish source and compile v6 in Codespaces **without overwriting main's stable v5**. Run `node --test worker/test/catalog.test.mjs` first, compile the CloudStream package, and verify the manifest says v6.
+2. Owner obtains an OMDb key from https://www.omdbapi.com/apikey.aspx and stores it as a **Cloudflare Worker secret** (`OMDB_API_KEY`) for `ea-fb-catalog`; **do not** paste secrets into chat or commit them. No end user enters any key.
+3. Deploy this branch's updated Worker source to the existing Cloudflare Worker.
+4. Probe `/v1/tv/125988?append_to_response=external_ids&language=tr-TR` and verify the response has independently sourced IMDb and TMDb ratings; validate real live title ID before relying on this fixture. Do not publish if either is missing.
+5. Release only after v6 Android/CloudStream compilation and successful live Worker check; then update GitHub `dist` and test on Mi Box. Existing v5 remains live until then.
+
+## Extra display items being tracked independently
+
+Homepage lower categories with empty cards or paging/navigation problem, simpler future-episode countdown, per-poster year and score overlays and genuine film/video adapters remain separate tasks. Do not conflate them with the dual-title-rating feature.
