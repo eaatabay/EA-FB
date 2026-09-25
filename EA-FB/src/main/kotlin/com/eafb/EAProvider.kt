@@ -196,6 +196,25 @@ class EAProvider : MainAPI() {
     private fun image(path: String?, width: String): String? =
         path?.takeIf { it.startsWith("/") }?.let { "https://image.tmdb.org/t/p/$width$it" }
 
+    /** Explicit source labels: TMDb ratings are not IMDb ratings. */
+    private fun ratingValue(item: JSONObject?): Double? {
+        if (item == null || item.optInt("vote_count", 0) <= 0) return null
+        return item.optDouble("vote_average", 0.0).takeIf { it > 0.0 && it <= 10.0 }
+    }
+
+    private fun scoreText(rating: Double): String =
+        String.format(Locale.ROOT, "%.1f", rating)
+
+    private fun titleRatings(item: JSONObject): Pair<Double?, Double?> {
+        val tmdb = ratingValue(item)
+        // Only the server may attach independent IMDb data. TMDb external_ids
+        // contains an IMDb ID, NOT an IMDb rating.
+        val imdb = item.optJSONObject("ea_fb_ratings")
+            ?.optDouble("imdb", 0.0)
+            ?.takeIf { it > 0.0 && it <= 10.0 }
+        return Pair(imdb, tmdb)
+    }
+
     private fun genres(item: JSONObject): List<String> {
         val rows = item.optJSONArray("genres") ?: return emptyList()
         return (0 until rows.length()).mapNotNull { i ->
@@ -354,13 +373,23 @@ class EAProvider : MainAPI() {
         val yearValue = mediaYear(item, media)
         val people = cast(item, isSeries)
         val director = creators(item, isSeries)
-        val combinedPlot = listOfNotNull(overview, director).joinToString("\n\n")
+        val (imdbRating, tmdbRating) = titleRatings(item)
+        val ratingLine = listOfNotNull(
+            imdbRating?.let { "IMDb " + scoreText(it) + "/10" },
+            tmdbRating?.let { "TMDb " + scoreText(it) + "/10" }
+        ).joinToString("    |    ")
+        val combinedPlot = listOfNotNull(
+            ratingLine.takeIf { it.isNotBlank() }, overview, director
+        ).joinToString("\n\n")
         val recs = recommendations(item, media, tmdbId)
         return if (isSeries) {
             val episodes = tvEpisodes(tmdbId, item.optJSONArray("seasons"))
             newTvSeriesLoadResponse(title, url, kind, episodes) {
                 plot = combinedPlot
                 year = yearValue
+                // Native CloudStream supports one score beside the year.
+                // Show IMDb there when independently available; otherwise TMDb.
+                score = (imdbRating ?: tmdbRating)?.let { Score.from10(it) }
                 posterUrl = poster
                 backgroundPosterUrl = backdrop
                 actors = people
@@ -379,6 +408,9 @@ class EAProvider : MainAPI() {
             newMovieLoadResponse(title, url, kind, "") {
                 plot = combinedPlot
                 year = yearValue
+                // Native CloudStream supports one score beside the year.
+                // Show IMDb there when independently available; otherwise TMDb.
+                score = (imdbRating ?: tmdbRating)?.let { Score.from10(it) }
                 posterUrl = poster
                 backgroundPosterUrl = backdrop
                 actors = people
