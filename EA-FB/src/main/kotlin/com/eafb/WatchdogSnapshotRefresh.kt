@@ -5,6 +5,7 @@ import java.nio.ByteBuffer
 import java.nio.charset.CharacterCodingException
 import java.nio.charset.CodingErrorAction
 import java.nio.charset.StandardCharsets
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
@@ -76,12 +77,19 @@ class WatchdogSnapshotRefresh(
             // A backwards wall-clock jump must not trigger an old signed list.
             return@withLock WatchdogRefreshResult(null, false, "clock_rollback", null)
         }
-        val cached = restoreOffline(now)?.takeIf { it.usableAt(now).isNotEmpty() }
+        val cached = try {
+            restoreOffline(now)?.takeIf { it.usableAt(now).isNotEmpty() }
+        } catch (_: Exception) {
+            // Corrupt SharedPreferences cannot crash a refresh or be exposed.
+            null
+        }
         if (now < nextAttempt) {
             return@withLock WatchdogRefreshResult(cached, false, "throttled", nextAttempt)
         }
         lastAttempt = now
-        val reply = try { transport.get(options.endpoint) } catch (_: Exception) {
+        val reply = try { transport.get(options.endpoint) }
+        catch (cancelled: CancellationException) { throw cancelled }
+        catch (_: Exception) {
             return@withLock failure(now, cached, "network_unavailable")
         }
         if (reply.status != 200) {
