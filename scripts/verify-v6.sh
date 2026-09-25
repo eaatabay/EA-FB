@@ -12,8 +12,8 @@ fi
 echo "== Worker gateway tests =="
 (cd worker && npm test)
 
-echo "== Source Watchdog policy/SQLite tests (isolated, no network) =="
-(cd source-watchdog && npm test)
+echo "== Source Watchdog policy/SQLite and signing tests (isolated, no network) =="
+(cd source-watchdog && node dev/check-runtime.mjs && npm test)
 python3 -m unittest discover -s source-watchdog/tests -v
 
 echo "== Pure Kotlin core and visual-policy tests =="
