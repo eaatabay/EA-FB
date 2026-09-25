@@ -95,5 +95,75 @@ fun main() {
     test(only(list=permits+List(30) {
         movie.copy(id="fixture-extra-$it")
     }).isEmpty(),"no more than 32 compiled rights permits")
+    // URL scope must be a segment boundary, never a string-prefix grant.
+    fun movieUrl(url: String): List<SnapshotSource> =
+        only(snapshot=defaultSnapshot.copy(usableSources=
+            defaultSnapshot.usableSources.map {
+                if (it.id=="fixture-movie") it.copy(baseUrl=url) else it
+            }))
+    test(movieUrl("https://films.example.org/public").any { it.id=="fixture-movie" },
+        "exact approved path accepted")
+    test(movieUrl("https://films.example.org/public/child/deep").any { it.id=="fixture-movie" },
+        "descendant approved path accepted")
+    test(movieUrl("https://films.example.org/private").none { it.id=="fixture-movie" },
+        "outside approved path rejected")
+    test(movieUrl("https://films.example.org/public-other").none { it.id=="fixture-movie" },
+        "sibling path cannot exploit prefix")
+    test(movieUrl("http://films.example.org/public").none { it.id=="fixture-movie" },
+        "plain HTTP cannot use approved HTTPS host")
+    test(movieUrl("https://films.example.org:443/public").none { it.id=="fixture-movie" },
+        "explicit port is outside pinned origin")
+    test(movieUrl("https://user@films.example.org/public").none { it.id=="fixture-movie" },
+        "URL credentials cannot accompany approved host")
+    test(movieUrl("https://films.example.org/public?redirect=other").none { it.id=="fixture-movie" },
+        "query cannot extend approved path scope")
+    test(movieUrl("https://films.example.org/public#fragment").none { it.id=="fixture-movie" },
+        "fragment cannot extend approved path scope")
+    test(movieUrl("https://films.example.org.evil.org/public").none { it.id=="fixture-movie" },
+        "approved hostname suffix is not a valid exact match")
+    test(movieUrl("https://films.example.org/public/%2Fprivate").none { it.id=="fixture-movie" },
+        "encoded slash cannot bypass reviewed path")
+    test(movieUrl("https://films.example.org/public/../private").none { it.id=="fixture-movie" },
+        "literal parent traversal cannot bypass reviewed path")
+
+    val signedAllBoth=defaultSnapshot.copy(usableSources=
+        defaultSnapshot.usableSources.map { it.copy(mediaKind="both") })
+    test(only(snapshot=signedAllBoth).map { it.mediaKind } ==
+        listOf("movie","series","both"),
+        "rights intersect signed movie/series/both claims independently")
+    val signedMovieOnly=defaultSnapshot.copy(usableSources=
+        defaultSnapshot.usableSources.map {
+            if(it.id=="fixture-both") it.copy(mediaKind="movie") else it
+        })
+    test(only(snapshot=signedMovieOnly).last().mediaKind=="movie",
+        "both-media permit never broadens signed movie-only claim")
+    val signedSeriesOnly=defaultSnapshot.copy(usableSources=
+        defaultSnapshot.usableSources.map {
+            if(it.id=="fixture-both") it.copy(mediaKind="series") else it
+        })
+    test(only(snapshot=signedSeriesOnly).last().mediaKind=="series",
+        "both-media permit never broadens signed series-only claim")
+    val wrongSeries=defaultSnapshot.copy(usableSources=
+        defaultSnapshot.usableSources.map {
+            if(it.id=="fixture-series") it.copy(mediaKind="movie") else it
+        })
+    test(only(snapshot=wrongSeries).none { it.id=="fixture-series" },
+        "series-only rights reject signed movie-only claim")
+    test(only(list=listOf(movie)).map { it.id }==listOf("fixture-movie"),
+        "unreviewed signed sources are excluded without dropping reviewed ones")
+    test(ReviewedSourcePermitPolicy.restrict(defaultSnapshot,T,emptyList())==null,
+        "empty compiled rights registry fails closed rather than returning an approval")
+    test(ReviewedSourcePermitPolicy.restrict(defaultSnapshot,T,permits+movie)==null,
+        "duplicate rights registry fails closed rather than returning an approval")
+    test(ReviewedSourcePermitPolicy.restrict(null,T,permits)==null,
+        "unsigned snapshot fails closed")
+    test(only(list=listOf(movie.copy(approvedPathPrefix="/public/../private"),
+        series,both)).isEmpty(), "unsafe reviewed path closes registry")
+    test(only(list=listOf(movie.copy(approvedHosts=setOf("FILMS.example.org")),
+        series,both)).isEmpty(), "noncanonical uppercase approved host rejected")
+    test(only(list=listOf(movie.copy(mediaKind="video"),series,both)).isEmpty(),
+        "unknown media rights category closes registry")
+    test(only(list=listOf(movie.copy(evidenceReference="rights/2026/a.md"),
+        series,both)).isEmpty(), "short unverifiable evidence path rejected")
     println("PASS: $passed/$passed reviewed source permit policy cases")
 }
