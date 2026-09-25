@@ -71,6 +71,11 @@
 - [x] Uygulama varsayilaninda endpoint, origin, anahtar ve adapter bos; otomatik ag baslatma YOK.
 - [ ] Gercek Android'de transport/network-permission, surec yeniden baslatma ve signed TTL davranisini test etme.
 - [x] WatchdogClientStore icine yalniz endpoint+key+adapter onayliyken istemci ureten ve otomatik ag acmayan factory eklendi.
+- [x] 26.09: Imzali medyaya gore movie/series/both adapter secimi eklendi; LIVE ve yanlis surumler devre disi.
+- [x] 26.09: 15/15 pure Kotlin secim testi + 5/5 kapali Android bridge JVM testi; GitHub blob SHA ile birebir.
+- [x] WatchdogApprovedAdapterBridge: onayli HTTPS origin, pinned public key ve .cs3'e derlenmis TAM adapter surum eslesmesi olmadan kaynak acmiyor.
+- [x] Her iki yeni test scripts/test-core.sh'e eklendi; birebir betik bash -n gecti.
+- [ ] EAProvider'a baglama yalniz gercek izinli kaynak adaptoru ve signing public key onayindan SONRA.
 - [ ] Guvenli endpoint ve gercek imza pini onaylandiktan sonra ilk onayli adapter ile uygulama akisina baglama.
 - [ ] Otomatik/manual yenilemeyi uygulama yasam dongusune guvenle baglama; canli yayin ve v5 etkilenmeyecek.
 - [ ] Guvenli client yenileme agi, API endpoint baglantisi ve offline TTL (gercek servis ve cihaz testi).
@@ -100,5 +105,6 @@
 - [ ] Production v5 veya main'e gecis yalniz ayri onayla.
 
 ## Sonraki en yakin is
-Actions kotasi sifirken Android cache/yerel testleri gelistir. Sonra tam Node 22
-ve izole yerel Wrangler D1; izinli kaynak adaptorleri ve MFA'li admin pilotu.
+Actions kotasi sifirken onayli gercek kaynak teknik/izin incelemesini bitir;
+sonra EAProvider'a secure adapter bridge, tam Node 22 ve izole Wrangler D1,
+MFA'li admin pilotu. Gercek v5/main ve canli Worker degismez.
