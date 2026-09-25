@@ -48,7 +48,27 @@ function requireApprovedConfig(input) {
       config.adapterVersion < 1 || config.adapterVersion > 1_000_000) {
     throw new Error("missing_integration_review");
   }
-  return config;
+  // Persist an explicit allowlist only. Unexpected fields must never carry
+  // credentials, cookies, probe secrets, or internal URLs into D1/audit history.
+  const clean = {
+    id: config.id,
+    enabled: config.enabled,
+    mediaKind: config.mediaKind,
+    integrationApproved: config.integrationApproved,
+    adapterVersion: config.adapterVersion,
+    currentUrl: config.currentUrl,
+    lastKnownGoodUrl: config.lastKnownGoodUrl,
+    verifiedDomains: [...config.verifiedDomains],
+    requiredChecks: [...config.requiredChecks],
+  };
+  if (config.approvalRef != null) {
+    if (typeof config.approvalRef !== "string" ||
+        !/^[a-zA-Z0-9_./:-]{8,160}$/.test(config.approvalRef)) {
+      throw new Error("invalid_approval_reference");
+    }
+    clean.approvalRef = config.approvalRef;
+  }
+  return clean;
 }
 
 function rowRecord(row) {
