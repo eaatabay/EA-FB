@@ -37,3 +37,11 @@ Homepage lower categories with empty cards or paging/navigation problem, simpler
 - Resmî TMDb koleksiyonu başka Spider-Man yeniden çevrimlerini kendiliğinden birleştirmez. Farklı evrenleri tek büyük listede toplamak ayrıca belirlenmiş manuel veya düzenleyici veri gerektirir.
 - Ekrandaki “Çok yakında...” başlığı koleksiyon rafı değildir. v5 film verisi metadata-only'dir; film oynatma kaynağı henüz sağlanmaz. Başlığı “Serinin Filmleri” olarak değiştirmek mevcut API'de mümkün değildir.
 - Kod GitHub feature branch'ine kaydedildi; **Kotlin Android derlemesi ve Mi Box görsel testi yapılmadı, main'deki v5 değiştirilmedi.**
+
+## 25.09.2026: Ana sayfa büyük/küçük afiş puanları
+
+- Kullanıcının açık isteği: **ana sayfadaki büyük film/dizi afişlerinde iki ayrı etiket (IMDb + TMDb), küçük afişlerde sığarsa iki etiket sol/sağ, sığmıyorsa bir gerçek puan.**
+- Mevcut CloudStream TV ana sayfasında tek yerleşik sayısal `score` ve ayrı `tags` çipleri bulunuyor. v6 kaynak kodu, büyük afişin detay verisine gerçek IMDb geldiğinde **IMDb ve TMDb çiplerini türlerden önce** koyuyor. Yerleşik sayısal puanda IMDb varsa IMDb, aksi durumda TMDb yer alıyor. *Cihazdaki tam görsel yerleşim derleme sonrası test edilmelidir.*
+- `SearchResponse` küçük kartlarına TMDb listelerinden gelen, oylaması olan **gerçek TMDb puanı** atandı; CloudStream uygulamasında "puanları göster" ayarı açık olduğunda tek yerleşik sayısal rozet görünür. IMDb puanı kategori listelerinde bağımsız kaynaktan gelmediği için `IMDb` gibi yanlış etiketlenmez; toplu sayıda OMDb isteği yapılmaz.
+- CloudStream'in stok küçük poster kartı iki bağımsız sol/sağ puan rozeti sağlamıyor. İki bağımsız rozet veya posterin üzerinde yıl bindirmesi için ayrı görüntü işleme ya da CloudStream UI özelleştirmesi gerekir. Kullanıcı bir puana açıkça izin verdiğinden mevcut güvenilir tercih **tek TMDb puan rozeti**. Ayrı IMDb kaynağı gerçek veriyle sunucu tarafında hazır olduğunda büyük afişte ikinci puan görünür.
+- v6 henüz **derlenmedi ve Mi Box'ta doğrulanmadı**. OMDb Worker secret `OMDB_API_KEY` henüz kurulduğu doğrulanmadı. Public v5 değiştirilmedi.
