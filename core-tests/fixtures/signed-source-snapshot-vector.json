@@ -1,0 +1,28 @@
+{
+  "note": "PUBLIC TEST VECTOR. NO PRIVATE KEY. DO NOT USE FOR PRODUCTION.",
+  "publicKeyBase64": "3XThw1FOoxQye8ObEatzSwW1lRlo/g9iZSRuClkOjak=",
+  "envelopeVersion": 1,
+  "algorithm": "Ed25519",
+  "keyId": "test-only-2026",
+  "payload": {
+    "schemaVersion": 1,
+    "revision": 42,
+    "generatedAt": 1800000000000,
+    "expiresAt": 1800000900000,
+    "sources": [
+      {
+        "id": "licensed-demo",
+        "mediaKind": "movie",
+        "baseUrl": "https://licensed.example.org",
+        "adapterVersion": 3
+      },
+      {
+        "id": "new-adapter",
+        "mediaKind": "series",
+        "baseUrl": "https://series.example.org",
+        "adapterVersion": 1
+      }
+    ]
+  },
+  "signature": "pcw-_1oE7BZMdmSjTJgVuurK04lxCVpHrcCLEchUueMtiI3B7lrrCl1NbbWNELG-HgEbw12OA14c4nC9gtp1DA"
+}
