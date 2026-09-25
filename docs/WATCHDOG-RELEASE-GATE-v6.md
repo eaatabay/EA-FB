@@ -68,6 +68,16 @@ Wrangler alt süreçleri Cloudflare hesap tokenlarını miras almıyor,
 tesadüfi gerçek D1 binding'i, ek route veya admin yazma yetkisi eklenmesi
 tam yapı karşılaştırmasıyla engelleniyor.
 
+**Yerel Wrangler komut güvenliği:** Sürüm kapısında izin verilen D1 işlemleri
+yalnızca geçici test veritabanına uygulanan iki migration, tek onaylı SQL seed
+dosyası ve **iki sabit, salt okunur sayım sorgusudur**. Başka bir SELECT,
+UPDATE, DELETE, `--remote`, `deploy`, farklı veritabanı, env/profile veya
+komut tekrarı anında reddedilir. Wrangler'ın JSON çıktısı ve 30 kaynaklık
+kabul sayaçları ayrı modülde tam olarak doğrulanır. Bu modülün GitHub'la
+aynı SHA'ya sahip kaynak/test dosyaları Node 22 üzerinde **4/4** başarılı
+çalıştırıldı; 18 zararlı/yanlış CLI argümanı senaryosu reddedildi.
+Bu doğrulama **gerçek Wrangler sürecinin yerini tutmaz**.
+
 **Test geçmeden** ayrı Cloudflare test hesabına deploy, gerçek kaynak
 adapteri veya Mi Box güncellemesi yapılmamalıdır.
 
