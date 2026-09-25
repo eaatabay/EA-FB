@@ -213,3 +213,31 @@ test("no optional OMDb key means zero extra external requests", async () => {
   assert.equal((await res.json()).ea_fb_ratings,undefined);
   assert.equal(calls.length,1);
 });
+
+test("activating OMDb does not reuse old TMDb-only detail cache", async () => {
+  const {env, ctx, calls} = setup();
+  globalThis.fetch = async (url, opts) => {
+    calls.push({url, opts});
+    if (url.startsWith("https://www.omdbapi.com/")) {
+      return new Response(JSON.stringify({
+        Response:"True", imdbID:"tt14688458", imdbRating:"7.9",
+      }), {headers:{"content-type":"application/json"}});
+    }
+    return new Response(JSON.stringify({
+      id:123, vote_average:8.4, vote_count:20,
+      external_ids:{imdb_id:"tt14688458"},
+    }), {headers:{"content-type":"application/json"}});
+  };
+  const request = new Request(
+    "https://example.workers.dev/v1/movie/123?append_to_response=external_ids"
+  );
+  const before = await gateway.fetch(request, env, ctx);
+  assert.equal((await before.json()).ea_fb_ratings, undefined);
+  env.OMDB_API_KEY = "SECRET_ONLY_FOR_SERVER";
+  const after = await gateway.fetch(request, env, ctx);
+  assert.equal((await after.json()).ea_fb_ratings.imdb, 7.9);
+  assert.equal(calls.length, 3); // TMDb without key; TMDb + OMDb with key.
+  const cached = await gateway.fetch(request, env, ctx);
+  assert.equal((await cached.json()).ea_fb_ratings.imdb, 7.9);
+  assert.equal(calls.length, 3);
+});
