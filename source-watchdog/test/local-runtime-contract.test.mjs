@@ -66,6 +66,9 @@ test("Wrangler success must be structured and contain exactly one real stats row
     JSON.stringify([{success:false,results:[{n:30}]}]),
     JSON.stringify([{success:true,results:[]}]),
     JSON.stringify([{success:true,results:[{n:30},{n:31}]}]),
+    JSON.stringify([{success:false,results:[]},{success:true,results:[{n:30}]}]),
+    JSON.stringify([{success:true,results:[{n:30}]},{success:false,results:[]}]),
+    JSON.stringify([{success:true,results:[{n:30}]},{success:true,results:[{n:30}]}]),
   ])assert.throws(()=>parseLocalD1Rows(output),Error);
 });
 
