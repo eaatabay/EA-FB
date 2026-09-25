@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { registerSource, getSource } from "../src/registry.mjs";
-import { runDueChecks, runIncidentCheck } from "../src/runner.mjs";
+import { runDueChecks, runIncidentCheck, runOneSourceCheck } from "../src/runner.mjs";
 import { HEALTH } from "../src/policy.mjs";
 
 let DatabaseSync;
@@ -137,4 +137,32 @@ test("two overlapping Cron ticks probe one source only once", {skip: !DatabaseSy
     const third=await runDueChecks({db,adapters,now:0});
     assert.deepEqual(third,[]);
   } finally { db.close(); }
+});
+
+test("timeout wins even when abort listener immediately returns a fake healthy probe",
+  {skip: !DatabaseSync}, async()=>{
+  const db=new SQLiteD1();
+  try {
+    await registerSource(db,source("fixture-timeout"),"admin:alice",0);
+    let aborted=false;
+    const adapters=new Map([["fixture-timeout",{
+      id:"fixture-timeout",
+      async probe({signal}) {
+        return new Promise(resolve=>{
+          signal.addEventListener("abort",()=>{
+            aborted=true;
+            resolve(good());
+          },{once:true});
+        });
+      },
+    }]]);
+    const result=await runOneSourceCheck({
+      db,adapters,sourceId:"fixture-timeout",now:0,
+      runId:"probe-timeout-00001",timeoutMs:500,
+    });
+    assert.equal(result.status,"runner_error");
+    assert.equal(result.error,"probe_timeout");
+    assert.equal(aborted,true);
+    assert.equal((await getSource(db,"fixture-timeout")).revision,0);
+  }finally{db.close();}
 });
