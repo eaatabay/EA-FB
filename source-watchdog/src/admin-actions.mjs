@@ -27,7 +27,11 @@ export function adminWritesConfigured(env) {
     env?.WATCHDOG_FIXTURE_ENABLED !== "true" &&
     typeof env?.WATCHDOG_ADMIN_ORIGIN === "string" &&
     ORIGIN.test(env.WATCHDOG_ADMIN_ORIGIN) &&
-    new URL(env.WATCHDOG_ADMIN_ORIGIN).hostname !== "localhost";
+    !new URL(env.WATCHDOG_ADMIN_ORIGIN).hostname.endsWith(".localhost") &&
+    !new URL(env.WATCHDOG_ADMIN_ORIGIN).hostname.endsWith(".local") &&
+    !new URL(env.WATCHDOG_ADMIN_ORIGIN).hostname.endsWith(".internal") &&
+    !new URL(env.WATCHDOG_ADMIN_ORIGIN).hostname.endsWith(".invalid") &&
+    !/^\d+(?:\.\d+){3}$/.test(new URL(env.WATCHDOG_ADMIN_ORIGIN).hostname);
 }
 
 /** Extra/ambiguous keys are rejected, not silently ignored. */
@@ -57,7 +61,10 @@ async function boundedJSON(request) {
         throw new AdminMutationError("invalid_admin_body");
       }
       size += value.byteLength;
-      if (size > MAX_BYTES) throw new AdminMutationError("admin_body_too_large", 413);
+      if (size > MAX_BYTES) {
+        await reader.cancel();
+        throw new AdminMutationError("admin_body_too_large", 413);
+      }
       chunks.push(value);
     }
   } finally {
