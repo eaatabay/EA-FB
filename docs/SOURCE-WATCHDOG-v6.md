@@ -178,11 +178,14 @@ catalog Worker remain unchanged.
   contract as the Worker and rejects invalid signatures, forged URLs, unknown
   signing keys, stale revisions, duplicate IDs, expired payloads and
   unsupported adapter versions. It checks time again before every new search.
-- Android \`WatchdogSnapshotJson.kt\` strictly parses the incoming untrusted
-  JSON, enforcing exact schema, integer types, 32 KiB size limit and bounded
-  source count. \`WatchdogClientStore.kt\` persists the accepted revision and
-  generation timestamp with a synchronous SharedPreferences commit; failed
-  persistence rejects the result.
+- Android \`WatchdogSnapshotJson.kt\` strictly parses untrusted JSON with an
+  exact schema and 32 KiB cap. \`WatchdogClientStore.kt\` now commits the
+  ORIGINAL signed envelope and both replay counters in one synchronous
+  SharedPreferences edit. Durable storage failure rejects the response.
+  \`SourceSnapshotOfflinePolicy.kt\` re-verifies a stored envelope's
+  Ed25519 signature, exact persisted revision/generation, expiry and
+  installed adapter versions on EVERY offline restore. Expired or tampered
+  bytes never rejoin new searches; durable replay guards remain intact.
 - \`SourceSnapshotGate.kt\` only configures installed, exactly version-matching
   adapters for NEW searches. It never downloads code or interrupts a stream
   already playing. With no verified snapshot it returns zero adapters.
@@ -200,6 +203,20 @@ catalog Worker remain unchanged.
   vector. The Android parser and storage code passed a Kotlin syntax/type
   compile against local Android/JSON *stubs*; actual Android Gradle/Dex
   packaging and Mi Box remote navigation/playback remain UNVERIFIED.
+
+## Signed offline snapshot cache (26 September; CODED, NOT RELEASED)
+- Offline reuse requires exact persisted replay markers AND a fresh cryptographic
+  verification of the original signed bytes with app-pinned Ed25519 keys.
+  A once-valid but expired or tampered cache returns no sources. Only installed
+  adapters matching the signed version are eligible; no dynamic code download.
+- Two exact GitHub Kotlin source files plus all JVM-only test/stub files
+  matched their local copies by Git blob SHA. Kotlin 1.9 / BC 1.80 tests:
+  **14/14** pure cache policy and **16/16** atomic Android store checks PASSED.
+  Android-store tests used minimal Context and JSON-parser TEST STUBS.
+  \`scripts/test-core.sh\` now runs both suites and passed \`bash -n\`.
+- REAL Android SharedPreferences, Gradle/Dex, actual Mi Box restart/network
+  polling, production signing-key pinning and Worker integration are UNTESTED.
+  The checked-in key/adapter maps and all Cloudflare runtime flags remain OFF.
 
 ## Signed read-only Worker endpoint (STAGED, DISABLED, NOT DEPLOYED)
 - GET /v1/sources is implemented behind four independent safeguards:
