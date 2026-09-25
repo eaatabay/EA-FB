@@ -80,3 +80,22 @@ test('signature from unpinned key cannot silently activate any source',async()=>
   const env=await signSnapshot(base(),privateKey,'unknown-key',now);
   assert.equal((await verify(env,publicKey)).reason,'unknown_signing_key');
 });
+
+
+test('same registry revision refresh needs a newer signed generation time',async()=>{
+  const {privateKey,publicKey}=await keypair();
+  const fresh=base();
+  fresh.generatedAt=now+120000;
+  fresh.expiresAt=now+1020000;
+  const envelope=await signSnapshot(fresh,privateKey,'eafb-2026',now+120000);
+  const valid=await verify(envelope,publicKey,
+    {now:now+120000,lastRevision:42,lastGeneratedAt:now});
+  assert.equal(valid.ok,true);
+  assert.equal(valid.generatedAt,now+120000);
+  const replay=await verify(envelope,publicKey,
+    {now:now+120000,lastRevision:42,lastGeneratedAt:now+120000});
+  assert.equal(replay.reason,'stale_revision');
+  const noTimestamp=await verify(envelope,publicKey,
+    {now:now+120000,lastRevision:42});
+  assert.equal(noTimestamp.reason,'stale_revision');
+});
