@@ -94,3 +94,31 @@ test("rate limit rejects without TMDb fetch", async () => {
   assert.equal(res.status, 429);
   assert.equal(calls.length, 0);
 });
+
+test("normalizes a stored Bearer prefix without exposing the secret", async () => {
+  const {env,ctx,calls}=setup();
+  env.TMDB_READ_ACCESS_TOKEN="  Bearer VALID_TEST_VALUE \n";
+  const res=await gateway.fetch(new Request("https://example.workers.dev/v1/movie/123"),env,ctx);
+  assert.equal(res.status,200);
+  assert.equal(calls[0].opts.headers.authorization,"Bearer VALID_TEST_VALUE");
+  assert.ok(!(await res.text()).includes("VALID_TEST_VALUE"));
+});
+
+test("distinguishes TMDb authorization failure without exposing upstream body", async () => {
+  const {env,ctx,calls}=setup();
+  globalThis.fetch=async (url, opts) => {
+    calls.push({url,opts});
+    return new Response(JSON.stringify({status_message:"DO_NOT_LEAK_SECRET_OR_ACCOUNT_DATA"}),{status:401,headers:{"content-type":"application/json"}});
+  };
+  const res=await gateway.fetch(new Request("https://example.workers.dev/v1/movie/123"),env,ctx);
+  assert.equal(res.status,502);
+  assert.deepEqual(await res.json(),{error:"tmdb_unauthorized"});
+});
+
+test("distinguishes TMDb network failure without leaking exception details", async () => {
+  const {env,ctx}=setup();
+  globalThis.fetch=async () => {throw new Error("PRIVATE_UNTRUSTED_NETWORK_DETAIL");};
+  const res=await gateway.fetch(new Request("https://example.workers.dev/v1/search/multi?query=Silo"),env,ctx);
+  assert.equal(res.status,502);
+  assert.deepEqual(await res.json(),{error:"tmdb_connection_error"});
+});

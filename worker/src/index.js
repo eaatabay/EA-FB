@@ -143,24 +143,32 @@ export default {
       if (cached) return cached;
     }
     const upstreamUrl = UPSTREAM + catalog.upstreamPath + "?" + catalog.params;
+    // Some dashboards copy an optional Bearer prefix. Never send Bearer Bearer.
+    const token = String(env.TMDB_READ_ACCESS_TOKEN).trim().replace(/^Bearer\s+/i, "").trim();
+    if (!token) return json({ error: "catalog_unconfigured" }, 503);
     let upstream;
     try {
       upstream = await fetch(upstreamUrl, {
         method: "GET",
         headers: {
-          authorization: "Bearer " + env.TMDB_READ_ACCESS_TOKEN,
+          authorization: "Bearer " + token,
           accept: "application/json",
         },
         redirect: "error",
         signal: AbortSignal.timeout(9000),
       });
-    } catch (_) {
-      return json({ error: "catalog_temporarily_unavailable" }, 502);
+    } catch (err) {
+      // Safe diagnostics: don't include upstream headers, secret, or error message.
+      const timeout = err?.name === "AbortError" || err?.name === "TimeoutError";
+      return json({ error: timeout ? "tmdb_timeout" : "tmdb_connection_error" }, 502);
     }
     if (!upstream.ok) {
-      // Never forward headers or upstream body: no tokens or account diagnostics.
-      return json({ error: upstream.status === 429 ? "catalog_rate_limited" : "catalog_upstream_error" },
-        upstream.status === 429 ? 429 : 502);
+      // Public, sanitized status only; upstream responses may include account details.
+      const code = upstream.status === 401 ? "tmdb_unauthorized" :
+        upstream.status === 403 ? "tmdb_forbidden" :
+        upstream.status === 429 ? "tmdb_rate_limited" :
+        "tmdb_upstream_error";
+      return json({ error: code }, upstream.status === 429 ? 429 : 502);
     }
     const contentType = upstream.headers.get("content-type") || "";
     if (!contentType.includes("application/json")) return json({ error: "invalid_catalog_response" }, 502);

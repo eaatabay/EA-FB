@@ -65,12 +65,30 @@ echo "Cloudflare catalog relay healthy."
 
 # A configured secret is not proof that TMDb accepted it. Check a real catalog request.
 echo "Checking an actual Turkish TMDb search through the relay..."
-if ! curl -fsS --max-time 20 "$endpoint/v1/search/multi?query=Silo&language=tr-TR" |
-  python3 -c 'import json,sys; data=json.load(sys.stdin); sys.exit(0 if isinstance(data.get("results"),list) and len(data["results"])>0 else 1)'; then
-  echo "TMDb lookup failed. Nothing will be published; check the secret and Worker logs." >&2
+smoke="$(mktemp)"
+trap 'rm -f "$log" "$smoke"' EXIT
+response_code="$(curl -sS --retry 2 --retry-all-errors --retry-delay 2 --max-time 20 -o "$smoke" -w '%{http_code}' "$endpoint/v1/search/multi?query=Silo&language=tr-TR" || true)"
+if [[ "$response_code" != 200 ]]; then
+  echo "Worker returned HTTP $response_code; safe error code follows:" >&2
+  python3 - "$smoke" <<'PY'
+import json,sys
+try:
+  d=json.load(open(sys.argv[1]))
+  error=d.get("error", "unknown_error")
+  print(error if isinstance(error,str) and len(error)<100 else "unknown_error")
+except (OSError,ValueError):
+  print("non_json_or_network_error")
+PY
+  echo "Public v5 was NOT published; Codespaces secret and GitHub files remain private." >&2
   exit 2
 fi
-echo "Real TMDb search passed."
+python3 - "$smoke" <<'PY'
+import json,sys
+d=json.load(open(sys.argv[1]))
+if not isinstance(d.get("results"), list) or not d["results"]:
+  raise SystemExit("Real TMDb search returned no catalog rows: public v5 NOT published.")
+print("Real TMDb search passed.")
+PY
 
 echo "Step 4/5: Save only public relay URL to GitHub..."
 export EA_FB_PUBLIC_ENDPOINT="$endpoint"
