@@ -134,7 +134,8 @@ PERMITS="EA-FB/src/main/kotlin/com/eafb/ReviewedSourcePermitPolicy.kt"
 ENGINE="EA-FB/src/main/kotlin/com/eafb/SourceEngine.kt"
 kotlinc -cp "$BC_JAR:$COROUTINES" "$DOMAIN" "$ENGINE" "$TRUST" "$GATE" "$SELECTION" core-tests/WatchdogAdapterSelectionTest.kt -include-runtime -d "$TMP/watchdog-selection.jar"
 java -cp "$TMP/watchdog-selection.jar:$BC_JAR:$COROUTINES" com.eafb.WatchdogAdapterSelectionTestKt
-# Review metadata is only an explicit, compiled allowlist—not a rights grant.
+# Offline rights gate: signed data alone never grants host, path or media rights.
+# The test file covers expiry, evidence syntax, URL tricks and media narrowing.
 kotlinc -cp "$BC_JAR" "$TRUST" "$PERMITS" core-tests/ReviewedSourcePermitPolicyTest.kt -include-runtime -d "$TMP/watchdog-permits.jar"
 java -cp "$TMP/watchdog-permits.jar:$BC_JAR" com.eafb.ReviewedSourcePermitPolicyTestKt
 # The bridge test uses fake SharedPreferences and never opens an HTTPS socket.
