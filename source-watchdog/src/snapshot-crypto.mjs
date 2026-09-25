@@ -87,7 +87,7 @@ export async function signSnapshot(snapshot, privateKey, keyId, now) {
  * are excluded, never fetched or dynamically executed.
  */
 export async function verifySnapshot(envelope, publicKeys, {
-  now, lastRevision = -1, installedAdapters,
+  now, lastRevision = -1, lastGeneratedAt = -1, installedAdapters,
 } = {}) {
   const reject = reason => ({ok: false, reason});
   if (!ownKeys(envelope, ['envelopeVersion', 'algorithm', 'keyId', 'payload', 'signature']) ||
@@ -95,8 +95,13 @@ export async function verifySnapshot(envelope, publicKeys, {
       typeof envelope.keyId !== 'string' || !/^[a-zA-Z0-9_-]{3,48}$/.test(envelope.keyId) ||
       !(publicKeys instanceof Map) || !(installedAdapters instanceof Map) ||
       !Number.isSafeInteger(lastRevision) || lastRevision < -1 ||
+      !Number.isSafeInteger(lastGeneratedAt) || lastGeneratedAt < -1 ||
       !validSnapshot(envelope.payload, now)) return reject('invalid_envelope');
-  if (envelope.payload.revision <= lastRevision) return reject('stale_revision');
+  if (envelope.payload.revision < lastRevision ||
+      (envelope.payload.revision === lastRevision &&
+       (lastGeneratedAt < 0 || envelope.payload.generatedAt <= lastGeneratedAt))) {
+    return reject('stale_revision');
+  }
   const key = publicKeys.get(envelope.keyId);
   if (!key || key.algorithm?.name !== 'Ed25519' || key.type !== 'public' ||
       !key.usages.includes('verify')) return reject('unknown_signing_key');
@@ -111,5 +116,5 @@ export async function verifySnapshot(envelope, publicKeys, {
   const usableSources = envelope.payload.sources.filter(source =>
     installedAdapters.get(source.id) === source.adapterVersion);
   return {ok: true, revision: envelope.payload.revision,
-    expiresAt: envelope.payload.expiresAt, usableSources};
+    generatedAt: envelope.payload.generatedAt, expiresAt: envelope.payload.expiresAt, usableSources};
 }
