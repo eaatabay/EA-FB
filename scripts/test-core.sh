@@ -20,7 +20,7 @@ if ! command -v kotlinc >/dev/null 2>&1; then
     curl --fail --silent --show-error --location --retry 2 \
       "https://github.com/JetBrains/kotlin/releases/download/v$KOTLIN_VERSION/kotlin-compiler-$KOTLIN_VERSION.zip" \
       -o "$TMP/kotlin-compiler.zip"
-    printf '%s  %s\\n' \
+    printf '%s  %s\n' \
       "ba1b9e6eb6ddc3275079224f2e9ea4a2b02eef7d59ce2d38404f04b22613c20a" \
       "$TMP/kotlin-compiler.zip" | sha256sum -c -
     mkdir -p "$TMP/compiler-unpack"
