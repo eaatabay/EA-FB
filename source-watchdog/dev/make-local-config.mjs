@@ -47,6 +47,22 @@ export function makeLocalConfig(tracked) {
   return config;
 }
 
+function canonical(value) {
+  if (Array.isArray(value)) return "["+value.map(canonical).join(",")+"]";
+  if (value && typeof value==="object") return "{"+Object.keys(value).sort()
+    .map(key=>JSON.stringify(key)+":"+canonical(value[key])).join(",")+"}";
+  return JSON.stringify(value);
+}
+
+/** A stale/edited local config cannot inject routes, real IDs or extra secrets. */
+export function verifyLocalConfig(tracked, local) {
+  const expected = makeLocalConfig(tracked);
+  if (canonical(local) !== canonical(expected)) {
+    throw new Error("unsafe_local_configuration");
+  }
+  return true;
+}
+
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const tracked=JSON.parse(readFileSync(new URL("../wrangler.jsonc",import.meta.url),"utf8"));
   const local=makeLocalConfig(tracked);
