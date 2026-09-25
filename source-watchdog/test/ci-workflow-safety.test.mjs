@@ -29,6 +29,6 @@ test("CI invokes only local D1 release gate; no Cloudflare credentials or deploy
   assert.match(workflow,/WRANGLER_SEND_METRICS: "false"/);
   assert.doesNotMatch(workflow,/\$\{\{\s*secrets\./);
   const commands=workflow.split("\n        run: |").slice(1).join("\n");
-  assert.doesNotMatch(commands,/\b(?:wrangler\s+deploy|wrangler\s+d1\s+create|--remote)\b/);
+  assert.doesNotMatch(commands,/(?:\bwrangler\s+(?:deploy|d1\s+create)\b|--remote\b)/);
   assert.match(workflow,/source-watchdog\/wrangler\.jsonc/);
 });
