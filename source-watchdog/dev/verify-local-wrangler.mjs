@@ -10,6 +10,9 @@ import {join, resolve} from "node:path";
 import {fileURLToPath} from "node:url";
 import {createServer} from "node:net";
 import {verifyLocalConfig} from "./make-local-config.mjs";
+import {
+  validateLocalWranglerArgs,parseLocalD1Rows,validateFixtureCounters,
+} from "./local-runtime-contract.mjs";
 
 const root = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const bin = resolve(root, "node_modules/.bin/wrangler");
@@ -52,27 +55,12 @@ function assertSafeLocalConfig() {
   }
 }
 function wrangler(args, timeout=75_000) {
-  if (args.includes("--remote") || args.includes("deploy") ||
-      !args.includes("--local") || !args.includes("--config") ||
-      !args.includes("wrangler.local.jsonc")) {
-    throw new Error("remote_or_unscoped_wrangler_command_refused");
-  }
+  validateLocalWranglerArgs(args,persistDir);
   return execFileSync(bin, args, {
     cwd:root, env:quietEnv, timeout,
     encoding:"utf8",maxBuffer:1024*1024,
     stdio:["ignore","pipe","pipe"],
   });
-}
-function resultRows(raw) {
-  // Wrangler --json returns a structured result; do not accept shell text
-  // containing a coincidental success-looking word.
-  const data = JSON.parse(raw);
-  const sets = Array.isArray(data) ? data : [data];
-  const first = sets.find(x => Array.isArray(x?.results));
-  if (!first?.success || !first.results.length) {
-    throw new Error("wrangler_json_result_missing");
-  }
-  return first.results;
 }
 function readStats() {
   const sql = [
@@ -82,7 +70,7 @@ function readStats() {
     "SUM(CASE WHEN json_extract(config_json,'$.currentUrl')='https://moved.example.org' THEN 1 ELSE 0 END) moves",
     "FROM source_registry",
   ].join(" ");
-  const rows = resultRows(wrangler(["d1","execute",name,"--local",
+  const rows = parseLocalD1Rows(wrangler(["d1","execute",name,"--local",
     "--config","wrangler.local.jsonc","--persist-to",persistDir,
     "--command",sql,"--json"]));
   const countRows = resultRows(wrangler(["d1","execute",name,"--local",
@@ -150,10 +138,7 @@ try {
   wrangler(["d1","execute",name,"--local","--config","wrangler.local.jsonc",
     "--persist-to",persistDir,"--file",seedPath]);
   const before=readStats();
-  if(before.total!==30 || before.healthy!==0 || before.runs!==0 ||
-     before.audits!==30 || before.revision!==30) {
-    throw new Error("fixture_seed_disagrees_"+JSON.stringify(before));
-  }
+  validateFixtureCounters("initial",before);
   steps++;
   const port=await unusedPort(),base="http://127.0.0.1:"+port;
   worker=spawn(bin,["dev","--local","--test-scheduled","--config",
@@ -169,17 +154,10 @@ try {
   await waitUntilReady(base);
   for(let tick=0;tick<8;tick++) await runTick(base,tick*QUARTER);
   const after=readStats();
-  if(after.total!==30 || after.healthy!==29 || after.admin_hold!==1 ||
-     after.moves!==2 || after.runs!==59 || after.audits!==89 ||
-     after.revision!==89 || after.leases!==0) {
-    throw new Error("unexpected_fixture_reconciliation_"+JSON.stringify(after));
-  }
+  validateFixtureCounters("final",after);
   await runTick(base,7*QUARTER); // Duplicate scheduled-time replay
   const duplicate=readStats();
-  if(duplicate.revision!==after.revision || duplicate.runs!==after.runs ||
-     duplicate.audits!==after.audits || duplicate.leases!==0) {
-    throw new Error("fixture_replay_changed_state_"+JSON.stringify(duplicate));
-  }
+  validateFixtureCounters("replay",duplicate,after);
   completed=true;
   console.log("PASS LOCAL Wrangler+D1: "+JSON.stringify({
     sources:after.total,healthy:after.healthy,adminHeld:after.admin_hold,
