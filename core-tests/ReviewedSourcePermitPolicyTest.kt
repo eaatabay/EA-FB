@@ -185,5 +185,18 @@ fun main() {
         series,both)).isEmpty(), "external evidence URL cannot substitute reviewed record")
     test(only(list=listOf(movie.copy(id="fixture-movie",approvedHosts=emptySet()),
         series,both)).isEmpty(), "empty approved host set invalidates permit registry")
+    test(only(list=listOf(movie.copy(
+        evidenceReference="rights/2026//fixture-movie.md"),series,both)).isEmpty(),
+        "empty evidence path segment cannot alias a reviewed record")
+    test(only(list=listOf(movie.copy(
+        evidenceReference="rights/2026/./fixture-movie.md"),series,both)).isEmpty(),
+        "current-directory evidence segment cannot alias a reviewed record")
+    test(only(list=listOf(movie.copy(
+        evidenceReference="rights/2026/fixture-movie.md/"),series,both)).isEmpty(),
+        "trailing slash cannot alias a reviewed record")
+    test(only(list=listOf(movie.copy(
+        evidenceReference="rights/2026/fixture-movie.md"),series,both))
+        .any { it.id=="fixture-movie" },
+        "canonical reviewed evidence path remains valid")
     println("PASS: $passed/$passed reviewed source permit policy cases")
 }
