@@ -24,3 +24,5 @@ Codespaces'te hâlihazırda TMDB_READ_ACCESS_TOKEN tanımlı. Bir Cloudflare hes
 **TMDb attribution:** This product uses the TMDB API but is not endorsed or certified by TMDB. JustWatch kaynaklı platform verileri ayrıca ilgili atıf koşullarına tabidir.
 
 Eski v3/v4 ayrıntılı plan ve kararlar: docs/ARCHIVE-2026-09-25.md.
+For later releases after the Worker is installed, bump `EA-FB/build.gradle.kts` and run `bash scripts/publish-update.sh` in Codespaces. This checks Worker health, forces a clean keyless build and publishes the existing repo manifest. It needs no new Cloudflare login or TMDb secret transfer. CloudStream discovers the new version when its extension list is refreshed.
+
