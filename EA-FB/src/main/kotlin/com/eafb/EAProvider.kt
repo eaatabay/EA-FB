@@ -58,11 +58,14 @@ class EAProvider : MainAPI() {
     private val livePrefix = "$mainUrl/ea-fb-live/"
     private val channelsUrl = "https://raw.githubusercontent.com/eaatabay/EA-FB/main/config/channels.json"
     private val categories = HomeCategories.all.filter { it.tmdbPath != null }
-    override val mainPage = mainPageOf(
-        "ea-fb-open" to "Açık Lisanslı Deneme Filmi",
-        "ea-fb-live" to "Canlı TV",
-        *categories.map { it.id to it.title }.toTypedArray()
-    )
+    // Reflect locally stored category switches when CloudStream reopens EA-FB.
+    override val mainPage
+        get() = mainPageOf(
+            "ea-fb-open" to "Açık Lisanslı Deneme Filmi",
+            "ea-fb-live" to "Canlı TV",
+            *categories.filter { EASettings.categoryEnabled(it.id) }
+                .map { it.id to it.title }.toTypedArray()
+        )
 
     private fun demoMovie(): SearchResponse = newMovieSearchResponse(
         "Big Buck Bunny (Deneme)", openMovieUrl, TvType.Movie
@@ -175,9 +178,16 @@ class EAProvider : MainAPI() {
         }
         val category = categories.firstOrNull { it.id == request.data }
             ?: return newHomePageResponse(emptyList(), false)
-        val response = getJson(
-            category.tmdbPath ?: return newHomePageResponse(emptyList(), false), page
-        ) ?: return newHomePageResponse(emptyList(), false)
+        if (!EASettings.categoryEnabled(category.id)) {
+            return newHomePageResponse(emptyList(), false)
+        }
+        val route = CatalogSortPolicy.route(
+            category.tmdbPath ?: return newHomePageResponse(emptyList(), false),
+            category.kind,
+            EASettings.sortMode()
+        )
+        val response = getJson(route, page)
+            ?: return newHomePageResponse(emptyList(), false)
         val raw = response.optJSONArray("results")
             ?: return newHomePageResponse(emptyList(), false)
         // TMDb occasionally returns titles without poster art. On TV these
@@ -436,10 +446,8 @@ class EAProvider : MainAPI() {
             imdbRating?.let { "IMDb " + scoreText(it) + "/10" },
             tmdbRating?.let { "TMDb " + scoreText(it) + "/10" }
         )
-        // Stock CloudStream TV hero exposes one native numeric score plus up
-        // to six text chips. Put independently sourced IMDb and TMDb chips
-        // first so both can be visible without modifying the CloudStream app.
-        val ratingLine = ratingBadges.joinToString("    |    ")
+        // CloudStream's unlabeled native hero score duplicates these source-labeled
+        // chips, so details deliberately show the chips only (no native score).
         val (collectionLabel, collectionCards) = if (!isSeries) {
             collectionMovies(item, tmdbId)
         } else Pair<String?, List<SearchResponse>>(null, emptyList())
@@ -454,9 +462,14 @@ class EAProvider : MainAPI() {
             "Sonraki bölüm" + (if (number.isNotEmpty()) " ($number)" else "") +
                 ": " + nextAir.dateLabel
         } else null
+        // Put a distant premiere date before the plot where it cannot be lost
+        // beneath long descriptions; native nextAiring handles near-term dates.
+        // Film collection text is a short cue, never a long duplicate title list.
+        val seriesNote = if (collectionCards.size >= 2)
+            "Seri: " + collectionCards.size + " film; vizyon sırasıyla Önerilenler'in başında."
+        else null
         val combinedPlot = listOfNotNull(
-            ratingLine.takeIf { it.isNotBlank() }, overview, director,
-            upcomingLabel, collectionLabel
+            upcomingLabel, overview, director, seriesNote
         ).joinToString("\n\n")
         val recs = recommendations(item, media, tmdbId)
         // The stock CloudStream LoadResponse exposes one recommendation rail,
@@ -468,9 +481,7 @@ class EAProvider : MainAPI() {
             newTvSeriesLoadResponse(title, url, kind, episodes) {
                 plot = combinedPlot
                 year = yearValue
-                // Native CloudStream supports one score beside the year.
-                // Show IMDb there when independently available; otherwise TMDb.
-                score = (imdbRating ?: tmdbRating)?.let { Score.from10(it) }
+                // IMDb/TMDb appear exactly once in explicit tags.
                 posterUrl = poster
                 backgroundPosterUrl = backdrop
                 actors = people
@@ -489,9 +500,7 @@ class EAProvider : MainAPI() {
             newMovieLoadResponse(title, url, kind, "") {
                 plot = combinedPlot
                 year = yearValue
-                // Native CloudStream supports one score beside the year.
-                // Show IMDb there when independently available; otherwise TMDb.
-                score = (imdbRating ?: tmdbRating)?.let { Score.from10(it) }
+                // IMDb/TMDb appear exactly once in explicit tags.
                 posterUrl = poster
                 backgroundPosterUrl = backdrop
                 actors = people
