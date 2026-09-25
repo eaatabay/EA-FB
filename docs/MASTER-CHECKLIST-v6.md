@@ -61,6 +61,10 @@
 - [x] Imzali snapshot ayni revision/daha yeni generatedAt TTL yenileme uyumu ve tam schema validation; izole V8 gercek GitHub kaynak/test koduyla 7/7.
 - [ ] Degisiklikleri tam Node22 test paketi ve Android/Cloudflare entegrasyonunda tekrar dogrulama.
 - [ ] Gercek public key'in Android eklenti surumune pinlenmesi.
+- [x] 26.09: Imzali JSON ve revision/generatedAt tek atomic commit ile cihazda saklama; bozulan/expired cache offline fail-closed.
+- [x] Kotlin JVM ayni GitHub kaynagi ile 14/14 offline cache politikasi + 16/16 Android store (Context/JSON test stubs) basarili.
+- [x] Iki yeni cache test paketi scripts/test-core.sh icine eklendi; bash -n gecti.
+- [ ] Gercek Android SharedPreferences, uygulama kapanip acilma ve Mi Box offline TTL testi.
 - [ ] Guvenli client yenileme agi, API endpoint baglantisi ve offline TTL.
 - [ ] Kotlin/Gradle/Dex/.cs3 ve Mi Box uctan uca testi.
 
@@ -88,5 +92,5 @@
 - [ ] Production v5 veya main'e gecis yalniz ayri onayla.
 
 ## Sonraki en yakin is
-Node 22 testleri + yerel Wrangler D1 smoke; ardindan ilgili kaynaklar icin
-hak/izin ve endpoint bilgileriyle ilk gercek adaptor, daha sonra MFA'li admin pilotu.
+Actions kotasi sifirken Android cache/yerel testleri gelistir. Sonra tam Node 22
+ve izole yerel Wrangler D1; izinli kaynak adaptorleri ve MFA'li admin pilotu.
