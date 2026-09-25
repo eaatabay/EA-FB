@@ -6,6 +6,8 @@
  */
 import { getPrivateRegistry, buildUnpublishedSnapshot } from "./registry.mjs";
 import { publishSignedSnapshot } from "./snapshot-publisher.mjs";
+import { adminAccessConfigured, verifyAdminAccess } from "./admin-auth.mjs";
+import { summarizeSources, renderAdminDashboard } from "./admin-view.mjs";
 import { runDueChecks } from "./runner.mjs";
 import { assertIsolatedFixtureRegistry, createFixtureAdapters } from "./fixtures.mjs";
 
@@ -42,6 +44,9 @@ export function createWatchdogWorker({
   logger = console,
   readSnapshot = buildUnpublishedSnapshot,
   signSnapshot = publishSignedSnapshot,
+  verifyAdmin = verifyAdminAccess,
+  makeAdminOverview = summarizeSources,
+  renderAdmin = renderAdminDashboard,
   nowMillis = Date.now,
 } = {}) {
   async function runScheduledFixture(controller, env) {
@@ -81,6 +86,32 @@ export function createWatchdogWorker({
       if (request.method !== "GET") return response({error:"method_not_allowed"},405);
       if (url.pathname === "/health") {
         return response({service:"EA-FB Source Watchdog",status:"configured_offline"});
+      }
+      if (url.pathname === "/admin") {
+        // Cloudflare Access-signed identity is checked even if a fronting
+        // Access policy was misconfigured. OFF by default in tracked config.
+        if (!adminAccessConfigured(env)) return response({error:"not_found"},404);
+        const email = await verifyAdmin(request, env);
+        if (!email) return response({error:"forbidden"},403);
+        if (!env.SOURCES_DB?.prepare) {
+          return response({error:"admin_unavailable"},503);
+        }
+        try {
+          const records = await readRegistry(env.SOURCES_DB);
+          const html = renderAdmin(makeAdminOverview(records,nowMillis()));
+          return new Response(html,{status:200,headers:{
+            "content-type":"text/html; charset=utf-8",
+            "cache-control":"no-store",
+            "x-content-type-options":"nosniff",
+            "x-frame-options":"DENY",
+            "referrer-policy":"no-referrer",
+            "content-security-policy":"default-src 'none'; style-src 'unsafe-inline'; " +
+              "frame-ancestors 'none'; base-uri 'none'; form-action 'none'",
+          }});
+        } catch (_) {
+          logger.warn?.("WATCHDOG_ADMIN_READ_FAILED");
+          return response({error:"admin_unavailable"},503);
+        }
       }
       if (url.pathname !== "/v1/sources" || !snapshotModeEnabled(env)) {
         return response({error:"not_found"},404);
