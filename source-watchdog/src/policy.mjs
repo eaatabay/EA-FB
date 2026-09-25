@@ -60,7 +60,7 @@ export function validateSource(source) {
   if (!Array.isArray(checks) || !checks.includes("search") || !checks.includes("detail") ||
       checks.some(x => !["reachability", "search", "detail", "episode", "playback"].includes(x)) ||
       new Set(checks).size !== checks.length) throw new Error("invalid_required_checks");
-  if (source.mediaKind === "series" && !checks.includes("episode")) {
+  if (["series", "both"].includes(source.mediaKind) && !checks.includes("episode")) {
     throw new Error("series_episode_check_required");
   }
   if (!["movie", "series", "both"].includes(source.mediaKind)) {
