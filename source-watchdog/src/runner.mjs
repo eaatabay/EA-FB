@@ -41,7 +41,9 @@ function safeRunId(sourceId, now, ordinal) {
 /**
  * Each source owns a persisted lease before probing. Revalidate eligibility
  * after acquisition and enforce the unexpired lease in the commit's DB CAS.
- * Network adapters MUST honor signal and their approved host allowlist.
+ * Future network adapters MUST honor signal, run network-boundary preflight
+ * on EVERY redirect hop, and pin/check the actual remote IP to prevent DNS
+ * rebinding. No live transport is attached to this runner in v6 yet.
  */
 export async function runOneSourceCheck({
   db, adapters, sourceId, now, runId, timeoutMs = 12000,
