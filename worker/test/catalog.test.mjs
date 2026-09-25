@@ -120,7 +120,7 @@ test("distinguishes TMDb network failure without leaking exception details", asy
   globalThis.fetch=async () => {throw new Error("PRIVATE_UNTRUSTED_NETWORK_DETAIL");};
   const res=await gateway.fetch(new Request("https://example.workers.dev/v1/search/multi?query=Silo"),env,ctx);
   assert.equal(res.status,502);
-  assert.deepEqual(await res.json(),{error:"tmdb_connection_error"});
+  assert.deepEqual(await res.json(),{error:"tmdb_connection_error",reason:"outbound_network"});
 });
 
 test("never forwards the token to redirects and avoids runtime-dependent timeout APIs", async () => {
