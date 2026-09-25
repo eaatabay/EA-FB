@@ -46,7 +46,11 @@
 - [ ] Tum Node/Workers/D1 test paketini gercek v6 checkout'unda kosma.
 - [ ] Kullanici tarafinda Cloudflare Access + MFA uygulamasi olusturma.
 - [ ] Basarili yerel test sonrasinda admin kimligi ve AUD onayi.
-- [ ] Audit'li admin yazma/onay/rollback akisi (su an KAPALI/yok).
+- [x] Salt kod: admin disable/enable/retest/rollback endpointleri Access+origin+CAS ile hazirlandi.
+- [x] Admin yazma bayragi ayri ve varsayilan OFF; yeni domain/onay endpoint'i YOK.
+- [x] V8 test doubles: admin policy 12/12, Worker route 10/10; tam Node degil.
+- [ ] Admin yazma Node/SQLite test dosyasini gercek checkout'ta tam calistirma.
+- [ ] Audit'li admin izin/onay is akisi + panelde duzenleme butonlari (HENUZ YOK).
 - [ ] Telegram kritik alarm ve gunluk rapor (onayli hedef gerekli).
 
 ## Yayina cikmadan once
