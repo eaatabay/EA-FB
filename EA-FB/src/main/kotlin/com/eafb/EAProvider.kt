@@ -154,6 +154,10 @@ class EAProvider : MainAPI() {
         return newMovieSearchResponse(title, "$mainUrl/$path/$id", if (kind == MediaKind.SERIES) TvType.TvSeries else TvType.Movie) {
             posterUrl = poster?.let { "https://image.tmdb.org/t/p/w500$it" }
             year = mediaYear(item, kind)
+            // CloudStream renders one score badge per small poster when the
+            // viewer has enabled "Show ratings" in their app preferences.
+            // TMDb list results contain TMDb scores; no IMDb score is invented.
+            score = ratingValue(item)?.let { Score.from10(it) }
         }
     }
 
@@ -417,10 +421,14 @@ class EAProvider : MainAPI() {
         val people = cast(item, isSeries)
         val director = creators(item, isSeries)
         val (imdbRating, tmdbRating) = titleRatings(item)
-        val ratingLine = listOfNotNull(
+        val ratingBadges = listOfNotNull(
             imdbRating?.let { "IMDb " + scoreText(it) + "/10" },
             tmdbRating?.let { "TMDb " + scoreText(it) + "/10" }
-        ).joinToString("    |    ")
+        )
+        // Stock CloudStream TV hero exposes one native numeric score plus up
+        // to six text chips. Put independently sourced IMDb and TMDb chips
+        // first so both can be visible without modifying the CloudStream app.
+        val ratingLine = ratingBadges.joinToString("    |    ")
         val (collectionLabel, collectionCards) = if (!isSeries) {
             collectionMovies(item, tmdbId)
         } else Pair<String?, List<SearchResponse>>(null, emptyList())
@@ -443,7 +451,7 @@ class EAProvider : MainAPI() {
                 posterUrl = poster
                 backgroundPosterUrl = backdrop
                 actors = people
-                tags = genres(item)
+                tags = ratingBadges + genres(item)
                 recommendations = recs
                 nextAiring = nextEpisode(item)
                 showStatus = when (item.optString("status")) {
@@ -464,7 +472,7 @@ class EAProvider : MainAPI() {
                 posterUrl = poster
                 backgroundPosterUrl = backdrop
                 actors = people
-                tags = genres(item)
+                tags = ratingBadges + genres(item)
                 recommendations = movieRelated
                 duration = item.optInt("runtime").takeIf { it > 0 }
             }
