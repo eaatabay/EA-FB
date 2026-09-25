@@ -70,6 +70,15 @@ test("a returning source joins searches only after two successful checks", () =>
   assert.equal(state.nextCheckAt, 8*HOUR);
   assert.deepEqual(searchableSourceIds([state]), [source.id]);
 });
+test("healthy source stays healthy across subsequent checks", () => {
+  let state = initialState(source, 0);
+  state = applyProbe(source, state, good(), HOUR);
+  state = applyProbe(source, state, good(), 2 * HOUR);
+  state = applyProbe(source, state, good(), 8 * HOUR);
+  assert.equal(state.status, HEALTH.HEALTHY);
+  assert.equal(state.nextCheckAt, 14 * HOUR);
+});
+
 test("a verified domain move needs two consistent successful probes", () => {
   let state = initialState(source, 0);
   state = applyProbe(source,state,good("https://new.example.org"),HOUR);
