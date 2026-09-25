@@ -75,7 +75,10 @@ import json,sys
 try:
   d=json.load(open(sys.argv[1]))
   error=d.get("error", "unknown_error")
-  print(error if isinstance(error,str) and len(error)<100 else "unknown_error")
+  reason=d.get("reason", "")
+  safe=lambda v: v if isinstance(v,str) and len(v)<80 and all(ch.islower() or ch.isdigit() or ch=="_" for ch in v) else ""
+  print("Worker error:", safe(error) or "unknown_error")
+  if reason: print("Connection diagnostic:", safe(reason) or "unknown_reason")
 except (OSError,ValueError):
   print("non_json_or_network_error")
 PY
