@@ -24,3 +24,11 @@ test("signed snapshot core tests and gate run exactly once",()=>{
   assert.equal(count("com.eafb.SourceSnapshotGateTestKt"),1);
   assert.equal(count("org/bouncycastle/crypto/signers/Ed25519Signer.class"),1);
 });
+
+test("v6 candidate build is blocked until actual local workerd+D1 smoke runs",()=>{
+  const script=readFileSync(resolve(root,"scripts/verify-v6.sh"),"utf8");
+  const local=script.indexOf("npm run test:wrangler-local");
+  const build=script.indexOf("bash scripts/build-codespace.sh");
+  assert.ok(local>=0 && build>local,"Local D1 gate must precede v6 build");
+  assert.match(script,/if \[ ! -x source-watchdog\/node_modules\/\.bin\/wrangler \]/);
+});
