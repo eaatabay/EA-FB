@@ -119,7 +119,8 @@ export async function executeAdminMutation(db, action, verifiedEmail, now) {
   if (!db?.prepare || !Number.isSafeInteger(now) || now < 0) {
     throw new AdminMutationError("admin_unavailable", 503);
   }
-  const {sourceId, expectedRevision} = validateAdminMutation(action?.sourceId, action);
+  const {sourceId, expectedRevision} = validateAdminMutation(action?.sourceId,
+    {action: action?.action, expectedRevision: action?.expectedRevision});
   const actor = await actorForVerifiedEmail(verifiedEmail);
   let result;
   switch (action.action) {
