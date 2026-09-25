@@ -345,6 +345,23 @@ catalog Worker remain unchanged.
 - All production Cloudflare switches remain OFF; no Mi Box or live Worker
   compilation/deployment has taken place.
 
+## Signed snapshot replay parity — OFFLINE fix (26 September)
+- The unsigned helper `canReplaceSnapshot` previously rejected *all*
+  snapshots carrying the same D1 revision, even after a new signed generation
+  legitimately refreshed expiry. Android and the Ed25519 verifier both
+  permit the same revision only with a strictly newer `generatedAt`.
+- The helper now uses the **same complete `validSnapshot` schema check** as
+  the signing verifier: no unexpected fields, duplicate IDs, bad URLs, invalid
+  adapter versions, future generation, oversized TTL or expired snapshots.
+  It is NOT a signature verifier: callers MUST cryptographically verify the
+  envelope before setting `signatureVerified=true`.
+- Seven existing and new snapshot tests, including eleven malformed-input
+  mutations, passed against the exact GitHub source blobs in an isolated
+  JavaScript/V8 harness with a URL shim. This does NOT count as a full Node,
+  Android or Cloudflare integration run.
+- No production keys were created or pinned, and all Watchdog switches stay
+  OFF. GitHub Actions quota is exhausted, so no PR or workflow was started.
+
 ## Next gated milestones
 1. Run full Node/SQLite tests from the actual v6 branch, then a local Wrangler
    test using only the isolated fixture D1. Never interpret fixture health
