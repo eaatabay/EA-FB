@@ -69,6 +69,11 @@ java -jar "$TMP/catalog-cards.jar"
 kotlinc "$DOMAIN" EA-FB/src/main/kotlin/com/eafb/CatalogSortPolicy.kt \
   core-tests/CatalogSortPolicyTest.kt -include-runtime -d "$TMP/catalog-sort.jar"
 java -jar "$TMP/catalog-sort.jar"
+# Official film collections: own movie required, no duplicate/reboot mixing,
+# chronological release dates, unknown dates last (pure JVM; no Android).
+kotlinc EA-FB/src/main/kotlin/com/eafb/FilmCollectionPolicy.kt \
+  core-tests/FilmCollectionPolicyTest.kt -include-runtime -d "$TMP/film-collection.jar"
+java -jar "$TMP/film-collection.jar"
 kotlinc EA-FB/src/main/kotlin/com/eafb/EpisodeAirPolicy.kt core-tests/EpisodeAirPolicyTest.kt -include-runtime -d "$TMP/episode-air.jar"
 java -jar "$TMP/episode-air.jar"
 
