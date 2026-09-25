@@ -16,6 +16,7 @@ test("local config is fixture-only with fake local D1 and never enables snapshot
   assert.equal(local.vars.WATCHDOG_MODE,"fixture");
   assert.equal(local.vars.WATCHDOG_CRON_ENABLED,"true");
   assert.equal(local.vars.WATCHDOG_SNAPSHOT_ENABLED,"false");
+  assert.equal(local.vars.WATCHDOG_ADMIN_ENABLED,"false");
   assert.equal(local.workers_dev,false);
   assert.equal(tracked.vars.WATCHDOG_MODE,"disabled"); // no tracked mutation
 });
