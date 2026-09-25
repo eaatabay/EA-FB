@@ -20,16 +20,27 @@ export PATH="$HOME/.local/bin:$PATH"
 
 echo "Step 1/5: Test keyless TMDb relay..."
 node --test worker/test/catalog.test.mjs
-echo "Step 2/5: Install Wrangler, then authorize Cloudflare once..."
+echo "Step 2/5: Install Wrangler, then reuse your existing Cloudflare authorization..."
 npm install --prefix worker --no-save --no-package-lock --no-audit --no-fund
-echo "Cloudflare login uses a device code suitable for Codespaces."
-echo "Log in or create an account when the displayed link opens; approve the one-time access."
-(cd worker && npx --no-install wrangler login --device --browser=false)
+if (cd worker && npx --no-install wrangler whoami --json >/dev/null 2>&1); then
+  echo "Cloudflare login already authorized. No new code needed."
+else
+  echo "Authorize Cloudflare once at the device URL printed below."
+  (cd worker && npx --no-install wrangler login --device --browser=false)
+fi
 
 echo "Step 3/5: Deploy Worker, transfer Codespaces secret server-side..."
 log="$(mktemp)"
 trap 'rm -f "$log"' EXIT
-(cd worker && npx --no-install wrangler deploy --config wrangler.jsonc) | tee "$log"
+if ! (cd worker && npx --no-install wrangler deploy --config wrangler.jsonc) 2>&1 | tee "$log"; then
+  if grep -qi 'register.*workers.dev subdomain' "$log"; then
+    echo
+    echo "Cloudflare Workers requires one-time workers.dev subdomain registration."
+    echo "Open the exact .../workers/onboarding URL shown above, choose a free subdomain, and register."
+    echo "Then rerun this same deployment command; the existing Cloudflare authorization is reused."
+  fi
+  exit 2
+fi
 endpoint="$(grep -Eo 'https://[[:alnum:].-]+[.]workers[.]dev' "$log" | head -n 1 || true)"
 if [[ -z "$endpoint" ]]; then
   echo "No public workers.dev URL in Wrangler output; cannot configure EA-FB safely." >&2
