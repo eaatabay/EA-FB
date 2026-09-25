@@ -24,6 +24,26 @@ production TMDb catalog Worker remain unchanged.
   private/reserved destinations at DNS resolution and at every redirect hop;
   pure URL syntax validation in this module is **not** sufficient SSRF defense.
 
+## Durable registry implemented on v6 (NOT deployed)
+- Separate `migrations/0001_registry.sql` defines a private D1-compatible
+  registry, monotonic global revision, trigger-backed immutable audit history,
+  and unique per-source probe IDs. A stale compare-and-swap update changes
+  nothing; a replayed historical probe ID rolls back the entire update.
+- `src/registry.mjs` exposes authenticated-*caller-only* building blocks:
+  register, read, commit a trusted probe, enable/disable, approve/revoke an
+  adapter, release from admin review, roll back to a previously audited healthy
+  approved URL, and build an **unpublished** client snapshot. There are NO
+  HTTP routes, credentials, scheduled checks, client signing, or live adapters.
+- Persisted configuration uses an explicit allowlist. Never store API keys,
+  cookies, headers, or free-form source objects in registry/audit history.
+- Offline tests: `npm test` checks policy and snapshot on supported Node;
+  `test/registry.test.mjs` additionally runs SQLite-backed D1-adapter tests on
+  Node >=22 (`node:sqlite`); `python3 -m unittest discover -s tests -v`
+  checks migration rollback, CAS, replay and audit independently.
+- Neither local SQLite nor mock D1 proves Cloudflare deployment compatibility.
+  Create a **separate development D1**, apply migration locally first, then
+  verify Wrangler against the isolated development Worker before any rollout.
+
 ## Current source files
 - `source-watchdog/src/policy.mjs`: side-effect-free state transitions.
 - `source-watchdog/test/policy.test.mjs`: fixture-only isolation/failure/recovery tests.
