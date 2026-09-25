@@ -211,7 +211,7 @@ catalog Worker remain unchanged.
   adapters matching the signed version are eligible; no dynamic code download.
 - Two exact GitHub Kotlin source files plus all JVM-only test/stub files
   matched their local copies by Git blob SHA. Kotlin 1.9 / BC 1.80 tests:
-  **14/14** pure cache policy and **16/16** atomic Android store checks PASSED.
+  **14/14** pure cache policy and **17/17** atomic Android store checks PASSED.
   Android-store tests used minimal Context and JSON-parser TEST STUBS.
   \`scripts/test-core.sh\` now runs both suites and passed \`bash -n\`.
 - REAL Android SharedPreferences, Gradle/Dex, actual Mi Box restart/network
@@ -241,10 +241,20 @@ catalog Worker remain unchanged.
   refresh or instantiate this client on startup; no network call occurs.
 - The exact GitHub source blobs compiled locally with Kotlin 1.9,
   BouncyCastle 1.80 and kotlinx.coroutines on JVM. New deterministic
-  injected-transport test suite: **21/21 passed** across twelve invalid
+  injected-transport test suite: **23/23 passed** across twelve invalid
   configurations, pin/version checks, UTF-8/size/MIME failures, redirect,
-  replay/expiry, offline fallback, clock rollback and concurrent requests.
+  replay/expiry, offline fallback, corrupt persisted cache, coroutine cancellation,
+  clock rollback and concurrent requests.
   `scripts/test-core.sh` now runs the suite; NO GitHub Actions quota used.
+- The HTTPS transport additionally passed **9/9** offline tests against a
+  fake `HttpsURLConnection`: no redirect following, cache disabling, enforced
+  4-second timeouts, correct request headers, declared/actual body cap and
+  cleanup on I/O failure. The production `WatchdogClientStore` now exposes
+  `approvedRefreshClient()`, which returns null with the checked-in empty
+  endpoint/pins/adapters and NEVER starts network activity on construction.
+  All four offline/cache/refresh/HTTPS test suites totaling **63/63** cases
+  were compiled against exact SHA-matched GitHub sources on Kotlin/JVM.
+  The exact updated `scripts/test-core.sh` also passed `bash -n`.
 - Still required: production endpoint ownership/authorization review, actual
   public-key pinning, one approved bundled source adapter, explicit plugin
   lifecycle integration, real Android HTTPS/device tests and isolated
