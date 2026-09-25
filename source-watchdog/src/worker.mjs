@@ -101,7 +101,13 @@ export function createWatchdogWorker({
               x.config.currentUrl.includes(".example.org"))) {
             throw new Error("fixture_record_in_production_registry");
           }
-          return readSnapshot(db, at);
+          const snapshot = await readSnapshot(db, at);
+          if (!snapshot || !Array.isArray(snapshot.sources) ||
+              snapshot.sources.some(x => x.id?.startsWith("fixture-") ||
+                x.baseUrl?.includes(".example.org"))) {
+            throw new Error("unsafe_production_snapshot");
+          }
+          return snapshot;
         });
         return response(signed);
       } catch (_) {
