@@ -60,5 +60,7 @@ subprojects {
         implementation("com.github.Blatzar:NiceHttp:0.4.11")
         implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0")
         implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.13.1")
+        // Android 5–12 / Mi Box JCA may lack Ed25519; use bundled verifier only.
+        implementation("org.bouncycastle:bcprov-jdk15to18:1.80")
     }
 }
