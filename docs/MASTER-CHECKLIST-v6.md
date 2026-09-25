@@ -24,8 +24,13 @@
 - [x] Yalniz yerel D1 konfigurasyon/seed/test komutlari (remote kaynak yok).
 - [ ] Tum Node 22/SQLite test paketini gercek v6 checkout'unda kosma.
 - [x] Tek komutlu Node/Python/yerel Wrangler+D1 release kapisi kodlandi.
+- [x] 26.09: D1'in desteklemedigi BEGIN/COMMIT fixture SQL'den cikarildi; tekrarini engelleyen test eklendi.
+- [x] Tam v6 verify betigi D1 testini Kotlin ve cs3 derlemesinden ONCE zorunlu kiliyor.
+- [x] Fixture kaydinin durum/candidate URL'leri de sadece onayli demo hostlarda kalabiliyor.
 - [x] 8 Cron + 1 tekrar senaryosunda 30 kaynak ve audit beklentisi otomatik denetleniyor.
-- [ ] Wrangler --local D1 migration/Cron entegrasyon testini gercekte kosma (paket kurulu degil).
+- [ ] Wrangler --local D1 migration/Cron entegrasyon testini gercekte kosma (paket bu ortamda kurulu degil).
+- [x] 26.09: Gercek repo koduyla V8 30 kaynak/59 kontrol, 2 tasinma, 1 admin bekleme, sifir tekrar dogrulandi.
+- [x] 26.09: Kotu durum adresi iceren 5 fixture'in Cron'a girmeden reddedildigi dogrulandi.
 - [ ] Ayrica onaylanmis, izinli gercek kaynak adapterlerini secip inceleme.
 - [x] DNS ve her redirect hop'u icin KAPALI/cevirmdisi preflight kodu, Node 5/5.
 - [x] GitHub ile birebir ayni migration dosyalari: SQLite smoke 4/4.
