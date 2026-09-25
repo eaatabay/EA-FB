@@ -50,6 +50,15 @@ if [[ "$ready" -ne 1 ]]; then
 fi
 echo "Cloudflare catalog relay healthy."
 
+# A configured secret is not proof that TMDb accepted it. Check a real catalog request.
+echo "Checking an actual Turkish TMDb search through the relay..."
+if ! curl -fsS --max-time 20 "$endpoint/v1/search/multi?query=Silo&language=tr-TR" |
+  python3 -c 'import json,sys; data=json.load(sys.stdin); sys.exit(0 if isinstance(data.get("results"),list) and len(data["results"])>0 else 1)'; then
+  echo "TMDb lookup failed. Nothing will be published; check the secret and Worker logs." >&2
+  exit 2
+fi
+echo "Real TMDb search passed."
+
 echo "Step 4/5: Save only public relay URL to GitHub..."
 export EA_FB_PUBLIC_ENDPOINT="$endpoint"
 python3 - <<'PY'
