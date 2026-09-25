@@ -1,5 +1,7 @@
 # EA-FB v6: main detail title ratings (feature branch)
 
+> **25.09.2026 update:** The first v6 candidate was compiled locally and tested on a Mi Box. A subsequent source-only update added the navy/yellow settings dialog, persistent categories, discovery sorting and duplicate-rating cleanup. **That updated package has NOT been rebuilt, deployed or installed.** Earlier dated notes below describe the pre-test development stages; current scope and remaining work are in [MI-BOX-REVIEW-AND-SETTINGS-v6.md](MI-BOX-REVIEW-AND-SETTINGS-v6.md).
+
 Status: **source only**, NOT compiled or published. Production `main/dist` remains EA-FB v5.
 
 ## Requested UI and native CloudStream constraints
