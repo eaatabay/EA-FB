@@ -23,7 +23,9 @@
 - [x] Yanlislikla canliya cikmayan ayri Worker ve tum bayraklar OFF.
 - [x] Yalniz yerel D1 konfigurasyon/seed/test komutlari (remote kaynak yok).
 - [ ] Tum Node 22/SQLite test paketini gercek v6 checkout'unda kosma.
-- [ ] Wrangler --local D1 migration/Cron entegrasyon testini kosma.
+- [x] Tek komutlu Node/Python/yerel Wrangler+D1 release kapisi kodlandi.
+- [x] 8 Cron + 1 tekrar senaryosunda 30 kaynak ve audit beklentisi otomatik denetleniyor.
+- [ ] Wrangler --local D1 migration/Cron entegrasyon testini gercekte kosma (paket kurulu degil).
 - [ ] Ayrica onaylanmis, izinli gercek kaynak adapterlerini secip inceleme.
 - [x] DNS ve her redirect hop'u icin KAPALI/cevirmdisi preflight kodu, Node 5/5.
 - [x] GitHub ile birebir ayni migration dosyalari: SQLite smoke 4/4.
