@@ -16,7 +16,7 @@ fun main() {
     check(CatalogSortPolicy.route(movie + "&sort_by=popularity.desc", MediaKind.MOVIE, CatalogSortMode.NEWEST)
         .count { it == '?' } == 1)
     check(CatalogSortPolicy.route(movie + "&sort_by=popularity.desc", MediaKind.MOVIE, CatalogSortMode.NEWEST)
-        .count { it == '&' } == 4)
+        .count { it == '&' } == 3)
     check(CatalogSortMode.fromKey("newest") == CatalogSortMode.NEWEST)
     check(CatalogSortMode.fromKey("bogus") == CatalogSortMode.POPULAR)
     println("PASS: 9/9 category sorting assertions")
