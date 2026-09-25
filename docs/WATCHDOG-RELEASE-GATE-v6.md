@@ -44,10 +44,19 @@ kendileri hiçbir ağ isteği yapmaz. `wrangler` işlemlerinin tamamında
 Test sonunda yerel süreç kapatılır ve geçici dizin silinir. Tracked
 `wrangler.jsonc` dosyasında **bütün çalışma bayrakları kapalıdır**.
 
+**D1 uyumluluk düzeltmesi:** İlk fixture SQL üreticisi açık `BEGIN TRANSACTION` /
+`COMMIT` yazıyordu. Cloudflare D1 dosya içe aktarması bunu desteklemediği
+İçin komutlar çıkarıldı. Üretici artık yalnızca 30 `INSERT OR IGNORE` yazıyor;
+regresyon testi transaction komutlarının geri gelmesini yasaklıyor.
+
 **Test geçmeden** ayrı Cloudflare test hesabına deploy, gerçek kaynak
 adapteri veya Mi Box güncellemesi yapılmamalıdır.
 
 ## Sınırlar
+
+Tam v6 doğrulaması olan `bash scripts/verify-v6.sh` da artık yerel Wrangler
+D1/Cron testini **Kotlin derlemesi ve `.cs3` üretiminden önce** zorunlu olarak
+çalıştırır. Wrangler kurulu değilse başarılı rapor vermek yerine durur.
 
 Bu betiğin depoda bulunması çalıştırıldığı anlamına GELMEZ. Yeni Wrangler
 paketi henüz bu çevrimdışı çalışma ortamında kurulu olmadığı için gerçek
