@@ -12,9 +12,13 @@ import kotlinx.coroutines.withContext
  * This transport does NOT pin remote IPs for source probing and must never
  * be reused for the server-side Source Watchdog probe network.
  */
-class WatchdogHttpsTransport : WatchdogSnapshotTransport {
+class WatchdogHttpsTransport(
+    private val open: (String) -> HttpsURLConnection = { endpoint ->
+        URL(endpoint).openConnection() as HttpsURLConnection
+    }
+) : WatchdogSnapshotTransport {
     override suspend fun get(endpoint: String): WatchdogHttpSnapshot = withContext(Dispatchers.IO) {
-        val connection = (URL(endpoint).openConnection() as HttpsURLConnection)
+        val connection = open(endpoint)
         try {
             connection.instanceFollowRedirects = false
             connection.connectTimeout = 4_000
