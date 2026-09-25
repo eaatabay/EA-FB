@@ -13,3 +13,7 @@ kotlinc "$DOMAIN" EA-FB/src/main/kotlin/com/eafb/LiveSourcePolicy.kt core-tests/
 java -jar "$TMP/live.jar"
 kotlinc -cp "$COROUTINES" "$DOMAIN" EA-FB/src/main/kotlin/com/eafb/SourceEngine.kt core-tests/SourceEngineTest.kt -include-runtime -d "$TMP/source.jar"
 java -cp "$TMP/source.jar:$COROUTINES" com.eafb.SourceEngineTestKt
+
+# Home rows: suppress posterless cards and stop at real TMDb page boundaries.
+kotlinc EA-FB/src/main/kotlin/com/eafb/CatalogCardPolicy.kt core-tests/CatalogCardPolicyTest.kt -include-runtime -d "$TMP/catalog-cards.jar"
+java -jar "$TMP/catalog-cards.jar"

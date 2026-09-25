@@ -176,11 +176,22 @@ class EAProvider : MainAPI() {
         }
         val category = categories.firstOrNull { it.id == request.data }
             ?: return newHomePageResponse(emptyList(), false)
-        val results = getJson(category.tmdbPath ?: return newHomePageResponse(emptyList(), false), page)
+        val raw = getJson(category.tmdbPath ?: return newHomePageResponse(emptyList(), false), page)
             ?.optJSONArray("results")
-            ?.let { arr -> (0 until arr.length()).mapNotNull { i -> arr.optJSONObject(i)?.let { newItem(it, category.kind) } } }
-            .orEmpty()
-        return newHomePageResponse(listOf(HomePageList(category.title, results, true)), results.isNotEmpty())
+            ?: return newHomePageResponse(emptyList(), false)
+        // TMDb occasionally returns titles without poster art. On TV these
+        // appear as blank, hard-to-navigate cards, especially in lower rows.
+        val results = (0 until raw.length()).mapNotNull { i ->
+            raw.optJSONObject(i)?.takeIf {
+                CatalogCardPolicy.hasPoster(it.optString("poster_path"))
+            }?.let { newItem(it, category.kind) }
+        }.distinctBy { it.url }
+        // Never create a visible empty rail or request nonexistent pages.
+        if (results.isEmpty()) return newHomePageResponse(emptyList(), false)
+        return newHomePageResponse(
+            listOf(HomePageList(category.title, results, true)),
+            CatalogCardPolicy.hasNext(raw.length(), page)
+        )
     }
 
     override suspend fun search(query: String): List<SearchResponse> {
