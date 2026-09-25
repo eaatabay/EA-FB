@@ -323,6 +323,28 @@ catalog Worker remain unchanged.
   Wrangler's npm package is not available in the offline container.
   Do not use this scripted acceptance target as evidence of a passing test.
 
+## Kotlin test-gate repair and verified JVM execution (25 Sep 2026)
+- Discovered a **broken and duplicated** BouncyCastle/snapshot-test block in
+  `scripts/test-core.sh`. Fixed the unterminated grep pattern and removed
+  the repeated Kotlin compile/run commands. A binary-equivalent local copy
+  of the **current GitHub script** passed `bash -n`; the trust and adapter
+  tests each appear exactly once.
+- The GitHub Kotlin files were compared character-for-character using
+  length and FNV32 checks against local copies, then compiled with installed
+  Kotlin JVM and BouncyCastle 1.80: **14/14 Ed25519 snapshot-verifier cases**
+  and **6/6 verified-adapter gate cases** passed. The adapter-gate JVM test
+  used standalone MediaSourceAdapter interface stubs, not a full Android
+  Gradle/.cs3 build.
+- The exact public JS/Kotlin cross-language test vector also passed local
+  Node 22 signature verification, URL tamper rejection and replay rejection.
+- Added `source-watchdog/test/shell-syntax.test.mjs`, which checks four
+  shell test/release scripts with `bash -n` and fails if either Kotlin
+  snapshot test entry point is duplicated. This new regression test has
+  been committed, but the full repository `npm test` cannot be run here
+  until the private repo test files and Wrangler are present locally.
+- All production Cloudflare switches remain OFF; no Mi Box or live Worker
+  compilation/deployment has taken place.
+
 ## Next gated milestones
 1. Run full Node/SQLite tests from the actual v6 branch, then a local Wrangler
    test using only the isolated fixture D1. Never interpret fixture health
