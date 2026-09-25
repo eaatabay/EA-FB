@@ -12,9 +12,10 @@ if [[ -z "${TMDB_READ_ACCESS_TOKEN:-}" ]]; then
   echo "TMDB_READ_ACCESS_TOKEN Codespaces secret not loaded. Restart this Codespace." >&2
   exit 2
 fi
-command -v node >/dev/null || { echo "Node.js missing" >&2; exit 2; }
-command -v npm >/dev/null || { echo "npm missing" >&2; exit 2; }
 command -v curl >/dev/null || { echo "curl missing" >&2; exit 2; }
+# A freshly-created EA-FB Codespace contains Java/Gradle but not necessarily Node.
+# Install a verified official Node binary for the current user automatically.
+bash scripts/ensure-node.sh
 
 echo "Step 1/5: Test keyless TMDb relay..."
 node --test worker/test/catalog.test.mjs
@@ -28,7 +29,7 @@ echo "Step 3/5: Deploy Worker, transfer Codespaces secret server-side..."
 log="$(mktemp)"
 trap 'rm -f "$log"' EXIT
 (cd worker && npx --no-install wrangler deploy --config wrangler.jsonc) | tee "$log"
-endpoint="$(grep -Eo "https://[[:alnum:].-]+\\.workers\\.dev" "$log" | head -n 1 || true)"
+endpoint="$(grep -Eo 'https://[[:alnum:].-]+[.]workers[.]dev' "$log" | head -n 1 || true)"
 if [[ -z "$endpoint" ]]; then
   echo "No public workers.dev URL in Wrangler output; cannot configure EA-FB safely." >&2
   exit 2
