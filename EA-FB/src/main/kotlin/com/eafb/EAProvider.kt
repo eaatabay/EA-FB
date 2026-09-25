@@ -267,6 +267,49 @@ class EAProvider : MainAPI() {
         }.take(18)
     }
 
+    /**
+     * Official TMDb film collection, independent of TMDb recommendations.
+     * A collection includes connected installments only; it must not silently
+     * mix unrelated Spider-Man reboot timelines or similarly named movies.
+     */
+    private suspend fun collectionMovies(
+        movie: JSONObject,
+        ownId: Int
+    ): Pair<String?, List<SearchResponse>> {
+        val collectionId = movie.optJSONObject("belongs_to_collection")
+            ?.optInt("id")?.takeIf { it > 0 } ?: return Pair(null, emptyList())
+        val collection = getJson("/collection/$collectionId")
+            ?: return Pair(null, emptyList())
+        val parts = collection.optJSONArray("parts")
+            ?: return Pair(null, emptyList())
+        val seen = mutableSetOf<Int>()
+        val ordered = (0 until parts.length()).mapNotNull { index ->
+            parts.optJSONObject(index)?.takeIf { part ->
+                val id = part.optInt("id")
+                id > 0 && seen.add(id) && part.optString("title").isNotBlank()
+            }
+        }.sortedWith(
+            compareBy<JSONObject>(
+                { part -> part.optString("release_date").takeIf {
+                    it.matches(Regex("\\d{4}-\\d{2}-\\d{2}"))
+                } ?: "9999-99-99" },
+                { part -> part.optInt("id") }
+            )
+        )
+        // One-item "collections" do not make a franchise strip.
+        if (ordered.size < 2 || ordered.none { it.optInt("id") == ownId }) {
+            return Pair(null, emptyList())
+        }
+        val cards = ordered.mapNotNull { newItem(it, MediaKind.MOVIE) }
+        if (cards.size < 2) return Pair(null, emptyList())
+        val labels = ordered.take(12).joinToString(" • ") { part ->
+            val title = part.optString("title")
+            val year = mediaYear(part, MediaKind.MOVIE)
+            if (year != null) "$title ($year)" else title
+        }
+        return Pair("Serinin Filmleri (vizyon tarihine göre): $labels", cards)
+    }
+
     private fun nextEpisode(item: JSONObject): NextAiring? {
         val upcoming = item.optJSONObject("next_episode_to_air") ?: return null
         val episode = upcoming.optInt("episode_number").takeIf { it > 0 } ?: return null
@@ -378,10 +421,17 @@ class EAProvider : MainAPI() {
             imdbRating?.let { "IMDb " + scoreText(it) + "/10" },
             tmdbRating?.let { "TMDb " + scoreText(it) + "/10" }
         ).joinToString("    |    ")
+        val (collectionLabel, collectionCards) = if (!isSeries) {
+            collectionMovies(item, tmdbId)
+        } else Pair<String?, List<SearchResponse>>(null, emptyList())
         val combinedPlot = listOfNotNull(
-            ratingLine.takeIf { it.isNotBlank() }, overview, director
+            ratingLine.takeIf { it.isNotBlank() }, overview, director, collectionLabel
         ).joinToString("\n\n")
         val recs = recommendations(item, media, tmdbId)
+        // The stock CloudStream LoadResponse exposes one recommendation rail,
+        // not a separate branded "Serinin Filmleri" section. Put official
+        // collection titles first, avoid duplicates, keep normal recs after.
+        val movieRelated = (collectionCards + recs).distinctBy { it.url }.take(32)
         return if (isSeries) {
             val episodes = tvEpisodes(tmdbId, item.optJSONArray("seasons"))
             newTvSeriesLoadResponse(title, url, kind, episodes) {
@@ -415,7 +465,7 @@ class EAProvider : MainAPI() {
                 backgroundPosterUrl = backdrop
                 actors = people
                 tags = genres(item)
-                recommendations = recs
+                recommendations = movieRelated
                 duration = item.optInt("runtime").takeIf { it > 0 }
             }
         }
