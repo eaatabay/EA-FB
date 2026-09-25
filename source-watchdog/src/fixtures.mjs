@@ -19,7 +19,12 @@ export function assertIsolatedFixtureRegistry(records) {
   const seen = new Set();
   for (const item of records) {
     const config = item?.config;
-    if (!config || typeof config.id !== "string" ||
+    const state = item?.state;
+    if (!config || !state || state.id !== config.id ||
+        !["healthy","degraded","quarantined","admin_required","disabled"].includes(state.status) ||
+        !exampleHost(state.currentUrl) || !exampleHost(state.lastKnownGoodUrl) ||
+        (state.candidateUrl != null && !exampleHost(state.candidateUrl)) ||
+        typeof config.id !== "string" ||
         item.id !== config.id || !FIXTURE_ID.test(config.id) || seen.has(config.id) ||
         !exampleHost(config.currentUrl) ||
         !exampleHost(config.lastKnownGoodUrl) ||
@@ -31,7 +36,11 @@ export function assertIsolatedFixtureRegistry(records) {
       throw new Error("unsafe_fixture_registry");
     }
     const currentHost = new URL(config.currentUrl).hostname;
-    if (!config.verifiedDomains.includes(currentHost)) {
+    const stateHosts = [config.lastKnownGoodUrl, state.currentUrl,
+      state.lastKnownGoodUrl, state.candidateUrl].filter(Boolean)
+      .map(value => new URL(value).hostname);
+    if (!config.verifiedDomains.includes(currentHost) ||
+        !stateHosts.every(host => config.verifiedDomains.includes(host))) {
       throw new Error("unsafe_fixture_registry");
     }
     seen.add(config.id);
