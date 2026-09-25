@@ -38,6 +38,25 @@ CREATE TABLE IF NOT EXISTS source_audit (
 CREATE INDEX IF NOT EXISTS source_audit_lookup
     ON source_audit(source_id, event_id DESC);
 
+-- Every probe run is unique forever within its source. Trigger-enforced inserts
+-- make duplicate IDs roll back the state update, metadata increment AND audit.
+CREATE TABLE IF NOT EXISTS source_probe_runs (
+    source_id TEXT NOT NULL,
+    run_id TEXT NOT NULL,
+    source_revision INTEGER NOT NULL,
+    checked_at_ms INTEGER NOT NULL,
+    PRIMARY KEY (source_id, run_id)
+) WITHOUT ROWID;
+
+CREATE TRIGGER IF NOT EXISTS source_probe_unique
+AFTER UPDATE ON source_registry
+WHEN NEW.last_check_run_id IS NOT NULL AND
+     NEW.last_check_run_id IS NOT OLD.last_check_run_id
+BEGIN
+    INSERT INTO source_probe_runs(source_id, run_id, source_revision, checked_at_ms)
+    VALUES (NEW.id, NEW.last_check_run_id, NEW.revision, NEW.updated_at_ms);
+END;
+
 CREATE TRIGGER IF NOT EXISTS source_registry_created
 AFTER INSERT ON source_registry
 BEGIN
