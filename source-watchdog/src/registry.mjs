@@ -85,6 +85,15 @@ function rowRecord(row) {
   };
 }
 
+/** Optional precondition for administrative writes; required by the HTTP layer. */
+function requireRevision(previous, expectedRevision) {
+  if (expectedRevision === null) return;
+  if (!Number.isSafeInteger(expectedRevision) || expectedRevision < 0) {
+    throw new Error("invalid_expected_revision");
+  }
+  if (previous.revision !== expectedRevision) throw new RegistryConflict();
+}
+
 function dbReady(db) {
   if (!db || typeof db.prepare !== "function") throw new Error("d1_not_configured");
   return db;
@@ -191,12 +200,13 @@ export async function commitProbe(db, id, runId, probe, now, lease = null) {
   return { duplicate: false, record };
 }
 
-export async function setEnabled(db, id, enabled, actor, now) {
+export async function setEnabled(db, id, enabled, actor, now, expectedRevision = null) {
   actorName(actor, "admin");
   clock(now);
   if (typeof enabled !== "boolean") throw new Error("invalid_enabled_state");
   const previous = await getSource(db, id);
   if (!previous) throw new Error("source_not_found");
+  requireRevision(previous, expectedRevision);
   if (previous.config.enabled === enabled) return { unchanged: true, record: previous };
   const config = { ...previous.config, enabled };
   const state = enabled ? {
@@ -213,7 +223,7 @@ export async function setEnabled(db, id, enabled, actor, now) {
   return { unchanged: false, record };
 }
 
-export async function setIntegrationApproval(db, id, approved, evidenceRef, actor, now) {
+export async function setIntegrationApproval(db, id, approved, evidenceRef, actor, now, expectedRevision = null) {
   actorName(actor, "admin");
   clock(now);
   if (typeof approved !== "boolean" ||
@@ -223,6 +233,7 @@ export async function setIntegrationApproval(db, id, approved, evidenceRef, acto
   }
   const previous = await getSource(db, id);
   if (!previous) throw new Error("source_not_found");
+  requireRevision(previous, expectedRevision);
   if (previous.config.integrationApproved === approved) {
     return { unchanged: true, record: previous };
   }
@@ -242,11 +253,12 @@ export async function setIntegrationApproval(db, id, approved, evidenceRef, acto
   return { unchanged: false, record };
 }
 
-export async function retestAfterReview(db, id, actor, now) {
+export async function retestAfterReview(db, id, actor, now, expectedRevision = null) {
   actorName(actor, "admin");
   clock(now);
   const previous = await getSource(db, id);
   if (!previous) throw new Error("source_not_found");
+  requireRevision(previous, expectedRevision);
   if (!previous.config.enabled || !previous.config.integrationApproved) {
     throw new Error("source_not_eligible");
   }
@@ -261,11 +273,12 @@ export async function retestAfterReview(db, id, actor, now) {
  * Returns to DEGRADED while two fresh checks run: never publish stale health.
  * An unapproved/new hostname needs separate human ownership verification.
  */
-export async function rollbackToLastHealthy(db, id, actor, now) {
+export async function rollbackToLastHealthy(db, id, actor, now, expectedRevision = null) {
   actorName(actor, "admin");
   clock(now);
   const previous = await getSource(db, id);
   if (!previous) throw new Error("source_not_found");
+  requireRevision(previous, expectedRevision);
   const results = await db.prepare(
     "SELECT new_state_json FROM source_audit WHERE source_id = ? " +
     "ORDER BY event_id DESC LIMIT 100"
