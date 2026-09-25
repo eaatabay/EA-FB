@@ -26,6 +26,8 @@
 - [x] Tek komutlu Node/Python/yerel Wrangler+D1 release kapisi kodlandi.
 - [x] Eski test:local artik mevcut D1'e dokunmuyor; tek kullanimlik D1 release testini aciyor.
 - [x] Yerel D1 config: 10/10 sahte binding/route/secret/worker degisikligi engellendi (Node 22).
+- [x] Yerel Wrangler komut kontrati 4/4 Node test: --remote, farkli DB, env/profil, ek SQL ve sahte sayac reddi.
+- [x] Smoke test artik yalnizca 2 sabit SELECT, exact seed dosyasi ve --local ile calisabilir.
 - [x] 26.09: 0600 yerel config olusturma, ikinci denemede uzerine yazmama dogrulandi.
 - [x] 26.09: D1'in desteklemedigi BEGIN/COMMIT fixture SQL'den cikarildi; tekrarini engelleyen test eklendi.
 - [x] 26.09: GitHub fixture generator cikti fingerprint'iyle birebir ayni SQL, gercek SQLite migration 0001+0002 uzerinde 30/30 kayit ve 30/30 audit; tekrar 0 duplicate dogrulandi.
