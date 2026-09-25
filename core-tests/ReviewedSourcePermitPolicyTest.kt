@@ -15,7 +15,7 @@ private val both = ReviewedSourcePermit(
     "fixture-both", 1, "both", setOf("both.example.org"),
     "/media", "rights/2026/fixture-both.md", T - DAY, T + 7*DAY
 )
-private val snapshot = VerifiedSourceSnapshot(42, T, T+900_000, listOf(
+private val defaultSnapshot = VerifiedSourceSnapshot(42, T, T+900_000, listOf(
     SnapshotSource("fixture-movie","movie","https://films.example.org/public/first",3),
     SnapshotSource("fixture-series","series","https://series.example.org",2),
     SnapshotSource("fixture-both","both","https://both.example.org/media/first",1)
@@ -25,7 +25,7 @@ fun main() {
     var passed = 0
     fun test(ok: Boolean, name: String) { check(ok) { name }; passed++ }
     val permits = listOf(movie, series, both)
-    fun only(snapshot: VerifiedSourceSnapshot? = this.snapshot,
+    fun only(snapshot: VerifiedSourceSnapshot? = defaultSnapshot,
         list: List<ReviewedSourcePermit> = permits,
         now: Long = T): List<SnapshotSource> =
         ReviewedSourcePermitPolicy.restrict(snapshot,now,list)?.usableSources.orEmpty()
@@ -56,39 +56,39 @@ fun main() {
         .isEmpty(),"internal-only domain never becomes approved")
     test(only(list=listOf(movie.copy(approvedHosts=setOf("192.0.0.9")),series,both))
         .isEmpty(),"IP literal cannot become approved host")
-    val withOtherHost = snapshot.copy(usableSources =
-        snapshot.usableSources.map { if (it.id=="fixture-movie")
+    val withOtherHost = defaultSnapshot.copy(usableSources =
+        defaultSnapshot.usableSources.map { if (it.id=="fixture-movie")
             it.copy(baseUrl="https://evil.example.org/public/first") else it })
     test(only(snapshot=withOtherHost).map { it.id } ==
         listOf("fixture-series","fixture-both"),"a signed URL cannot override approved domain")
-    val withWrongPath = snapshot.copy(usableSources =
-        snapshot.usableSources.map { if (it.id=="fixture-movie")
+    val withWrongPath = defaultSnapshot.copy(usableSources =
+        defaultSnapshot.usableSources.map { if (it.id=="fixture-movie")
             it.copy(baseUrl="https://films.example.org/publicity") else it })
     test(only(snapshot=withWrongPath).map { it.id } ==
         listOf("fixture-series","fixture-both"),"path prefix requires exact segment boundary")
-    val withEncodedPath = snapshot.copy(usableSources =
-        snapshot.usableSources.map { if (it.id=="fixture-movie")
+    val withEncodedPath = defaultSnapshot.copy(usableSources =
+        defaultSnapshot.usableSources.map { if (it.id=="fixture-movie")
             it.copy(baseUrl="https://films.example.org/public/%2e%2e/private") else it })
     test(only(snapshot=withEncodedPath).map { it.id } ==
         listOf("fixture-series","fixture-both"),"encoded traversal rejected")
-    val moved = snapshot.copy(usableSources =
-        snapshot.usableSources.map { if(it.id=="fixture-movie")
+    val moved = defaultSnapshot.copy(usableSources =
+        defaultSnapshot.usableSources.map { if(it.id=="fixture-movie")
             it.copy(baseUrl="https://new-films.example.org/public/second") else it })
     test(only(snapshot=moved).first().baseUrl ==
         "https://new-films.example.org/public/second",
         "human preapproved alternate domain can be signed and promoted")
-    val unapprovedMove = snapshot.copy(usableSources =
-        snapshot.usableSources.map { if(it.id=="fixture-movie")
+    val unapprovedMove = defaultSnapshot.copy(usableSources =
+        defaultSnapshot.usableSources.map { if(it.id=="fixture-movie")
             it.copy(baseUrl="https://unknown-films.example.org/public") else it })
     test(only(snapshot=unapprovedMove).none { it.id=="fixture-movie" },
         "unreviewed redirect host cannot be promoted")
-    val signedBoth = snapshot.copy(usableSources =
-        snapshot.usableSources.map { if (it.id=="fixture-movie")
+    val signedBoth = defaultSnapshot.copy(usableSources =
+        defaultSnapshot.usableSources.map { if (it.id=="fixture-movie")
             it.copy(mediaKind="both") else it })
     test(only(snapshot=signedBoth).first().mediaKind=="movie",
         "license restricted to films narrows a signed both-media source")
-    val signedWrongKind = snapshot.copy(usableSources =
-        snapshot.usableSources.map { if (it.id=="fixture-movie")
+    val signedWrongKind = defaultSnapshot.copy(usableSources =
+        defaultSnapshot.usableSources.map { if (it.id=="fixture-movie")
             it.copy(mediaKind="series") else it })
     test(only(snapshot=signedWrongKind).none {it.id=="fixture-movie"},
         "signed series cannot exceed a movie-only reviewed permit")
