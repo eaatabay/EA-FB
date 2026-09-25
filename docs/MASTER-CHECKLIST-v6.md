@@ -46,6 +46,7 @@
 - [x] 26.09: Kotu durum adresi iceren 5 fixture'in Cron'a girmeden reddedildigi dogrulandi.
 - [x] 26.09: Derlemeye sabitlenen ayri izin/kapsam/host/yol/sure kaydi icin ReviewedSourcePermitPolicy eklendi; hicbir gercek kaynak onayli degil.
 - [x] Birebir GitHub Kotlin/JVM izin politikasi 23/23 basarili; izin olmadan kaynak yok, host/yol/DRM ve abonelik haklari varsayilmiyor.
+- [x] 26.09: Izin politikasi test dosyasi GitHub'da zaten mevcuttu; onayli host/yol segmenti, HTTPS origin, URL manipulasyonu ve film/dizi yetki kesisimi icin 24 yeni cevrimdisi regresyon senaryosu eklendi (d6074f72). Yeni testler henuz JVM'de calistirilmadi.
 - [x] 5/5 mevcut bridge JVM testi yeni izin kapisiyla yeniden derlenip gecti (test-only Android/MediaSource stublari).
 - [x] Kullanici acik kaynak-bazli onayi ve hak sahibi delili gerektiren docs/SOURCE-RIGHTS-REVIEW-v6.md olusturuldu.
 - [ ] Gercek kaynagin izin kapsami, kanit referansi, rate limit, bolge ve yenileme tarihini tek tek onaylat.
