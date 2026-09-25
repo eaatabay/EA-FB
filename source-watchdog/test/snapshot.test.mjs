@@ -61,3 +61,42 @@ test("requires distinct source IDs and immutable monotonic revisions",()=>{
   assert.equal(canReplaceSnapshot(snap,snap,now,true),false);
   assert.equal(canReplaceSnapshot(null,snap,snap.expiresAt,true),false);
 });
+
+test("signed same-revision refresh requires a strictly newer generation",()=>{
+  const a=source("source-one");
+  const current=buildClientSnapshot([a],[healthy(a.id)],42,now);
+  const fresh=buildClientSnapshot([a],[healthy(a.id)],42,now+60_000);
+  assert.equal(canReplaceSnapshot(current,fresh,now+60_000,true),true);
+  assert.equal(canReplaceSnapshot(current,fresh,now+60_000,false),false);
+  assert.equal(canReplaceSnapshot(fresh,fresh,now+60_000,true),false);
+  assert.equal(canReplaceSnapshot({...current,generatedAt:null},fresh,now+60_000,true),false);
+  assert.equal(canReplaceSnapshot({...current,revision:43},fresh,now+60_000,true),false);
+  assert.equal(canReplaceSnapshot(null,fresh,now+60_000,true),true);
+});
+
+test("signed refresh rejects malformed payload, duplicate IDs and future or stale times",()=>{
+  const a=source("source-one");
+  const current=buildClientSnapshot([a],[healthy(a.id)],42,now);
+  const makeFresh=()=>buildClientSnapshot([a],[healthy(a.id)],43,now+60_000);
+  const mutations=[
+    s=>s.sources.push({...s.sources[0]}),
+    s=>s.sources[0].baseUrl="http://licensed.example.org",
+    s=>s.sources[0].baseUrl="https://127.0.0.1",
+    s=>s.sources[0].mediaKind="unknown",
+    s=>s.sources[0].adapterVersion=0,
+    s=>s.sources[0].secret="leak",
+    s=>s.debug="leak",
+    s=>s.generatedAt=now+600_000,
+    s=>s.expiresAt=s.generatedAt+3_600_001,
+    s=>s.revision=-1,
+    s=>s.schemaVersion=2,
+  ];
+  for(const mutate of mutations){
+    const incoming=makeFresh();
+    mutate(incoming);
+    assert.equal(canReplaceSnapshot(current,incoming,now+60_000,true),false,
+      JSON.stringify(incoming));
+  }
+  const expired=makeFresh();
+  assert.equal(canReplaceSnapshot(current,expired,expired.expiresAt,true),false);
+});
