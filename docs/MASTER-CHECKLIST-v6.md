@@ -62,15 +62,16 @@
 - [ ] Degisiklikleri tam Node22 test paketi ve Android/Cloudflare entegrasyonunda tekrar dogrulama.
 - [ ] Gercek public key'in Android eklenti surumune pinlenmesi.
 - [x] 26.09: Imzali JSON ve revision/generatedAt tek atomic commit ile cihazda saklama; bozulan/expired cache offline fail-closed.
-- [x] Kotlin JVM ayni GitHub kaynagi ile 14/14 offline cache politikasi + 16/16 Android store (Context/JSON test stubs) basarili.
-- [x] Iki yeni cache test paketi scripts/test-core.sh icine eklendi; bash -n gecti.
+- [x] 26.09: GitHub ile birebir ayni JVM: 14/14 offline cache, 17/17 Android store (Context/JSON stubs), 23/23 signed HTTPS refresh ve 9/9 sahte HTTPS tasiyici testi basarili.
+- [x] Dort offline/HTTPS test paketi scripts/test-core.sh icinde; birebir GitHub betigi bash -n gecti.
 - [ ] Gercek Android SharedPreferences, uygulama kapanip acilma ve Mi Box offline TTL testi.
 - [x] 26.09: Istege bagli HTTPS snapshot refresh motoru kodlandi: tam izinli origin/path, 32 KiB, JSON/UTF-8, imza, 15–60 dk backoff ve offline TTL.
-- [x] Kotlin 1.9/BC 1.80/coroutines ile birebir GitHub kaynak kodu: 21/21 injected-transport JVM vakasi basarili; Actions kullanilmadi.
+- [x] Kotlin 1.9/BC 1.80/coroutines ile birebir GitHub kaynak kodu: 23/23 injected-transport JVM vakasi basarili; Actions kullanilmadi.
 - [x] Android'e uygun TLS GET tasiyicisi eklendi: 4 sn baglanti/okuma siniri, redirect KAPALI, en fazla 32 KiB, kimlik bilgisi YOK.
 - [x] Uygulama varsayilaninda endpoint, origin, anahtar ve adapter bos; otomatik ag baslatma YOK.
 - [ ] Gercek Android'de transport/network-permission, surec yeniden baslatma ve signed TTL davranisini test etme.
-- [ ] Guvenli endpoint icin onayli origin ve public key pini saglandiktan sonra WatchdogClientStore ve ilk onayli adapter ile baglama.
+- [x] WatchdogClientStore icine yalniz endpoint+key+adapter onayliyken istemci ureten ve otomatik ag acmayan factory eklendi.
+- [ ] Guvenli endpoint ve gercek imza pini onaylandiktan sonra ilk onayli adapter ile uygulama akisina baglama.
 - [ ] Otomatik/manual yenilemeyi uygulama yasam dongusune guvenle baglama; canli yayin ve v5 etkilenmeyecek.
 - [ ] Guvenli client yenileme agi, API endpoint baglantisi ve offline TTL (gercek servis ve cihaz testi).
 - [ ] Kotlin/Gradle/Dex/.cs3 ve Mi Box uctan uca testi.
