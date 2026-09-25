@@ -25,6 +25,7 @@
 - [ ] Tum Node 22/SQLite test paketini gercek v6 checkout'unda kosma.
 - [x] Tek komutlu Node/Python/yerel Wrangler+D1 release kapisi kodlandi.
 - [x] 26.09: D1'in desteklemedigi BEGIN/COMMIT fixture SQL'den cikarildi; tekrarini engelleyen test eklendi.
+- [x] 26.09: GitHub fixture generator cikti fingerprint'iyle birebir ayni SQL, gercek SQLite migration 0001+0002 uzerinde 30/30 kayit ve 30/30 audit; tekrar 0 duplicate dogrulandi.
 - [x] Tam v6 verify betigi D1 testini Kotlin ve cs3 derlemesinden ONCE zorunlu kiliyor.
 - [x] Fixture kaydinin durum/candidate URL'leri de sadece onayli demo hostlarda kalabiliyor.
 - [x] 8 Cron + 1 tekrar senaryosunda 30 kaynak ve audit beklentisi otomatik denetleniyor.
