@@ -6,7 +6,9 @@
     "test": "node --test test/*.test.mjs",
     "dev": "wrangler dev --test-scheduled",
     "seed:fixtures": "node dev/generate-fixture-seed.mjs",
-    "test:migration": "python3 -m unittest discover -s tests -v"
+    "test:migration": "python3 -m unittest discover -s tests -v",
+    "dev:fixture": "wrangler dev --local --test-scheduled --config wrangler.local.jsonc",
+    "test:local": "bash dev/run-local-fixtures.sh"
   },
   "devDependencies": {
     "wrangler": "^4.119.0"
