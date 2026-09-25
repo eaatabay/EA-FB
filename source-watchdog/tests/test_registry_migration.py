@@ -9,6 +9,7 @@ import unittest
 from pathlib import Path
 
 MIGRATION = Path(__file__).resolve().parents[1] / "migrations" / "0001_registry.sql"
+MIGRATION_LEASE = Path(__file__).resolve().parents[1] / "migrations" / "0002_source_leases.sql"
 
 
 class RegistryMigrationTests(unittest.TestCase):
@@ -16,6 +17,7 @@ class RegistryMigrationTests(unittest.TestCase):
         self.db = sqlite3.connect(":memory:")
         self.db.execute("PRAGMA foreign_keys = ON")
         self.db.executescript(MIGRATION.read_text(encoding="utf-8"))
+        self.db.executescript(MIGRATION_LEASE.read_text(encoding="utf-8"))
 
     def tearDown(self):
         self.db.close()
@@ -126,6 +128,44 @@ class RegistryMigrationTests(unittest.TestCase):
         ).fetchone()
         self.assertEqual(last, ("admin:tester", "admin:disabled"))
 
+
+    def test_lease_serializes_runners_and_rejects_late_probe_atomically(self):
+        self.register()
+        acquire = (
+            "INSERT INTO source_probe_leases"
+            "(source_id,lease_token,acquired_at_ms,expires_at_ms) VALUES(?,?,?,?) "
+            "ON CONFLICT(source_id) DO UPDATE SET "
+            "lease_token=excluded.lease_token,acquired_at_ms=excluded.acquired_at_ms,"
+            "expires_at_ms=excluded.expires_at_ms "
+            "WHERE source_probe_leases.expires_at_ms<=excluded.acquired_at_ms"
+        )
+        def claim(token, now):
+            return self.db.execute(acquire, (
+                "licensed-demo", token, now, now + 30000
+            )).rowcount
+        self.assertEqual(claim("lease-owner-0001", 1000), 1)
+        self.assertEqual(claim("lease-owner-0002", 2000), 0)
+        self.assertEqual(claim("lease-owner-0002", 31000), 1)
+        cas = (
+            "UPDATE source_registry SET revision=revision+1, "
+            "state_json=?,changed_by='watchdog:runner',change_reason='probe:healthy' "
+            "WHERE id=? AND revision=? AND EXISTS ("
+            "SELECT 1 FROM source_probe_leases WHERE "
+            "source_id=? AND lease_token=? AND expires_at_ms>?)"
+        )
+        args = (json.dumps({"id":"licensed-demo","status":"healthy"}),
+                "licensed-demo",0,"licensed-demo")
+        self.assertEqual(self.db.execute(
+            cas, (*args,"lease-owner-0001",32000)).rowcount, 0)
+        self.assertEqual(self.counts(), (1,1,0))
+        self.assertEqual(self.db.execute(
+            cas, (*args,"lease-owner-0002",32000)).rowcount, 1)
+        self.assertEqual(self.counts(), (2,2,0))
+        self.assertEqual(self.db.execute(
+            "DELETE FROM source_probe_leases WHERE source_id=? AND lease_token=?",
+            ("licensed-demo","lease-owner-0001")).rowcount, 0)
+        self.assertEqual(self.db.execute(
+            "SELECT COUNT(*) FROM source_probe_leases").fetchone()[0],1)
 
 if __name__ == "__main__":
     unittest.main()
