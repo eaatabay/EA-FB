@@ -8,6 +8,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 RAW = "https://raw.githubusercontent.com/eaatabay/EA-FB/main/dist"
+ICON = "https://raw.githubusercontent.com/eaatabay/EA-FB/main/assets/ea-fb-logo.png"
 
 
 def stage(root=ROOT):
@@ -37,12 +38,14 @@ def stage(root=ROOT):
     output = dist / "EA-FB.cs3"
     shutil.copyfile(binary, output)
     entry["name"] = "EA-FB"
+    entry["iconUrl"] = ICON
     entry["fileSize"] = output.stat().st_size
     entry["repositoryUrl"] = "https://github.com/eaatabay/EA-FB"
     entry["url"] = RAW + "/EA-FB.cs3"
     (dist / "plugins.json").write_text(json.dumps(entries, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     (dist / "repo.json").write_text(json.dumps({
         "name": "EA-FB",
+        "iconUrl": ICON,
         "description": "Tek eklentide film, dizi ve izinli canlı TV",
         "manifestVersion": 1,
         "pluginLists": [RAW + "/plugins.json"],
