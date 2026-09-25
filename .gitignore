@@ -17,3 +17,11 @@ secrets.properties
 /worker/.wrangler/
 /worker/.dev.vars*
 /worker/.env*
+
+# Separate Source Watchdog: never commit local secrets or database bindings
+/source-watchdog/node_modules/
+/source-watchdog/.wrangler/
+/source-watchdog/.dev.vars*
+/source-watchdog/.env*
+/source-watchdog/wrangler.local.jsonc
+/source-watchdog/dev/generated-fixtures.sql
