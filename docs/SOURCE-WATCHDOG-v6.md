@@ -244,9 +244,11 @@ catalog Worker remain unchanged.
 - New offline tests cover credential gates, forged JWT claims, invalid
   issuer/audience, token replay timing, unknown JWKS signing keys, HTML
   injection, read-only route behavior and disabled-by-default config.
-  Eight pure repository-code safety checks passed in V8; the newly added
-  comprehensive Node JWT/Worker test files and real Cloudflare Access flow
-  still require a full Node/Workers runtime test before enabling any route.
+  Eight pure repository-code safety checks passed in V8. Additionally, the
+  exact GitHub admin-auth source and test-file blobs (verified by git SHA)
+  passed **5/5 Node 22 JWT tests** with ephemeral RSA keys. The broader
+  Node/Worker/D1 suite and real Cloudflare Access + MFA still require testing
+  before any admin route is enabled.
 
 ## Next gated milestones
 1. Run full Node/SQLite tests from the actual v6 branch, then a local Wrangler
