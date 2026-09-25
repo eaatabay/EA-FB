@@ -497,3 +497,6 @@ catalog Worker remain unchanged.
 
 GitHub Actions quota is currently exhausted; use local fixture tests where
 available. Build or deployment results MUST NOT be inferred from source review.
+
+## Reviewed-source permission regression extension (26 Sep 2026; committed, unrun)
+The Kotlin offline rights suite now covers exact approved HTTPS hosts and path segments, URL credentials/ports/query/fragment, encoded and literal traversal, invalid or future review records, missing/invalid evidence references, duplicate permits, adapter-version mismatch and signed movie/series/both narrowing. A defense-in-depth fix rejects unsupported signed media kinds even if an already-verified snapshot is supplied directly to the permit policy. `scripts/test-core.sh` already invokes the permit and bridge JVM tests. A separate Node source-wiring regression asserts that the bridge passes the rights-restricted snapshot, not the raw signed snapshot, to adapter selection. Neither new Kotlin cases nor the new Node regression has been executed in this session. The evidence reference is a compiled review-record pointer, not proof of legal rights by itself; no real source has been approved. Production permit list and all live/admin switches remain OFF.
