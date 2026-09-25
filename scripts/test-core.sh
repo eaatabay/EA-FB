@@ -126,3 +126,13 @@ java -cp "$TMP/watchdog-refresh.jar:$BC_JAR:$COROUTINES" com.eafb.WatchdogSnapsh
 # Fake TLS connection tests: never contact a real endpoint or spend Actions.
 kotlinc -cp "$BC_JAR:$COROUTINES" "$TRUST" "$REFRESH" "$HTTPS" core-tests/WatchdogHttpsTransportTest.kt -include-runtime -d "$TMP/watchdog-https.jar"
 java -cp "$TMP/watchdog-https.jar:$BC_JAR:$COROUTINES" com.eafb.WatchdogHttpsTransportTestKt
+
+echo "== Signed snapshot to preinstalled media adapters (no real source network) =="
+SELECTION="EA-FB/src/main/kotlin/com/eafb/WatchdogAdapterSelection.kt"
+BRIDGE="EA-FB/src/main/kotlin/com/eafb/WatchdogApprovedAdapterBridge.kt"
+ENGINE="EA-FB/src/main/kotlin/com/eafb/SourceEngine.kt"
+kotlinc -cp "$BC_JAR:$COROUTINES" "$DOMAIN" "$ENGINE" "$TRUST" "$GATE" "$SELECTION" core-tests/WatchdogAdapterSelectionTest.kt -include-runtime -d "$TMP/watchdog-selection.jar"
+java -cp "$TMP/watchdog-selection.jar:$BC_JAR:$COROUTINES" com.eafb.WatchdogAdapterSelectionTestKt
+# The bridge test uses fake SharedPreferences and never opens an HTTPS socket.
+kotlinc -cp "$BC_JAR:$COROUTINES" "$DOMAIN" "$ENGINE" "$TRUST" "$GATE" "$SELECTION" "$BRIDGE" "$OFFLINE" "$REFRESH" "$HTTPS" "$STORE" core-tests/stubs/android/content/Context.kt core-tests/stubs/com/eafb/WatchdogSnapshotJson.kt core-tests/WatchdogApprovedAdapterBridgeTest.kt -include-runtime -d "$TMP/watchdog-bridge.jar"
+java -cp "$TMP/watchdog-bridge.jar:$BC_JAR:$COROUTINES" com.eafb.WatchdogApprovedAdapterBridgeTestKt
