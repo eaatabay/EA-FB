@@ -16,7 +16,9 @@ const source = (id, host = "demo.example.org") => ({
     requiredChecks: ["reachability", "search", "detail", "episode", "playback"],
     adapterVersion: 1,
   },
-  state: { status: "degraded", nextCheckAt: 0 },
+  state: { id, status: "degraded", currentUrl: "https://" + host,
+    lastKnownGoodUrl: "https://" + host, candidateUrl: null,
+    nextCheckAt: 0 },
 });
 const env = { WATCHDOG_MODE: "fixture", WATCHDOG_CRON_ENABLED: "true",
   WATCHDOG_FIXTURE_ENABLED: "true", SOURCES_DB: { prepare() {} } };
@@ -51,6 +53,27 @@ test("mixed or non-fixture registry fails closed BEFORE the runner", async () =>
   });
   await assert.rejects(worker.scheduled(event,env),/unsafe_fixture_registry/);
   assert.equal(runs,0);
+});
+
+test("fixture mode refuses external URLs hidden inside persisted state", async () => {
+  const unsafeCases=[
+    row => {row.state.currentUrl="https://internal.example.com";},
+    row => {row.state.lastKnownGoodUrl="https://169.254.169.254";},
+    row => {row.state.candidateUrl="https://unapproved.example.org";},
+    row => {row.state.id="another-source";},
+    row => {row.state.status="unexpected_status";},
+  ];
+  for(const change of unsafeCases){
+    const row=source("fixture-healthy-01");
+    change(row);
+    let ran=false;
+    const worker=createWatchdogWorker({
+      readRegistry:async()=>[row],
+      runChecks:async()=>{ran=true;return [];},logger,
+    });
+    await assert.rejects(worker.scheduled(event,env),/unsafe_fixture_registry/);
+    assert.equal(ran,false);
+  }
 });
 
 test("empty registry remains harmless", async () => {
