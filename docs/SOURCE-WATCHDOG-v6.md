@@ -161,6 +161,37 @@ catalog Worker remain unchanged.
   The actual Workers runtime, dedicated D1 and Android pinned-key verification
   are still mandatory integration gates before enabling delivery.
 
+## Android/Mi Box client signature-verification foundation (STAGED, NOT RELEASED)
+- Added pure Kotlin \`SourceSnapshotTrust.kt\` using BouncyCastle Ed25519 verification
+  because older Mi Box Android runtimes cannot be assumed to implement JCA
+  Ed25519. The BC 1.80 library is now a pinned v6 Gradle dependency.
+- The Kotlin verifier independently canonicalizes the **same** snapshot
+  contract as the Worker and rejects invalid signatures, forged URLs, unknown
+  signing keys, stale revisions, duplicate IDs, expired payloads and
+  unsupported adapter versions. It checks time again before every new search.
+- Android \`WatchdogSnapshotJson.kt\` strictly parses the incoming untrusted
+  JSON, enforcing exact schema, integer types, 32 KiB size limit and bounded
+  source count. \`WatchdogClientStore.kt\` persists the accepted revision and
+  generation timestamp with a synchronous SharedPreferences commit; failed
+  persistence rejects the result.
+- \`SourceSnapshotGate.kt\` only configures installed, exactly version-matching
+  adapters for NEW searches. It never downloads code or interrupts a stream
+  already playing. With no verified snapshot it returns zero adapters.
+- **No production signing public key is pinned yet**, no external adapters are
+  bundled, and the Worker publishes no endpoint. \`WatchdogTrustConfig\`
+  intentionally contains EMPTY key and adapter maps. A separately approved
+  release must explicitly provision and pin the real public key, authenticate
+  the read-only endpoint, and connect the source list to the actual provider.
+- Added one shared Node WebCrypto public test vector in
+  \`core-tests/fixtures/signed-source-snapshot-vector.json\` (NO private key).
+  Both JS and Kotlin validate its Ed25519 signature, allowing test-only
+  cross-language compatibility without trusting real source records.
+- Local JVM checks: 14/14 signature and replay cases and 6/6 adapter-gate
+  cases pass using Kotlin/JVM and BouncyCastle 1.80; Node verifies the same
+  vector. The Android parser and storage code passed a Kotlin syntax/type
+  compile against local Android/JSON *stubs*; actual Android Gradle/Dex
+  packaging and Mi Box remote navigation/playback remain UNVERIFIED.
+
 ## Next gated milestones
 1. Run full Node/SQLite tests from the actual v6 branch, then a local Wrangler
    test using only the isolated fixture D1. Never interpret fixture health
@@ -171,9 +202,9 @@ catalog Worker remain unchanged.
    sources; the private runner already has lease-based serialization. User-facing
    search/playback must never wait for repair.
 4. Build admin panel with strong authentication/2FA, approvals, audit and rollback.
-5. Integrate the now-coded signed snapshot contract with a read-only Worker
-   endpoint and install a PINNED public key plus signature/revision verification
-   on the Android client. No unsigned config or arbitrary adapter code loading.
+5. Integrate the now-staged Kotlin verifier with actual EA-FB source adapters
+   and a signed read-only Worker endpoint after pinning a production public key.
+   Verify Gradle/Dex packaging on old Mi Box Android; fail closed until then.
 6. Run staged rollout on a separate test service before touching v5/main.
 
 GitHub Actions quota is currently exhausted; use local fixture tests where
