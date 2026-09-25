@@ -136,6 +136,10 @@ export default {
     }
 
     const cacheUrl = new URL(url.origin + "/v1" + catalog.upstreamPath + "?" + catalog.params);
+    // Partition metadata caches by enrichment mode. When the private OMDb key
+    // is enabled after v5, a warm TMDb-only cache must not hide IMDb ratings.
+    // Only the mode, never the private credential, enters the cache key.
+    cacheUrl.searchParams.set("_ea_fb_rating", env.OMDB_API_KEY ? "omdb-v1" : "tmdb-v1");
     const cacheKey = new Request(cacheUrl.toString(), { method: "GET" });
     const cache = typeof caches === "undefined" ? null : caches.default;
     if (cache) {
