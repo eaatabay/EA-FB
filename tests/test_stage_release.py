@@ -36,6 +36,9 @@ class StageReleaseTests(unittest.TestCase):
         self.assertEqual(len(metadata), 1)
         self.assertEqual(metadata[0]["fileSize"], (dist / "EA-FB.cs3").stat().st_size)
         self.assertEqual(json.loads((dist / "repo.json").read_text())["manifestVersion"], 1)
+        repo_meta = json.loads((dist / "repo.json").read_text())
+        self.assertEqual(metadata[0]["iconUrl"], module.ICON)
+        self.assertEqual(repo_meta["iconUrl"], module.ICON)
 
     def test_reject_missing_binary(self):
         with self.assertRaisesRegex(ValueError, "Expected exactly one"):
