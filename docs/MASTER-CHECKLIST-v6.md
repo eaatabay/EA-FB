@@ -29,6 +29,7 @@
 - [x] Eski test:local artik mevcut D1'e dokunmuyor; tek kullanimlik D1 release testini aciyor.
 - [x] Yerel D1 config: 10/10 sahte binding/route/secret/worker degisikligi engellendi (Node 22).
 - [x] Yerel Wrangler komut kontrati 4/4 Node test: --remote, farkli DB, env/profil, ek SQL ve sahte sayac reddi.
+- [x] 26.09: Yerel D1 sayim sorgularinda --json zorunlu, fixture seed icin --json yasak; 3 yeni negatif regresyon senaryosu GitHub'a kaydedildi (commit 4835d414). Tam Node/Wrangler testi henuz calistirilmadi.
 - [x] Smoke test artik yalnizca 2 sabit SELECT, exact seed dosyasi ve --local ile calisabilir.
 - [x] 26.09: 0600 yerel config olusturma, ikinci denemede uzerine yazmama dogrulandi.
 - [x] 26.09: D1'in desteklemedigi BEGIN/COMMIT fixture SQL'den cikarildi; tekrarini engelleyen test eklendi.
