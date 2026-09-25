@@ -81,6 +81,30 @@ Bu doğrulama **gerçek Wrangler sürecinin yerini tutmaz**.
 **Test geçmeden** ayrı Cloudflare test hesabına deploy, gerçek kaynak
 adapteri veya Mi Box güncellemesi yapılmamalıdır.
 
+## GitHub üzerinden test (henüz çalıştırılmadı)
+
+`.github/workflows/v6-watchdog-local-check.yml` ile ayrı bir **opt-in,
+salt-okunur** test işi hazırlandı. Yalnızca aynı depodaki
+`feature/detail-dual-ratings-v6` dalından `main` hedefine açılan PR'da
+çalışır; `push` ve `schedule` tetikleyicisi yoktur. GitHub Actions
+dakikası tüketmemek için şu aşamada bir PR açılmadı ve iş tetiklenmedi.
+`workflow_dispatch` ileride workflow varsayılan dalda da bulunduğunda
+kullanılabilir; mevcut özellik dalındaki dosyayı tek başına menüde
+görünür kılmaz.
+
+İş Node 22 / Python 3.13 kurar, bağımlılıkları indirir ve
+`npm run test:release-local` komutunu çalıştırır. `contents: read`
+yetkisi dışında GitHub izni veya Cloudflare sırrı verilmez. Gerçek
+Cloudflare'a yükleme, uzaktan D1 oluşturma, Worker deploy ve gerçek
+kaynak taraması içermez.
+
+**Yeni sonuç:** GitHub dosyalarıyla SHA'sı eşleşen Node testleri, yapı
+değişikliği/sahte işlem kontrolünde **4/4**, yalnızca PR/manual
+tetiklenen Actions workflow güvenliğinde **3/3** geçti. YAML yapısı da
+ayrı incelendi. Wrangler CLI'nin karma (bir hata + bir başarı) JSON
+yanıtını artık kabul etmiyoruz. Bu sonuçlar gerçek workerd/D1
+çalıştırıldığını göstermez.
+
 ## Sınırlar
 
 Tam v6 doğrulaması olan `bash scripts/verify-v6.sh` da artık yerel Wrangler
