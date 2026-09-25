@@ -1,0 +1,74 @@
+# Opt-in validation for the isolated v6 Source Watchdog. This workflow
+# NEVER deploys, provisions a D1 database or accesses Cloudflare secrets.
+# No push/schedule triggers: Actions usage is reserved for a reviewed PR
+# or a later, explicitly requested manual run.
+name: EA-FB v6 Watchdog local gate
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "source-watchdog/**"
+      - "scripts/verify-v6.sh"
+      - ".github/workflows/v6-watchdog-local-check.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: eafb-v6-watchdog-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  local-only:
+    # Never execute code from an unknown fork or a different head branch.
+    if: >-
+      (github.event_name == 'pull_request' &&
+       github.event.pull_request.head.repo.full_name == github.repository &&
+       github.head_ref == 'feature/detail-dual-ratings-v6') ||
+      (github.event_name == 'workflow_dispatch' &&
+       github.ref_name == 'feature/detail-dual-ratings-v6')
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      CI: "true"
+      NO_D1_WARNING: "true"
+      WRANGLER_SEND_METRICS: "false"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/detail-dual-ratings-v6
+          persist-credentials: false
+      - name: Verify trusted branch
+        shell: bash
+        run: |
+          test "$(git branch --show-current)" = "feature/detail-dual-ratings-v6"
+          test ! -e source-watchdog/.dev.vars
+          test ! -e source-watchdog/.env
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install LOCAL Wrangler test dependency
+        working-directory: source-watchdog
+        run: npm install --no-audit --no-fund
+      - name: Node, SQLite, crypto and local workerd/D1 Cron acceptance
+        working-directory: source-watchdog
+        run: npm run test:release-local
+      - name: Ensure tracked Worker configuration remains inert
+        if: always()
+        shell: bash
+        run: |
+          node --input-type=module <<'JS'
+          import {readFileSync} from "node:fs";
+          const w=JSON.parse(readFileSync("source-watchdog/wrangler.jsonc","utf8"));
+          if(w.workers_dev!==false || w.d1_databases!==undefined ||
+             Object.values(w.vars??{}).some(x=>x!=="false"&&x!=="disabled")){
+            throw Error("Production Worker settings changed in local-only test");
+          }
+          console.log("PASS: no live D1 binding, no enabled Worker flags");
+          JS
+          git diff --exit-code -- source-watchdog/wrangler.jsonc
