@@ -37,6 +37,9 @@
 - [x] Ed25519 imzalama ve surum/zaman kontrolleri sunucu tarafi.
 - [x] Imzali salt-okunur /v1/sources endpoint'i (varsayilan OFF).
 - [x] Kotlin/BouncyCastle dogrulama, JSON ayrimci, replay saklama ve adapter gate kodu.
+- [x] 25.09: Gercek GitHub Kotlin kaynaklariyla JVM imza testleri 14/14 ve adapter gate 6/6 basarili.
+- [x] Bozuk ve yinelenen test-core.sh blogu duzeltildi; GitHub dosyasi bash -n testinden gecti.
+- [x] Test-core shell syntax ve iki testin yalniz bir kez calismasi icin kalici Node regresyon testi eklendi.
 - [x] Paylasilan PUBLIC kriptografik test vektoru.
 - [ ] Gercek public key'in Android eklenti surumune pinlenmesi.
 - [ ] Guvenli client yenileme agi, API endpoint baglantisi ve offline TTL.
