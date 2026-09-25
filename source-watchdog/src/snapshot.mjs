@@ -54,7 +54,8 @@ export function buildClientSnapshot(sources, states, revision, now, options={}) 
 }
 
 /** A device accepts only newer signed snapshots; signing is handled outside. */
-export function canReplaceSnapshot(current, incoming, now) {
+export function canReplaceSnapshot(current, incoming, now, signatureVerified = false) {
+  if (signatureVerified !== true) return false;
   if (!incoming || incoming.schemaVersion !== 1 ||
       !Number.isSafeInteger(incoming.revision) ||
       !Number.isFinite(incoming.expiresAt) ||
