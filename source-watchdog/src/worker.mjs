@@ -4,7 +4,8 @@
  * are NO third-party network adapters or public registry/admin endpoints.
  * Fixture mode requires an entirely fixture-only D1 database.
  */
-import { getPrivateRegistry, buildUnpublishedSnapshot } from "./registry.mjs";
+import { getPrivateRegistry, buildUnpublishedSnapshot, RegistryConflict } from "./registry.mjs";
+import {adminWritesConfigured,parseAdminMutationRequest,executeAdminMutation,AdminMutationError} from "./admin-actions.mjs";
 import { publishSignedSnapshot } from "./snapshot-publisher.mjs";
 import { adminAccessConfigured, verifyAdminAccess } from "./admin-auth.mjs";
 import { summarizeSources, renderAdminDashboard } from "./admin-view.mjs";
@@ -47,6 +48,8 @@ export function createWatchdogWorker({
   verifyAdmin = verifyAdminAccess,
   makeAdminOverview = summarizeSources,
   renderAdmin = renderAdminDashboard,
+  performAdminMutation = executeAdminMutation,
+  parseAdminRequest = parseAdminMutationRequest,
   nowMillis = Date.now,
 } = {}) {
   async function runScheduledFixture(controller, env) {
@@ -83,6 +86,40 @@ export function createWatchdogWorker({
   return {
     async fetch(request, env) {
       const url = new URL(request.url);
+      if (url.pathname.startsWith("/admin/api/")) {
+        // No production writes unless explicitly enabled BEYOND read-only
+        // dashboard access, with a verified Access JWT and a strict origin.
+        if (!adminAccessConfigured(env) || !adminWritesConfigured(env)) {
+          return response({error:"not_found"},404);
+        }
+        if (request.method !== "POST") return response({error:"method_not_allowed"},405);
+        let email;
+        try { email = await verifyAdmin(request, env); }
+        catch { email = null; }
+        if (!email) return response({error:"forbidden"},403);
+        if (!env.SOURCES_DB?.prepare) return response({error:"admin_unavailable"},503);
+        try {
+          const action = await parseAdminRequest(request, env);
+          const result = await performAdminMutation(env.SOURCES_DB, action, email, nowMillis());
+          return response(result,200);
+        } catch (err) {
+          if (err instanceof AdminMutationError) {
+            return response({error:err.message},err.status);
+          }
+          if (err instanceof RegistryConflict) {
+            return response({error:"revision_conflict"},409);
+          }
+          if (err?.message === "source_not_found") {
+            return response({error:"source_not_found"},404);
+          }
+          if (["source_not_eligible", "invalid_admin_release",
+               "no_approved_previous_healthy_address"].includes(err?.message)) {
+            return response({error:"invalid_source_state"},409);
+          }
+          logger.warn?.("WATCHDOG_ADMIN_WRITE_FAILED");
+          return response({error:"admin_unavailable"},503);
+        }
+      }
       if (request.method !== "GET") return response({error:"method_not_allowed"},405);
       if (url.pathname === "/health") {
         return response({service:"EA-FB Source Watchdog",status:"configured_offline"});
