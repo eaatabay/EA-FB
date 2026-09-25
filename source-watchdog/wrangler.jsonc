@@ -13,6 +13,7 @@
     "WATCHDOG_MODE": "disabled",
     "WATCHDOG_CRON_ENABLED": "false",
     "WATCHDOG_FIXTURE_ENABLED": "false",
-    "WATCHDOG_SNAPSHOT_ENABLED": "false"
+    "WATCHDOG_SNAPSHOT_ENABLED": "false",
+    "WATCHDOG_ADMIN_ENABLED": "false"
   }
 }
