@@ -54,7 +54,8 @@ export function createWatchdogWorker({
       concurrency: 4,
       timeoutMs: 12000,
     });
-    const totals = {committed:0, skipped:0, duplicate:0, runner_error:0, other:0};
+    const totals = {committed:0, skipped:0, duplicate:0, lease_busy:0,
+      not_due:0, rate_limited_or_ineligible:0, runner_error:0, other:0};
     for (const item of result) {
       if (Object.hasOwn(totals, item.status)) totals[item.status]++;
       else totals.other++;
