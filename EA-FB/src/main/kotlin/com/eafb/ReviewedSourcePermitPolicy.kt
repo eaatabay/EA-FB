@@ -70,7 +70,11 @@ object ReviewedSourcePermitPolicy {
             permit.approvedHosts.all(::validHost) &&
             validPath(permit.approvedPathPrefix) &&
             evidence.matches(permit.evidenceReference) &&
-            !permit.evidenceReference.split('/').contains("..") &&
+            // Evidence is a repository-local review record, never a URL or
+            // a path that can normalize to a different reviewed document.
+            permit.evidenceReference.removePrefix("rights/")
+                .split('/').all { it.isNotEmpty() && it != "." && it != ".." } &&
+
             permit.reviewedAt in 0..now &&
             permit.validUntil > now &&
             permit.validUntil > permit.reviewedAt &&
