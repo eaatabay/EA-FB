@@ -192,6 +192,30 @@ catalog Worker remain unchanged.
   compile against local Android/JSON *stubs*; actual Android Gradle/Dex
   packaging and Mi Box remote navigation/playback remain UNVERIFIED.
 
+## Signed read-only Worker endpoint (STAGED, DISABLED, NOT DEPLOYED)
+- GET /v1/sources is implemented behind four independent safeguards:
+  WATCHDOG_MODE=production, WATCHDOG_SNAPSHOT_ENABLED=true,
+  WATCHDOG_FIXTURE_ENABLED != true, plus a bound private SOURCES_DB and
+  Cloudflare Worker secrets SNAPSHOT_SIGNING_KEY_ID and
+  SNAPSHOT_SIGNING_PKCS8_B64. The COMMITTED config keeps the route OFF,
+  Worker dev exposure OFF and ALL fixture Cron settings OFF.
+- The endpoint publishes only the strictly filtered D1 client snapshot
+  signed by the private Worker key. It NEVER accepts source URLs or writes
+  source data from HTTP requests and never returns private signing keys.
+- It rejects any database containing fixture IDs or example.org test domains;
+  it also refuses test records that appear between registry read and signing.
+  A bad/missing database, key, or invalid snapshot yields sanitized HTTP 503.
+  JSON is no-store: the Android side must persist replay guards and recheck
+  the signed 15-minute expiry before using any source for a new search.
+- Added test/signed-endpoint.test.mjs: route OFF by default, missing secrets,
+  mixed fixtures, late fixture insertion, ephemeral real Ed25519 signing,
+  signature verification with the corresponding public key, and blocked writes.
+  The local Worker module boundary was additionally checked using Node 22
+  fixture-only dependencies; this does NOT constitute deployed Cloudflare
+  D1 or actual Mi Box integration testing.
+- Android WatchdogClientStore now synchronizes snapshot acceptance before
+  updating the durable replay guard to avoid concurrent refresh rollback.
+
 ## Next gated milestones
 1. Run full Node/SQLite tests from the actual v6 branch, then a local Wrangler
    test using only the isolated fixture D1. Never interpret fixture health
@@ -202,9 +226,10 @@ catalog Worker remain unchanged.
    sources; the private runner already has lease-based serialization. User-facing
    search/playback must never wait for repair.
 4. Build admin panel with strong authentication/2FA, approvals, audit and rollback.
-5. Integrate the now-staged Kotlin verifier with actual EA-FB source adapters
-   and a signed read-only Worker endpoint after pinning a production public key.
-   Verify Gradle/Dex packaging on old Mi Box Android; fail closed until then.
+5. Provision and pin a production signing public key in a reviewed .cs3,
+   connect the staged read-only Worker endpoint to the Android refresh client,
+   and integrate only genuinely approved bundled source adapters. Verify
+   Gradle/Dex packaging on Mi Box; fail closed until every gate passes.
 6. Run staged rollout on a separate test service before touching v5/main.
 
 GitHub Actions quota is currently exhausted; use local fixture tests where
