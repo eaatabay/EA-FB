@@ -189,7 +189,7 @@ class EAProvider : MainAPI() {
         // Never create a visible empty rail or request nonexistent pages.
         if (results.isEmpty()) return newHomePageResponse(emptyList(), false)
         return newHomePageResponse(
-            listOf(HomePageList(category.title, results, true)),
+            listOf(HomePageList(category.title, results, false)),
             CatalogCardPolicy.hasNext(raw.length(), page)
         )
     }
