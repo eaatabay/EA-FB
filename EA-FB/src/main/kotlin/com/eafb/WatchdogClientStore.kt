@@ -1,34 +1,61 @@
 package com.eafb
 
 import android.content.Context
+import java.nio.charset.StandardCharsets
 
 /**
- * This does NOT fetch an endpoint or activate any external adapter. New
- * searches may use only a signature-verified, unexpired snapshot. The app
- * persists replay protection before exposing an accepted snapshot to callers.
+ * All replay metadata and the signed cache are committed atomically. The
+ * offline cache is never an authority: its signature, exact high-water marks,
+ * expiry and bundled adapter versions are rechecked on each restoration.
  */
-class WatchdogClientStore(context: Context) {
-    private val preferences = context.getSharedPreferences("ea_fb_watchdog_trust_v1", Context.MODE_PRIVATE)
+class WatchdogClientStore(
+    context: Context,
+    private val verifier: SourceSnapshotTrust = SourceSnapshotTrust(
+        WatchdogTrustConfig.pinnedPublicKeys,
+        WatchdogTrustConfig.installedAdapterVersions
+    ),
+    private val parseEnvelope: (String) -> SignedSourceEnvelope? = WatchdogSnapshotJson::parse
+) {
+    private val preferences = context.getSharedPreferences(
+        "ea_fb_watchdog_trust_v1", Context.MODE_PRIVATE
+    )
 
-    @Synchronized // Serialize concurrent refreshes before updating persisted replay guards.
+    @Synchronized
     fun acceptSignedJson(raw: String, now: Long): SnapshotCheck {
-        val envelope = WatchdogSnapshotJson.parse(raw)
+        if (raw.length > 32_768 ||
+            raw.toByteArray(StandardCharsets.UTF_8).size > 32_768) {
+            return SnapshotCheck.Rejected("invalid_envelope")
+        }
+        val envelope = runCatching { parseEnvelope(raw) }.getOrNull()
             ?: return SnapshotCheck.Rejected("invalid_envelope")
-        // Production currently has NO live signing keys or external playback
-        // adapters. Until approved pins are bundled, this fails closed.
-        val verifier = SourceSnapshotTrust(
-            WatchdogTrustConfig.pinnedPublicKeys,
-            WatchdogTrustConfig.installedAdapterVersions
-        )
-        val oldRevision = preferences.getLong("last_revision", -1L)
-        val oldGeneratedAt = preferences.getLong("last_generated_at", -1L)
-        val result = verifier.verify(envelope, now, oldRevision, oldGeneratedAt)
+        val previousRevision = preferences.getLong("last_revision", -1L)
+        val previousGeneratedAt = preferences.getLong("last_generated_at", -1L)
+        val result = verifier.verify(envelope, now, previousRevision, previousGeneratedAt)
         if (result !is SnapshotCheck.Accepted) return result
-        val signed = result.snapshot
-        val stored = preferences.edit()
-            .putLong("last_revision", signed.revision)
-            .putLong("last_generated_at", signed.generatedAt)
-            .commit() // fail closed if durable storage fails
-        return if (stored) result else SnapshotCheck.Rejected("cannot_persist_replay_guard")
+
+        // Store the ORIGINAL signed JSON, never a reconstructed unsigned
+        // payload. Android SharedPreferences Editor commits all 3 entries
+        // together or exposes none of them to this instance.
+        val durable = preferences.edit()
+            .putLong("last_revision", result.snapshot.revision)
+            .putLong("last_generated_at", result.snapshot.generatedAt)
+            .putString("last_signed_envelope", raw)
+            .commit()
+        return if (durable) result
+            else SnapshotCheck.Rejected("cannot_persist_replay_guard")
     }
+
+    /**
+     * Recover an unexpired cached snapshot with NO network connection.
+     * Expired or tampered caches fail closed; the replay high-water marks are
+     * intentionally retained to block a previously signed old revision.
+     */
+    @Synchronized
+    fun restoreVerifiedOffline(now: Long): VerifiedSourceSnapshot? =
+        SourceSnapshotOfflinePolicy.restore(
+            preferences.getString("last_signed_envelope", null), now,
+            preferences.getLong("last_revision", -1L),
+            preferences.getLong("last_generated_at", -1L),
+            parseEnvelope, verifier
+        )
 }
