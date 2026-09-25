@@ -1,7 +1,7 @@
 /**
  * Generates SQL to initialize a PRIVATE, LOCAL, fixture-only D1 test database.
  * NEVER run the output with Wrangler --remote or against any existing database.
- * This script prints SQL only: it does not contact Cloudflare or any website.
+ * This script prints SQL only: it does not contact Cloudflare or any website.\n * IMPORTANT: D1 imports reject explicit BEGIN/COMMIT in SQL files. Wrangler\n * executes the INSERT statements through its own transaction handling.
  */
 import { initialState } from "../src/policy.mjs";
 
@@ -31,4 +31,4 @@ const rows = ids.map(id => {
 });
 process.stdout.write("-- FIXTURE-ONLY: local isolated D1 only; never use with --remote.\n" +
   "-- 27 healthy candidates, two approved-domain moves, one structural failure.\n" +
-  "BEGIN TRANSACTION;\n" + rows.join("\n") + "\nCOMMIT;\n");
+  rows.join("\n") + "\n");
