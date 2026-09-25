@@ -51,6 +51,22 @@ catalog Worker remain unchanged.
 - `source-watchdog/test/policy.test.mjs`: fixture-only isolation/failure/recovery tests.
 - `source-watchdog/package.json`: `npm test`, no external dependencies.
 
+## Scheduler and runner implemented on v6 (NOT deployed)
+- `src/scheduler.mjs` selects only enabled, integration-approved sources whose
+  next check is due. Degraded sources are checked before quarantined, then
+  healthy sources. Admin-required and disabled sources are never auto-run.
+- `src/runner.mjs` isolates each adapter with a timeout and bounded
+  concurrency. One crashing adapter cannot stop the other source checks.
+- User-facing playback/search never waits for a repair check. An incident can
+  request an early check for one source, with a five-minute minimum spacing;
+  it cannot bypass disabled/admin-review/integration-approval gates.
+- There are still **no real third-party adapters or network probes** in this
+  branch. Source-specific adapters must be permission-reviewed and must enforce
+  manual redirects, verified host allowlists, SSRF protections and request
+  budgets before they are connected.
+- Added fixture tests for scheduling priority, incident throttling, two-check
+  recovery and isolation when one adapter throws.
+
 ## Next gated milestones
 1. Design a durable central registry and audit log, and enforce CAS/versioned
    writes plus least-privilege administration. Keep the catalog Worker separate.
