@@ -167,7 +167,7 @@ export function applyProbe(source, previous, probe, now) {
   const currentUrl = recovered && candidate ? candidate : previous.currentUrl;
   return { ...base, status: recovered ? HEALTH.HEALTHY : HEALTH.DEGRADED,
     currentUrl, lastKnownGoodUrl: recovered ? currentUrl : previous.lastKnownGoodUrl,
-    candidateUrl: recovered ? null : candidate, consecutiveSuccesses: recovered ? 0 : successes,
+    candidateUrl: recovered ? null : candidate, consecutiveSuccesses: recovered ? RECOVERY_SUCCESSES : successes,
     consecutiveFailures: 0, lastFailure: null,
     nextCheckAt: now + (recovered ? BASE_CHECK : DEGRADED_CHECK) };
 }
