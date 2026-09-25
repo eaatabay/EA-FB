@@ -275,12 +275,41 @@ catalog Worker remain unchanged.
   harness with mocked URL/stream/cryptography/database primitives. This is
   NOT an end-to-end Node, real D1 or Cloudflare Access validation.
 
+## Network preflight safety gate (CODED, TESTED LOCALLY; NO LIVE TRANSPORT)
+- `src/network-boundary.mjs` performs side-effect-free preflight against
+  preapproved, exact HTTPS hostnames only. It rejects local/private/reserved
+  IPv4 addresses, malformed targets, credentials/ports, mixed public-private
+  DNS answers, IPv6 (conservative pending pinned IPv6 transport), unknown
+  redirects, redirect loops and more than three redirects.
+- Approved-host DNS is checked again at each supplied redirect hop. This
+  module never performs `fetch` and never accepts arbitrary new domains.
+  Unknown new hosts require human ownership/authorization review.
+- IMPORTANT: DNS preflight **does not prevent DNS rebinding** by itself.
+  Source-specific adapters must still use a transport that pins/checks the
+  actual remote IP on every connection AND redirect before any live probing.
+  Cloudflare Worker global fetch must not be treated as an automatically
+  pinned socket, so LIVE probes stay OFF until this is solved and tested.
+- `test/network-boundary.test.mjs` adds five Node >=22 tests for public
+  address filtering, unsafe mixed DNS answers, strict HTTPS host approval,
+  per-hop redirect validation, redirect limits and loop detection.
+  The exact GitHub code and test blobs were verified against the local
+  copies; all **5/5** tests passed on Node v22.16.0.
+- Both migration files `0001_registry.sql` and `0002_source_leases.sql`
+  were likewise verified byte-for-byte against current v6 GitHub contents.
+  Four independent **Python SQLite 3.13 smoke tests** passed: idempotent
+  migration, expired-owner lease takeover with old CAS denial, historical
+  run-ID replay rollback, and invalid JSON/unknown lease rejection.
+  These are actual local SQLite tests; they are NOT a Cloudflare D1 or
+  full repository Node suite result. Wrangler is not provisioned here.
+
 ## Next gated milestones
 1. Run full Node/SQLite tests from the actual v6 branch, then a local Wrangler
    test using only the isolated fixture D1. Never interpret fixture health
    as availability of any real external source.
-2. Review authorized real-source adapters one by one: explicit approved hosts,
-   DNS and redirect SSRF protection, functional checks and request budgets.
+2. Review authorized real-source adapters one by one: the new strict DNS /
+   redirect preflight exists, but a genuinely IP-pinned live transport (not
+   default Worker fetch), source authorization, functional checks and request
+   budgets must be designed and independently verified before activation.
 3. Add verified, authenticated and rate-limited incident intake for real
    sources; the private runner already has lease-based serialization. User-facing
    search/playback must never wait for repair.
