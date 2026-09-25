@@ -12,7 +12,6 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import org.json.JSONArray
-import java.text.SimpleDateFormat
 import java.util.Locale
 import com.lagradost.cloudstream3.HomePageList
 import com.lagradost.cloudstream3.HomePageResponse
@@ -327,19 +326,18 @@ class EAProvider : MainAPI() {
         return Pair("Serinin Filmleri (vizyon tarihine göre): $labels", cards)
     }
 
-    private fun nextEpisode(item: JSONObject): NextAiring? {
+    private fun upcomingEpisode(item: JSONObject): EpisodeAirPolicy.Airing? =
+        item.optJSONObject("next_episode_to_air")
+            ?.optString("air_date")
+            ?.let { EpisodeAirPolicy.parse(it, System.currentTimeMillis()) }
+
+    private fun nextEpisode(item: JSONObject, airing: EpisodeAirPolicy.Airing?): NextAiring? {
+        if (airing?.showNativeCountdown != true) return null
         val upcoming = item.optJSONObject("next_episode_to_air") ?: return null
         val episode = upcoming.optInt("episode_number").takeIf { it > 0 } ?: return null
-        val airDate = upcoming.optString("air_date").takeIf { it.length >= 10 }
-            ?: return null
-        val seconds = runCatching {
-            SimpleDateFormat("yyyy-MM-dd", Locale.ROOT).apply { isLenient = false }
-                .parse(airDate)?.time?.div(1000)
-        }.getOrNull() ?: return null
-        if (seconds <= System.currentTimeMillis() / 1000) return null
         return NextAiring(
             episode = episode,
-            unixTime = seconds,
+            unixTime = airing.unixSeconds,
             season = upcoming.optInt("season_number").takeIf { it > 0 }
         )
     }
@@ -445,8 +443,20 @@ class EAProvider : MainAPI() {
         val (collectionLabel, collectionCards) = if (!isSeries) {
             collectionMovies(item, tmdbId)
         } else Pair<String?, List<SearchResponse>>(null, emptyList())
+        val nextAir = if (isSeries) upcomingEpisode(item) else null
+        val upcomingLabel = if (nextAir != null && !nextAir.showNativeCountdown) {
+            val next = item.optJSONObject("next_episode_to_air")
+            val season = next?.optInt("season_number")?.takeIf { it > 0 }
+            val episode = next?.optInt("episode_number")?.takeIf { it > 0 }
+            val number = listOfNotNull(
+                season?.let { "S$it" }, episode?.let { "B$it" }
+            ).joinToString(" ")
+            "Sonraki bölüm" + (if (number.isNotEmpty()) " ($number)" else "") +
+                ": " + nextAir.dateLabel
+        } else null
         val combinedPlot = listOfNotNull(
-            ratingLine.takeIf { it.isNotBlank() }, overview, director, collectionLabel
+            ratingLine.takeIf { it.isNotBlank() }, overview, director,
+            upcomingLabel, collectionLabel
         ).joinToString("\n\n")
         val recs = recommendations(item, media, tmdbId)
         // The stock CloudStream LoadResponse exposes one recommendation rail,
@@ -466,7 +476,7 @@ class EAProvider : MainAPI() {
                 actors = people
                 tags = ratingBadges + genres(item)
                 recommendations = recs
-                nextAiring = nextEpisode(item)
+                nextAiring = nextEpisode(item, nextAir)
                 showStatus = when (item.optString("status")) {
                     "Ended", "Canceled" -> ShowStatus.Completed
                     "Returning Series", "In Production" -> ShowStatus.Ongoing
