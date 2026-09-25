@@ -15,6 +15,7 @@ class SQLiteD1 {
     this.sql = new DatabaseSync(":memory:");
     const path = join(dirname(fileURLToPath(import.meta.url)), "../migrations/0001_registry.sql");
     this.sql.exec(readFileSync(path, "utf8"));
+    this.sql.exec(readFileSync(join(dirname(path), "0002_source_leases.sql"), "utf8"));
   }
   prepare(sql) {
     const connection = this.sql;
@@ -103,4 +104,37 @@ sqliteTest("incident-triggered check is rate limited and never bypasses eligibil
     });
     assert.equal(second.status,"rate_limited_or_ineligible");
   }finally{db.close();}
+});
+
+test("two overlapping Cron ticks probe one source only once", {skip: !DatabaseSync}, async()=>{
+  const db=new SQLiteD1();
+  try {
+    await registerSource(db,source("fixture-overlap"),"admin:alice",0);
+    let startProbe;
+    const started=new Promise(resolve=>{startProbe=resolve;});
+    let finishProbe;
+    const held=new Promise(resolve=>{finishProbe=resolve;});
+    let calls=0;
+    const adapters=new Map([["fixture-overlap",{
+      id:"fixture-overlap",
+      async probe(){
+        calls++;
+        startProbe();
+        await held;
+        return good();
+      },
+    }]]);
+    const first=runDueChecks({db,adapters,now:0});
+    await started;
+    const second=await runDueChecks({db,adapters,now:0});
+    assert.equal(second.length,1);
+    assert.equal(second[0].status,"lease_busy");
+    finishProbe();
+    const firstResult=await first;
+    assert.equal(firstResult[0].status,"committed");
+    assert.equal(calls,1);
+    assert.equal((await getSource(db,"fixture-overlap")).state.revision,1);
+    const third=await runDueChecks({db,adapters,now:0});
+    assert.deepEqual(third,[]);
+  } finally { db.close(); }
 });
