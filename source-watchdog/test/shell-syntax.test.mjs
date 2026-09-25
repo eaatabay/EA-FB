@@ -22,6 +22,8 @@ test("signed snapshot core tests and gate run exactly once",()=>{
   const count=text=>body.split(text).length-1;
   assert.equal(count("com.eafb.SourceSnapshotTrustTestKt"),1);
   assert.equal(count("com.eafb.SourceSnapshotGateTestKt"),1);
+  assert.equal(count("com.eafb.SourceSnapshotOfflinePolicyTestKt"),1);
+  assert.equal(count("com.eafb.WatchdogClientStoreJvmTestKt"),1);
   assert.equal(count("org/bouncycastle/crypto/signers/Ed25519Signer.class"),1);
 });
 
