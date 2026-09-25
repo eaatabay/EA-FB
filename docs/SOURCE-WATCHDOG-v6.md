@@ -1,8 +1,10 @@
 # EA-FB Source Watchdog — foundation (v6 feature branch)
 
-This is a **policy engine and test fixtures only**. Nothing is deployed and no
-source monitoring, automatic recovery, or admin UI is live. v5/main and the
-production TMDb catalog Worker remain unchanged.
+The **policy engine, D1-compatible private registry, immutable audit triggers,
+local tests and unpublished snapshot serializer** are implemented in v6.
+Nothing is deployed: no real monitoring, automatic recovery, cron, signed
+snapshot delivery or admin UI is live. v5/main and the production TMDb
+catalog Worker remain unchanged.
 
 ## Non-negotiable production contract
 - The catalog (TMDb metadata) and licensed source system are failure-isolated.
