@@ -1,7 +1,8 @@
 # EA-FB Source Watchdog — foundation (v6 feature branch)
 
 The **policy engine, D1-compatible private registry, immutable audit triggers,
-local tests, isolated Cron/fixture Worker and unpublished snapshot serializer** are implemented in v6.
+local-only D1 fixture harness, isolated Cron Worker, signed snapshot contract and
+read-only Access-gated admin dashboard** are staged on the v6 branch.
 Nothing is deployed: no real source monitoring, deployed cron, signed snapshot
 delivery or admin UI is live. v5/main and the production TMDb
 catalog Worker remain unchanged.
@@ -103,10 +104,13 @@ catalog Worker remain unchanged.
   one-hour degraded retry and slower quarantine backoff. Cron only wakes the
   scheduler to process whichever sources are due.
 - Committed configuration is intentionally INERT: WATCHDOG_MODE=disabled,
-  WATCHDOG_CRON_ENABLED=false, WATCHDOG_FIXTURE_ENABLED=false, workers_dev=false,
-  and NO D1 binding. No live Cloudflare or third-party API was contacted.
-- src/worker.mjs only exposes a minimal GET /health; the registry, incident
-  intake and admin writes have NO public routes. No real adapters are included.
+  WATCHDOG_CRON_ENABLED=false, WATCHDOG_FIXTURE_ENABLED=false,
+  WATCHDOG_SNAPSHOT_ENABLED=false, WATCHDOG_ADMIN_ENABLED=false,
+  workers_dev=false and NO D1 binding. No live Cloudflare or third-party API was contacted.
+- src/worker.mjs exposes GET /health only with the committed OFF flags;
+  signed /v1/sources and read-only /admin require separate explicit enablement.
+  The incident intake and admin WRITES have no public routes. No real adapters
+  are included.
 - All three fixture flags and an isolated SOURCES_DB binding must be enabled
   before the fixture Cron runs. The fixture registry refuses mixed real IDs
   and non-example.org destinations before invoking any runner.
@@ -118,19 +122,24 @@ catalog Worker remain unchanged.
   safe test sources, seeded migration audit and fixture runner coordination.
   These tests are not a substitute for a real Cloudflare D1/Workers test.
 
-### Future developer-only local verification (do NOT deploy)
-1. In source-watchdog run npm install, then create a NEW empty dev-only D1
-   named ea-fb-source-watchdog-dev with Wrangler.
-2. Copy wrangler.jsonc to ignored wrangler.local.jsonc, adding a SOURCES_DB D1
-   binding using the newly created database ID. Do not edit tracked config.
-3. Apply migrations with Wrangler --local and the ignored local config.
-4. Run node dev/generate-fixture-seed.mjs > dev/generated-fixtures.sql,
-   then import that file ONLY with wrangler d1 execute --local.
-5. In ignored LOCAL config set fixture mode and its two explicit true flags,
-   then run wrangler dev --test-scheduled --config wrangler.local.jsonc.
-6. Trigger /cdn-cgi/local/scheduled?format=json and check two-success recovery,
-   the structural admin hold, audit revision, and historical-run de-duplication.
-7. Leave the committed Wrangler flags off and DO NOT run Wrangler deploy.
+### Developer-only LOCAL D1 fixture verification (do NOT deploy)
+- `dev/make-local-config.mjs` creates an ignored `wrangler.local.jsonc` with
+  an inert UUID placeholder and preview_database_id for a LOCAL-only D1.
+  The config generator refuses to run unless every tracked production flag
+  is disabled and the tracked config contains no D1 binding. It uses an
+  exclusive create and will not overwrite an existing local file.
+- From the v6 feature branch: `cd source-watchdog && npm install`, then
+  `npm run test:local`. This executes the Node, SQLite and Python tests;
+  applies BOTH D1 migrations using Wrangler `--local`; and imports exactly
+  30 synthetic fixture records into an isolated local D1 database.
+- To exercise the local Cloudflare runtime: `npm run dev:fixture`, then
+  request `/cdn-cgi/local/scheduled?cron=*/15+*+*+*+*` on localhost.
+  All test records use fictitious `*.example.org` domains; no real scraping
+  or network health checks occur. The local admin and snapshot routes stay OFF.
+- No `wrangler d1 create`, `--remote`, `wrangler deploy`, real database ID,
+  Access domain or production token is required for local verification.
+- A full local Wrangler run remains to be performed in a checkout with the
+  Wrangler dependency installed; this repository edit alone is not a test run.
 
 ## Signed client snapshot contract (v6 code and offline tests, NOT live)
 - `src/snapshot-crypto.mjs` adds canonical Ed25519 signing and verification
@@ -216,6 +225,29 @@ catalog Worker remain unchanged.
 - Android WatchdogClientStore now synchronizes snapshot acceptance before
   updating the durable replay guard to avoid concurrent refresh rollback.
 
+## Admin dashboard foundation (STAGED, OFF, READ-ONLY)
+- `src/admin-auth.mjs` verifies the actual RS256 Cloudflare Access JWT
+  signature against the JWKS at the fixed admin-chosen team domain, exact
+  issuer and application audience, expiration/nbf/iat and a lower-case
+  explicit allowlist of admin email addresses. An unverified email header
+  alone NEVER authorizes a request. Unknown signers and malformed JWTs fail
+  closed. The test JWKS uses ephemeral RSA keys, not production credentials.
+- `src/admin-view.mjs` summarizes health and renders a responsive navy/yellow
+  HTML dashboard. Every D1-derived value is HTML escaped; the page includes
+  no JavaScript, forms or write controls. An authenticated GET /admin receives
+  no-store and a restrictive CSP/frame protection. Any admin or D1 failure
+  returns a sanitized 403 or 503 without exposing internal exceptions.
+- The tracked Worker config sets WATCHDOG_ADMIN_ENABLED=false. Enabling it
+  eventually requires a separately reviewed Cloudflare Access application,
+  MFA policy, team domain, application AUD tag, explicit admin email list
+  and the separate D1 binding. None is configured or deployed now.
+- New offline tests cover credential gates, forged JWT claims, invalid
+  issuer/audience, token replay timing, unknown JWKS signing keys, HTML
+  injection, read-only route behavior and disabled-by-default config.
+  Eight pure repository-code safety checks passed in V8; the newly added
+  comprehensive Node JWT/Worker test files and real Cloudflare Access flow
+  still require a full Node/Workers runtime test before enabling any route.
+
 ## Next gated milestones
 1. Run full Node/SQLite tests from the actual v6 branch, then a local Wrangler
    test using only the isolated fixture D1. Never interpret fixture health
@@ -225,7 +257,9 @@ catalog Worker remain unchanged.
 3. Add verified, authenticated and rate-limited incident intake for real
    sources; the private runner already has lease-based serialization. User-facing
    search/playback must never wait for repair.
-4. Build admin panel with strong authentication/2FA, approvals, audit and rollback.
+4. Connect the staged read-only admin panel to a real, MFA-enforced Cloudflare
+   Access application. Add reviewed write operations only after independent
+   authorization, audit and rollback tests.
 5. Provision and pin a production signing public key in a reviewed .cs3,
    connect the staged read-only Worker endpoint to the Android refresh client,
    and integrate only genuinely approved bundled source adapters. Verify
