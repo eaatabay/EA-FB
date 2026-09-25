@@ -1,9 +1,9 @@
 # EA-FB Source Watchdog — foundation (v6 feature branch)
 
 The **policy engine, D1-compatible private registry, immutable audit triggers,
-local tests and unpublished snapshot serializer** are implemented in v6.
-Nothing is deployed: no real monitoring, automatic recovery, cron, signed
-snapshot delivery or admin UI is live. v5/main and the production TMDb
+local tests, isolated Cron/fixture Worker and unpublished snapshot serializer** are implemented in v6.
+Nothing is deployed: no real source monitoring, deployed cron, signed snapshot
+delivery or admin UI is live. v5/main and the production TMDb
 catalog Worker remain unchanged.
 
 ## Non-negotiable production contract
@@ -35,7 +35,7 @@ catalog Worker remain unchanged.
   register, read, commit a trusted probe, enable/disable, approve/revoke an
   adapter, release from admin review, roll back to a previously audited healthy
   approved URL, and build an **unpublished** client snapshot. There are NO
-  HTTP routes, credentials, scheduled checks, client signing, or live adapters.
+  write-enabled HTTP routes, credentials, client signing, or live adapters.
 - Persisted configuration uses an explicit allowlist. Never store API keys,
   cookies, headers, or free-form source objects in registry/audit history.
 - Offline tests: `npm test` checks policy and snapshot on supported Node;
@@ -67,21 +67,53 @@ catalog Worker remain unchanged.
 - Added fixture tests for scheduling priority, incident throttling, two-check
   recovery and isolation when one adapter throws.
 
+## Isolated Cloudflare Cron Worker (implemented, NOT deployed)
+- The separate source-watchdog/wrangler.jsonc uses name ea-fb-source-watchdog-dev,
+  with a 15-minute Cron trigger. This is NOT the live catalog Worker.
+  Existing source policy retains its ~6-hour normal healthy-source cadence,
+  one-hour degraded retry and slower quarantine backoff. Cron only wakes the
+  scheduler to process whichever sources are due.
+- Committed configuration is intentionally INERT: WATCHDOG_MODE=disabled,
+  WATCHDOG_CRON_ENABLED=false, WATCHDOG_FIXTURE_ENABLED=false, workers_dev=false,
+  and NO D1 binding. No live Cloudflare or third-party API was contacted.
+- src/worker.mjs only exposes a minimal GET /health; the registry, incident
+  intake and admin writes have NO public routes. No real adapters are included.
+- All three fixture flags and an isolated SOURCES_DB binding must be enabled
+  before the fixture Cron runs. The fixture registry refuses mixed real IDs
+  and non-example.org destinations before invoking any runner.
+- src/fixtures.mjs models 27 ordinary sources, two approved test-domain moves,
+  and one structural failure requiring admin intervention. It makes no network
+  calls. dev/generate-fixture-seed.mjs prints idempotent SQL for 30 fictitious
+  source records in a separate LOCAL D1 test database.
+- New offline tests cover disabled-by-default gating, no public admin routes,
+  safe test sources, seeded migration audit and fixture runner coordination.
+  These tests are not a substitute for a real Cloudflare D1/Workers test.
+
+### Future developer-only local verification (do NOT deploy)
+1. In source-watchdog run npm install, then create a NEW empty dev-only D1
+   named ea-fb-source-watchdog-dev with Wrangler.
+2. Copy wrangler.jsonc to ignored wrangler.local.jsonc, adding a SOURCES_DB D1
+   binding using the newly created database ID. Do not edit tracked config.
+3. Apply migrations with Wrangler --local and the ignored local config.
+4. Run node dev/generate-fixture-seed.mjs > dev/generated-fixtures.sql,
+   then import that file ONLY with wrangler d1 execute --local.
+5. In ignored LOCAL config set fixture mode and its two explicit true flags,
+   then run wrangler dev --test-scheduled --config wrangler.local.jsonc.
+6. Trigger /cdn-cgi/local/scheduled?format=json and check two-success recovery,
+   the structural admin hold, audit revision, and historical-run de-duplication.
+7. Leave the committed Wrangler flags off and DO NOT run Wrangler deploy.
+
 ## Next gated milestones
-1. Design a durable central registry and audit log, and enforce CAS/versioned
-   writes plus least-privilege administration. Keep the catalog Worker separate.
-2. Authorized probe runner with actual search/detail/episode test fixtures,
-   SSRF-safe DNS and redirect handling, per-host rate limits and no video
-   downloading. Never classify HTTP 200 alone as success.
-3. Scheduled checks (initially six-hour baseline), incident-triggered checks,
-   serialized per-source runs, and automatically retained last-known-good config.
-4. Admin-only navy/yellow dashboard, login/2FA, review/release/retest/rollback.
-5. Hook EA-FB client source adapters into a **read-only, signed or authenticated**
-   registry snapshot; enforce last-known-good cache TTL and fail closed.
-6. Test with three independent **authorized/licensed** fixtures: two domain
-   moves, one structural failure, 27 healthy simulated sources; then real
-   test environment and controlled rollout. No production deployment until
-   approved validation passes.
+1. Run full Node/SQLite tests from the actual v6 branch, then a local Wrangler
+   test using only the isolated fixture D1. Never interpret fixture health
+   as availability of any real external source.
+2. Review authorized real-source adapters one by one: explicit approved hosts,
+   DNS and redirect SSRF protection, functional checks and request budgets.
+3. Add verified, rate-limited incident reporting and a serialized per-source
+   runner. User-facing search/playback must never wait for repair.
+4. Build admin panel with strong authentication/2FA, approvals, audit and rollback.
+5. Implement signed read-only snapshot delivery and client signature checks.
+6. Run staged rollout on a separate test service before touching v5/main.
 
 GitHub Actions quota is currently exhausted; use local fixture tests where
 available. Build or deployment results MUST NOT be inferred from source review.
