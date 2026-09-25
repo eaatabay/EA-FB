@@ -46,10 +46,39 @@ catalog Worker remain unchanged.
   Create a **separate development D1**, apply migration locally first, then
   verify Wrangler against the isolated development Worker before any rollout.
 
+## Durable per-source lease and Cron/incident race protection (v6 code only)
+- `migrations/0002_source_leases.sql` adds a per-source D1 lease with a unique
+  token and bounded expiration; a second Cron or incident runner skips an
+  already-claimed source. A crashed runner's lease can expire, but a stale
+  owner cannot delete a successor's lease.
+- `src/runner.mjs` rechecks enabled/integration-approved/admin-review status
+  and whether the check is due **after** acquiring the lease. A source-specific
+  database or adapter failure is isolated from other source checks.
+- `src/registry.mjs` atomically enforces both the source revision and active
+  lease token on scheduled/incident probe writes. Late results cannot publish
+  if another runner took over. Earlier direct registry fixture tests retain
+  the optional no-lease internal API; there is no public route for it.
+- Timeouts abort cooperative adapters. Rejecting the timeout before emitting
+  the abort signal prevents an adapter's synchronous abort listener from
+  reporting false success.
+- Tests: `test/lease.test.mjs` exercises real local Node SQLite lock, expiry
+  and safe release; `test/runner.test.mjs` covers overlapping Cron runs and
+  timeout race; `test/registry.test.mjs` verifies an expired owner cannot
+  mutate health, audit or global revision; Python migration tests cover CAS
+  and duplicate protection.
+- `test/full-cycle.test.mjs` is a separate Node >=22 SQLite integration test:
+  30 fabricated sources, 15-minute wake-ups, 27 ordinary recoveries, two
+  approved test-domain moves, one admin-held structural failure and two fresh
+  checks after simulated admin repair. It requires **both** D1 migrations.
+  Offline fixture assertions and lease/SQL unit tests were individually
+  verified during development; full Node/Worker/D1 end-to-end execution
+  remains a release gate.
+
 ## Current source files
 - `source-watchdog/src/policy.mjs`: side-effect-free state transitions.
 - `source-watchdog/test/policy.test.mjs`: fixture-only isolation/failure/recovery tests.
-- `source-watchdog/package.json`: `npm test`, no external dependencies.
+- `source-watchdog/package.json`: `npm test` (Node built-ins and SQLite);
+  Wrangler is a development-only dependency, never part of the plugin.
 
 ## Scheduler and runner implemented on v6 (NOT deployed)
 - `src/scheduler.mjs` selects only enabled, integration-approved sources whose
@@ -109,8 +138,9 @@ catalog Worker remain unchanged.
    as availability of any real external source.
 2. Review authorized real-source adapters one by one: explicit approved hosts,
    DNS and redirect SSRF protection, functional checks and request budgets.
-3. Add verified, rate-limited incident reporting and a serialized per-source
-   runner. User-facing search/playback must never wait for repair.
+3. Add verified, authenticated and rate-limited incident intake for real
+   sources; the private runner already has lease-based serialization. User-facing
+   search/playback must never wait for repair.
 4. Build admin panel with strong authentication/2FA, approvals, audit and rollback.
 5. Implement signed read-only snapshot delivery and client signature checks.
 6. Run staged rollout on a separate test service before touching v5/main.
