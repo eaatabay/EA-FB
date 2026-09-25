@@ -25,7 +25,10 @@
 - [ ] Tum Node 22/SQLite test paketini gercek v6 checkout'unda kosma.
 - [ ] Wrangler --local D1 migration/Cron entegrasyon testini kosma.
 - [ ] Ayrica onaylanmis, izinli gercek kaynak adapterlerini secip inceleme.
-- [ ] DNS ve her redirect hop'unda SSRF ve kota sinirlarini dogrulama.
+- [x] DNS ve her redirect hop'u icin KAPALI/cevirmdisi preflight kodu, Node 5/5.
+- [x] GitHub ile birebir ayni migration dosyalari: SQLite smoke 4/4.
+- [ ] Gercek HTTP baglantisinda IP-pinning, IPv6 ve DNS-rebinding guvenligi.
+- [ ] Gercek kaynak probe istek kotasi / rate limit / network testleri.
 - [ ] Gercek ag islevsel probe'lari (search/detail/episode/izinli playback).
 
 ## Imzali kaynak listesi ve Android
