@@ -117,3 +117,6 @@ workerd+D1 testini burada tamamlayamadık. Testin başarılı sonucu oluşunca
 rapordaki sayaçlar terminalde `PASS LOCAL Wrangler+D1` olarak görünür.
 İzinli gerçek kaynakların IP-pinned taşıma katmanı ve Android cihazdaki
 uçtan uca playback testi **ayrı aşamalardır**.
+
+## Rights gate validation status (26 Sep 2026)
+The independent Kotlin rights suite and bridge JVM suite are included in `scripts/test-core.sh`; new offline rights regressions and a Node bridge-wiring check have been committed on the v6 feature branch but not rerun here. These checks do not substitute for the outstanding real LOCAL Wrangler+D1/Cron smoke, Android Gradle packaging or Mi Box verification. No Actions, remote D1 or live-source requests were used.
