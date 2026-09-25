@@ -1,5 +1,7 @@
-import { commitProbe, getPrivateRegistry, getSource } from "./registry.mjs";
+import { commitProbe, getPrivateRegistry, getSource, RegistryConflict } from "./registry.mjs";
 import { dueSources, incidentEligible } from "./scheduler.mjs";
+import { claimProbeLease, releaseProbeLease } from "./lease.mjs";
+import { HEALTH } from "./policy.mjs";
 
 function checkAdapters(adapters) {
   if (!(adapters instanceof Map)) throw new Error("adapter_map_required");
@@ -13,12 +15,16 @@ async function withTimeout(task, timeoutMs) {
   if (!Number.isSafeInteger(timeoutMs) || timeoutMs < 500 || timeoutMs > 60000) {
     throw new Error("invalid_probe_timeout");
   }
+  const controller = new AbortController();
   let timer;
   try {
     return await Promise.race([
-      Promise.resolve().then(task),
+      Promise.resolve().then(() => task(controller.signal)),
       new Promise((_, reject) => {
-        timer = setTimeout(() => reject(new Error("probe_timeout")), timeoutMs);
+        timer = setTimeout(() => {
+          controller.abort();
+          reject(new Error("probe_timeout"));
+        }, timeoutMs);
       }),
     ]);
   } finally {
@@ -31,40 +37,63 @@ function safeRunId(sourceId, now, ordinal) {
 }
 
 /**
- * Adapter contract:
- * adapter.probe({source, now}) -> trusted structured result.
- * The adapter implementation must use only authorized source-specific requests,
- * manual redirects and explicit host allowlists. No arbitrary public URL input
- * is accepted here.
+ * Each source owns a persisted lease before probing. Revalidate eligibility
+ * after acquisition and enforce the unexpired lease in the commit's DB CAS.
+ * Network adapters MUST honor signal and their approved host allowlist.
  */
 export async function runOneSourceCheck({
   db, adapters, sourceId, now, runId, timeoutMs = 12000,
+  mode = "scheduled", leaseClock = Date.now,
 }) {
   checkAdapters(adapters);
+  if (!Number.isSafeInteger(now) || now < 0 ||
+      !Number.isSafeInteger(timeoutMs) || timeoutMs < 500 || timeoutMs > 60000 ||
+      !["scheduled", "incident"].includes(mode) ||
+      typeof runId !== "string" || !/^[a-zA-Z0-9][a-zA-Z0-9_.:-]{7,95}$/.test(runId) ||
+      typeof leaseClock !== "function") throw new Error("invalid_check_request");
   const record = await getSource(db, sourceId);
   if (!record) return {sourceId, status:"not_found"};
   const adapter = adapters.get(sourceId);
   if (!adapter) return {sourceId, status:"adapter_missing"};
-  if (!record.config.enabled || record.config.integrationApproved !== true) {
+  if (!record.config.enabled || record.config.integrationApproved !== true ||
+      record.state.status === HEALTH.ADMIN_REQUIRED) {
     return {sourceId, status:"not_eligible"};
   }
+
+  const token = "lease-" + globalThis.crypto.randomUUID();
+  const leaseNow = leaseClock();
+  const acquired = await claimProbeLease(db, sourceId, token, leaseNow,
+    Math.min(120000, Math.max(30000, timeoutMs + 15000)));
+  if (!acquired) return {sourceId, status:"lease_busy"};
   try {
+    const current = await getSource(db, sourceId);
+    if (!current || !current.config.enabled ||
+        current.config.integrationApproved !== true ||
+        current.state.status === HEALTH.ADMIN_REQUIRED) {
+      return {sourceId, status:"not_eligible"};
+    }
+    if (mode === "scheduled" && dueSources([current], now, 1).length === 0) {
+      return {sourceId, status:"not_due"};
+    }
+    if (mode === "incident" && !incidentEligible(current, now)) {
+      return {sourceId, status:"rate_limited_or_ineligible"};
+    }
+
     const probe = await withTimeout(
-      () => adapter.probe({source: record.config, now}),
-      timeoutMs,
-    );
-    const committed = await commitProbe(db, sourceId, runId, probe, now);
-    return {
-      sourceId,
+      signal => adapter.probe({source: current.config, now, signal}), timeoutMs);
+    const committed = await commitProbe(db, sourceId, runId, probe, now,
+      {token, checkedAtMs: leaseClock()});
+    return {sourceId,
       status: committed.skipped ? "skipped" : committed.duplicate ? "duplicate" : "committed",
-      detail: committed,
-    };
+      detail: committed};
   } catch (err) {
-    return {
-      sourceId,
-      status:"runner_error",
-      error:String(err?.message || "unknown").replace(/[^a-zA-Z0-9_.:-]/g,"_").slice(0,96),
-    };
+    // Do not leak exception text, URLs, auth headers or site content into logs.
+    const error = err instanceof RegistryConflict ? "stale_revision_or_lease" :
+      err?.message === "probe_timeout" ? "probe_timeout" : "internal_failure";
+    return {sourceId, status:"runner_error", error};
+  } finally {
+    try { await releaseProbeLease(db, sourceId, token); }
+    catch { /* Expiration releases a crashed owner without blocking others. */ }
   }
 }
 
@@ -105,7 +134,7 @@ export async function runIncidentCheck({
   db, adapters, sourceId, now, incidentId, timeoutMs = 12000,
 }) {
   checkAdapters(adapters);
-  if (typeof incidentId !== "string" || !/^[a-zA-Z0-9_.:-]{8,96}$/.test(incidentId)) {
+  if (typeof incidentId !== "string" || !/^[a-zA-Z0-9_.:-]{8,88}$/.test(incidentId)) {
     throw new Error("invalid_incident_id");
   }
   const record = await getSource(db, sourceId);
@@ -118,7 +147,8 @@ export async function runIncidentCheck({
     adapters,
     sourceId,
     now,
-    runId:"incident-" + incidentId + "-" + sourceId,
+    runId:"inc-" + incidentId,
     timeoutMs,
+    mode:"incident",
   });
 }
