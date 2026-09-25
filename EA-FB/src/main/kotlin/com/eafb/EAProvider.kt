@@ -308,20 +308,24 @@ class EAProvider : MainAPI() {
             ?: return Pair(null, emptyList())
         val parts = collection.optJSONArray("parts")
             ?: return Pair(null, emptyList())
-        val seen = mutableSetOf<Int>()
-        val ordered = (0 until parts.length()).mapNotNull { index ->
-            parts.optJSONObject(index)?.takeIf { part ->
-                val id = part.optInt("id")
-                id > 0 && seen.add(id) && part.optString("title").isNotBlank()
+        val byId = linkedMapOf<Int, JSONObject>()
+        for (index in 0 until parts.length()) {
+            val part = parts.optJSONObject(index) ?: continue
+            val id = part.optInt("id")
+            if (id > 0 && part.optString("title").isNotBlank() && !byId.containsKey(id)) {
+                byId[id] = part
             }
-        }.sortedWith(
-            compareBy<JSONObject>(
-                { part -> part.optString("release_date").takeIf {
-                    it.matches(Regex("\\d{4}-\\d{2}-\\d{2}"))
-                } ?: "9999-99-99" },
-                { part -> part.optInt("id") }
-            )
+        }
+        val sortedParts = FilmCollectionPolicy.chronological(
+            byId.values.map { part ->
+                FilmCollectionPart(
+                    part.optInt("id"), part.optString("title"),
+                    part.optString("release_date")
+                )
+            },
+            ownId
         )
+        val ordered = sortedParts.mapNotNull { byId[it.id] }
         // One-item "collections" do not make a franchise strip.
         if (ordered.size < 2 || ordered.none { it.optInt("id") == ownId }) {
             return Pair(null, emptyList())
