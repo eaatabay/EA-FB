@@ -12,6 +12,7 @@ import {createServer} from "node:net";
 import {verifyLocalConfig} from "./make-local-config.mjs";
 import {
   validateLocalWranglerArgs,parseLocalD1Rows,validateFixtureCounters,
+  STATS_QUERY,COUNTERS_QUERY,
 } from "./local-runtime-contract.mjs";
 
 const root = resolve(fileURLToPath(new URL("..", import.meta.url)));
@@ -63,23 +64,15 @@ function wrangler(args, timeout=75_000) {
   });
 }
 function readStats() {
-  const sql = [
-    "SELECT COUNT(*) total,",
-    "SUM(CASE WHEN json_extract(state_json,'$.status')='healthy' THEN 1 ELSE 0 END) healthy,",
-    "SUM(CASE WHEN json_extract(state_json,'$.status')='admin_required' THEN 1 ELSE 0 END) admin_hold,",
-    "SUM(CASE WHEN json_extract(config_json,'$.currentUrl')='https://moved.example.org' THEN 1 ELSE 0 END) moves",
-    "FROM source_registry",
-  ].join(" ");
-  const rows = parseLocalD1Rows(wrangler(["d1","execute",name,"--local",
-    "--config","wrangler.local.jsonc","--persist-to",persistDir,
-    "--command",sql,"--json"]));
-  const countRows = resultRows(wrangler(["d1","execute",name,"--local",
-    "--config","wrangler.local.jsonc","--persist-to",persistDir,
-    "--command","SELECT (SELECT revision FROM registry_meta WHERE singleton=1) revision, "+
-      "(SELECT COUNT(*) FROM source_audit) audits, "+
-      "(SELECT COUNT(*) FROM source_probe_runs) runs, "+
-      "(SELECT COUNT(*) FROM source_probe_leases) leases","--json"]));
-  return {...rows[0], ...countRows[0]};
+  const rows = parseLocalD1Rows(wrangler([
+    "d1","execute",name,"--local","--config","wrangler.local.jsonc",
+    "--persist-to",persistDir,"--command",STATS_QUERY,"--json",
+  ]));
+  const counters = parseLocalD1Rows(wrangler([
+    "d1","execute",name,"--local","--config","wrangler.local.jsonc",
+    "--persist-to",persistDir,"--command",COUNTERS_QUERY,"--json",
+  ]));
+  return {...rows[0],...counters[0]};
 }
 async function unusedPort() {
   return new Promise((resolve,reject)=>{
