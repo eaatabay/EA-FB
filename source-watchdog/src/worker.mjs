@@ -4,7 +4,8 @@
  * are NO third-party network adapters or public registry/admin endpoints.
  * Fixture mode requires an entirely fixture-only D1 database.
  */
-import { getPrivateRegistry } from "./registry.mjs";
+import { getPrivateRegistry, buildUnpublishedSnapshot } from "./registry.mjs";
+import { publishSignedSnapshot } from "./snapshot-publisher.mjs";
 import { runDueChecks } from "./runner.mjs";
 import { assertIsolatedFixtureRegistry, createFixtureAdapters } from "./fixtures.mjs";
 
@@ -20,6 +21,12 @@ function response(body, status = 200) {
   });
 }
 
+function snapshotModeEnabled(env) {
+  return env?.WATCHDOG_MODE === "production" &&
+    env?.WATCHDOG_SNAPSHOT_ENABLED === "true" &&
+    env?.WATCHDOG_FIXTURE_ENABLED !== "true";
+}
+
 function fixtureModeEnabled(env) {
   return env?.WATCHDOG_CRON_ENABLED === "true" &&
     env?.WATCHDOG_FIXTURE_ENABLED === "true" &&
@@ -33,6 +40,9 @@ export function createWatchdogWorker({
   makeAdapters = createFixtureAdapters,
   validateFixtures = assertIsolatedFixtureRegistry,
   logger = console,
+  readSnapshot = buildUnpublishedSnapshot,
+  signSnapshot = publishSignedSnapshot,
+  nowMillis = Date.now,
 } = {}) {
   async function runScheduledFixture(controller, env) {
     // An accidental Worker deployment must remain read-only and inert.
@@ -66,13 +76,39 @@ export function createWatchdogWorker({
   }
 
   return {
-    async fetch(request) {
+    async fetch(request, env) {
       const url = new URL(request.url);
       if (request.method !== "GET") return response({error:"method_not_allowed"},405);
       if (url.pathname === "/health") {
         return response({service:"EA-FB Source Watchdog",status:"configured_offline"});
       }
-      return response({error:"not_found"},404);
+      if (url.pathname !== "/v1/sources" || !snapshotModeEnabled(env)) {
+        return response({error:"not_found"},404);
+      }
+      // This route is read-only, opt-in, and requires a separate private D1
+      // plus a configured signing key. The tracked Wrangler config disables it.
+      if (!env.SOURCES_DB?.prepare || typeof env.SNAPSHOT_SIGNING_KEY_ID !== "string" ||
+          typeof env.SNAPSHOT_SIGNING_PKCS8_B64 !== "string") {
+        return response({error:"source_snapshot_unavailable"},503);
+      }
+      try {
+        const now = nowMillis();
+        const signed = await signSnapshot(env.SOURCES_DB, env, now, async (db, at) => {
+          // Production publication refuses any fixture/mixed test database.
+          // Even disabled fixture records must not coexist with real sources.
+          const records = await readRegistry(db);
+          if (records.some(x => x.id.startsWith("fixture-") ||
+              x.config.currentUrl.includes(".example.org"))) {
+            throw new Error("fixture_record_in_production_registry");
+          }
+          return readSnapshot(db, at);
+        });
+        return response(signed);
+      } catch (_) {
+        // Never expose D1 internals, signing secrets, source URLs or exceptions.
+        logger.warn?.("WATCHDOG_SNAPSHOT_PUBLICATION_FAILED");
+        return response({error:"source_snapshot_unavailable"},503);
+      }
     },
     async scheduled(controller, env) {
       return runScheduledFixture(controller, env);
