@@ -19,6 +19,8 @@ test("fixture generator never contains live domains or dangerous remote commands
   assert.ok(!sql.includes("DROP TABLE"));
   assert.ok(!sql.includes("DELETE FROM"));
   assert.ok(!sql.includes("UPDATE source_registry"));
+  // Wrangler D1 import rejects explicit BEGIN/COMMIT in SQL files.
+  assert.doesNotMatch(sql,/\b(?:BEGIN\s+TRANSACTION|COMMIT|SAVEPOINT)\s*;/i);
   assert.equal((sql.match(/\.example\.org/g)||[]).length>30,true);
 });
 
