@@ -10,6 +10,7 @@ import android.content.Context
 class WatchdogClientStore(context: Context) {
     private val preferences = context.getSharedPreferences("ea_fb_watchdog_trust_v1", Context.MODE_PRIVATE)
 
+    @Synchronized // Serialize concurrent refreshes before updating persisted replay guards.
     fun acceptSignedJson(raw: String, now: Long): SnapshotCheck {
         val envelope = WatchdogSnapshotJson.parse(raw)
             ?: return SnapshotCheck.Rejected("invalid_envelope")
