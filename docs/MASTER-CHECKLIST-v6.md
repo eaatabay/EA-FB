@@ -7,10 +7,12 @@
 ## Katalog ve Mi Box arayuzu
 - [x] Ayri v6 dalinda gelistirme; v5/main'i koruma.
 - [x] TMDb/IMDb ayri puan veri yapisi ve v6 detay kodu.
-- [x] Film koleksiyonu kronolojik listeleme icin temel kod.
+- [x] Resmi TMDb film serisi kronolojisi pure FilmCollectionPolicy ile EAProvider'a baglandi; JVM 12/12 gecti.
+- [x] Tekli seri, ayri reboot, duplicate ID, eksik/gecersiz tarih ve ayni gun vizyonu icin regresyon testleri eklendi.
 - [x] Sari-lacivert ayarlar ve kategori siralama kodu.
 - [ ] Buyuk afis yaninda IMDb ve TMDb puanlarini Mi Box'ta onaylama.
-- [ ] Film serisini Onerilenler'den ayri raf olarak cihazda dogrulama.
+- [ ] Ayri film-serisi rafi: stok CloudStream eklenti API'si tek Onerilenler rafi sundugu icin istemci destegi gerekiyor; simdilik seri kartlari yil sirasiyla Onerilenler'in basinda.
+- [ ] Mi Box'ta seri kartlarinin gercek TMDb koleksiyon kimligi ve yil sirasini test etme.
 - [ ] Kategori/ayar kaliciligi, D-pad ve eski Android cihaz testi.
 
 ## Kaynak Bekcisi: sunucu cekirdegi
@@ -56,6 +58,8 @@
 - [x] Bozuk ve yinelenen test-core.sh blogu duzeltildi; GitHub dosyasi bash -n testinden gecti.
 - [x] Test-core shell syntax ve iki testin yalniz bir kez calismasi icin kalici Node regresyon testi eklendi.
 - [x] Paylasilan PUBLIC kriptografik test vektoru.
+- [x] Imzali snapshot ayni revision/daha yeni generatedAt TTL yenileme uyumu ve tam schema validation; izole V8 gercek GitHub kaynak/test koduyla 7/7.
+- [ ] Degisiklikleri tam Node22 test paketi ve Android/Cloudflare entegrasyonunda tekrar dogrulama.
 - [ ] Gercek public key'in Android eklenti surumune pinlenmesi.
 - [ ] Guvenli client yenileme agi, API endpoint baglantisi ve offline TTL.
 - [ ] Kotlin/Gradle/Dex/.cs3 ve Mi Box uctan uca testi.
