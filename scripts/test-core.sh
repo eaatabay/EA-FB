@@ -108,3 +108,12 @@ kotlinc -cp "$COROUTINES:$BC_JAR" "$DOMAIN" \
   EA-FB/src/main/kotlin/com/eafb/SourceEngine.kt "$TRUST" "$GATE" \
   core-tests/SourceSnapshotGateTest.kt -include-runtime -d "$TMP/watchdog-gate.jar"
 java -cp "$TMP/watchdog-gate.jar:$COROUTINES:$BC_JAR" com.eafb.SourceSnapshotGateTestKt
+
+echo "== Watchdog signed offline cache: pure Kotlin and Android store JVM stubs =="
+OFFLINE="EA-FB/src/main/kotlin/com/eafb/SourceSnapshotOfflinePolicy.kt"
+STORE="EA-FB/src/main/kotlin/com/eafb/WatchdogClientStore.kt"
+kotlinc -cp "$BC_JAR" "$TRUST" "$OFFLINE" core-tests/SourceSnapshotOfflinePolicyTest.kt -include-runtime -d "$TMP/watchdog-offline.jar"
+java -cp "$TMP/watchdog-offline.jar:$BC_JAR" com.eafb.SourceSnapshotOfflinePolicyTestKt
+# JVM-only Context/JSON stubs; NOT compiled into the Android production app.
+kotlinc -cp "$BC_JAR" "$TRUST" "$OFFLINE" "$STORE" core-tests/stubs/android/content/Context.kt core-tests/stubs/com/eafb/WatchdogSnapshotJson.kt core-tests/WatchdogClientStoreJvmTest.kt -include-runtime -d "$TMP/watchdog-store.jar"
+java -cp "$TMP/watchdog-store.jar:$BC_JAR" com.eafb.WatchdogClientStoreJvmTestKt
