@@ -218,6 +218,38 @@ catalog Worker remain unchanged.
   polling, production signing-key pinning and Worker integration are UNTESTED.
   The checked-in key/adapter maps and all Cloudflare runtime flags remain OFF.
 
+## Approved first-party HTTPS refresh client (26 September; STAGED, OFF)
+- Added `WatchdogSnapshotRefresh.kt`: explicit opt-in config, exact reviewed
+  HTTPS origin and `/v1/sources` path, installed public signing key AND
+  bundled adapter requirement, 32 KiB response cap, strict JSON MIME and
+  UTF-8 validation, 15-minute cadence and bounded 15–60-minute retry backoff.
+  Concurrent refresh calls are serialized with a Kotlin coroutine `Mutex`.
+- All responses go through `WatchdogClientStore.acceptSignedJson` (injected
+  callback) before use, including durable anti-replay checks. On a network
+  failure, ONLY an already signed and still-unexpired cache may be used.
+  Redirects, HTTP 200 + empty, bad JSON/MIME, malformed UTF-8, forged
+  signatures, clock rollback and expired cached data fail closed.
+- Added `WatchdogHttpsTransport.kt` for a separately approved first-party
+  HTTPS Worker endpoint. System TLS, no cookies or credentials, no redirects,
+  no HTTP caching, 4-second connection/read timeouts and a bounded byte
+  stream prevent untrusted response bloat. This is strictly a snapshot
+  delivery client, NOT a source-probing transport or a substitute for
+  IP-pinned server-side probes.
+- The checked-in `WatchdogDeliveryConfig` has `enabled=false`, an EMPTY
+  endpoint and EMPTY approved origin. `WatchdogTrustConfig` still has NO
+  production public key and NO real adapters. The plugin does NOT schedule
+  refresh or instantiate this client on startup; no network call occurs.
+- The exact GitHub source blobs compiled locally with Kotlin 1.9,
+  BouncyCastle 1.80 and kotlinx.coroutines on JVM. New deterministic
+  injected-transport test suite: **21/21 passed** across twelve invalid
+  configurations, pin/version checks, UTF-8/size/MIME failures, redirect,
+  replay/expiry, offline fallback, clock rollback and concurrent requests.
+  `scripts/test-core.sh` now runs the suite; NO GitHub Actions quota used.
+- Still required: production endpoint ownership/authorization review, actual
+  public-key pinning, one approved bundled source adapter, explicit plugin
+  lifecycle integration, real Android HTTPS/device tests and isolated
+  Cloudflare Worker+D1 integration. No deployment or main-branch change.
+
 ## Signed read-only Worker endpoint (STAGED, DISABLED, NOT DEPLOYED)
 - GET /v1/sources is implemented behind four independent safeguards:
   WATCHDOG_MODE=production, WATCHDOG_SNAPSHOT_ENABLED=true,
