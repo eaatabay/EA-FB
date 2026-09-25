@@ -125,6 +125,7 @@ test("committed Wrangler config cannot accidentally start fixture jobs",async()=
   assert.equal(config.vars.WATCHDOG_MODE,"disabled");
   assert.equal(config.vars.WATCHDOG_CRON_ENABLED,"false");
   assert.equal(config.vars.WATCHDOG_FIXTURE_ENABLED,"false");
+  assert.equal(config.vars.WATCHDOG_SNAPSHOT_ENABLED,"false");
   assert.deepEqual(config.triggers.crons,["*/15 * * * *"]);
   assert.equal(config.d1_databases,undefined); // deliberate deployment blocker
 });
