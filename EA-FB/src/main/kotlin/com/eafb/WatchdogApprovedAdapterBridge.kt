@@ -27,8 +27,14 @@ class WatchdogApprovedAdapterBridge(
         }
         val snapshot = try { store.restoreVerifiedOffline(now) }
             catch (_: Exception) { null }
+        // Cryptographic validity does not by itself grant distribution rights.
+        // Every signed source also needs an unexpired, release-compiled
+        // rights/host/path permit; default v6 ships an EMPTY permit list.
+        val reviewed = ReviewedSourcePermitPolicy.restrict(
+            snapshot, now, ReviewedSourcePermits.bundled
+        )
         return WatchdogAdapterSelection.forNewSearch(
-            snapshot, kind, now, bundledAdapters
+            reviewed, kind, now, bundledAdapters
         )
     }
 }
