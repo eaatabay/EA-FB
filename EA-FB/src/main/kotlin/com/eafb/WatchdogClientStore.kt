@@ -46,6 +46,20 @@ class WatchdogClientStore(
     }
 
     /**
+     * Production delivery is never created without an approved bundled origin,
+     * pinned public signing key and a matching installed source adapter.
+     * Constructing the client does NOT start network work or a timer.
+     */
+    fun approvedRefreshClient(
+        transport: WatchdogSnapshotTransport = WatchdogHttpsTransport()
+    ): WatchdogSnapshotRefresh? {
+        val options = WatchdogDeliveryConfig.productionOptions()
+        if (!WatchdogSnapshotRefresh.isApprovedConfiguration(options)) return null
+        return WatchdogSnapshotRefresh(options, transport,
+            ::acceptSignedJson, ::restoreVerifiedOffline)
+    }
+
+    /**
      * Recover an unexpired cached snapshot with NO network connection.
      * Expired or tampered caches fail closed; the replay high-water marks are
      * intentionally retained to block a previously signed old revision.
