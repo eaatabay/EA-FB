@@ -57,6 +57,17 @@ Wrangler'ın workerd+D1 çalışma zamanı henüz doğrulanmadı.
 İçin komutlar çıkarıldı. Üretici artık yalnızca 30 `INSERT OR IGNORE` yazıyor;
 regresyon testi transaction komutlarının geri gelmesini yasaklıyor.
 
+**Yerel veritabanı güvenliği (26.09):** Eski `npm run test:local`
+komutunun mevcut yerel D1 veritabanını değiştirme riski giderildi:
+artık her zaman tek kullanımlık, geçici D1 kullanan aynı sürüm-kapısı
+betiğini çağırıyor. GitHub'daki `make-local-config.mjs` dosyasının
+birebir kopyası Node 22 üzerinde test edildi: 10/10 manipüle edilmiş
+yerel/tracked yapılandırma reddedildi. Yerel config ilk oluşturulduğunda
+dosya izni `0600`; ikinci oluşturma mevcut dosyanın üzerine yazmadı.
+Wrangler alt süreçleri Cloudflare hesap tokenlarını miras almıyor,
+tesadüfi gerçek D1 binding'i, ek route veya admin yazma yetkisi eklenmesi
+tam yapı karşılaştırmasıyla engelleniyor.
+
 **Test geçmeden** ayrı Cloudflare test hesabına deploy, gerçek kaynak
 adapteri veya Mi Box güncellemesi yapılmamalıdır.
 
