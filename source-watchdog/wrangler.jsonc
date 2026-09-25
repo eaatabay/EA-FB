@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json.schemastore.org/wrangler.json",
+  "name": "ea-fb-source-watchdog-dev",
+  "main": "./src/worker.mjs",
+  "compatibility_date": "2026-09-25",
+  "workers_dev": false,
+  "triggers": {
+    "crons": [
+      "*/15 * * * *"
+    ]
+  },
+  "vars": {
+    "WATCHDOG_MODE": "disabled",
+    "WATCHDOG_CRON_ENABLED": "false",
+    "WATCHDOG_FIXTURE_ENABLED": "false"
+  }
+}
