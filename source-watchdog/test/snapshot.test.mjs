@@ -56,7 +56,8 @@ test("requires distinct source IDs and immutable monotonic revisions",()=>{
   const a=source("source-one");
   assert.throws(()=>buildClientSnapshot([a,a],[healthy(a.id)],1,now));
   const snap=buildClientSnapshot([a],[healthy(a.id)],4,now);
-  assert.equal(canReplaceSnapshot(null,snap,now),true);
-  assert.equal(canReplaceSnapshot(snap,snap,now),false);
-  assert.equal(canReplaceSnapshot(null,snap,snap.expiresAt),false);
+  assert.equal(canReplaceSnapshot(null,snap,now),false); // unsigned snapshot cannot replace
+  assert.equal(canReplaceSnapshot(null,snap,now,true),true);
+  assert.equal(canReplaceSnapshot(snap,snap,now,true),false);
+  assert.equal(canReplaceSnapshot(null,snap,snap.expiresAt,true),false);
 });
