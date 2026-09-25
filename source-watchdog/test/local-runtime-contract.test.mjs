@@ -3,14 +3,16 @@ import assert from "node:assert/strict";
 import {resolve} from "node:path";
 import {
   validateLocalWranglerArgs,parseLocalD1Rows,validateFixtureCounters,
+  STATS_QUERY,COUNTERS_QUERY,
 } from "../dev/local-runtime-contract.mjs";
 
 const db="ea-fb-watchdog-fixture-local";
 const root="/tmp/eafb-isolated-runtime-0001";
 const opts=["--local","--config","wrangler.local.jsonc","--persist-to",root];
 const migration=["d1","migrations","apply",db,...opts];
-const select=["d1","execute",db,...opts,"--command",
-  "SELECT COUNT(*) AS n FROM source_registry","--json"];
+const query=["d1","execute",db,...opts];
+const select=[...query,"--command",STATS_QUERY,"--json"];
+const counters=[...query,"--command",COUNTERS_QUERY,"--json"];
 const seed=["d1","execute",db,...opts,"--file",
   resolve(root,"seed","fixtures.sql")];
 const initial={total:30,healthy:0,admin_hold:0,moves:0,runs:0,
@@ -21,6 +23,7 @@ const final={...initial,healthy:29,admin_hold:1,moves:2,
 test("ONLY exact scoped migration, read-only queries and private fixture SQL are permitted",()=>{
   assert.equal(validateLocalWranglerArgs(migration,root),true);
   assert.equal(validateLocalWranglerArgs(select,root),true);
+  assert.equal(validateLocalWranglerArgs(counters,root),true);
   assert.equal(validateLocalWranglerArgs(seed,root),true);
 });
 
@@ -36,9 +39,10 @@ test("rejects remote, credentials, unrecognized commands and ambiguous options",
     migration.filter(x=>x!=="--local"),
     migration.map(x=>x===db?"ea-fb-catalog":x),
     [...migration,"--json"],
-    [...select,"--command","DELETE FROM source_registry"],
-    [...select.slice(0,-2),"--command","UPDATE registry_meta SET revision=0"],
-    [...select.slice(0,-2),"--command","SELECT 1;DELETE FROM source_registry"],
+    [...query,"--command","DELETE FROM source_registry"],
+    [...query,"--command","UPDATE registry_meta SET revision=0"],
+    [...query,"--command","SELECT 1;DELETE FROM source_registry"],
+    [...query,"--command","SELECT * FROM source_audit"],
     [...seed,"--file",resolve(root,"seed","fixtures.sql")],
     seed.map(x=>x===resolve(root,"seed","fixtures.sql")?"/tmp/production.sql":x),
     seed.map(x=>x===root?"/tmp/unreviewed-db":x),
