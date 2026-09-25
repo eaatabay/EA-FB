@@ -77,6 +77,7 @@ function rowRecord(row) {
   const state = JSON.parse(row.state_json);
   if (row.id !== config.id || row.id !== state.id ||
       !Number.isSafeInteger(row.revision) || row.revision < 0 ||
+      state.revision !== row.revision ||
       !Number.isSafeInteger(row.updated_at_ms)) throw new Error("corrupt_source_record");
   return {
     id: row.id, config, state, revision: row.revision,
