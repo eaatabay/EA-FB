@@ -11,6 +11,14 @@ const DEV_DB_ID="00000000-0000-0000-0000-000000000000";
 export function makeLocalConfig(tracked) {
   if (!tracked || tracked.name !== "ea-fb-source-watchdog-dev" ||
       tracked.workers_dev !== false || tracked.d1_databases !== undefined ||
+      tracked.main !== "./src/worker.mjs" ||
+      Object.keys(tracked).sort().join(",") !==
+        ["$schema","compatibility_date","main","name","triggers","vars","workers_dev"].sort().join(",") ||
+      Object.keys(tracked.triggers ?? {}).join(",") !== "crons" ||
+      Object.keys(tracked.vars ?? {}).sort().join(",") !==
+        ["WATCHDOG_MODE","WATCHDOG_CRON_ENABLED","WATCHDOG_FIXTURE_ENABLED",
+         "WATCHDOG_SNAPSHOT_ENABLED","WATCHDOG_ADMIN_ENABLED",
+         "WATCHDOG_ADMIN_WRITES_ENABLED"].sort().join(",") ||
       tracked.vars?.WATCHDOG_MODE !== "disabled" ||
       tracked.vars?.WATCHDOG_CRON_ENABLED !== "false" ||
       tracked.vars?.WATCHDOG_FIXTURE_ENABLED !== "false" ||
