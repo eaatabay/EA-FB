@@ -9,6 +9,7 @@ import {
   buildUnpublishedSnapshot, RegistryConflict,
 } from "../src/registry.mjs";
 import { HEALTH } from "../src/policy.mjs";
+import { claimProbeLease } from "../src/lease.mjs";
 
 // node:sqlite is included on Node >=22. No live D1/database/network is touched.
 // Pure policy/snapshot tests still run independently on older Node runtimes.
@@ -20,6 +21,7 @@ class SQLiteD1 {
     this.sql = new DatabaseSync(":memory:");
     const path = join(dirname(fileURLToPath(import.meta.url)), "../migrations/0001_registry.sql");
     this.sql.exec(readFileSync(path, "utf8"));
+    this.sql.exec(readFileSync(join(dirname(path), "0002_source_leases.sql"), "utf8"));
   }
   prepare(sql) {
     const connection = this.sql;
@@ -181,5 +183,28 @@ sqliteTest("stale CAS does not publish or advance audit revision",async()=>{
     assert.equal((await buildUnpublishedSnapshot(db,HOUR)).revision,2);
     assert.equal(db.sql.prepare("SELECT COUNT(*) n FROM source_audit").get().n,2);
     await assert.rejects(registerSource(db,source(),"admin:alice",2*HOUR),RegistryConflict);
+  }finally{db.close();}
+});
+
+sqliteTest("late probe after lease takeover cannot write health, audit or global revision",async()=>{
+  const db=new SQLiteD1();
+  try{
+    await registerSource(db,source(),"admin:alice",0);
+    const ownerA="probe-token-owner-a",ownerB="probe-token-owner-b";
+    assert.equal(await claimProbeLease(db,"licensed-demo",ownerA,1000,30000),true);
+    assert.equal(await claimProbeLease(db,"licensed-demo",ownerB,31000,30000),true);
+    await assert.rejects(
+      commitProbe(db,"licensed-demo","probe-00000021",good(),HOUR,
+        {token:ownerA,checkedAtMs:32000}),
+      RegistryConflict,
+    );
+    assert.equal((await getSource(db,"licensed-demo")).revision,0);
+    assert.equal((await buildUnpublishedSnapshot(db,HOUR)).revision,1);
+    assert.equal(db.sql.prepare("SELECT COUNT(*) n FROM source_audit").get().n,1);
+    const result=await commitProbe(db,"licensed-demo","probe-00000022",good(),HOUR,
+      {token:ownerB,checkedAtMs:32000});
+    assert.equal(result.duplicate,false);
+    assert.equal((await getSource(db,"licensed-demo")).revision,1);
+    assert.equal(db.sql.prepare("SELECT COUNT(*) n FROM source_audit").get().n,2);
   }finally{db.close();}
 });
