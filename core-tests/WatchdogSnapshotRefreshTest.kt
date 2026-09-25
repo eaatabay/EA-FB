@@ -1,5 +1,6 @@
 package com.eafb
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -127,6 +128,15 @@ fun main()=runBlocking {
     checked(coordinator(offline,FakeTransport(response(429))).refresh(T+1).status==
         "http_unavailable","rate-limited HTTP response never accepted")
     checked(store.offline(T+Q)==null,"cache is unusable exactly at expiry")
+    val brokenCache=WatchdogSnapshotRefresh(good,FakeTransport().apply{fails=true},
+        offline::accept,{ throw IllegalStateException("corrupt local preferences") })
+    checked(brokenCache.refresh(T+1).snapshot==null,
+        "corrupt offline preferences fail closed without crashing network retry")
+    val interrupted=WatchdogSnapshotRefresh(good,
+        WatchdogSnapshotTransport { throw CancellationException("screen gone") },
+        offline::accept,offline::offline)
+    checked(runCatching{interrupted.refresh(T+1)}.exceptionOrNull() is CancellationException,
+        "coroutine cancellation propagates and frees refresh mutex")
     val concurrentStore=FakeStore();val concurrentNet=FakeTransport()
     val concurrent=coordinator(concurrentStore,concurrentNet)
     val all=(0..4).map{async{concurrent.refresh(T)}}.awaitAll()
