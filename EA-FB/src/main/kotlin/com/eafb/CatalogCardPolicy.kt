@@ -1,11 +1,13 @@
 package com.eafb
 
-/** Keep the TV home rows navigable when TMDb returns titles without artwork. */
+/** Keep TV home rows navigable when TMDb returns titles without artwork. */
 object CatalogCardPolicy {
-    fun hasPoster(path: String?): Boolean =
-        path != null && path.length > 1 && path.startsWith('/')
+    fun hasPoster(path: String?): Boolean = path != null && path.length > 1 && path.startsWith('/')
 
-    /** TMDb catalog pages contain at most 20 raw results. */
-    fun hasNext(rawResultCount: Int, page: Int): Boolean =
-        rawResultCount >= 20 && page in 1..19
+    /** TMDb total_pages is authoritative; infer only if omitted. */
+    fun hasNext(page: Int, rawResultCount: Int, totalPages: Int): Boolean {
+        if (page !in 1..20 || rawResultCount <= 0) return false
+        return if (totalPages > 0) page < minOf(totalPages, 20)
+        else rawResultCount >= 20 && page < 20
+    }
 }

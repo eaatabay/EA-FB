@@ -176,8 +176,10 @@ class EAProvider : MainAPI() {
         }
         val category = categories.firstOrNull { it.id == request.data }
             ?: return newHomePageResponse(emptyList(), false)
-        val raw = getJson(category.tmdbPath ?: return newHomePageResponse(emptyList(), false), page)
-            ?.optJSONArray("results")
+        val response = getJson(
+            category.tmdbPath ?: return newHomePageResponse(emptyList(), false), page
+        ) ?: return newHomePageResponse(emptyList(), false)
+        val raw = response.optJSONArray("results")
             ?: return newHomePageResponse(emptyList(), false)
         // TMDb occasionally returns titles without poster art. On TV these
         // appear as blank, hard-to-navigate cards, especially in lower rows.
@@ -190,7 +192,7 @@ class EAProvider : MainAPI() {
         if (results.isEmpty()) return newHomePageResponse(emptyList(), false)
         return newHomePageResponse(
             listOf(HomePageList(category.title, results, false)),
-            CatalogCardPolicy.hasNext(raw.length(), page)
+            CatalogCardPolicy.hasNext(page, raw.length(), response.optInt("total_pages", 0))
         )
     }
 
