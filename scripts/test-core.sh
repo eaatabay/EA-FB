@@ -6,6 +6,32 @@ trap 'rm -rf "$TMP"' EXIT
 # Codespaces can expose kotlinc through a symlink or wrapper under /workspaces.
 # Resolve the real compiler and search its bundled libraries before falling
 # back to the version already declared in the project's Gradle dependencies.
+# The Codespaces base image does not always include the standalone
+# Kotlin compiler, even when the Gradle Kotlin plugin is configured.
+# Install the same pinned version as build.gradle.kts, with checksum checking.
+if ! command -v kotlinc >/dev/null 2>&1; then
+  KOTLIN_VERSION="2.4.0"
+  KOTLIN_DIR="$HOME/.local/opt/kotlin-compiler-$KOTLIN_VERSION"
+  if [ ! -x "$KOTLIN_DIR/bin/kotlinc" ]; then
+    echo "Standalone Kotlin compiler missing; installing verified Kotlin $KOTLIN_VERSION."
+    command -v curl >/dev/null || { echo "Missing curl for Kotlin bootstrap" >&2; exit 2; }
+    command -v unzip >/dev/null || { echo "Missing unzip for Kotlin bootstrap" >&2; exit 2; }
+    mkdir -p "$HOME/.local/opt"
+    curl --fail --silent --show-error --location --retry 2 \
+      "https://github.com/JetBrains/kotlin/releases/download/v$KOTLIN_VERSION/kotlin-compiler-$KOTLIN_VERSION.zip" \
+      -o "$TMP/kotlin-compiler.zip"
+    printf '%s  %s\\n' \
+      "ba1b9e6eb6ddc3275079224f2e9ea4a2b02eef7d59ce2d38404f04b22613c20a" \
+      "$TMP/kotlin-compiler.zip" | sha256sum -c -
+    mkdir -p "$TMP/compiler-unpack"
+    unzip -q "$TMP/kotlin-compiler.zip" -d "$TMP/compiler-unpack"
+    test -x "$TMP/compiler-unpack/kotlinc/bin/kotlinc" || {
+      echo "Kotlin distribution missing its compiler" >&2; exit 2;
+    }
+    mv "$TMP/compiler-unpack/kotlinc" "$KOTLIN_DIR"
+  fi
+  export PATH="$KOTLIN_DIR/bin:$PATH"
+fi
 KOTLINC="$(command -v kotlinc)"
 KOTLINC_REAL="$(readlink -f "$KOTLINC" || printf '%s' "$KOTLINC")"
 KOTLIN_REAL_HOME="$(cd "$(dirname "$KOTLINC_REAL")/.." && pwd)"
