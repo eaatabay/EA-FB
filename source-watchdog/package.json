@@ -3,6 +3,12 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node --test test/*.test.mjs"
+    "test": "node --test test/*.test.mjs",
+    "dev": "wrangler dev --test-scheduled",
+    "seed:fixtures": "node dev/generate-fixture-seed.mjs",
+    "test:migration": "python3 -m unittest discover -s tests -v"
+  },
+  "devDependencies": {
+    "wrangler": "^4.119.0"
   }
 }
