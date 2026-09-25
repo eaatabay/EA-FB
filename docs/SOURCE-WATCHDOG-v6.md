@@ -147,10 +147,16 @@ catalog Worker remain unchanged.
   prefiltered unpublished D1 snapshot via a private code path, NOT HTTP.
   No private key, production public key or public snapshot endpoint exists
   in this branch. Key material was generated ephemerally for tests only.
+- To avoid breaking clients when no source health state changes for six hours,
+  snapshots with an unchanged registry revision may be refreshed when their
+  signed generatedAt timestamp is strictly newer than the last verified one.
+  A replay with the same timestamp is still rejected. The client must persist
+  BOTH the last accepted revision and last generatedAt.
 - `test/snapshot-crypto.test.mjs` and `test/snapshot-publisher.test.mjs`
   exercise signatures, domain tampering, revision replay, expiration, key
   rotation rejection, strict schema, adapter allowlisting and secret failures.
-  All nine new tests were run with local Node v22 during development.
+  All ten new signing and replay tests passed with local Node v22 during
+  development; the wider Node/Cloudflare/D1 suite remains a release gate.
 - Cloudflare documents standard Ed25519 support in Workers WebCrypto.
   The actual Workers runtime, dedicated D1 and Android pinned-key verification
   are still mandatory integration gates before enabling delivery.
