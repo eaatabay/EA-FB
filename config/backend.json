@@ -1,4 +1,4 @@
 {
-  "apiBaseUrl": null,
-  "status": "awaiting_deployment"
+  "apiBaseUrl": "https://ea-fb-catalog.eaatabay.workers.dev",
+  "status": "ready"
 }
