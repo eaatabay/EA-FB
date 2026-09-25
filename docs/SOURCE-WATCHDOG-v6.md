@@ -132,6 +132,29 @@ catalog Worker remain unchanged.
    the structural admin hold, audit revision, and historical-run de-duplication.
 7. Leave the committed Wrangler flags off and DO NOT run Wrangler deploy.
 
+## Signed client snapshot contract (v6 code and offline tests, NOT live)
+- `src/snapshot-crypto.mjs` adds canonical Ed25519 signing and verification
+  for read-only registry snapshots. The signature authenticates source IDs,
+  approved HTTPS base URLs, adapter versions, revision and 15-minute expiry.
+  It also rejects malformed URLs, duplicate IDs, unknown fields, future dates,
+  old revisions, expired payloads, unpinned signers and modified payloads.
+- A valid signature is not permission to execute new parser code: verified
+  sources are restricted to IDs and EXACT adapter versions already bundled
+  into the installed client. New domain values may change without reinstall
+  ONLY when the same approved adapter remains compatible.
+- `src/snapshot-publisher.mjs` imports a PKCS#8 Ed25519 private key only from
+  future Worker secrets SNAPSHOT_SIGNING_PKCS8_B64 and KEY_ID; it signs a
+  prefiltered unpublished D1 snapshot via a private code path, NOT HTTP.
+  No private key, production public key or public snapshot endpoint exists
+  in this branch. Key material was generated ephemerally for tests only.
+- `test/snapshot-crypto.test.mjs` and `test/snapshot-publisher.test.mjs`
+  exercise signatures, domain tampering, revision replay, expiration, key
+  rotation rejection, strict schema, adapter allowlisting and secret failures.
+  All nine new tests were run with local Node v22 during development.
+- Cloudflare documents standard Ed25519 support in Workers WebCrypto.
+  The actual Workers runtime, dedicated D1 and Android pinned-key verification
+  are still mandatory integration gates before enabling delivery.
+
 ## Next gated milestones
 1. Run full Node/SQLite tests from the actual v6 branch, then a local Wrangler
    test using only the isolated fixture D1. Never interpret fixture health
@@ -142,7 +165,9 @@ catalog Worker remain unchanged.
    sources; the private runner already has lease-based serialization. User-facing
    search/playback must never wait for repair.
 4. Build admin panel with strong authentication/2FA, approvals, audit and rollback.
-5. Implement signed read-only snapshot delivery and client signature checks.
+5. Integrate the now-coded signed snapshot contract with a read-only Worker
+   endpoint and install a PINNED public key plus signature/revision verification
+   on the Android client. No unsigned config or arbitrary adapter code loading.
 6. Run staged rollout on a separate test service before touching v5/main.
 
 GitHub Actions quota is currently exhausted; use local fixture tests where
