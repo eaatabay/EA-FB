@@ -112,15 +112,15 @@ java -cp "$TMP/watchdog-gate.jar:$COROUTINES:$BC_JAR" com.eafb.SourceSnapshotGat
 echo "== Watchdog signed offline cache: pure Kotlin and Android store JVM stubs =="
 OFFLINE="EA-FB/src/main/kotlin/com/eafb/SourceSnapshotOfflinePolicy.kt"
 STORE="EA-FB/src/main/kotlin/com/eafb/WatchdogClientStore.kt"
+REFRESH="EA-FB/src/main/kotlin/com/eafb/WatchdogSnapshotRefresh.kt"
+HTTPS="EA-FB/src/main/kotlin/com/eafb/WatchdogHttpsTransport.kt"
 kotlinc -cp "$BC_JAR" "$TRUST" "$OFFLINE" core-tests/SourceSnapshotOfflinePolicyTest.kt -include-runtime -d "$TMP/watchdog-offline.jar"
 java -cp "$TMP/watchdog-offline.jar:$BC_JAR" com.eafb.SourceSnapshotOfflinePolicyTestKt
 # JVM-only Context/JSON stubs; NOT compiled into the Android production app.
-kotlinc -cp "$BC_JAR" "$TRUST" "$OFFLINE" "$STORE" core-tests/stubs/android/content/Context.kt core-tests/stubs/com/eafb/WatchdogSnapshotJson.kt core-tests/WatchdogClientStoreJvmTest.kt -include-runtime -d "$TMP/watchdog-store.jar"
-java -cp "$TMP/watchdog-store.jar:$BC_JAR" com.eafb.WatchdogClientStoreJvmTestKt
+kotlinc -cp "$BC_JAR:$COROUTINES" "$TRUST" "$OFFLINE" "$STORE" "$REFRESH" "$HTTPS" core-tests/stubs/android/content/Context.kt core-tests/stubs/com/eafb/WatchdogSnapshotJson.kt core-tests/WatchdogClientStoreJvmTest.kt -include-runtime -d "$TMP/watchdog-store.jar"
+java -cp "$TMP/watchdog-store.jar:$BC_JAR:$COROUTINES" com.eafb.WatchdogClientStoreJvmTestKt
 
 echo "== Watchdog approved HTTPS refresh: offline TTL, bounded response, backoff =="
-REFRESH="EA-FB/src/main/kotlin/com/eafb/WatchdogSnapshotRefresh.kt"
-HTTPS="EA-FB/src/main/kotlin/com/eafb/WatchdogHttpsTransport.kt"
 kotlinc -cp "$BC_JAR:$COROUTINES" "$TRUST" "$OFFLINE" "$REFRESH" "$HTTPS" core-tests/WatchdogSnapshotRefreshTest.kt -include-runtime -d "$TMP/watchdog-refresh.jar"
 java -cp "$TMP/watchdog-refresh.jar:$BC_JAR:$COROUTINES" com.eafb.WatchdogSnapshotRefreshTestKt
 # Fake TLS connection tests: never contact a real endpoint or spend Actions.
