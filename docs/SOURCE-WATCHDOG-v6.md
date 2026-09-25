@@ -283,6 +283,36 @@ catalog Worker remain unchanged.
   adapters and Mi Box integration are still PENDING. GitHub Actions
   quota was not used; no PR or deployment was initiated.
 
+## Release-compiled rights permits for real sources (26 Sep; EMPTY, OFF)
+- `ReviewedSourcePermitPolicy.kt` adds an independently compiled **rights,
+  host, path and expiry** gate to the existing signed Android snapshot +
+  matching bundled-adapter version checks. One successful signed snapshot
+  cannot grant media distribution rights or introduce a new executable parser.
+  The checked-in `ReviewedSourcePermits.bundled` is an **EMPTY list**.
+- The prospective permit specifies fixed source ID, adapter version,
+  movie/series/both scope, up to 12 exact HTTPS hosts, an approved URI path
+  prefix, a source-specific evidence reference under `rights/`, review date
+  and expiry within 366 days. Invalid/expired/duplicate permit records fail
+  the entire list closed. Per-source version, media-scope, host and path
+  mismatches exclude that signed source without disrupting unrelated sources.
+  Pre-approved alternate hosts can be promoted, but a redirect cannot expand
+  the built-in permit list.
+- `WatchdogApprovedAdapterBridge` now passes only its *already verified*
+  offline snapshot through this permit gate BEFORE new-search adapter
+  activation. The default plugin still has no endpoint, signing pins,
+  approved sources, real adapters or automatic network behavior.
+- Exact GitHub source/test blobs were compared to the Kotlin/JVM build:
+  **23/23 pure rights-permit cases passed** and the pre-existing
+  production-OFF bridge was recompiled with the new permit and passed **5/5**
+  additional cases. The first test exposed an actual Kotlin test-fixture
+  shadowing error, which was fixed before recording the passing results.
+  This is NOT a live source, licensing, Gradle, Android or D1 test.
+- `docs/SOURCE-RIGHTS-REVIEW-v6.md` documents the per-source written
+  authorization, rights scope, expiry, verified host/path, request budget
+  and **explicit user approval** needed BEFORE compiling any real permit.
+  Merely adding a document or writing `authorized:true` is not evidence
+  of rights or permission to scan a service.
+
 ## Signed read-only Worker endpoint (STAGED, DISABLED, NOT DEPLOYED)
 - GET /v1/sources is implemented behind four independent safeguards:
   WATCHDOG_MODE=production, WATCHDOG_SNAPSHOT_ENABLED=true,
