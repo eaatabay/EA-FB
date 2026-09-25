@@ -43,7 +43,7 @@ class EAProvider : MainAPI() {
     override val supportedTypes = setOf(TvType.Movie, TvType.TvSeries, TvType.Live)
     override val hasMainPage = true
 
-    /** Supply a personal TMDb API bearer token locally; never commit real credentials. */
+    /** Public client: the separate metadata Worker holds the only TMDb credential. */
     // Open movie by Blender Foundation (CC BY 3.0); retain original closing credits.
     private val openMovieData = "ea-fb:open:big-buck-bunny"
     private val openMovieUrl = "$mainUrl/ea-fb-open/big-buck-bunny"
@@ -99,16 +99,36 @@ class EAProvider : MainAPI() {
         channel.name, "$livePrefix${Identity.channelKey(channel.name)}", TvType.Live, fix = false
     )
 
-    private suspend fun getJson(path: String, page: Int? = null, language: String = "tr-TR"): JSONObject? {
-        val catalogToken = EASettings.tmdbToken()
-        if (catalogToken.isBlank()) return null
-        val join = if ('?' in path) '&' else '?'
-        val url = "$mainUrl$path${join}language=$language${if (page != null) "&page=$page" else ""}"
-        return runCatching {
-            JSONObject(app.get(url, headers = mapOf("Authorization" to "Bearer $catalogToken")).text)
-        }.getOrNull()
+    // This public config contains only a relay URL. The TMDb token is server-side.
+    private val catalogConfigUrl = "https://raw.githubusercontent.com/eaatabay/EA-FB/main/config/backend.json"
+    @Volatile private var relayBase: String? = null
+    @Volatile private var relayCheckedAt: Long = 0L
+
+    private suspend fun catalogRelay(): String {
+        val now = System.currentTimeMillis()
+        val cached = relayBase
+        if (!cached.isNullOrBlank() && now - relayCheckedAt < 3_600_000L) return cached
+        val config = runCatching { JSONObject(app.get(catalogConfigUrl).text) }.getOrElse {
+            if (!cached.isNullOrBlank()) return cached
+            error("EA-FB katalog servisi ayarına ulaşılamıyor. İnternet bağlantısını kontrol et.")
+        }
+        val url = config.optString("apiBaseUrl").trim().trimEnd('/')
+        if (!url.startsWith("https://") || url.length > 200 ||
+            url.contains("@") || url.contains("?") || url.contains("#") || url.contains(" ")) {
+            error("EA-FB katalog servisi henüz etkinleştirilmedi.")
+        }
+        relayBase = url
+        relayCheckedAt = now
+        return url
     }
 
+    private suspend fun getJson(path: String, page: Int? = null, language: String = "tr-TR"): JSONObject? {
+        val relay = catalogRelay()
+        val join = if ('?' in path) '&' else '?'
+        val url = "$relay/v1$path${join}language=$language${if (page != null) "&page=$page" else ""}"
+        // No TMDb credential or Authorization header ever reaches the client.
+        return runCatching { JSONObject(app.get(url).text) }.getOrNull()
+    }
     private fun mediaKind(item: JSONObject, fallback: MediaKind): MediaKind =
         if (item.optString("media_type") == "tv" || (item.has("name") && !item.has("title"))) MediaKind.SERIES
         else if (item.optString("media_type") == "movie") MediaKind.MOVIE
@@ -320,7 +340,7 @@ class EAProvider : MainAPI() {
         val append = if (isSeries) "aggregate_credits,recommendations,external_ids"
                      else "credits,recommendations,external_ids"
         val item = getJson("$path?append_to_response=$append")
-            ?: error("EA-FB: TMDb anahtarı ayarlanmadı veya katalog erişilemiyor")
+            ?: error("EA-FB katalog servisine şu anda erişilemiyor")
         val title = item.optString(if (isSeries) "name" else "title")
         val primaryOverview = item.optString("overview")
         val fallbackOverview = if (primaryOverview.isBlank()) {

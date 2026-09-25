@@ -12,3 +12,8 @@ secrets.properties
 
 # Private builds may contain an embedded personal TMDb token. NEVER publish.
 /private-dist/
+
+/worker/node_modules/
+/worker/.wrangler/
+/worker/.dev.vars*
+/worker/.env*
