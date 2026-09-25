@@ -16,6 +16,13 @@ echo "== Source Watchdog policy/SQLite and signing tests (isolated, no network) 
 (cd source-watchdog && node dev/check-runtime.mjs && npm test)
 python3 -m unittest discover -s source-watchdog/tests -v
 
+echo "== Isolated REAL local Wrangler + D1 migration, Cron and replay smoke =="
+if [ ! -x source-watchdog/node_modules/.bin/wrangler ]; then
+  echo "Wrangler not installed. Run: cd source-watchdog && npm install" >&2
+  exit 2
+fi
+(cd source-watchdog && npm run test:wrangler-local)
+
 echo "== Pure Kotlin core and visual-policy tests =="
 bash scripts/test-core.sh
 
