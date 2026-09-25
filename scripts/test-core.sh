@@ -130,9 +130,13 @@ java -cp "$TMP/watchdog-https.jar:$BC_JAR:$COROUTINES" com.eafb.WatchdogHttpsTra
 echo "== Signed snapshot to preinstalled media adapters (no real source network) =="
 SELECTION="EA-FB/src/main/kotlin/com/eafb/WatchdogAdapterSelection.kt"
 BRIDGE="EA-FB/src/main/kotlin/com/eafb/WatchdogApprovedAdapterBridge.kt"
+PERMITS="EA-FB/src/main/kotlin/com/eafb/ReviewedSourcePermitPolicy.kt"
 ENGINE="EA-FB/src/main/kotlin/com/eafb/SourceEngine.kt"
 kotlinc -cp "$BC_JAR:$COROUTINES" "$DOMAIN" "$ENGINE" "$TRUST" "$GATE" "$SELECTION" core-tests/WatchdogAdapterSelectionTest.kt -include-runtime -d "$TMP/watchdog-selection.jar"
 java -cp "$TMP/watchdog-selection.jar:$BC_JAR:$COROUTINES" com.eafb.WatchdogAdapterSelectionTestKt
+# Review metadata is only an explicit, compiled allowlist—not a rights grant.
+kotlinc -cp "$BC_JAR" "$TRUST" "$PERMITS" core-tests/ReviewedSourcePermitPolicyTest.kt -include-runtime -d "$TMP/watchdog-permits.jar"
+java -cp "$TMP/watchdog-permits.jar:$BC_JAR" com.eafb.ReviewedSourcePermitPolicyTestKt
 # The bridge test uses fake SharedPreferences and never opens an HTTPS socket.
-kotlinc -cp "$BC_JAR:$COROUTINES" "$DOMAIN" "$ENGINE" "$TRUST" "$GATE" "$SELECTION" "$BRIDGE" "$OFFLINE" "$REFRESH" "$HTTPS" "$STORE" core-tests/stubs/android/content/Context.kt core-tests/stubs/com/eafb/WatchdogSnapshotJson.kt core-tests/WatchdogApprovedAdapterBridgeTest.kt -include-runtime -d "$TMP/watchdog-bridge.jar"
+kotlinc -cp "$BC_JAR:$COROUTINES" "$DOMAIN" "$ENGINE" "$TRUST" "$GATE" "$SELECTION" "$BRIDGE" "$PERMITS" "$OFFLINE" "$REFRESH" "$HTTPS" "$STORE" core-tests/stubs/android/content/Context.kt core-tests/stubs/com/eafb/WatchdogSnapshotJson.kt core-tests/WatchdogApprovedAdapterBridgeTest.kt -include-runtime -d "$TMP/watchdog-bridge.jar"
 java -cp "$TMP/watchdog-bridge.jar:$BC_JAR:$COROUTINES" com.eafb.WatchdogApprovedAdapterBridgeTestKt
