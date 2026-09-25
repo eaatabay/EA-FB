@@ -122,3 +122,24 @@ test("distinguishes TMDb network failure without leaking exception details", asy
   assert.equal(res.status,502);
   assert.deepEqual(await res.json(),{error:"tmdb_connection_error"});
 });
+
+test("never forwards the token to redirects and avoids runtime-dependent timeout APIs", async () => {
+  const { env, ctx, calls } = setup();
+  const result = await gateway.fetch(new Request("https://example.workers.dev/v1/movie/789"), env, ctx);
+  assert.equal(result.status, 200);
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].opts.redirect, "manual");
+  assert.ok(!Object.hasOwn(calls[0].opts, "signal"));
+});
+
+test("rejects redirects without forwarding the original Authorization header", async () => {
+  const {env,ctx,calls}=setup();
+  globalThis.fetch=async (url,opts) => {
+    calls.push({url,opts});
+    return new Response(null,{status:302,headers:{location:"https://elsewhere.invalid/"}});
+  };
+  const res=await gateway.fetch(new Request("https://example.workers.dev/v1/movie/789"),env,ctx);
+  assert.equal(res.status,502);
+  assert.deepEqual(await res.json(),{error:"tmdb_redirect_rejected"});
+  assert.equal(calls.length,1);
+});

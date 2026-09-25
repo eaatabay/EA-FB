@@ -154,13 +154,30 @@ export default {
           authorization: "Bearer " + token,
           accept: "application/json",
         },
-        redirect: "error",
-        signal: AbortSignal.timeout(9000),
+        // Avoid AbortSignal.timeout: unsupported Worker runtime implementations
+        // may throw before the network request is made. Manual redirects
+        // ensure we never forward a private Bearer token to a redirected host.
+        redirect: "manual",
       });
     } catch (err) {
-      // Safe diagnostics: don't include upstream headers, secret, or error message.
-      const timeout = err?.name === "AbortError" || err?.name === "TimeoutError";
-      return json({ error: timeout ? "tmdb_timeout" : "tmdb_connection_error" }, 502);
+      // Categorize the runtime failure without leaking URLs, auth headers,
+      // tokens, exception messages or account details into public responses.
+      const name = String(err?.name || "");
+      const message = String(err?.message || "");
+      const reason = /abortsignal|unsupported.*signal|invalid.*signal/i.test(message)
+        ? "runtime_signal" : /redirect/i.test(message) ? "redirect_error"
+        : /dns|resolve/i.test(message) ? "dns_failure"
+        : /tls|ssl|certificate/i.test(message) ? "tls_failure"
+        : /fetch|network|connect/i.test(message) ? "outbound_network"
+        : name === "TypeError" ? "runtime_type_error"
+        : name === "TimeoutError" || name === "AbortError" ? "timeout"
+        : "other";
+      console.warn("TMDB_FETCH_FAILURE", reason, name.replace(/[^a-zA-Z]/g, "").slice(0, 32));
+      return json({ error: "tmdb_connection_error", reason }, 502);
+    }
+    if (upstream.status >= 300 && upstream.status < 400) {
+      // Do not forward Authorization to redirects.
+      return json({ error: "tmdb_redirect_rejected" }, 502);
     }
     if (!upstream.ok) {
       // Public, sanitized status only; upstream responses may include account details.
