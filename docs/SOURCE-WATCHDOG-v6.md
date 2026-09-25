@@ -302,6 +302,27 @@ catalog Worker remain unchanged.
   These are actual local SQLite tests; they are NOT a Cloudflare D1 or
   full repository Node suite result. Wrangler is not provisioned here.
 
+## One-command LOCAL Wrangler/D1 acceptance harness (STAGED, NOT YET RUN)
+- `source-watchdog/dev/verify-local-wrangler.mjs` now launches an actual
+  LOCAL Cloudflare workerd via Wrangler, using a newly generated ephemeral
+  D1 persistence directory. It applies both migrations, seeds 30 wholly
+  fictional offline sources, triggers eight 15-minute simulated Cron events,
+  and replays the last event to check for duplicate writes.
+- The script fails unless it sees **29 healthy, 1 admin-held, 2 approved
+  test-domain moves, 59 probe runs, 89 audit events, revision 89,
+  zero leaked leases and zero writes on repeated Cron**. It checks that
+  tracked and local Wrangler configs still have every production flag OFF,
+  and explicitly forbids `--remote` or `deploy` commands.
+- A single release command (`cd source-watchdog && npm install &&
+  npm run test:release-local`) first checks Node 22/SQLite/Ed25519,
+  then runs ALL repository Node tests, Python migration tests and finally
+  the Wrangler+D1 real-local-runtime smoke. See
+  `docs/WATCHDOG-RELEASE-GATE-v6.md` for usage and acceptance criteria.
+- **Honest status:** The new harness code and configuration syntax were
+  inspected and parsed. The full suite / workerd test has NOT run here:
+  Wrangler's npm package is not available in the offline container.
+  Do not use this scripted acceptance target as evidence of a passing test.
+
 ## Next gated milestones
 1. Run full Node/SQLite tests from the actual v6 branch, then a local Wrangler
    test using only the isolated fixture D1. Never interpret fixture health
