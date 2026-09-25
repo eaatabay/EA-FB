@@ -43,6 +43,11 @@
 - [ ] Actions kotasi uygun oldugunda sadece yerel D1/Worker test job'unu gercekte calistirip log inceleme.
 - [x] 26.09: Gercek repo koduyla V8 30 kaynak/59 kontrol, 2 tasinma, 1 admin bekleme, sifir tekrar dogrulandi.
 - [x] 26.09: Kotu durum adresi iceren 5 fixture'in Cron'a girmeden reddedildigi dogrulandi.
+- [x] 26.09: Derlemeye sabitlenen ayri izin/kapsam/host/yol/sure kaydi icin ReviewedSourcePermitPolicy eklendi; hicbir gercek kaynak onayli degil.
+- [x] Birebir GitHub Kotlin/JVM izin politikasi 23/23 basarili; izin olmadan kaynak yok, host/yol/DRM ve abonelik haklari varsayilmiyor.
+- [x] 5/5 mevcut bridge JVM testi yeni izin kapisiyla yeniden derlenip gecti (test-only Android/MediaSource stublari).
+- [x] Kullanici acik kaynak-bazli onayi ve hak sahibi delili gerektiren docs/SOURCE-RIGHTS-REVIEW-v6.md olusturuldu.
+- [ ] Gercek kaynagin izin kapsami, kanit referansi, rate limit, bolge ve yenileme tarihini tek tek onaylat.
 - [ ] Ayrica onaylanmis, izinli gercek kaynak adapterlerini secip inceleme.
 - [x] DNS ve her redirect hop'u icin KAPALI/cevirmdisi preflight kodu, Node 5/5.
 - [x] GitHub ile birebir ayni migration dosyalari: SQLite smoke 4/4.
@@ -74,6 +79,7 @@
 - [x] 26.09: Imzali medyaya gore movie/series/both adapter secimi eklendi; LIVE ve yanlis surumler devre disi.
 - [x] 26.09: 15/15 pure Kotlin secim testi + 5/5 kapali Android bridge JVM testi; GitHub blob SHA ile birebir.
 - [x] WatchdogApprovedAdapterBridge: onayli HTTPS origin, pinned public key ve .cs3'e derlenmis TAM adapter surum eslesmesi olmadan kaynak acmiyor.
+- [x] WatchdogApprovedAdapterBridge simdi ayri, sureli hak/izin/host/yol kaydi olmadan da hicbir kaynak adaptoru acmiyor (production listesi BOS).
 - [x] Her iki yeni test scripts/test-core.sh'e eklendi; birebir betik bash -n gecti.
 - [ ] EAProvider'a baglama yalniz gercek izinli kaynak adaptoru ve signing public key onayindan SONRA.
 - [ ] Guvenli endpoint ve gercek imza pini onaylandiktan sonra ilk onayli adapter ile uygulama akisina baglama.
@@ -105,6 +111,6 @@
 - [ ] Production v5 veya main'e gecis yalniz ayri onayla.
 
 ## Sonraki en yakin is
-Actions kotasi sifirken onayli gercek kaynak teknik/izin incelemesini bitir;
+Actions kotasi sifirken hak/izin kayitlarini birer birer incele ve kullanicidan onay al;
 sonra EAProvider'a secure adapter bridge, tam Node 22 ve izole Wrangler D1,
 MFA'li admin pilotu. Gercek v5/main ve canli Worker degismez.
