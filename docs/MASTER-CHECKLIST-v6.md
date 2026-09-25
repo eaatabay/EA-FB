@@ -42,7 +42,8 @@
 - [x] XSS-escaped, salt-okunur sari-lacivert admin saglik paneli.
 - [x] GET /admin default OFF, yetkisiz 403 ve CSP/iframe korumalari.
 - [x] Sahte JWT, yetki, XSS ve kapali varsayilan icin Node test dosyalari.
-- [ ] Yeni JWT testlerini tam Node 22 paketiyle gercekten calistirma.
+- [x] Exact GitHub Access JWT dosyasi ve Node 22 testleri: 5/5 gecti.
+- [ ] Tum Node/Workers/D1 test paketini gercek v6 checkout'unda kosma.
 - [ ] Kullanici tarafinda Cloudflare Access + MFA uygulamasi olusturma.
 - [ ] Basarili yerel test sonrasinda admin kimligi ve AUD onayi.
 - [ ] Audit'li admin yazma/onay/rollback akisi (su an KAPALI/yok).
