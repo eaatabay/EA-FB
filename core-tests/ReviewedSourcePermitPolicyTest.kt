@@ -165,5 +165,25 @@ fun main() {
         "unknown media rights category closes registry")
     test(only(list=listOf(movie.copy(evidenceReference="rights/2026/a.md"),
         series,both)).isEmpty(), "short unverifiable evidence path rejected")
+    val signedInvalid=defaultSnapshot.copy(usableSources=
+        defaultSnapshot.usableSources.map {
+            if (it.id=="fixture-both") it.copy(mediaKind="live") else it
+        })
+    test(only(snapshot=signedInvalid).none { it.id=="fixture-both" },
+        "even a both-media permit rejects unsupported signed LIVE kind")
+    val signedUnknown=defaultSnapshot.copy(usableSources=
+        defaultSnapshot.usableSources.map {
+            if (it.id=="fixture-both") it.copy(mediaKind="unknown") else it
+        })
+    test(only(snapshot=signedUnknown).none { it.id=="fixture-both" },
+        "unsupported signed media never passes the permit intersection")
+    test(only(list=listOf(movie.copy(reviewedAt=T+DAY),series,both)).isEmpty(),
+        "rights review dated in future is not yet valid")
+    test(only(list=listOf(movie.copy(evidenceReference=""),series,both)).isEmpty(),
+        "missing evidence reference fails closed")
+    test(only(list=listOf(movie.copy(evidenceReference="https://example.org/fake.md"),
+        series,both)).isEmpty(), "external evidence URL cannot substitute reviewed record")
+    test(only(list=listOf(movie.copy(id="fixture-movie",approvedHosts=emptySet()),
+        series,both)).isEmpty(), "empty approved host set invalidates permit registry")
     println("PASS: $passed/$passed reviewed source permit policy cases")
 }
