@@ -6,7 +6,7 @@
 const UPSTREAM = "https://api.themoviedb.org/3";
 const LANGUAGES = new Set(["tr-TR", "en-US"]);
 const MONETIZATION = new Set(["flatrate", "free", "ads", "rent", "buy"]);
-const SORTS = new Set(["popularity.desc", "vote_average.desc", "primary_release_date.desc"]);
+const SORTS = new Set(["popularity.desc", "vote_average.desc", "primary_release_date.desc", "first_air_date.desc"]);
 const APPENDS = {
   movie: new Set(["credits", "recommendations", "external_ids", "images", "similar", "videos", "watch/providers"]),
   tv: new Set(["aggregate_credits", "recommendations", "external_ids", "images", "similar", "videos", "watch/providers"]),
@@ -55,14 +55,17 @@ function catalogRequest(url) {
   } else if (kind === "discover" && parts.length === 2 &&
       ["movie", "tv"].includes(parts[1])) {
     upstreamPath = "/" + parts.join("/");
-    for (const k of ["with_watch_providers", "watch_region", "with_watch_monetization_types", "with_genres", "sort_by"]) {
+    for (const k of ["with_watch_providers", "watch_region", "with_watch_monetization_types", "with_genres", "sort_by", "vote_count.gte"]) {
       const v = q.get(k);
       if (v == null) continue;
       const valid = k === "with_watch_providers" ? /^\d{1,6}(,\d{1,6}){0,4}$/.test(v) :
         k === "watch_region" ? /^[A-Z]{2}$/.test(v) :
         k === "with_watch_monetization_types" ? MONETIZATION.has(v) :
         k === "with_genres" ? /^\d{1,4}(,\d{1,4}){0,4}$/.test(v) :
-        SORTS.has(v);
+        k === "vote_count.gte" ? /^\d{1,5}$/.test(v) && +v >= 1 && +v <= 10000 :
+        SORTS.has(v) &&
+          (v !== "first_air_date.desc" || parts[1] === "tv") &&
+          (v !== "primary_release_date.desc" || parts[1] === "movie");
       if (!valid) return null;
       accepted.set(k, v);
     }
@@ -104,7 +107,7 @@ function catalogRequest(url) {
   // Do not quietly allow arbitrary upstream query parameters.
   const permitted = new Set([...accepted.keys(), "append_to_response",
     "with_watch_providers", "watch_region", "with_watch_monetization_types",
-    "with_genres", "sort_by", "query"]);
+    "with_genres", "sort_by", "vote_count.gte", "query"]);
   for (const key of q.keys()) {
     if (!permitted.has(key) || !accepted.has(key) || q.getAll(key).length !== 1) return null;
   }
