@@ -1,4 +1,5 @@
 import { HEALTH, normalizedHttpsUrl, validateSource } from "./policy.mjs";
+import { validSnapshot } from "./snapshot-crypto.mjs";
 
 /**
  * Client-safe, read-only registry view. This is only a pure serializer; the
@@ -53,15 +54,23 @@ export function buildClientSnapshot(sources, states, revision, now, options={}) 
   };
 }
 
-/** A device accepts only newer signed snapshots; signing is handled outside. */
+/**
+ * Legacy pure replacement helper for ALREADY signature-verified snapshots.
+ * It does NOT verify signatures: callers must use verifySnapshot() first.
+ *
+ * A new signed generation may refresh TTL without changing D1 revision.
+ * Match the Ed25519 verifier's revision+generatedAt replay rules exactly.
+ * Fail closed on malformed/partial payloads instead of shallow URL checks.
+ */
 export function canReplaceSnapshot(current, incoming, now, signatureVerified = false) {
-  if (signatureVerified !== true) return false;
-  if (!incoming || incoming.schemaVersion !== 1 ||
-      !Number.isSafeInteger(incoming.revision) ||
-      !Number.isFinite(incoming.expiresAt) ||
-      !Array.isArray(incoming.sources) || incoming.expiresAt <= now) return false;
-  if (current && incoming.revision <= current.revision) return false;
-  return incoming.sources.every(x =>
-    x && typeof x.id === "string" && Number.isSafeInteger(x.adapterVersion) &&
-    x.adapterVersion > 0 && normalizedHttpsUrl(x.baseUrl));
+  if (signatureVerified !== true || !validSnapshot(incoming, now)) return false;
+  if (current == null) return true;
+  if (!Number.isSafeInteger(current.revision) || current.revision < 0 ||
+      !Number.isSafeInteger(current.generatedAt) || current.generatedAt < 0) {
+    return false;
+  }
+  if (incoming.revision < current.revision) return false;
+  if (incoming.revision === current.revision &&
+      incoming.generatedAt <= current.generatedAt) return false;
+  return true;
 }
