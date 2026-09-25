@@ -87,6 +87,30 @@ test("serves exact paths used by EA-FB 28-category catalog", async () => {
   assert.equal(calls.length, 13);
 });
 
+test("discovery sort validates film, series, and rated-list safeguards", async () => {
+  const { env, ctx, calls } = setup();
+  for (const path of [
+    "/v1/discover/movie?with_genres=28&sort_by=primary_release_date.desc",
+    "/v1/discover/tv?with_watch_providers=8&sort_by=first_air_date.desc",
+    "/v1/discover/movie?with_genres=878&sort_by=vote_average.desc&vote_count.gte=100",
+  ]) {
+    const res = await gateway.fetch(new Request("https://example.workers.dev" + path), env, ctx);
+    assert.equal(res.status, 200, path);
+  }
+  assert.equal(calls.length, 3);
+  for (const path of [
+    "/v1/discover/tv?sort_by=primary_release_date.desc",
+    "/v1/discover/movie?sort_by=first_air_date.desc",
+    "/v1/discover/movie?vote_count.gte=0",
+    "/v1/discover/movie?vote_count.gte=10001",
+    "/v1/discover/movie?vote_count.gte=100&vote_count.gte=200",
+  ]) {
+    const res = await gateway.fetch(new Request("https://example.workers.dev" + path), env, ctx);
+    assert.equal(res.status, 400, path);
+  }
+  assert.equal(calls.length, 3);
+});
+
 test("rate limit rejects without TMDb fetch", async () => {
   const { env, ctx, calls } = setup();
   env.PER_CLIENT_LIMIT = { limit: async () => ({ success: false }) };
