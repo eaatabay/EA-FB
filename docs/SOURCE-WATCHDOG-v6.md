@@ -1,0 +1,49 @@
+# EA-FB Source Watchdog — foundation (v6 feature branch)
+
+This is a **policy engine and test fixtures only**. Nothing is deployed and no
+source monitoring, automatic recovery, or admin UI is live. v5/main and the
+production TMDb catalog Worker remain unchanged.
+
+## Non-negotiable production contract
+- The catalog (TMDb metadata) and licensed source system are failure-isolated.
+- Search receives only healthy, enabled and permission-reviewed source adapters.
+  A failing source never blocks or hides independent healthy sources.
+- A successful HTTP response is *not* a healthy source. Search, detail, TV episode,
+  and an authorized playback fixture (if configured) must each pass.
+- Unknown redirects, identity mismatches and structural changes require admin
+  review. Even a move to an already approved hostname requires two consistent
+  successful functional checks.
+- Sources return only after two consecutive healthy checks; intermittent network
+  failures enter degraded then quarantine, with capped backoff.
+- Previous working configuration remains available; changes must be audited and
+  reversible. A manual release from admin review always restarts tests.
+- Never probe third-party sites without authorization, ignore robots/terms,
+  bypass DRM or authentication, or trust unvalidated redirects.
+- No public endpoint accepts arbitrary URLs. The future runner must use only
+  admin-approved source IDs and explicitly validated allowlisted hosts. Block
+  private/reserved destinations at DNS resolution and at every redirect hop;
+  pure URL syntax validation in this module is **not** sufficient SSRF defense.
+
+## Current source files
+- `source-watchdog/src/policy.mjs`: side-effect-free state transitions.
+- `source-watchdog/test/policy.test.mjs`: fixture-only isolation/failure/recovery tests.
+- `source-watchdog/package.json`: `npm test`, no external dependencies.
+
+## Next gated milestones
+1. Design a durable central registry and audit log, and enforce CAS/versioned
+   writes plus least-privilege administration. Keep the catalog Worker separate.
+2. Authorized probe runner with actual search/detail/episode test fixtures,
+   SSRF-safe DNS and redirect handling, per-host rate limits and no video
+   downloading. Never classify HTTP 200 alone as success.
+3. Scheduled checks (initially six-hour baseline), incident-triggered checks,
+   serialized per-source runs, and automatically retained last-known-good config.
+4. Admin-only navy/yellow dashboard, login/2FA, review/release/retest/rollback.
+5. Hook EA-FB client source adapters into a **read-only, signed or authenticated**
+   registry snapshot; enforce last-known-good cache TTL and fail closed.
+6. Test with three independent **authorized/licensed** fixtures: two domain
+   moves, one structural failure, 27 healthy simulated sources; then real
+   test environment and controlled rollout. No production deployment until
+   approved validation passes.
+
+GitHub Actions quota is currently exhausted; use local fixture tests where
+available. Build or deployment results MUST NOT be inferred from source review.
