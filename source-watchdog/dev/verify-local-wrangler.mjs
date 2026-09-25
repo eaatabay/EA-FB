@@ -9,7 +9,7 @@ import {tmpdir} from "node:os";
 import {join, resolve} from "node:path";
 import {fileURLToPath} from "node:url";
 import {createServer} from "node:net";
-import {makeLocalConfig} from "./make-local-config.mjs";
+import {verifyLocalConfig} from "./make-local-config.mjs";
 
 const root = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const bin = resolve(root, "node_modules/.bin/wrangler");
@@ -29,18 +29,12 @@ let workerOutput = "";
 let completed = false;
 let steps = 0;
 
-function stableJSON(value) {
-  if (Array.isArray(value)) return "["+value.map(stableJSON).join(",")+"]";
-  if (value && typeof value==="object") return "{"+Object.keys(value).sort()
-    .map(key=>JSON.stringify(key)+":"+stableJSON(value[key])).join(",")+"}";
-  return JSON.stringify(value);
-}
 function assertSafeLocalConfig() {
   const tracked = JSON.parse(readFileSync(resolve(root,"wrangler.jsonc"),"utf8"));
   const local = JSON.parse(readFileSync(localConfig,"utf8"));
   if (tracked.d1_databases !== undefined ||
       tracked.workers_dev !== false ||
-      stableJSON(local) !== stableJSON(makeLocalConfig(tracked)) ||
+      verifyLocalConfig(tracked, local) !== true ||
       Object.values(tracked.vars ?? {}).some(v => v !== "false" && v !== "disabled") ||
       local.name !== "ea-fb-source-watchdog-local-fixtures" ||
       local.vars?.WATCHDOG_MODE !== "fixture" ||
