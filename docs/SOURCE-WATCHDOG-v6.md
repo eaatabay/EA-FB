@@ -250,6 +250,31 @@ catalog Worker remain unchanged.
   Node/Worker/D1 suite and real Cloudflare Access + MFA still require testing
   before any admin route is enabled.
 
+## Admin repair/write endpoints (STAGED ONLY; INDEPENDENTLY OFF)
+- `src/admin-actions.mjs` validates strict same-origin requests with an
+  explicit confirmation header, JSON-only input, a **1 KiB streaming body
+  limit**, fixed action names and a mandatory per-source expected revision.
+  It rejects unexpected fields, cross-site requests, stale revisions and
+  arbitrary URLs. A verified Access email becomes a stable hashed audit actor.
+- The ONLY staged HTTP actions are **disable, enable, retest and rollback**.
+  Each calls an existing audited, trigger-backed D1 operation with a source
+  revision precondition; a concurrent write or historical replay returns 409.
+  No HTTP path can grant integration permission, add/change a source domain,
+  register a source, run SQL or download parser code.
+- `POST /admin/api/sources/:id` requires a valid Cloudflare Access admin JWT
+  **and** a second independent opt-in switch,
+  `WATCHDOG_ADMIN_WRITES_ENABLED=true`, and an exact
+  `WATCHDOG_ADMIN_ORIGIN`. The checked-in Wrangler file and generated local
+  test config both keep admin writes OFF. The existing dashboard deliberately
+  remains read-only, with no mutation forms or script controls.
+- New `test/admin-actions.test.mjs` covers validation, CSRF, oversized
+  streamed bodies, replay/CAS, audit actors and sanitized API errors. These
+  full Node/SQLite integration tests still require a real v6 checkout run.
+  During development, the **exact GitHub admin action and Worker sources**
+  passed 12/12 pure policy checks and 10/10 route checks in an isolated V8
+  harness with mocked URL/stream/cryptography/database primitives. This is
+  NOT an end-to-end Node, real D1 or Cloudflare Access validation.
+
 ## Next gated milestones
 1. Run full Node/SQLite tests from the actual v6 branch, then a local Wrangler
    test using only the isolated fixture D1. Never interpret fixture health
@@ -259,9 +284,10 @@ catalog Worker remain unchanged.
 3. Add verified, authenticated and rate-limited incident intake for real
    sources; the private runner already has lease-based serialization. User-facing
    search/playback must never wait for repair.
-4. Connect the staged read-only admin panel to a real, MFA-enforced Cloudflare
-   Access application. Add reviewed write operations only after independent
-   authorization, audit and rollback tests.
+4. Run the new admin-actions Node/SQLite tests, connect read-only admin view
+   to a real MFA-enforced Cloudflare Access application, then separately review
+   and enable only the narrowly scoped disable/enable/retest/rollback API.
+   All admin writes remain OFF until tests, origin and audit are confirmed.
 5. Provision and pin a production signing public key in a reviewed .cs3,
    connect the staged read-only Worker endpoint to the Android refresh client,
    and integrate only genuinely approved bundled source adapters. Verify
