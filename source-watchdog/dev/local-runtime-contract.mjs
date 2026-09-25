@@ -84,12 +84,15 @@ export function parseLocalD1Rows(raw){
   let data;
   try {data=JSON.parse(raw);}catch{throw new Error("invalid_wrangler_json");}
   const sets=Array.isArray(data)?data:[data];
-  const results=sets.find(x=>x?.success===true&&Array.isArray(x.results));
-  if(!results||results.results.length!==1 ||
-      !results.results[0]||typeof results.results[0]!=="object"){
+  // A single approved SELECT must produce exactly one successful statement.
+  // Never skip over a failed statement and cherry-pick a later success.
+  if(sets.length!==1 || sets[0]?.success!==true ||
+      !Array.isArray(sets[0].results) || sets[0].results.length!==1 ||
+      !sets[0].results[0] || Array.isArray(sets[0].results[0]) ||
+      typeof sets[0].results[0]!=="object"){
     throw new Error("wrangler_json_result_missing");
   }
-  return results.results;
+  return sets[0].results;
 }
 
 export function validateFixtureCounters(phase,current,previous=null) {
