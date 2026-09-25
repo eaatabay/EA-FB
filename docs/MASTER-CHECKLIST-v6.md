@@ -35,6 +35,10 @@
 - [x] Fixture kaydinin durum/candidate URL'leri de sadece onayli demo hostlarda kalabiliyor.
 - [x] 8 Cron + 1 tekrar senaryosunda 30 kaynak ve audit beklentisi otomatik denetleniyor.
 - [ ] Wrangler --local D1 migration/Cron entegrasyon testini gercekte kosma (paket bu ortamda kurulu degil).
+- [x] Yalniz v6 PR veya opt-in manual ile calisan, Cloudflare sirri almayan read-only Actions testi eklendi.
+- [x] CI YAML yapisi dogrulandi; 3/3 Node CI guvenlik testi gecti.
+- [x] Wrangler JSON kanitinda karisik basarisiz/basarili ifadelerin PASS sayilmasi kapatildi (4/4 Node).
+- [ ] Actions kotasi uygun oldugunda sadece yerel D1/Worker test job'unu gercekte calistirip log inceleme.
 - [x] 26.09: Gercek repo koduyla V8 30 kaynak/59 kontrol, 2 tasinma, 1 admin bekleme, sifir tekrar dogrulandi.
 - [x] 26.09: Kotu durum adresi iceren 5 fixture'in Cron'a girmeden reddedildigi dogrulandi.
 - [ ] Ayrica onaylanmis, izinli gercek kaynak adapterlerini secip inceleme.
