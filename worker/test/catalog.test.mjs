@@ -143,3 +143,73 @@ test("rejects redirects without forwarding the original Authorization header", a
   assert.deepEqual(await res.json(),{error:"tmdb_redirect_rejected"});
   assert.equal(calls.length,1);
 });
+
+test("optionally adds genuine IMDb rating from OMDb without leaking server key", async () => {
+  const {env,ctx,calls}=setup();
+  env.OMDB_API_KEY="SERVER_ONLY_OMDB_TEST_KEY";
+  globalThis.fetch=async (url,opts) => {
+    calls.push({url,opts});
+    if (url.startsWith("https://api.themoviedb.org/")) {
+      return new Response(JSON.stringify({
+        id:123,
+        name:"Sample",
+        vote_average:8.3,
+        vote_count:125,
+        external_ids:{imdb_id:"tt14688458"},
+      }),{headers:{"content-type":"application/json"}});
+    }
+    return new Response(JSON.stringify({
+      imdbID:"tt14688458",imdbRating:"8.1",Response:"True",
+    }),{headers:{"content-type":"application/json"}});
+  };
+  const request = new Request("https://example.workers.dev/v1/tv/123?append_to_response=external_ids");
+  const res=await gateway.fetch(request,env,ctx);
+  assert.equal(res.status,200);
+  const detail=await res.json();
+  assert.equal(detail.ea_fb_ratings.imdb,8.1);
+  assert.equal(detail.ea_fb_ratings.source,"OMDb API");
+  assert.equal(detail.vote_average,8.3);
+  assert.equal(calls.length,2);
+  assert.equal(calls[0].opts.headers.authorization,"Bearer "+env.TMDB_READ_ACCESS_TOKEN);
+  assert.ok(calls[1].url.includes(encodeURIComponent(env.OMDB_API_KEY)));
+  assert.equal(calls[1].opts.redirect,"manual");
+  assert.ok(!JSON.stringify(detail).includes(env.OMDB_API_KEY));
+  assert.ok(!JSON.stringify(detail).includes(env.TMDB_READ_ACCESS_TOKEN));
+});
+
+test("never invents IMDb rating if OMDb is unavailable or responds N/A", async () => {
+  const {env,ctx,calls}=setup();
+  env.OMDB_API_KEY="SERVER_ONLY_OMDB_TEST_KEY";
+  globalThis.fetch=async (url,opts) => {
+    calls.push({url,opts});
+    if (url.startsWith("https://api.themoviedb.org/")) {
+      return new Response(JSON.stringify({
+        id:123,
+        vote_average:7.4,vote_count:19,
+        external_ids:{imdb_id:"tt14688458"},
+      }),{headers:{"content-type":"application/json"}});
+    }
+    return new Response(JSON.stringify({imdbID:"tt14688458",imdbRating:"N/A",Response:"True"}),
+      {headers:{"content-type":"application/json"}});
+  };
+  const r=await gateway.fetch(new Request("https://example.workers.dev/v1/tv/123?append_to_response=external_ids"),env,ctx);
+  const body=await r.json();
+  assert.equal(r.status,200);
+  assert.equal(body.vote_average,7.4);
+  assert.equal(body.ea_fb_ratings,undefined);
+});
+
+test("no optional OMDb key means zero extra external requests", async () => {
+  const {env,ctx,calls}=setup();
+  globalThis.fetch=async (url,opts) => {
+    calls.push({url,opts});
+    return new Response(JSON.stringify({
+      id:123,vote_average:8.1,vote_count:22,
+      external_ids:{imdb_id:"tt14688458"},
+    }),{headers:{"content-type":"application/json"}});
+  };
+  const res=await gateway.fetch(new Request("https://example.workers.dev/v1/tv/123?append_to_response=external_ids"),env,ctx);
+  assert.equal(res.status,200);
+  assert.equal((await res.json()).ea_fb_ratings,undefined);
+  assert.equal(calls.length,1);
+});
