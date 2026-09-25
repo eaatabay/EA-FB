@@ -66,6 +66,12 @@ export function validateLocalWranglerArgs(args, persistDir) {
     if((typeof command==="string") === (typeof file==="string")){
       throw new Error("missing_or_ambiguous_sql");
     }
+    // Count queries must return machine-readable proof; seed must not
+    // masquerade as a read-only JSON result.
+    if ((command !== undefined && opts.get("--json") !== true) ||
+        (file !== undefined && opts.has("--json"))) {
+      throw new Error("invalid_local_d1_output_mode");
+    }
     if(command!==undefined &&
         command!==STATS_QUERY && command!==COUNTERS_QUERY) {
       throw new Error("only_approved_aggregate_sql_allowed");
