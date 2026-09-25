@@ -123,3 +123,6 @@ REFRESH="EA-FB/src/main/kotlin/com/eafb/WatchdogSnapshotRefresh.kt"
 HTTPS="EA-FB/src/main/kotlin/com/eafb/WatchdogHttpsTransport.kt"
 kotlinc -cp "$BC_JAR:$COROUTINES" "$TRUST" "$OFFLINE" "$REFRESH" "$HTTPS" core-tests/WatchdogSnapshotRefreshTest.kt -include-runtime -d "$TMP/watchdog-refresh.jar"
 java -cp "$TMP/watchdog-refresh.jar:$BC_JAR:$COROUTINES" com.eafb.WatchdogSnapshotRefreshTestKt
+# Fake TLS connection tests: never contact a real endpoint or spend Actions.
+kotlinc -cp "$BC_JAR:$COROUTINES" "$TRUST" "$REFRESH" "$HTTPS" core-tests/WatchdogHttpsTransportTest.kt -include-runtime -d "$TMP/watchdog-https.jar"
+java -cp "$TMP/watchdog-https.jar:$BC_JAR:$COROUTINES" com.eafb.WatchdogHttpsTransportTestKt
