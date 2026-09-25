@@ -9,6 +9,21 @@ const CONFIG="wrangler.local.jsonc";
 const FLAGS=new Set(["--local","--json"]);
 const VALUES=new Set(["--config","--persist-to","--command","--file"]);
 
+// Restrict local D1 reads to the TWO immutable aggregate queries below.
+// An accidental future dynamic string cannot inspect other local tables.
+export const STATS_QUERY = [
+  "SELECT COUNT(*) total,",
+  "SUM(CASE WHEN json_extract(state_json,'$.status')='healthy' THEN 1 ELSE 0 END) healthy,",
+  "SUM(CASE WHEN json_extract(state_json,'$.status')='admin_required' THEN 1 ELSE 0 END) admin_hold,",
+  "SUM(CASE WHEN json_extract(config_json,'$.currentUrl')='https://moved.example.org' THEN 1 ELSE 0 END) moves",
+  "FROM source_registry",
+].join(" ");
+export const COUNTERS_QUERY = "SELECT " +
+  "(SELECT revision FROM registry_meta WHERE singleton=1) revision, " +
+  "(SELECT COUNT(*) FROM source_audit) audits, " +
+  "(SELECT COUNT(*) FROM source_probe_runs) runs, " +
+  "(SELECT COUNT(*) FROM source_probe_leases) leases";
+
 export function validateLocalWranglerArgs(args, persistDir) {
   if (!Array.isArray(args) || typeof persistDir !== "string" ||
       persistDir.length < 4 || !persistDir.startsWith("/") ||
@@ -52,8 +67,8 @@ export function validateLocalWranglerArgs(args, persistDir) {
       throw new Error("missing_or_ambiguous_sql");
     }
     if(command!==undefined &&
-        (!/^SELECT\b/i.test(command.trim()) || /[;]/.test(command))) {
-      throw new Error("only_readonly_local_sql_allowed");
+        command!==STATS_QUERY && command!==COUNTERS_QUERY) {
+      throw new Error("only_approved_aggregate_sql_allowed");
     }
     if(file!==undefined &&
         (resolve(file)!==resolve(persistDir,"seed","fixtures.sql") ||
