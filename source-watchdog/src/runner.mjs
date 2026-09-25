@@ -22,8 +22,10 @@ async function withTimeout(task, timeoutMs) {
       Promise.resolve().then(() => task(controller.signal)),
       new Promise((_, reject) => {
         timer = setTimeout(() => {
-          controller.abort();
+          // Reject BEFORE aborting: a synchronous abort listener may resolve
+          // the adapter promise. Timeout must never count as healthy.
           reject(new Error("probe_timeout"));
+          controller.abort();
         }, timeoutMs);
       }),
     ]);
@@ -114,14 +116,15 @@ export async function runDueChecks({
       const index = cursor++;
       if (index >= due.length) return;
       const record = due[index];
-      out[index] = await runOneSourceCheck({
-        db,
-        adapters,
-        sourceId: record.id,
-        now,
-        runId: safeRunId(record.id, now, index + slot * 1000),
-        timeoutMs,
-      });
+      try {
+        out[index] = await runOneSourceCheck({
+          db, adapters, sourceId: record.id, now,
+          runId: safeRunId(record.id, now, index + slot * 1000), timeoutMs,
+        });
+      } catch (_) {
+        // A corrupt source or isolated D1 failure must not stop other probes.
+        out[index] = {sourceId: record.id, status:"runner_error", error:"scheduling_failure"};
+      }
     }
   }
 
