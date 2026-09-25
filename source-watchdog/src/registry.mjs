@@ -120,7 +120,7 @@ export async function registerSource(db, rawConfig, actor, now) {
   return { id: config.id, config, state, revision: 0, lastCheckRunId: null, updatedAt: now };
 }
 
-async function replaceCAS(db, previous, nextConfig, nextState, runId, actor, reason, now) {
+async function replaceCAS(db, previous, nextConfig, nextState, runId, actor, reason, now, lease = null) {
   dbReady(db);
   clock(now);
   const config = requireApprovedConfig(nextConfig);
@@ -130,14 +130,25 @@ async function replaceCAS(db, previous, nextConfig, nextState, runId, actor, rea
       !Number.isSafeInteger(previous.revision) || previous.revision < 0 ||
       now < previous.updatedAt) throw new Error("invalid_update");
   if (runId !== null) runIdText(runId);
-  // A single UPDATE CAS transaction also fires the unique-run, global-revision
-  // and audit triggers. On conflict nothing is published or half-recorded.
+  // One atomic UPDATE CAS also verifies that the CURRENT runner still owns
+  // its unexpired lease. A late probe cannot overwrite a newer lease holder.
+  // Legacy direct internal/test calls may omit the lease; the public Worker
+  // exposes no route that can call commitProbe directly.
+  if (lease !== null && (!lease || typeof lease.token !== "string" ||
+      !Number.isSafeInteger(lease.checkedAtMs) || lease.checkedAtMs < 0)) {
+    throw new Error("invalid_probe_lease");
+  }
+  const leaseClause = lease === null ? "" :
+    " AND EXISTS (SELECT 1 FROM source_probe_leases WHERE source_id=? " +
+    "AND lease_token=? AND expires_at_ms>?)";
+  const leaseArgs = lease === null ? [] :
+    [previous.id, lease.token, lease.checkedAtMs];
   const result = await db.prepare(
     "UPDATE source_registry SET config_json = ?, state_json = ?, revision = revision + 1, " +
     "last_check_run_id = ?, updated_at_ms = ?, changed_by = ?, change_reason = ? " +
-    "WHERE id = ? AND revision = ?"
+    "WHERE id = ? AND revision = ?" + leaseClause
   ).bind(JSON.stringify(config), JSON.stringify(nextState), runId, now,
-    actor, reason, previous.id, previous.revision).run();
+    actor, reason, previous.id, previous.revision, ...leaseArgs).run();
   if (result?.meta?.changes !== 1) throw new RegistryConflict();
   return {
     id: previous.id, config, state: nextState, revision: previous.revision + 1,
@@ -150,7 +161,7 @@ async function replaceCAS(db, previous, nextConfig, nextState, runId, actor, rea
  * verify source ownership/permissions and implement DNS/redirect SSRF guards,
  * request budgets and the source-specific fixture checks independently.
  */
-export async function commitProbe(db, id, runId, probe, now) {
+export async function commitProbe(db, id, runId, probe, now, lease = null) {
   runIdText(runId);
   clock(now);
   const previous = await getSource(db, id);
@@ -176,7 +187,7 @@ export async function commitProbe(db, id, runId, probe, now) {
     promoted ? "probe:verified_domain_change" : "probe:" + state.status
   );
   const record = await replaceCAS(db, previous, config, state, runId,
-    "watchdog:runner", reason, now);
+    "watchdog:runner", reason, now, lease);
   return { duplicate: false, record };
 }
 
