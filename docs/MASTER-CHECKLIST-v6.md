@@ -24,6 +24,9 @@
 - [x] Yalniz yerel D1 konfigurasyon/seed/test komutlari (remote kaynak yok).
 - [ ] Tum Node 22/SQLite test paketini gercek v6 checkout'unda kosma.
 - [x] Tek komutlu Node/Python/yerel Wrangler+D1 release kapisi kodlandi.
+- [x] Eski test:local artik mevcut D1'e dokunmuyor; tek kullanimlik D1 release testini aciyor.
+- [x] Yerel D1 config: 10/10 sahte binding/route/secret/worker degisikligi engellendi (Node 22).
+- [x] 26.09: 0600 yerel config olusturma, ikinci denemede uzerine yazmama dogrulandi.
 - [x] 26.09: D1'in desteklemedigi BEGIN/COMMIT fixture SQL'den cikarildi; tekrarini engelleyen test eklendi.
 - [x] 26.09: GitHub fixture generator cikti fingerprint'iyle birebir ayni SQL, gercek SQLite migration 0001+0002 uzerinde 30/30 kayit ve 30/30 audit; tekrar 0 duplicate dogrulandi.
 - [x] Tam v6 verify betigi D1 testini Kotlin ve cs3 derlemesinden ONCE zorunlu kiliyor.
