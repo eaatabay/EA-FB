@@ -90,7 +90,20 @@ if [ -z "$BC_JAR" ]; then
     "https://repo.maven.apache.org/maven2/org/bouncycastle/bcprov-jdk15to18/1.80/bcprov-jdk15to18-1.80.jar" \
     -o "$BC_JAR"
 fi
-jar tf "$BC_JAR" | grep -q '^org/bouncycastle/crypto/signers/Ed25519Signer.class$' || {
+jar tf "$BC_JAR" | grep '^org/bouncycastle/crypto/signers/Ed25519Signer.class
+  echo "The pinned BouncyCastle verifier is missing" >&2
+  exit 2
+}
+TRUST="EA-FB/src/main/kotlin/com/eafb/SourceSnapshotTrust.kt"
+GATE="EA-FB/src/main/kotlin/com/eafb/SourceSnapshotGate.kt"
+kotlinc -cp "$BC_JAR" "$TRUST" core-tests/SourceSnapshotTrustTest.kt \
+  -include-runtime -d "$TMP/watchdog-trust.jar"
+java -cp "$TMP/watchdog-trust.jar:$BC_JAR" com.eafb.SourceSnapshotTrustTestKt
+kotlinc -cp "$COROUTINES:$BC_JAR" "$DOMAIN" \
+  EA-FB/src/main/kotlin/com/eafb/SourceEngine.kt "$TRUST" "$GATE" \
+  core-tests/SourceSnapshotGateTest.kt -include-runtime -d "$TMP/watchdog-gate.jar"
+java -cp "$TMP/watchdog-gate.jar:$COROUTINES:$BC_JAR" com.eafb.SourceSnapshotGateTestKt
+ >/dev/null || {
   echo "The pinned BouncyCastle verifier is missing" >&2
   exit 2
 }
