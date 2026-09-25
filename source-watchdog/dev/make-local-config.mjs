@@ -16,6 +16,7 @@ export function makeLocalConfig(tracked) {
       tracked.vars?.WATCHDOG_FIXTURE_ENABLED !== "false" ||
       tracked.vars?.WATCHDOG_SNAPSHOT_ENABLED !== "false" ||
       tracked.vars?.WATCHDOG_ADMIN_ENABLED !== "false" ||
+      tracked.vars?.WATCHDOG_ADMIN_WRITES_ENABLED !== "false" ||
       JSON.stringify(tracked.triggers?.crons) !== JSON.stringify(["*/15 * * * *"])) {
     throw new Error("tracked_worker_config_is_not_inert");
   }
@@ -32,6 +33,7 @@ export function makeLocalConfig(tracked) {
     WATCHDOG_FIXTURE_ENABLED:"true",
     WATCHDOG_SNAPSHOT_ENABLED:"false",
     WATCHDOG_ADMIN_ENABLED:"false",
+    WATCHDOG_ADMIN_WRITES_ENABLED:"false",
   };
   config.workers_dev=false;
   return config;
