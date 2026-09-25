@@ -17,6 +17,7 @@ Last updated: 25.09.2026. Review observations came from the user's photos of **r
 2. `EASettings.kt`: SharedPreferences persist switches and ordering preferences. Only actual TMDb-bound home categories are exposed as active switches; documentary-only placeholders are labeled pending. `EAProvider.mainPage` derives enabled sections when EA-FB is reopened.
 3. `CatalogSortPolicy.kt`: platform and genre discover feeds sort by popular, latest (movie release date or TV first air date), or rating with at least 100 votes. Trending/top-rated/native now-playing categories preserve their meaningful source order.
 4. `worker/src/index.js`: securely allowlists TV `first_air_date.desc` and `vote_count.gte` for the new discover sorting; tests added. **Deploy the updated Worker before releasing a client that emits these new query parameters**.
+6. `assets/ea-fb-logo.png` and `assets/ea-fb-logo.svg`: matching navy/yellow logo assets; future staging now inserts the PNG as `iconUrl` in both repo and extension manifests. Main is untouched.
 5. Detail rating cleanup: no unlabeled native hero score and no duplicate rating line in the plot; one set of explicitly named IMDb/TMDb chips when independent data exists. The next-episode date for far-off episodes moves to the plot's first line. Collection text becomes a short note rather than a long list.
 
 ## Pending – must not be presented as finished
@@ -24,7 +25,7 @@ Last updated: 25.09.2026. Review observations came from the user's photos of **r
 - The new settings UI and updated Android v6 package have **not** been compiled, deployed or tested on Mi Box after these new edits. Earlier v6 baseline was compiled and tested; do not conflate the two.
 - Worker updates have not been deployed. OMDb secret has not been confirmed; until it is configured, only real TMDb scores appear.
 - A separately headed, TV-focusable `Serinin Filmleri` carousel, blue/current-film selection and unlimited horizontal navigation require CloudStream UI extension support or an application fork. Current standard `MovieLoadResponse` cannot create a second native rail.
-- An icon-bearing repo card needs a valid hosted PNG `iconUrl` and a published versioned repository. Do not replace the v5 `main/dist` manifest with an untested package.
+- Logo PNG is present in the feature branch and release staging is configured, **but the public/main icon URL will not work until publication**. Repo card theming beyond the icon is controlled by CloudStream. Do not replace the v5 `main/dist` manifest with an untested package.
 - Platform and genre feeds should be tested on-device, especially the new Worker sort paths. Actual BelgeselX feed, external source adapters and user choice of them need separate implementation and permission review.
 - Styling the CloudStream-wide search screen, playback controls, sidebar or Extension manager requires modifying the host app, not just EA-FB's plugin.
 
