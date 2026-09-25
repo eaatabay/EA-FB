@@ -16,6 +16,7 @@ command -v curl >/dev/null || { echo "curl missing" >&2; exit 2; }
 # A freshly-created EA-FB Codespace contains Java/Gradle but not necessarily Node.
 # Install a verified official Node binary for the current user automatically.
 bash scripts/ensure-node.sh
+export PATH="$HOME/.local/bin:$PATH"
 
 echo "Step 1/5: Test keyless TMDb relay..."
 node --test worker/test/catalog.test.mjs
