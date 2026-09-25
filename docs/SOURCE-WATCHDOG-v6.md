@@ -260,6 +260,29 @@ catalog Worker remain unchanged.
   lifecycle integration, real Android HTTPS/device tests and isolated
   Cloudflare Worker+D1 integration. No deployment or main-branch change.
 
+## Signed media adapter bridge (26 September; OFFLINE ONLY, NO LIVE SOURCES)
+- `WatchdogAdapterSelection.kt` applies signed `mediaKind` scope before
+  instantiating only exact-version compiled `VerifiedBaseUrlAdapter`s.
+  Movie searches may use `movie`/`both`, series may use `series`/`both`;
+  `LIVE` remains the separate existing TV path. No new code may arrive
+  from a downloaded snapshot. Missing/expired snapshots, mismatched IDs,
+  duplicate adapters, over 32 bundles and failing adapter factories are
+  all rejected or isolated before any network call.
+- `WatchdogApprovedAdapterBridge.kt` is a dormant future integration point:
+  it can obtain an **already signature-verified** offline snapshot from
+  `WatchdogClientStore` only if the compiled endpoint/origin, public signing
+  keys and *entire* installed adapter ID/version map have been approved.
+  The checked-in production values are EMPTY/OFF. The existing EAProvider
+  search and playback paths have NOT been modified or activated.
+- Against local JVM tests using minimal *test-only MediaSourceAdapter* and
+  *test-only Android Context/JSON* stubs, **15/15 selection cases** and
+  **5/5 production-OFF bridge cases** passed. The local source and test
+  files were cross-checked by exact Git blob SHA against GitHub. The
+  revised `scripts/test-core.sh` includes both suites and passed `bash -n`.
+  Full real CloudStream/Android Gradle, workerd+D1, authorized live
+  adapters and Mi Box integration are still PENDING. GitHub Actions
+  quota was not used; no PR or deployment was initiated.
+
 ## Signed read-only Worker endpoint (STAGED, DISABLED, NOT DEPLOYED)
 - GET /v1/sources is implemented behind four independent safeguards:
   WATCHDOG_MODE=production, WATCHDOG_SNAPSHOT_ENABLED=true,
