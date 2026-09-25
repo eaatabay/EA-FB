@@ -78,6 +78,7 @@ object ReviewedSourcePermitPolicy {
 
     private fun permittedKind(permit: String, signed: String): String? =
         when {
+            signed !in setOf("movie", "series", "both") -> null
             permit == "both" -> signed
             signed == "both" || signed == permit -> permit
             else -> null
