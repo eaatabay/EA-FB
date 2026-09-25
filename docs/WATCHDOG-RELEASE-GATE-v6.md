@@ -44,6 +44,14 @@ kendileri hiçbir ağ isteği yapmaz. `wrangler` işlemlerinin tamamında
 Test sonunda yerel süreç kapatılır ve geçici dizin silinir. Tracked
 `wrangler.jsonc` dosyasında **bütün çalışma bayrakları kapalıdır**.
 
+**26.09 yerel doğrulama:** Güncel GitHub fixture üreticisi gerçek policy koduyla
+çalıştırılıp 25.289 bayt SQL oluşturdu. Aynı çıktının uzunluğu, FNV32 ve
+Adler32 toplamlarıyla birebir eşleşen SQL dosyası SQLite üzerinde
+iki gerçek migration ile çalıştırıldı: **30 kayıt, 30 audit, 0 probe,
+0 açık kilit, global revizyon 30**. Tekrar içe aktarıldığında
+**sıfır ilave kayıt/audit** oluştu. Bu test gerçek SQLite üzerindedir;
+Wrangler'ın workerd+D1 çalışma zamanı henüz doğrulanmadı.
+
 **D1 uyumluluk düzeltmesi:** İlk fixture SQL üreticisi açık `BEGIN TRANSACTION` /
 `COMMIT` yazıyordu. Cloudflare D1 dosya içe aktarması bunu desteklemediği
 İçin komutlar çıkarıldı. Üretici artık yalnızca 30 `INSERT OR IGNORE` yazıyor;
