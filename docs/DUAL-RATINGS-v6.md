@@ -26,3 +26,14 @@ CloudStream's ordinary `MovieLoadResponse` and `TvSeriesLoadResponse` expose **o
 ## Extra display items being tracked independently
 
 Homepage lower categories with empty cards or paging/navigation problem, simpler future-episode countdown, per-poster year and score overlays and genuine film/video adapters remain separate tasks. Do not conflate them with the dual-title-rating feature.
+
+## Film serileri / koleksiyonlar (aynı geliştirme dalında)
+
+25.09.2026 Mi Box fotoğrafı: 2026 tarihli Örümcek Adam filmi detayında oyuncuların altında “Çok yakında...” var, “Önerilen” altında başka filmler var ama ayrı “Serinin Filmleri” rafı yok. Bu eski v5'te hiç uygulanmamıştı.
+
+- v6 feature branch'inde film `belongs_to_collection.id` kimliği okunuyor; Worker'ın zaten izin verdiği `/v1/collection/{id}` TMDb kaynağı çağrılıyor.
+- Resmî koleksiyonun parçaları `release_date` ile eski→yeni sıralanıyor; filme ait koleksiyon en az iki üye içermiyorsa seri eklenmiyor. Gösterilen film dâhil tutuluyor; aynı film iki kez gösterilmiyor.
+- Gelen koleksiyon filmleri stok CloudStream'in **mevcut tek “Önerilen” rafının başına** ekleniyor, normal öneriler daha sonra geliyor. Açıklamada ayrıca “Serinin Filmleri (vizyon tarihine göre)” listesi açıkça etiketleniyor. **Bu, istenen bağımsız, “Önerilen” üzerinde kendi başlıklı yatay rafın yerine geçmez.** Stok `MovieLoadResponse` ayrı başlıklı ikinci raf alanı sağlamıyor; kesin aynı tasarım ayrı CloudStream uygulama/UI değişikliği gerektirir. Kullanıcıdan bu fark gizlenmemeli.
+- Resmî TMDb koleksiyonu başka Spider-Man yeniden çevrimlerini kendiliğinden birleştirmez. Farklı evrenleri tek büyük listede toplamak ayrıca belirlenmiş manuel veya düzenleyici veri gerektirir.
+- Ekrandaki “Çok yakında...” başlığı koleksiyon rafı değildir. v5 film verisi metadata-only'dir; film oynatma kaynağı henüz sağlanmaz. Başlığı “Serinin Filmleri” olarak değiştirmek mevcut API'de mümkün değildir.
+- Kod GitHub feature branch'ine kaydedildi; **Kotlin Android derlemesi ve Mi Box görsel testi yapılmadı, main'deki v5 değiştirilmedi.**
