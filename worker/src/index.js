@@ -191,8 +191,44 @@ export default {
     if (!contentType.includes("application/json")) return json({ error: "invalid_catalog_response" }, 502);
     const body = await upstream.text();
     if (body.length > 2_000_000) return json({ error: "catalog_response_too_large" }, 502);
-    try { JSON.parse(body); } catch (_) { return json({ error: "invalid_catalog_response" }, 502); }
-    const response = new Response(body, {
+    let result;
+    try { result = JSON.parse(body); } catch (_) {
+      return json({ error: "invalid_catalog_response" }, 502);
+    }
+
+    // Optional second rating source, queried ONLY on a single title detail.
+    // This server-side key never leaves Cloudflare; clients see ratings only.
+    // TMDb's external_ids.imdb_id identifies a title but has NO IMDb score.
+    const isDetail = /^\/(movie|tv)\/\d{1,9}$/.test(catalog.upstreamPath);
+    const imdbId = result?.external_ids?.imdb_id;
+    let outputBody = body;
+    if (isDetail && env.OMDB_API_KEY && typeof imdbId === "string" &&
+        /^tt\d{7,10}$/.test(imdbId)) {
+      try {
+        const omdbUrl = "https://www.omdbapi.com/?i=" +
+          encodeURIComponent(imdbId) + "&apikey=" + encodeURIComponent(env.OMDB_API_KEY);
+        const other = await fetch(omdbUrl, {
+          method: "GET", redirect: "manual", headers: { accept: "application/json" },
+        });
+        if (other.ok && (other.headers.get("content-type") || "").includes("application/json")) {
+          const text = await other.text();
+          if (text.length < 50_000) {
+            const data = JSON.parse(text);
+            const value = Number(data.imdbRating);
+            if (data.Response === "True" && Number.isFinite(value) &&
+                value > 0 && value <= 10 && String(data.imdbID) === imdbId) {
+              // Avoid returning a copied OMDb response. Retain only the rating
+              // and clearly identify its source on the client.
+              result.ea_fb_ratings = { imdb: value, source: "OMDb API" };
+              outputBody = JSON.stringify(result);
+            }
+          }
+        }
+      } catch (_) {
+        // IMDb enrichment is best-effort. TMDb detail always remains usable.
+      }
+    }
+    const response = new Response(outputBody, {
       status: 200,
       headers: {
         "content-type": "application/json; charset=utf-8",
