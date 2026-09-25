@@ -44,6 +44,8 @@ fun main(){
     val parse:(String)->SignedSourceEnvelope?={if(it=="signed")fixture else null}
     val client=WatchdogClientStore(ctx,trust,parse)
     ok(client.restoreVerifiedOffline(NOW)==null,"no cached snapshot before acceptance")
+    ok(client.approvedRefreshClient() == null,
+        "production refresh client cannot activate with missing keys or endpoint")
     ok(client.acceptSignedJson("signed",NOW) is SnapshotCheck.Accepted,"valid signature accepted")
     ok(ctx.prefs.values.size==3,"signed raw and both replay guards stored in one commit")
     ok(client.restoreVerifiedOffline(NOW)?.usableSources?.map{it.id}==listOf("licensed-demo"),
