@@ -14,7 +14,16 @@ class EAPlugin : Plugin() {
         EASettings.initialize(context)
         registerMainAPI(EAProvider())
 
-        openSettings = { uiContext ->
+        // Never reveal a token embedded in a private build in the settings dialog.
+        if (EAConfig.tmdbBearerToken.isNotBlank()) {
+            openSettings = { uiContext ->
+                AlertDialog.Builder(uiContext)
+                    .setTitle("EA-FB • Katalog Hazır")
+                    .setMessage("TMDb bağlantısı bu özel sürümde hazır. Televizyona veya telefona ayrıca API anahtarı girmen gerekmiyor.")
+                    .setPositiveButton("Tamam", null)
+                    .show()
+            }
+        } else openSettings = { uiContext ->
             val tokenInput = EditText(uiContext).apply {
                 setSingleLine(true)
                 hint = "TMDb API Read Access Token"

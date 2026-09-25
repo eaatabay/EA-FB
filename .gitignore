@@ -9,3 +9,6 @@ secrets.properties
 
 # Locally cloned pinned LGPL-3.0 build tool (never committed)
 /vendor/cloudstream-gradle/
+
+# Private builds may contain an embedded personal TMDb token. NEVER publish.
+/private-dist/

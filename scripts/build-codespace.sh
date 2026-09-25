@@ -12,6 +12,13 @@ test -f "$ANDROID_HOME/platforms/android-35/android.jar" || {
   exit 2
 }
 
+# A credential embedded in source must never be sent to the public dist/ repository.
+if [[ "${EA_FB_PRIVATE_BUILD:-0}" != "1" ]] &&
+   grep -Eq 'const val tmdbBearerToken: String = "[^"]+' EA-FB/src/main/kotlin/com/eafb/EAConfig.kt; then
+  echo "BLOCKED: private TMDb credential is present. Run bash scripts/build-private-codespace.sh instead." >&2
+  exit 2
+fi
+
 java -version
 gradle --version | head -n 8
 
@@ -31,10 +38,30 @@ else
   exit 1
 fi
 
-python3 scripts/stage-release.py
-
-echo
-echo "Build completed. Files staged under dist/:"
-ls -lh dist/
-echo
-echo "Do not publish until EA-FB.cs3 is tested in CloudStream on an Android device."
+if [[ "${EA_FB_PRIVATE_BUILD:-0}" == "1" ]]; then
+  python3 - <<'PY'
+import shutil
+import zipfile
+from pathlib import Path
+files = list(Path("EA-FB/build").glob("*.cs3"))
+if len(files) != 1 or not zipfile.is_zipfile(files[0]):
+    raise SystemExit("Private build blocked: expected one valid .cs3 package")
+with zipfile.ZipFile(files[0]) as archive:
+    if not {"classes.dex", "manifest.json"}.issubset(archive.namelist()):
+        raise SystemExit("Private build blocked: missing .cs3 components")
+    if archive.testzip():
+        raise SystemExit("Private build blocked: corrupt .cs3")
+target = Path("private-dist/EA-FB.cs3")
+target.parent.mkdir(exist_ok=True)
+shutil.copy2(files[0], target)
+print(f"Private .cs3 prepared: {target} ({target.stat().st_size} bytes)")
+print("Do NOT commit or upload this .cs3 to the public GitHub repository.")
+PY
+else
+  python3 scripts/stage-release.py
+  echo
+  echo "Build completed. Files staged under dist/:"
+  ls -lh dist/
+  echo
+  echo "Do not publish until EA-FB.cs3 is tested in CloudStream on an Android device."
+fi

@@ -109,3 +109,22 @@ Kaynaklar: https://developer.themoviedb.org/reference/movie-details ; https://de
 TMDb `tr-TR` detay çağrılarında `append_to_response` ile oyuncular, yönetmen/yaratıcılar ve öneriler okunur; film ve dizi kartları Türkçe özet, yıl, tür, geniş görsel ve fotoğraflı oyunculara bağlandı. Dizilerin tüm TMDb sezonları (özel sezon 0 dâhil) dörderli gruplar hâlinde sorgulanır; bölüm resimleri, Türkçe ad/açıklama, TMDb bölüm puanı, süre ve ilk yayın tarihi CloudStream'in yerleşik bölüm ekranına aktarılır. `next_episode_to_air` varsa planlanan yayın tarihi gösterilir. Türkçe dizi/film genel açıklaması boşsa `en-US` özet denenir. Kod `version = 4` olarak hazırlandı fakat Gradle derlemesi veya TV testi henüz yapılmadı. Çalışan `dist/EA-FB.cs3` v3 olarak bırakıldı.
 
 Gerçek IMDb puanı için ayrı doğrulanmış puan sağlayıcısı hâlâ gerekiyor; TMDb `vote_average` yanlış IMDb etiketiyle verilmez. Yerleşik afiş köşe yılı, bağımsız “Serinin Filmleri” şeridi ve gerçek film/dizi video sağlayıcıları bu commitin kapsamı dışındadır. Yayınlanmış ancak bağlantısı eklenmemiş bölümün oynatılması henüz mümkün değildir. TMDb API anahtarı kullanıcı tarafından eklenti ayarına girilmelidir; anahtar GitHub'a commit edilmez.
+
+## Tek defalık TMDb anahtarlı özel derleme (25.09.2026)
+
+Kullanıcı isteği: EA-FB'yi kuran kişi her cihazda TMDb API anahtarını kopyalamasın. **Kişisel kullanım** için uygulama, anahtarı derleme sırasında paketine dahil eder ve kurulduğu cihazlarda otomatik kullanır. Public sürümde eklenti ayarlarına elle token girme seçeneği geriye dönük olarak korunur. Özel paket ayar ekranında gömülü token açıkça gösterilmez.
+
+**Anahtarı public GitHub koduna, issue veya sohbete koymayın.** Bir kez GitHub EA-FB repo **Settings → Secrets and variables → Codespaces → New repository secret** yolunda `TMDB_READ_ACCESS_TOKEN` adıyla kendi **API Read Access Token** değerinizi kaydedin; Codespace ortamına aktarılması için gerekiyorsa Codespace'i yeniden başlatın.
+
+Codespaces terminalinde (değişiklikler `main`e geldikten sonra) yalnız:
+
+```bash
+git pull --ff-only
+bash scripts/build-private-codespace.sh
+```
+
+Betik geçici olarak `EAConfig.kt` içine tokenı ekler, `EA_FB_PRIVATE_BUILD=1` ile Gradle üzerinden özel paketi derler, `private-dist/EA-FB.cs3` oluşturur, `EAConfig.kt` içindeki secret değişikliğini çıkışta geri alır. `private-dist/` gitignore kapsamındadır ve özel paket **public `dist/` klasörüne taşınmaz**. Televizyona yerel kurulum için `.cs3` dosyasını cihazın `Cloudstream3/plugins/` klasörüne aktarın, mevcut aynı isimli online EA-FB eklentisini kaldırın veya çakışmayı önleyin ve CloudStream'i yeniden başlatın.
+
+**Güvenlik:** Kodun GitHub'da temiz tutulması, derlenmiş `.cs3` içindeki tokenı gizlemez; paketi alan teknik bir kişi tokenı çıkarabilir. Dolayısıyla `private-dist/EA-FB.cs3` kişisel dosyadır, `dist/`, GitHub release veya herkese açık URL'ye yüklenmeyecek. Eğer ileride şifresiz public repodan yüklenen tüm kullanıcılara anahtarsız erişim istenirse kimliği ve kötüye kullanımı kontrol eden özel bir TMDb aracı sunucu gerekir. CloudStream standard public sürümün derleme yolu eskisi gibi çalışır.
+
+**Durum:** Yapılandırma ve özel derleme betiği GitHub kaynak kodunda hazırlandı; Codespaces üzerinden gerçek derleme ve cihaz testi henüz yapılmadı. Mevcut yayımlanmış `.cs3` v3 değişmedi.
