@@ -60,6 +60,8 @@
 - [x] 26.09.2026: GitHub'daki guncel Kotlin/bridge/test-runner dosyalarinda 9/9 salt-okunur kaynak kontrolu gecti; izole eski Kotlin kopyasindaki 38/38 test yeniden calistirildi. Bunlar 62/62 tam repo JVM testi degildir.
 - [x] 26.09.2026: Izole yerel Kotlin test kopyasi son host-authority, nokta-segment ve duplicate snapshot korumalariyla yeniden derlendi; 43/43 bagimsiz offline kontrol gecti. GitHub'daki 62 testin birebir calistirilmasi degildir.
 - [x] 26.09.2026: Izole yerel bridge wiring Node testi 2/2 gecti; dosyalarin GitHub SHA eslesmesi teyit edilmediginden tam repo dogrulamasi degildir.
+- [x] 26.09.2026: Yerel izole Kotlin kopyasi 43/43 ve Node bridge wiring 2/2 tekrar gecti. Bunlar GitHub'daki tam test dosyalarinin birebir calismasi degildir.
+- [x] 26.09.2026: Kanit referansi denetiminin yalnizca yol sozdizimi oldugu; gercek lisans/hak sahibi/playback yetkisinin insan incelemesi ve ayrica release onayi gerektirdigi SOURCE-RIGHTS-REVIEW'de aciklandi (a284a8ac).
 - [ ] Genisletilmis 62/62 Kotlin izin testi, 5/5 bridge JVM ve 2/2 Node wiring testini gercek v6 checkout'unda calistirip dogrula.
 - [x] Kullanici acik kaynak-bazli onayi ve hak sahibi delili gerektiren docs/SOURCE-RIGHTS-REVIEW-v6.md olusturuldu.
 - [ ] Gercek kaynagin izin kapsami, kanit referansi, rate limit, bolge ve yenileme tarihini tek tek onaylat.
