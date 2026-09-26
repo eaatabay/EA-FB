@@ -316,3 +316,6 @@ MFA'li admin pilotu. Gercek v5/main ve canli Worker degismez.
 
 ## 26.09.2026 — SHA eşleşmeli scheduler regresyonu
 - [x] Güncel `scheduler.mjs` SHA `3c6e37ad2d30f146445b654f2435dc6d9af07d89` ve `scheduler.test.mjs` SHA `f206af9250f5b3f67387230d77d52e5f8d6be729` birebir yerel kopyalarla **5/5 Node testi geçti**; HEALTH enum test-only sabit, D1/runner entegrasyonu değil.
+
+## 26.09.2026 — Birleşik seçilmiş yerel test tekrarı
+- [x] Aynı SHA eşleşmeli kaynaklarla Node seçilmiş 4 dosya **30/30**, Python staging **20/20**, Kotlin offline/refresh/store/HTTPS **67/67** tekrar geçti: toplam **117/117 seçilmiş kontrol**. Node 7 admin-body senaryosu test-only registry stub ile, Kotlin store Android Context/JSON stub ile çalıştı; tam checkout `npm test`/Wrangler/Gradle/Mi Box sonucu değildir.
