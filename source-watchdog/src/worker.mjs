@@ -132,7 +132,9 @@ export function createWatchdogWorker({
         // Cloudflare Access-signed identity is checked even if a fronting
         // Access policy was misconfigured. OFF by default in tracked config.
         if (!adminAccessConfigured(env)) return response({error:"not_found"},404);
-        const email = await verifyAdmin(request, env);
+        let email;
+        try { email = await verifyAdmin(request, env); }
+        catch { email = null; }
         if (!email) return response({error:"forbidden"},403);
         if (!env.SOURCES_DB?.prepare) {
           return response({error:"admin_unavailable"},503);
