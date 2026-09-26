@@ -15,3 +15,17 @@ test("production permit list is empty and no runtime mutation API exists",()=>{
   assert.match(policy,/val bundled:\s*List<ReviewedSourcePermit>\s*=\s*emptyList\(\)/);
   assert.doesNotMatch(policy,/fun\s+(register|approve|addPermit)\s*\(/);
 });
+
+test("empty compiled rights fail before any offline cache read",()=>{
+  const emptyGate = bridge.indexOf("if (ReviewedSourcePermits.bundled.isEmpty()) return emptyList()");
+  const restore = bridge.indexOf("store.restoreVerifiedOffline(now)");
+  assert.ok(emptyGate >= 0 && restore > emptyGate,
+    "empty rights must return before restoring any cached source");
+});
+
+test("rights restriction must precede adapter selection in source order",()=>{
+  const rights = bridge.indexOf("ReviewedSourcePermitPolicy.restrict(");
+  const selection = bridge.indexOf("WatchdogAdapterSelection.forNewSearch(");
+  assert.ok(rights >= 0 && selection > rights,
+    "do not select an adapter before compiled rights are enforced");
+});
