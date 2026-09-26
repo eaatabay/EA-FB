@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import {mkdtemp,readFile,writeFile,rm} from "node:fs/promises";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
-import {applyLocalCatalogEdit,previewLocalCatalogDraft,initLocalCatalogDraft} from "../dev/catalog-draft-cli.mjs";
+import {applyLocalCatalogEdit,previewLocalCatalogDraft,initLocalCatalogDraft,compileLocalCatalogDraftPreview} from "../dev/catalog-draft-cli.mjs";
 test("local draft editor atomically applies CAS and renders safe preview",async()=>{
   const dir=await mkdtemp(join(tmpdir(),"eafb-catalog-"));
   try {
@@ -16,6 +16,9 @@ test("local draft editor atomically applies CAS and renders safe preview",async(
       operation:{action:"rename",id:"custom-tv",title:"Yeni Türk Dizileri"}});
     assert.equal(updated.revision,1);
     assert.match(await previewLocalCatalogDraft(file),/Yeni Türk Dizileri/);
+    const compiled=await compileLocalCatalogDraftPreview(file);
+    assert.equal(compiled.status,"preview-v6-not-published");
+    assert.equal(compiled.shelves[0].path,"/discover/tv?with_genres=18");
     await assert.rejects(applyLocalCatalogEdit(file,{expectedRevision:0,
       operation:{action:"remove",id:"custom-tv"}}),/catalog_revision_conflict/);
     assert.equal(JSON.parse(await readFile(file,"utf8")).shelves.length,1);
@@ -26,6 +29,7 @@ test("local draft editor atomically applies CAS and renders safe preview",async(
     const original=JSON.parse(await readFile(file,"utf8"));
     await writeFile(file,JSON.stringify({...original,playbackGrant:true}));
     await assert.rejects(previewLocalCatalogDraft(file),/not_an_unpublished_draft/);
+    await assert.rejects(compileLocalCatalogDraftPreview(file),/invalid_draft_envelope/);
     await assert.rejects(applyLocalCatalogEdit(file,{expectedRevision:1,
       operation:{action:"remove",id:"custom-tv"}}),/invalid_draft_envelope/);
     await writeFile(file,JSON.stringify(original));
