@@ -31,6 +31,15 @@ export async function applyLocalCatalogEdit(file,command) {
   }
 }
 
+/** Create a new local unpublished draft; refuse overwriting any existing file. */
+export async function initLocalCatalogDraft(file,shelves=[]) {
+  const absolute=resolve(file);
+  if (!absolute.endsWith(".catalog-draft.json")) throw Error("draft_filename_required");
+  const draft=buildCatalogDraft(shelves,0);
+  await writeFile(absolute,JSON.stringify(draft,null,2)+"\\n",{flag:"wx",mode:0o600});
+  return draft;
+}
+
 export async function previewLocalCatalogDraft(file) {
   const draft=JSON.parse(await readFile(resolve(file),"utf8"));
   if (draft.version!==1 || draft.status!=="draft-v6-not-published")
@@ -41,12 +50,15 @@ export async function previewLocalCatalogDraft(file) {
 if (process.argv[1] && resolve(process.argv[1])===resolve(fileURLToPath(import.meta.url))) {
   const [action,file,arg]=process.argv.slice(2);
   try {
-    if (action==="preview" && file && !arg) {
+    if (action==="init" && file && !arg) {
+      const draft=await initLocalCatalogDraft(file);
+      process.stdout.write("Created unpublished catalog draft revision "+draft.revision+"\\n");
+    } else if (action==="preview" && file && !arg) {
       process.stdout.write(await previewLocalCatalogDraft(file));
     } else if (action==="edit" && file && arg) {
       const result=await applyLocalCatalogEdit(file,JSON.parse(await readFile(resolve(arg),"utf8")));
       process.stdout.write("Updated local unpublished catalog draft to revision "+result.revision+"\n");
-    } else throw Error("usage: node dev/catalog-draft-cli.mjs preview FILE | edit FILE COMMAND.json");
+    } else throw Error("usage: node dev/catalog-draft-cli.mjs init FILE | preview FILE | edit FILE COMMAND.json");
   } catch(error) {
     process.stderr.write(String(error.message)+"\n");
     process.exitCode=1;
