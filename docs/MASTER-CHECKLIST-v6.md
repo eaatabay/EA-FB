@@ -260,3 +260,10 @@ MFA'li admin pilotu. Gercek v5/main ve canli Worker degismez.
 - [x] En fazla 1024 baytlık yönetici JSON gövdesi artık ayrıca toplam 4 saniyelik okuma süresiyle sınırlı; takılan `reader.cancel()` beklenmiyor.
 - [x] Asılı stream ve asılı cancel için 408 regresyon vakası eklendi.
 - [x] İzole Node v22 kontrolünde normal/çok büyük/asılı body davranışı 3/3 geçti; tam `source-watchdog` test paketi çalıştırılmayı bekliyor.
+
+## 26.09.2026 — Android/CloudStream iptal zinciri
+- [x] `EAProvider` üç askıya alınabilir HTTP yolunda (`liveChannels`, `catalogRelay`, `getJson`) `CancellationException` iptalini üst katmana iletiyor; ağ/JSON hatalarının önceki fallback davranışı korunuyor.
+- [x] `WatchdogApprovedAdapterBridge` gelecekte etkinleşen izinli cache okumasında iptal istisnasını yutmuyor.
+- [x] Provider için Node kaynak-baglanti testi ve bridge için ek Node wiring testi eklendi; izole Kotlin stub'unda 3/3 iptal senaryosu geçti.
+- [x] Yerel Node 22.16.0 SQLite ve Ed25519 runtime smoke geçti; gerçek repo testleri için checkout gerekiyor.
+- [ ] Gerçek Android/CloudStream build, provider entegrasyonu, tam JVM ve Mi Box testi bekliyor.
