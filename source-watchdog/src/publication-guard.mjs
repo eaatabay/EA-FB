@@ -13,11 +13,15 @@ export const APPROVED_RIGHTS_REFS = Object.freeze([]);
 /** Independently reviewed, release-pinned host/path/version/date scopes. EMPTY in v6. */
 export const APPROVED_SOURCE_GRANTS = Object.freeze([]);
 const MAX_REVIEW_AGE_MS = 366 * 86_400_000;
+const GRANT_KEYS = ["id","evidenceReference","mediaKind","adapterVersion",
+  "approvedHosts","approvedPathPrefix","reviewedAt","validUntil"].sort().join("|");
 const HOST = /^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)+$/;
 const PATH = new RegExp("^/(?:[a-zA-Z0-9_.-]+(?:/[a-zA-Z0-9_.-]+)*)?$");
 
 function reviewedGrant(grant, at) {
-  if (!grant || !SOURCE_ID.test(grant.id) ||
+  if (!grant || typeof grant !== "object" || Array.isArray(grant) ||
+      Object.keys(grant).sort().join("|") !== GRANT_KEYS ||
+      !SOURCE_ID.test(grant.id) ||
       !validApprovalReference(grant.evidenceReference) ||
         !new RegExp("^rights/[0-9]{4}/" + grant.id + "\\.md$").test(grant.evidenceReference) ||
       !["movie","series","both"].includes(grant.mediaKind) ||
@@ -51,13 +55,16 @@ export function assertReviewedPublication(records, snapshot,
     throw new Error("unsafe_production_snapshot");
   }
   if (!Array.isArray(approvedEvidenceRefs) ||
+      approvedEvidenceRefs.length > 32 ||
+      new Set(approvedEvidenceRefs).size !== approvedEvidenceRefs.length ||
       approvedEvidenceRefs.some(ref => !validApprovalReference(ref))) {
     throw new Error("invalid_production_rights_allowlist");
   }
   if (!Number.isSafeInteger(snapshot.generatedAt) || snapshot.generatedAt < 0 ||
       !Number.isSafeInteger(snapshot.expiresAt) ||
       snapshot.expiresAt <= snapshot.generatedAt ||
-      !Array.isArray(approvedSourceGrants)) {
+      !Array.isArray(approvedSourceGrants) ||
+      approvedSourceGrants.length > 32) {
     throw new Error("invalid_reviewed_source_grant");
   }
   const approved = new Set(approvedEvidenceRefs);
