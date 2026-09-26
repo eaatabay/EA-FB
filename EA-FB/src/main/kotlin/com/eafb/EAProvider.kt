@@ -62,7 +62,6 @@ class EAProvider : MainAPI() {
     // Reflect locally stored category switches when CloudStream reopens EA-FB.
     override val mainPage
         get() = mainPageOf(
-            "ea-fb-open" to "Açık Lisanslı Deneme Filmi",
             "ea-fb-live" to "Canlı TV",
             *categories.filter { EASettings.categoryEnabled(it.id) }
                 .map { it.id to it.title }.toTypedArray()
