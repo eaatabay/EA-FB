@@ -13,5 +13,6 @@ test("franchise detail labels only reference visible official collection artwork
   assert.match(provider,/belongs_to_collection/);
   assert.match(provider,/FilmCollectionPolicy\.chronological/);
   assert.match(provider,/FilmCollectionPolicy\.visibleChronology/);
+  assert.match(provider,/if \(ownId !in visibleIds\) return Pair\(null, emptyList\(\)\)/);
   assert.match(provider,/val movieRelated = \(collectionCards \+ recs\)\.distinctBy/);
 });
