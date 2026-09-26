@@ -39,3 +39,9 @@ test("v6 candidate build is blocked until actual local workerd+D1 smoke runs",()
   assert.ok(local>=0 && build>local,"Local D1 gate must precede v6 build");
   assert.match(script,/if \[ ! -x source-watchdog\/node_modules\/\.bin\/wrangler \]/);
 });
+
+
+test("offline cancellation JVM test receives the coroutines classpath",()=>{
+ const body=readFileSync(resolve(root,"scripts/test-core.sh"),"utf8");
+ assert.ok(body.includes('kotlinc -cp "$BC_JAR:$COROUTINES" "$TRUST" "$OFFLINE" core-tests/SourceSnapshotOfflinePolicyTest.kt'));
+});
