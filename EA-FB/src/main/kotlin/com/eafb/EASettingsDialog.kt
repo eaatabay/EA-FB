@@ -157,7 +157,7 @@ object EASettingsDialog {
         }
         root.addView(scroll, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f))
 
-        val footer = text(ctx, "Seçimler kaydedilir. Ana sayfayı yenilemek için aşağıdaki düğmeyi kullan.", 12f, MUTED)
+        val footer = text(ctx, "Seçimler kaydedilir; pencereyi kapatınca ana sayfa yenilenir. Dilersen hemen yenile.", 12f, MUTED)
         root.addView(footer, margin(ctx, 12, 0))
         val refresh = button(ctx, "KAYDET VE ANA SAYFAYI YENİLE") {
             // User-triggered Activity recreation; no silent host restart.
