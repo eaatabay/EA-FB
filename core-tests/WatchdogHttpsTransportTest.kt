@@ -76,14 +76,14 @@ fun main()=runBlocking {
     yes(failed.isFailure&&fails.disconnected,"I/O failure still closes connection")
     val deadline=FakeHttps()
     var tick=0
-    val overdue=runCatching { WatchdogHttpsTransport({ deadline },
-        { if (tick++ == 0) 0L else 13_000_000_000L }).get(sampleUrl) }
+    val overdue=runCatching { WatchdogHttpsTransport(nanoClock =
+        { if (tick++ == 0) 0L else 13_000_000_000L }, open = { deadline }).get(sampleUrl) }
     yes(overdue.exceptionOrNull() is IOException && deadline.disconnected,
         "absolute 12-second response deadline closes slow connection")
     val streamDeadline=FakeHttps(bytes=ByteArray(8192))
     var streamTick=0
-    val slowStream=runCatching { WatchdogHttpsTransport({ streamDeadline },
-        { if (streamTick++ < 3) 0L else 13_000_000_000L }).get(sampleUrl) }
+    val slowStream=runCatching { WatchdogHttpsTransport(nanoClock =
+        { if (streamTick++ < 3) 0L else 13_000_000_000L }, open = { streamDeadline }).get(sampleUrl) }
     yes(slowStream.exceptionOrNull() is IOException && streamDeadline.disconnected,
         "slow streaming body cannot extend deadline with small chunks")
     val cancelled=FakeHttps()
