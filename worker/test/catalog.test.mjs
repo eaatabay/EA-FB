@@ -428,3 +428,17 @@ test("upstream cannot forge reserved IMDb rating or mismatch requested TMDb ID",
   assert.equal(mismatch.status,502);
   assert.deepEqual(await mismatch.json(),{error:"invalid_catalog_response"});
 });
+
+test("catalog rejects duplicate/trailing slashes, empty query and fragments",async()=>{
+  const {env,ctx,calls}=setup();
+  for(const alias of [
+    "/v1//movie/123","/v1/movie/123/","/v1/movie/123?",
+    "/v1/movie/123#","/v1/movie/123#fragment",
+    "/v1/movie/123?language=tr-TR#fragment",
+  ]){
+    const res=await gateway.fetch(new Request(
+      "https://example.workers.dev"+alias),env,ctx);
+    assert.equal(res.status,400,alias);
+  }
+  assert.equal(calls.length,0);
+});
