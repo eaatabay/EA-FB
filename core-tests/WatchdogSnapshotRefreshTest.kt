@@ -165,5 +165,13 @@ fun main()=runBlocking {
     checked(runCatching { cancelledAfterResponse.await() }.exceptionOrNull() is CancellationException &&
         lateAccepts==0,
         "cancellation after transport response prevents signed snapshot persistence")
+    val cancelledAfterCache=async {
+        val job=coroutineContext[Job]!!
+        val refresh=WatchdogSnapshotRefresh(good, FakeTransport(),
+            offline::accept, { now -> job.cancel(); offline.offline(now) })
+        refresh.refresh(T+1)
+    }
+    checked(runCatching { cancelledAfterCache.await() }.exceptionOrNull() is CancellationException,
+        "cache callback cancellation stops refresh before network or throttle return")
     println("PASS: $count/$count offline and injected-transport refresh checks")
 }
