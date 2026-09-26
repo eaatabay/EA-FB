@@ -242,10 +242,53 @@ test("adapter cannot forge the reserved internal runnerFailure marker",
       },
     }]]);
     const result=await runDueChecks({db,adapters,now:0});
-    assert.equal(result[0].status,"probe_failed");
-    assert.equal(result[0].error,"adapter_error");
+    assert.equal(result[0].status,"anomaly_held");
     const record=await getSource(db,"fixture-marker");
-    assert.equal(record.state.status,HEALTH.DEGRADED);
-    assert.equal(record.state.lastFailure,"adapter_error");
+    assert.equal(record.state.status,HEALTH.ADMIN_REQUIRED);
+    assert.equal(record.state.lastFailure,"structural_change");
+    assert.equal(record.state.nextCheckAt,null);
+  }finally{db.close();}
+});
+
+
+test("incomplete adapter schema is audited and held for admin, not falsely quarantined",
+  {skip: !DatabaseSync},async()=>{
+  const db=new SQLiteD1();
+  try {
+    await registerSource(db,source("fixture-schema"),"admin:alice",0);
+    let calls=0;
+    const adapters=new Map([["fixture-schema",{id:"fixture-schema",
+      async probe(){calls++;return {reached:true,finalUrl:"https://demo.example.org",
+        identityVerified:true,checks:{search:true,detail:true}};},
+    }]]);
+    const first=await runDueChecks({db,adapters,now:0});
+    assert.equal(first[0].status,"anomaly_held");
+    const state=(await getSource(db,"fixture-schema")).state;
+    assert.equal(state.status,HEALTH.ADMIN_REQUIRED);
+    assert.equal(state.lastFailure,"structural_change");
+    assert.equal(state.consecutiveFailures,0);
+    assert.equal(state.nextCheckAt,null);
+    assert.equal((await runDueChecks({db,adapters,now:HOUR})).length,0);
+    assert.equal(calls,1);
+    assert.equal((await db.prepare(
+      "SELECT COUNT(*) AS n FROM source_probe_runs WHERE source_id=?")
+      .bind("fixture-schema").first()).n,1);
+  }finally{db.close();}
+});
+
+test("nonboolean parser fields cannot masquerade as a verified source",
+  {skip: !DatabaseSync},async()=>{
+  const db=new SQLiteD1();
+  try {
+    await registerSource(db,source("fixture-truthy"),"admin:alice",0);
+    const adapters=new Map([["fixture-truthy",{id:"fixture-truthy",
+      async probe(){return {reached:"true",finalUrl:"https://demo.example.org",
+        identityVerified:true,checks:{search:true,detail:true,
+          episode:true,playback:true}};},
+    }]]);
+    const result=await runDueChecks({db,adapters,now:0});
+    assert.equal(result[0].status,"anomaly_held");
+    assert.equal((await getSource(db,"fixture-truthy")).state.status,
+      HEALTH.ADMIN_REQUIRED);
   }finally{db.close();}
 });
