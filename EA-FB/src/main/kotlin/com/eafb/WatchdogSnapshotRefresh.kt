@@ -88,6 +88,7 @@ class WatchdogSnapshotRefresh(
             // Corrupt SharedPreferences cannot crash a refresh or be exposed.
             null
         }
+        currentCoroutineContext().ensureActive()
         if (now < nextAttempt) {
             return@withLock WatchdogRefreshResult(cached, false, "throttled", nextAttempt)
         }
@@ -123,6 +124,7 @@ class WatchdogSnapshotRefresh(
         val verified = try { acceptSigned(json, now) }
         catch (cancelled: CancellationException) { throw cancelled }
         catch (_: Exception) { SnapshotCheck.Rejected("invalid_envelope") }
+        currentCoroutineContext().ensureActive()
         if (verified !is SnapshotCheck.Accepted) {
             return@withLock failure(now, cached, "untrusted_snapshot")
         }
