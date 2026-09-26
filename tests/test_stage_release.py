@@ -65,6 +65,31 @@ class StageReleaseTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "missing required"):
             module.stage(self.root)
 
+    def test_reject_duplicate_critical_zip_members(self):
+        path = self.make_archive()
+        with zipfile.ZipFile(path, "a") as z:
+            import warnings
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", UserWarning)
+                z.writestr("classes.dex", b"duplicate")
+        with self.assertRaisesRegex(ValueError, "Duplicate"):
+            module.stage(self.root)
+
+    def test_reject_zip_path_traversal(self):
+        path = self.make_archive()
+        with zipfile.ZipFile(path, "a") as z:
+            z.writestr("../unexpected.txt", "unsafe")
+        with self.assertRaisesRegex(ValueError, "Unsafe"):
+            module.stage(self.root)
+
+    def test_reject_symlinked_binary(self):
+        path = self.make_archive()
+        external = self.root / "external.cs3"
+        path.rename(external)
+        path.symlink_to(external)
+        with self.assertRaisesRegex(ValueError, "symlinked"):
+            module.stage(self.root)
+
     def test_reject_multiple_extensions(self):
         self.make_archive()
         (self.root / "build" / "plugins.json").write_text(json.dumps([
