@@ -186,7 +186,11 @@ export function applyProbe(source, previous, probe, now) {
 export function releaseForRetest(source, previous, now) {
   validateSource(source);
   if (previous?.status !== HEALTH.ADMIN_REQUIRED || previous?.id !== source.id ||
-      !Number.isSafeInteger(now) || now < 0) throw new Error("invalid_admin_release");
+      !Number.isSafeInteger(now) || now < 0 ||
+      (previous.lastCheckedAt !== null &&
+       (!Number.isSafeInteger(previous.lastCheckedAt) || now < previous.lastCheckedAt))) {
+    throw new Error("invalid_admin_release");
+  }
   return { ...previous, status: HEALTH.DEGRADED, candidateUrl: null,
     consecutiveFailures: 0, consecutiveSuccesses: 0, lastFailure: null,
     nextCheckAt: now, revision: previous.revision + 1 };
