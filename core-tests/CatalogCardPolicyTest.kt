@@ -20,5 +20,10 @@ fun main() {
     check(CatalogCardPolicy.bestArtwork(null, null) == null)
     check(CatalogCardPolicy.bestArtwork("//evil.example/poster", null) == null)
     check(CatalogCardPolicy.bestArtwork("//evil.example/poster", "/safe.jpg") == "/safe.jpg")
-    println("PASS: 20/20 catalog card assertions")
+    check(CatalogCardPolicy.collectionArtwork(2,2,null,null,"/selected.jpg") == "/selected.jpg")
+    check(CatalogCardPolicy.collectionArtwork(3,2,null,null,"/selected.jpg") == null)
+    check(CatalogCardPolicy.collectionArtwork(2,2,"/part.jpg",null,"/selected.jpg") == "/part.jpg")
+    check(CatalogCardPolicy.collectionArtwork(2,2,null,"/part-backdrop.jpg","/selected.jpg") == "/part-backdrop.jpg")
+    check(CatalogCardPolicy.collectionArtwork(2,2,null,null,"//bad.example/image") == null)
+    println("PASS: 25/25 catalog card assertions")
 }
