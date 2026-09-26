@@ -36,6 +36,8 @@ test("signed endpoint is dark by default; never touches D1 or signing secret",as
     production && {...production,WATCHDOG_SNAPSHOT_ENABLED:"false"},
     {...production,WATCHDOG_MODE:"disabled"},
     {...production,WATCHDOG_FIXTURE_ENABLED:"true"},
+    {...production,WATCHDOG_FIXTURE_ENABLED:"TRUE"},
+    {...production,WATCHDOG_FIXTURE_ENABLED:undefined},
   ]) {
     const response=await worker.fetch(request(),env);
     assert.equal(response.status,404);
