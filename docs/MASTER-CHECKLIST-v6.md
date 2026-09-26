@@ -236,3 +236,9 @@ MFA'li admin pilotu. Gercek v5/main ve canli Worker degismez.
 - Ek: Cloudflare edge cache match sonsuza kadar beklerse 1.5 saniye sonra TMDb origin'e duser; bu senaryo icin catalog.test.mjs entegrasyon regresyonu eklendi (tam suite henuz yeniden calistirilmadi).
 
 - Son duzeltme: zorunlu olmayan adapter check alanlari da yalniz boolean olabilir; nesne, string veya gizli veri kontrol nesnesine gecemez. Exact SHA eslesmeli adapter testi 8/8.
+
+## 26.09.2026 — Snapshot coroutine cancellation düzeltmesi
+- [x] `WatchdogSnapshotRefresh.refresh`: offline cache restore ve imzalı JSON doğrulayıcı callback'lerinde `CancellationException` artık genel `Exception` içinde yutulmuyor; iptal çağırana iletiliyor.
+- [x] Gerçek Kotlin refresh test dosyasına iki regresyon vakası eklendi: cache restore iptali ve imza doğrulama iptali.
+- [ ] Bu iki yeni test dahil tüm Kotlin/JVM paketini ve gerçek Android lifecycle iptalini çalıştır; GitHub dosya değişiklikleri doğrulandı ancak test yürütme sonucu henüz yok.
+- [ ] Tam Node/SQLite, Wrangler/D1, Gradle .cs3 ve Mi Box doğrulaması hâlâ bekliyor. Actions kotası doluyken workflow tetikleme yok; main/v5/canlı Worker/D1 değişmedi.
