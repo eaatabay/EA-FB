@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {adminAccessConfigured,verifyAdminAccess} from "../src/admin-auth.mjs";
+import {adminAccessConfigured,verifyAdminAccess,readLimitedJwks} from "../src/admin-auth.mjs";
 
 const NOW=1_800_000_000;
 const TEAM="https://ea-fixture.cloudflareaccess.com";
@@ -89,4 +89,27 @@ test("wrong signing key, forged JWT alg, unknown kid and no JWKS all fail closed
  assert.equal(await verify(await sign(claims),ENV,async()=>{throw Error("network");}),null);
  const second=await fixture();
  assert.equal(await verify(await second.sign(claims)),null);
+});
+
+
+test("JWKS reader rejects lying Content-Length, oversized chunks and invalid UTF-8",async()=>{
+  const good={keys:[{kid:"fixture-key-001",kty:"RSA"}]};
+  const res=new Response(JSON.stringify(good),{headers:{"content-type":"application/json"}});
+  assert.deepEqual(await readLimitedJwks(res),good);
+  const large=new Response(new ReadableStream({
+    start(c){c.enqueue(new Uint8Array(65_537));c.close();},
+  }),{headers:{"content-length":"1"}});
+  await assert.rejects(readLimitedJwks(large),/oversized_access_certs/);
+  const announced=new Response("{}",{headers:{"content-length":"65537"}});
+  await assert.rejects(readLimitedJwks(announced),/oversized_access_certs/);
+  const invalid=new Response(Uint8Array.of(0xff,0xfe));
+  await assert.rejects(readLimitedJwks(invalid));
+});
+
+test("JWKS reader never leaks a failed stream cancellation",async()=>{
+  const res=new Response(new ReadableStream({
+    start(c){c.enqueue(new Uint8Array(65_537));},
+    cancel(){throw Error("SECRET_CANCEL_EXCEPTION");},
+  }));
+  await assert.rejects(readLimitedJwks(res),/oversized_access_certs/);
 });
