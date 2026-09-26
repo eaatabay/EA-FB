@@ -13,5 +13,12 @@ fun main() {
     check(!CatalogCardPolicy.hasNext(1,19,0))
     check(CatalogCardPolicy.hasNext(1,20,0))
     check(!CatalogCardPolicy.hasNext(0,20,2))
-    println("PASS: 13/13 catalog card assertions")
+    check(CatalogCardPolicy.bestArtwork("/poster.jpg", "/backdrop.jpg") == "/poster.jpg")
+    check(CatalogCardPolicy.bestArtwork(null, "/backdrop.jpg") == "/backdrop.jpg")
+    check(CatalogCardPolicy.bestArtwork("", "/backdrop.jpg") == "/backdrop.jpg")
+    check(CatalogCardPolicy.bestArtwork("/", "/backdrop.jpg") == "/backdrop.jpg")
+    check(CatalogCardPolicy.bestArtwork(null, null) == null)
+    check(CatalogCardPolicy.bestArtwork("//evil.example/poster", null) == null)
+    check(CatalogCardPolicy.bestArtwork("//evil.example/poster", "/safe.jpg") == "/safe.jpg")
+    println("PASS: 20/20 catalog card assertions")
 }
