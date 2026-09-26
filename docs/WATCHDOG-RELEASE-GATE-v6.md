@@ -166,7 +166,7 @@ The checked-in Wrangler config also has a new exact offline regression `source-w
 
 ## 26 Sep 2026: third offline test session
 
-Exact GitHub SHA-matched release staging `scripts/stage-release.py` (2587ce54) and `tests/test_stage_release.py` (81c83c94) passed **17/17** locally. New checks reject oversized/encrypted archives, duplicate members, unsafe directory entries, embedded ZIP symlinks, symlinked dist and output targets, bad manifest JSON, wrong plugin identity and non-integer v6 metadata. The test artifacts are synthetic ZIPs; Android Gradle packaging remains unverified.
+Exact GitHub SHA-matched release staging `scripts/stage-release.py` (5c4ef40b; clean BadZipFile CLI handling added) and `tests/test_stage_release.py` (81c83c94) passed **17/17** locally. New checks reject oversized/encrypted archives, duplicate members, unsafe directory entries, embedded ZIP symlinks, symlinked dist and output targets, bad manifest JSON, wrong plugin identity and non-integer v6 metadata. The test artifacts are synthetic ZIPs; Android Gradle packaging remains unverified.
 
 Signed Cloudflare Access admin JWTs now have an explicit maximum 24-hour session age and issuance-to-expiry span, and both team and admin-write origins require canonical DNS labels. The locally reconstructed Access module/test passed **6/6**; exact full-repo admin tests have not run. Registry approval evidence now rejects external URLs, traversal and ambiguous paths (isolated 12/12 boundary checks; exact registry/D1 suite pending). The source policy rejects URL parser aliases and malformed host allowlists (reconstructed policy 12/12 plus 11 additional boundary cases; exact full suite pending). Admin body overflow remains HTTP 413 even when stream cancellation throws.
 
