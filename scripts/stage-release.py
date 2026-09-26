@@ -87,6 +87,6 @@ def stage(root=ROOT):
 if __name__ == "__main__":
     try:
         stage()
-    except (OSError, ValueError, json.JSONDecodeError) as exc:
+    except (OSError, ValueError, zipfile.BadZipFile, json.JSONDecodeError) as exc:
         print(f"Release blocked: {exc}", file=sys.stderr)
         sys.exit(1)
