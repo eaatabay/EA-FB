@@ -30,6 +30,10 @@ function catalogRequest(url) {
   const p = url.pathname;
   let ttl = 3600;
   const parts = p.split("/").filter(Boolean);
+  // Reject duplicate/trailing slashes and empty ?/# aliases. The stock
+  // Android client always uses canonical paths; aliases waste cache budget.
+  if (p !== "/" + parts.join("/") ||
+      url.href !== url.origin + p + url.search) return null;
   if (parts.shift() !== "v1") return null;
   if (parts.some((s) => !/^[a-zA-Z0-9_-]+$/.test(s))) return null;
 
@@ -121,7 +125,7 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     if (request.method !== "GET") return json({ error: "method_not_allowed" }, 405);
-    if (url.pathname === "/health") {
+    if (url.pathname === "/health" && url.href === url.origin + "/health") {
       return json({ status: env.TMDB_READ_ACCESS_TOKEN ? "ready" : "unconfigured", service: "EA-FB catalog", version: 1 },
         env.TMDB_READ_ACCESS_TOKEN ? 200 : 503);
     }
