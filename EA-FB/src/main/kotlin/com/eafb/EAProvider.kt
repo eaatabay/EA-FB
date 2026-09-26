@@ -337,8 +337,12 @@ class EAProvider : MainAPI() {
             movie.optString("poster_path"), movie.optString("backdrop_path")
         )
         val cards = ordered.mapNotNull { part ->
-            newItem(part, MediaKind.MOVIE,
-                if (part.optInt("id") == ownId) selectedArtwork else null)
+            val artwork = CatalogCardPolicy.collectionArtwork(
+                part.optInt("id"), ownId,
+                part.optString("poster_path"), part.optString("backdrop_path"),
+                selectedArtwork
+            )
+            newItem(part, MediaKind.MOVIE, artwork)
         }
         if (cards.size < 2) return Pair(null, emptyList())
         val labels = ordered.take(12).joinToString(" • ") { part ->
