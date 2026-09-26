@@ -140,3 +140,13 @@ test("malformed allowlist objects and noninteger clocks fail closed",()=>{
     assert.throws(()=>releaseForRetest(source,held,now),/invalid_admin_release/);
   }
 });
+
+
+test("manual retest cannot rewind the previous probe clock",()=>{
+  const held={...initialState(source,0),status:HEALTH.ADMIN_REQUIRED,
+    lastCheckedAt:2*HOUR};
+  assert.throws(()=>releaseForRetest(source,held,HOUR),/invalid_admin_release/);
+  assert.throws(()=>releaseForRetest(source,{...held,lastCheckedAt:0.5},
+    3*HOUR),/invalid_admin_release/);
+  assert.equal(releaseForRetest(source,held,2*HOUR).nextCheckAt,2*HOUR);
+});
