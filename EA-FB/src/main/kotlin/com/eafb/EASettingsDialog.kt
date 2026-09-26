@@ -2,6 +2,7 @@ package com.eafb
 
 import android.app.Dialog
 import android.app.Activity
+import android.content.ContextWrapper
 import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.Color
@@ -158,7 +159,9 @@ object EASettingsDialog {
         val refresh = button(ctx, "KAYDET VE ANA SAYFAYI YENİLE") {
             // User-triggered Activity recreation; no silent host restart.
             dialog.dismiss()
-            (ctx as? Activity)?.recreate()
+            var host: Context? = ctx
+            while (host is ContextWrapper && host !is Activity) host = host.baseContext
+            (host as? Activity)?.recreate()
         }
         root.addView(refresh, margin(ctx, 12, 8))
 
