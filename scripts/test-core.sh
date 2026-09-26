@@ -69,6 +69,10 @@ java -jar "$TMP/catalog-cards.jar"
 kotlinc "$DOMAIN" EA-FB/src/main/kotlin/com/eafb/CatalogSortPolicy.kt \
   core-tests/CatalogSortPolicyTest.kt -include-runtime -d "$TMP/catalog-sort.jar"
 java -jar "$TMP/catalog-sort.jar"
+# Pin the public metadata relay; reject remotely configured unreviewed origins.
+kotlinc EA-FB/src/main/kotlin/com/eafb/CatalogRelayPolicy.kt \
+  core-tests/CatalogRelayPolicyTest.kt -include-runtime -d "$TMP/catalog-relay.jar"
+java -jar "$TMP/catalog-relay.jar"
 # Official film collections: own movie required, no duplicate/reboot mixing,
 # chronological release dates, unknown dates last (pure JVM; no Android).
 kotlinc EA-FB/src/main/kotlin/com/eafb/FilmCollectionPolicy.kt \
