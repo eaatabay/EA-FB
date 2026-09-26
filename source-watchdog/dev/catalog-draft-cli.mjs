@@ -1,7 +1,7 @@
 import {readFile,writeFile,rename,unlink,open} from "node:fs/promises";
 import {fileURLToPath} from "node:url";
 import {resolve,dirname,basename,join} from "node:path";
-import {buildCatalogDraft,editCatalogDraft} from "../src/catalog-shelves.mjs";
+import {buildCatalogDraft,editCatalogDraft,compileCatalogDraftPreview} from "../src/catalog-shelves.mjs";
 import {renderCatalogDraftPreview} from "../src/catalog-admin-preview.mjs";
 
 /** Local-only editor; never touches production Worker, D1 or source grants. */
@@ -42,6 +42,11 @@ export async function initLocalCatalogDraft(file,shelves=[]) {
   return draft;
 }
 
+export async function compileLocalCatalogDraftPreview(file) {
+  const draft=JSON.parse(await readFile(resolve(file),"utf8"));
+  return compileCatalogDraftPreview(draft);
+}
+
 export async function previewLocalCatalogDraft(file) {
   const draft=JSON.parse(await readFile(resolve(file),"utf8"));
   if (Object.keys(draft).sort().join(",")!=="revision,shelves,status,version" ||
@@ -56,12 +61,14 @@ if (process.argv[1] && resolve(process.argv[1])===resolve(fileURLToPath(import.m
     if (action==="init" && file && !arg) {
       const draft=await initLocalCatalogDraft(file);
       process.stdout.write("Created unpublished catalog draft revision "+draft.revision+"\n");
+    } else if (action==="compile-preview" && file && !arg) {
+      process.stdout.write(JSON.stringify(await compileLocalCatalogDraftPreview(file),null,2)+"\n");
     } else if (action==="preview" && file && !arg) {
       process.stdout.write(await previewLocalCatalogDraft(file));
     } else if (action==="edit" && file && arg) {
       const result=await applyLocalCatalogEdit(file,JSON.parse(await readFile(resolve(arg),"utf8")));
       process.stdout.write("Updated local unpublished catalog draft to revision "+result.revision+"\n");
-    } else throw Error("usage: node dev/catalog-draft-cli.mjs init FILE | preview FILE | edit FILE COMMAND.json");
+    } else throw Error("usage: node dev/catalog-draft-cli.mjs init FILE | preview FILE | compile-preview FILE | edit FILE COMMAND.json");
   } catch(error) {
     process.stderr.write(String(error.message)+"\n");
     process.exitCode=1;
