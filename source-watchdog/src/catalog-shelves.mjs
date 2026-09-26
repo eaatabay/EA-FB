@@ -14,7 +14,7 @@ export function validateCatalogShelves(input) {
   const seen=new Set();
   return input.map((item,index)=>{
     if (!item || typeof item!=="object" || Array.isArray(item) ||
-      Object.keys(item).some(k=>!["id","title","kind","providerId","region","genres","enabled","order","language"].includes(k)) ||
+      Object.keys(item).some(k=>!["id","title","kind","providerId","region","genres","enabled","order","language","yearFrom","yearTo"].includes(k)) ||
       !ID.test(item.id) || seen.has(item.id) || RESERVED.has(item.id) ||
       typeof item.title!=="string" || item.title.trim().length<2 ||
       item.title.length>64 || /[<>]/.test(item.title) ||
@@ -26,6 +26,13 @@ export function validateCatalogShelves(input) {
     if (item.language!==undefined && (typeof item.language!=="string" || !LANGUAGE.test(item.language))) {
       throw Error("invalid_catalog_language");
     }
+    const yearKeys=["yearFrom","yearTo"];
+    for (const key of yearKeys) {
+      if (item[key]!==undefined && (!Number.isSafeInteger(item[key]) ||
+          item[key]<1888 || item[key]>2100)) throw Error("invalid_catalog_year");
+    }
+    if (item.yearFrom!==undefined && item.yearTo!==undefined &&
+        item.yearFrom>item.yearTo) throw Error("invalid_catalog_year_range");
     const provider=item.providerId;
     const genres=item.genres;
     if ((provider===undefined)===(genres===undefined) ||
@@ -39,6 +46,8 @@ export function validateCatalogShelves(input) {
       enabled:item.enabled,order:item.order,
       ...(provider!==undefined?{providerId:String(provider),region:item.region}:{genres}),
       ...(item.language!==undefined?{language:item.language}:{}),
+      ...(item.yearFrom!==undefined?{yearFrom:item.yearFrom}:{}),
+      ...(item.yearTo!==undefined?{yearTo:item.yearTo}:{}),
     });
   }).sort((a,b)=>a.order-b.order||a.id.localeCompare(b.id));
 }
