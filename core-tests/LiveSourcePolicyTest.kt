@@ -23,6 +23,7 @@ fun main() {
         "https://tv.example.org\\\\private.m3u8"
     )) check(!LiveSourcePolicy.acceptedUrl(unsafe)) { unsafe }
     check(LiveSourcePolicy.acceptedUrl("https://tv.example.org/live.m3u8?token=abc"))
+    check(!LiveChannelDeliveryConfig.enabled)
     val entries = listOf(
         ApprovedLiveSource("TRT 1 HD", "Resmî", "https://tv.example.org/a.m3u8", true, 1080),
         ApprovedLiveSource("TRT1", "Alternatif", "https://other.example.org/b.m3u8", true, 720),
@@ -34,5 +35,5 @@ fun main() {
     check(channels.size == 1 && channels[0].name == "TRT 1")
     check(channels[0].links.size == 2)
     check(channels[0].links.map { it.provider }.toSet() == setOf("Resmî", "Alternatif"))
-    println("PASS: 23/23 live-source policy assertions")
+    println("PASS: 24/24 live-source policy assertions")
 }
