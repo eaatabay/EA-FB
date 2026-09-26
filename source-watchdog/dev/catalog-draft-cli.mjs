@@ -18,7 +18,7 @@ export async function applyLocalCatalogEdit(file,command) {
     const updated=editCatalogDraft(current,command.expectedRevision,command.operation);
     const target=join(dirname(absolute),"."+basename(absolute)+".tmp-"+process.pid);
     try {
-      await writeFile(target,JSON.stringify(updated,null,2)+"\\n",{flag:"wx",mode:0o600});
+      await writeFile(target,JSON.stringify(updated,null,2)+"\n",{flag:"wx",mode:0o600});
       await rename(target,absolute);
     } catch(error) {
       await unlink(target).catch(()=>{});
