@@ -19,8 +19,10 @@ export function dueSources(records, now, limit = 8) {
     .filter(record => {
       const config = record?.config, state = record?.state;
       if (!config || !state || !config.enabled || config.integrationApproved !== true) return false;
-      if ([HEALTH.DISABLED, HEALTH.ADMIN_REQUIRED].includes(state.status)) return false;
-      return Number.isFinite(state.nextCheckAt) && state.nextCheckAt <= now;
+      // Unknown/corrupt statuses and timestamps must never become runnable.
+      if (!Object.hasOwn(PRIORITY, state.status)) return false;
+      return Number.isSafeInteger(state.nextCheckAt) &&
+        state.nextCheckAt >= 0 && state.nextCheckAt <= now;
     })
     .sort((a,b) => {
       const pa = PRIORITY[a.state.status] ?? 99;
@@ -37,7 +39,9 @@ export function incidentEligible(record, now, minSpacingMs = 5 * 60 * 1000) {
       !Number.isSafeInteger(minSpacingMs) || minSpacingMs < 60000) return false;
   const { config, state } = record;
   if (!config.enabled || config.integrationApproved !== true ||
-      [HEALTH.DISABLED, HEALTH.ADMIN_REQUIRED].includes(state.status)) return false;
+      !Object.hasOwn(PRIORITY, state.status)) return false;
   if (state.lastCheckedAt == null) return true;
+  if (!Number.isSafeInteger(state.lastCheckedAt) ||
+      state.lastCheckedAt < 0) return false;
   return now - state.lastCheckedAt >= minSpacingMs;
 }
