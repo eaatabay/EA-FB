@@ -68,6 +68,15 @@ export function compileCatalogShelf(shelf) {
   return {id:item.id,title:item.title,kind:item.kind,enabled:item.enabled,
     order:item.order,path:"/discover/"+kind+"?"+q.toString()};
 }
+/** A deterministic draft artifact for an authenticated admin workflow.
+ * Caller must explicitly publish through a separately reviewed metadata path.
+ */
+export function buildCatalogDraft(input,revision) {
+  if (!Number.isSafeInteger(revision) || revision<0) throw Error("invalid_catalog_revision");
+  const shelves=validateCatalogShelves(input);
+  return Object.freeze({version:1,revision,status:"draft-v6-not-published",
+    shelves:shelves.map(x=>({...x}))});
+}
 export function publicCatalogShelves(input) {
   return {version:1,shelves:validateCatalogShelves(input).filter(x=>x.enabled)};
 }
