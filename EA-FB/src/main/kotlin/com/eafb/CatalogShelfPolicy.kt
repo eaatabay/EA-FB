@@ -21,6 +21,22 @@ object CatalogShelfPolicy {
     private val languages = Regex("[a-z]{2}")
     private val genreIds = Regex("[0-9]{1,4}(,[0-9]{1,4}){0,4}")
 
+    /**
+     * A fail-closed catalog-only batch for a future reviewed metadata snapshot.
+     * No playback URL or permission can be represented by this type.
+     * Invalid, duplicated or oversized batches never partially update home.
+     */
+    fun categories(shelves: List<CatalogShelfDefinition>): List<CatalogCategory>? {
+        if (shelves.size > 40 || shelves.map { it.id }.toSet().size != shelves.size ||
+            shelves.any { it.order !in 0..39 }) return null
+        val ordered = shelves.sortedWith(compareBy<CatalogShelfDefinition>({ it.order }, { it.id }))
+        val compiled = ordered.mapNotNull(::category)
+        // Disabled shelves are expected to disappear; enabled invalid shelves
+        // are an error, not an excuse to publish an incomplete catalog.
+        if (compiled.size != shelves.count { it.enabled }) return null
+        return compiled
+    }
+
     fun category(shelf: CatalogShelfDefinition): CatalogCategory? {
         if (!shelf.enabled || !ids.matches(shelf.id) || HomeCategories.all.any { it.id == shelf.id } || shelf.title.length !in 2..64 || shelf.title.trim().length < 2 ||
             shelf.kind == MediaKind.LIVE || shelf.title.any { it == '<' || it == '>' || Character.isISOControl(it) } ||
