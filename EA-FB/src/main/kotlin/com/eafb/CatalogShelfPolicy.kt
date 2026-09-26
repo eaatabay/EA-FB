@@ -29,6 +29,19 @@ object CatalogShelfPolicy {
     fun categories(shelves: List<CatalogShelfDefinition>): List<CatalogCategory>? {
         if (shelves.size > 40 || shelves.map { it.id }.toSet().size != shelves.size ||
             shelves.any { it.order !in 0..39 }) return null
+        // Disabled drafts may retain future language/year filters, but their
+        // identity and other metadata must remain valid before activation.
+        if (shelves.any { shelf ->
+            !ids.matches(shelf.id) || HomeCategories.all.any { it.id == shelf.id } ||
+                shelf.title.length !in 2..64 || shelf.title.trim().length < 2 ||
+                shelf.title.any { it == '<' || it == '>' || Character.isISOControl(it) } ||
+                shelf.kind == MediaKind.LIVE ||
+                ((shelf.providerId == null) == (shelf.genres == null)) ||
+                shelf.language?.let { !languages.matches(it) } == true ||
+                shelf.yearFrom?.let { it !in 1888..2100 } == true ||
+                shelf.yearTo?.let { it !in 1888..2100 } == true ||
+                (shelf.yearFrom != null && shelf.yearTo != null && shelf.yearFrom > shelf.yearTo)
+        }) return null
         val ordered = shelves.sortedWith(compareBy<CatalogShelfDefinition>({ it.order }, { it.id }))
         val compiled = ordered.mapNotNull(::category)
         // Disabled shelves are expected to disappear; enabled invalid shelves
