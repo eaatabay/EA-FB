@@ -219,16 +219,17 @@ class EAProvider : MainAPI() {
         // only when the first valid page yields no released artwork cards.
         // A scanned rail is deliberately non-paginated to avoid duplicate
         // cards on the host's subsequent page-2 request.
-        if (page == 1 && results.isEmpty() && sortMode == CatalogSortMode.NEWEST &&
-            category.tmdbPath.startsWith("/discover/") &&
-            response?.optJSONArray("results") != null) {
-            val total = response.optInt("total_pages", 0)
-            for (extraPage in 2..minOf(total, 3)) {
+        val extraPages = CatalogPagePolicy.extraNewestPages(
+            page, response?.optInt("total_pages", 0) ?: 0,
+            results.isEmpty(), category.tmdbPath.startsWith("/discover/"),
+            sortMode == CatalogSortMode.NEWEST,
+            response?.optJSONArray("results") != null
+        )
+        for (extraPage in extraPages) {
                 val extra = getJson(route, extraPage) ?: break
                 scannedExtraPages = true
                 results = (results + cards(extra)).distinctBy { it.url }
                 if (results.isNotEmpty()) break
-            }
         }
         // A sparse regional provider feed can be empty under date/vote sorting.
         // Preserve the platform rail with clearly labeled popular results rather
@@ -246,7 +247,8 @@ class EAProvider : MainAPI() {
         val rawLength = response?.optJSONArray("results")?.length() ?: 0
         return newHomePageResponse(
             listOf(HomePageList(label, results, false)),
-            !usedFallback && !scannedExtraPages && CatalogCardPolicy.hasNext(
+            CatalogPagePolicy.allowNextPage(
+                usedFallback, scannedExtraPages,
                 page, rawLength, response?.optInt("total_pages", 0) ?: 0
             )
         )
