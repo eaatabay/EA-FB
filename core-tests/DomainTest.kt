@@ -1,8 +1,8 @@
 package com.eafb
 
 fun main() {
-    check(HomeCategories.all.size == 28) { "Expected all 28 documented home sections" }
-    check(HomeCategories.all.map { it.id }.distinct().size == 28)
+    check(HomeCategories.all.size == 29) { "Expected all 29 documented home sections" }
+    check(HomeCategories.all.map { it.id }.distinct().size == 29)
     check(Identity.normalize("Dizi İZLE: ŞAFAK ı") == "dizi izle safak i")
     check(Identity.mediaKey(MediaKind.MOVIE, "İsyan", 2026) == "MOVIE:isyan:2026")
     check(Identity.channelKey("TRT 1 HD") == Identity.channelKey("TRT1"))
@@ -14,5 +14,6 @@ fun main() {
     val combined = ChannelMerger.merge(listOf(Channel("TRT 1 HD", listOf(a)), Channel("TRT1", listOf(b, a))))
     check(combined.size == 1 && combined[0].links.size == 2) { "One channel with alternate stream links" }
     check(HomeCategories.all.count { it.tmdbPath != null } >= 20)
-    println("PASS: 8/8 core assertions; one visible provider, 28 home categories, merged TV channels")
+    check(HomeCategories.all.first { it.id == "paramount-movie" }.tmdbPath!!.contains("with_watch_providers=531"))
+    println("PASS: 9/9 core assertions; one visible provider, 29 home categories, merged TV channels")
 }
