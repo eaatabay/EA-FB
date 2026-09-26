@@ -70,7 +70,8 @@
 - [x] 26.09.2026: Gercek bridge JVM test dosyasina negatif saat (3 medya tipi) ve bos adapter paketi (3 medya tipi) icin 6 regresyon eklendi (b6f5e36c). Tam bridge JVM testi artik 11 senaryo; bu yeni 6 senaryo gercek repo checkout'unda henuz calistirilmadi.
 - [x] 26.09.2026: Derlenmis izin kaydinin evidenceReference degeri tam olarak rights/YYYY/<kaynak-id>.md ile eslestirildi; baska kaynagin belgesi, ic ice alias ve yil olmayan klasor reddediliyor (6bcab6cf). GitHub test dosyasina 4 yeni regresyon eklendi (19789c82); toplam 66 senaryo.
 - [x] 26.09.2026: SHA'si GitHub ile birebir ayni yeni Kotlin izin politikasi (bf544b12), izole JVM test bagimliliklariyla 47/47 bagimsiz cevrimdisi kontrolu gecti. Bu, GitHub'daki 66 test dosyasinin birebir calistirilmasi degildir.
-- [ ] Genisletilmis 66/66 Kotlin izin testi ve 11/11 bridge JVM testini gercek v6 checkout'unda calistirip dogrula. Node wiring 5/5, onceki SHA-eslesmeli yerel dosyalarda gecti.
+- [x] 26.09.2026: Izin gecerlilik suresi pozitif ve en fazla 366 gun olarak acik aralik kontrolune alindi (1bfb39e5); cok uzak gelecek ve tam 366-gun siniri icin iki yeni regresyon eklendi (5e05f958). Kodda negatif reviewedAt zaten reddedildiginden bu esasen sinir netlestirmesidir; yeni testler henuz tam repo JVM'de calistirilmadi.
+- [ ] Genisletilmis 68/68 Kotlin izin testi ve 11/11 bridge JVM testini gercek v6 checkout'unda calistirip dogrula. Node wiring 5/5, onceki SHA-eslesmeli yerel dosyalarda gecti.
 - [x] Kullanici acik kaynak-bazli onayi ve hak sahibi delili gerektiren docs/SOURCE-RIGHTS-REVIEW-v6.md olusturuldu.
 - [ ] Gercek kaynagin izin kapsami, kanit referansi, rate limit, bolge ve yenileme tarihini tek tek onaylat.
 - [ ] Ayrica onaylanmis, izinli gercek kaynak adapterlerini secip inceleme.
