@@ -53,6 +53,10 @@ test("unknown health states and malformed clocks never enter scheduled or incide
   const infinite=record("infinite",HEALTH.HEALTHY,Infinity);
   assert.deepEqual(dueSources([unknown,fractional,negative,infinite],1000),[]);
   assert.equal(incidentEligible(unknown,1000),false);
+  const corrupt=record("corrupt",{toString:null},0);
+  assert.deepEqual(dueSources([corrupt,record("good",HEALTH.HEALTHY,0)],1000)
+    .map(row=>row.id),["good"]);
+  assert.equal(incidentEligible(corrupt,1000),false);
   const malformed=record("bad-clock",HEALTH.DEGRADED,0,1.5);
   assert.equal(incidentEligible(malformed,1000),false);
   malformed.state.lastCheckedAt=-1;
