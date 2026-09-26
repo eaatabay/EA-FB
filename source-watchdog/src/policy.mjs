@@ -24,9 +24,17 @@ export function normalizedHttpsUrl(value) {
   if (typeof value !== "string" || value.length > 2048) return null;
   try {
     const url = new URL(value);
-    if (url.protocol !== "https:" || url.username || url.password ||
+    const authority = value.startsWith("https://")
+      ? value.slice(8).split(/[/?#]/, 1)[0] : "";
+    const rawPath = value.slice(8 + authority.length).split(/[?#]/, 1)[0];
+    if (authority.toLowerCase() !== url.hostname ||
+        value.includes("?") || value.includes("#") ||
+        rawPath.includes("%") || rawPath.includes("\\") ||
+        rawPath.includes("//") || rawPath.split("/").some(x=>x==="."||x==="..") ||
+        url.protocol !== "https:" || url.username || url.password ||
         url.port || url.search || url.hash ||
-        !url.hostname.includes(".") ||
+        !/^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)+$/.test(url.hostname) ||
+        url.hostname.length > 253 || url.hostname.split(".").some(x=>x.length>63) ||
         url.hostname === "localhost" ||
         url.hostname.endsWith(".localhost") ||
         url.hostname.endsWith(".local") ||
@@ -48,9 +56,11 @@ export function validateSource(source) {
   const verifiedDomains = source.verifiedDomains;
   if (!currentUrl || !lastKnownGoodUrl || !Array.isArray(verifiedDomains) ||
       verifiedDomains.length < 1 || verifiedDomains.length > 12 ||
+      new Set(verifiedDomains).size !== verifiedDomains.length ||
       !verifiedDomains.every(host => {
         const normalized = normalizedHttpsUrl("https://" + host);
-        return normalized && new URL(normalized).hostname === host.toLowerCase();
+        return typeof host === "string" && host === host.toLowerCase() &&
+          normalized && new URL(normalized).hostname === host;
       })) throw new Error("invalid_source_addresses");
   if (!verifiedDomains.includes(new URL(currentUrl).hostname) ||
       !verifiedDomains.includes(new URL(lastKnownGoodUrl).hostname)) {
