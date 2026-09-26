@@ -40,7 +40,7 @@ async function readBoundedText(response, maxBytes) {
       if (!(value instanceof Uint8Array)) throw new Error("upstream_invalid_chunk");
       bytes += value.byteLength;
       if (bytes > maxBytes) {
-        await reader.cancel();
+        try { await reader.cancel(); } catch { /* Still reject oversized data. */ }
         throw new Error("upstream_too_large");
       }
       text += decoder.decode(value, {stream:true});
