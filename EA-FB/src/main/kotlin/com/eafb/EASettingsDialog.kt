@@ -1,6 +1,7 @@
 package com.eafb
 
 import android.app.Dialog
+import android.app.Activity
 import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.Color
@@ -152,8 +153,14 @@ object EASettingsDialog {
         }
         root.addView(scroll, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f))
 
-        val footer = text(ctx, "Seçimler otomatik kaydedilir. Ana sayfada güncellemek için EA-FB'yi yeniden aç.", 12f, MUTED)
+        val footer = text(ctx, "Seçimler kaydedilir. Ana sayfayı yenilemek için aşağıdaki düğmeyi kullan.", 12f, MUTED)
         root.addView(footer, margin(ctx, 12, 0))
+        val refresh = button(ctx, "KAYDET VE ANA SAYFAYI YENİLE") {
+            // User-triggered Activity recreation; no silent host restart.
+            dialog.dismiss()
+            (ctx as? Activity)?.recreate()
+        }
+        root.addView(refresh, margin(ctx, 12, 8))
 
         render = {
             categoryTab.isSelected = isCategories
