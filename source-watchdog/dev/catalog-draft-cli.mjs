@@ -44,7 +44,8 @@ export async function initLocalCatalogDraft(file,shelves=[]) {
 
 export async function previewLocalCatalogDraft(file) {
   const draft=JSON.parse(await readFile(resolve(file),"utf8"));
-  if (draft.version!==1 || draft.status!=="draft-v6-not-published")
+  if (Object.keys(draft).sort().join(",")!=="revision,shelves,status,version" ||
+      draft.version!==1 || draft.status!=="draft-v6-not-published")
     throw Error("not_an_unpublished_draft");
   return renderCatalogDraftPreview(draft.shelves,draft.revision);
 }
