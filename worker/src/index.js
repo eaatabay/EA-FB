@@ -208,13 +208,26 @@ export default {
     try { result = JSON.parse(body); } catch (_) {
       return json({ error: "invalid_catalog_response" }, 502);
     }
+    // TMDb endpoints return objects. Never cache an array, null, or primitive
+    // as a successful catalog response (they break the Android JSON client).
+    if (!result || typeof result !== "object" || Array.isArray(result)) {
+      return json({ error: "invalid_catalog_response" }, 502);
+    }
 
     // Optional second rating source, queried ONLY on a single title detail.
     // This server-side key never leaves Cloudflare; clients see ratings only.
     // TMDb's external_ids.imdb_id identifies a title but has NO IMDb score.
     const isDetail = /^\/(movie|tv)\/\d{1,9}$/.test(catalog.upstreamPath);
+    const requestedId = isDetail ? Number(catalog.upstreamPath.split("/")[2]) : null;
+    if (isDetail && result.id !== undefined && result.id !== requestedId) {
+      return json({ error: "invalid_catalog_response" }, 502);
+    }
+    // Only THIS Worker may attach the reserved IMDb rating field. Do not
+    // trust a field with the same name in an upstream metadata response.
+    const hadUntrustedRating = Object.hasOwn(result, "ea_fb_ratings");
+    if (hadUntrustedRating) delete result.ea_fb_ratings;
     const imdbId = result?.external_ids?.imdb_id;
-    let outputBody = body;
+    let outputBody = hadUntrustedRating ? JSON.stringify(result) : body;
     const omdbAttempted = isDetail && Boolean(env.OMDB_API_KEY) &&
       typeof imdbId === "string" && /^tt\d{7,10}$/.test(imdbId);
     let omdbSettled = false;
