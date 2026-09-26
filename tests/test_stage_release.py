@@ -42,7 +42,7 @@ class StageReleaseTests(unittest.TestCase):
 
     def test_reject_stale_plugin_version(self):
         self.make_archive()
-        for version in (4, 5, 7, None):
+        for version in (4, 5, 7, None, 6.0, "6", True):
             (self.root / "build" / "plugins.json").write_text(json.dumps([
                 {"internalName": "EA-FB", "version": version}
             ]))
