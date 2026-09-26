@@ -54,7 +54,9 @@ export async function readLimitedJwks(res, maxBytes = 65_536) {
       if (!(value instanceof Uint8Array)) throw Error("invalid_access_certs");
       bytes += value.byteLength;
       if (bytes > maxBytes) {
-        try { await reader.cancel(); } catch { /* Keep the size rejection. */ }
+        // Hostile or broken JWKS streams may never resolve cancel().
+        try { void Promise.resolve(reader.cancel()).catch(() => {}); }
+        catch { /* Keep the size rejection. */ }
         throw Error("oversized_access_certs");
       }
       text += decoder.decode(value, {stream:true});
