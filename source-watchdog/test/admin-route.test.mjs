@@ -64,3 +64,15 @@ test("no database returns 503 and no admin writes exist",async()=>{
  const edit=await worker.fetch(request("/admin/update"),env);
  assert.equal(edit.status,404);
 });
+
+test("Access verification exception fails closed before any admin registry read",async()=>{
+ let dbReads=0;
+ const worker=createWatchdogWorker({
+  verifyAdmin:async()=>{throw Error("PRIVATE_ACCESS_JWKS_FAILURE");},
+  readRegistry:async()=>{dbReads++;return [row];},
+ });
+ const res=await worker.fetch(request(),env);
+ assert.equal(res.status,403);
+ assert.deepEqual(await res.json(),{error:"forbidden"});
+ assert.equal(dbReads,0);
+});
