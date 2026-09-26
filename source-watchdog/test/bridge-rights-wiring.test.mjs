@@ -39,3 +39,9 @@ test("LIVE and invalid timestamps cannot reach cached snapshot restoration",()=>
   assert.ok(earlyGate >= 0 && restore > earlyGate,
     "unsupported media and invalid time must return before cache access");
 });
+
+
+test("future enabled bridge must propagate cancelled cache restoration",()=>{
+ assert.match(bridge,/import kotlinx\.coroutines\.CancellationException/);
+ assert.match(bridge,/catch \(cancelled: CancellationException\) \{ throw cancelled \}/);
+});
