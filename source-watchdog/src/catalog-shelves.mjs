@@ -155,3 +155,35 @@ export function compileCatalogDraftPreview(draft) {
       .map(x=>Object.freeze(compileCatalogShelf(x))))
   });
 }
+
+/** Human-reviewable, metadata-only diff between unpublished draft revisions. */
+export function diffCatalogDrafts(before,after) {
+  const check=draft=>{
+    if (!draft || typeof draft!=="object" || Array.isArray(draft) ||
+        Object.keys(draft).sort().join(",")!=="revision,shelves,status,version" ||
+        draft.version!==1 || draft.status!=="draft-v6-not-published")
+      throw Error("invalid_draft_envelope");
+    return buildCatalogDraft(draft.shelves,draft.revision);
+  };
+  const left=check(before),right=check(after);
+  if (right.revision<=left.revision) throw Error("invalid_catalog_revision_order");
+  const old=new Map(left.shelves.map(x=>[x.id,x]));
+  const now=new Map(right.shelves.map(x=>[x.id,x]));
+  const changes=[];
+  for (const [id,item] of old) {
+    if (!now.has(id)) changes.push(Object.freeze({id,action:"removed"}));
+    else {
+      const next=now.get(id);
+      for (const field of ["title","kind","providerId","region","genres",
+                           "language","yearFrom","yearTo","enabled","order"]) {
+        if (item[field]!==next[field]) changes.push(Object.freeze({
+          id,action:"changed",field,from:item[field]??null,to:next[field]??null
+        }));
+      }
+    }
+  }
+  for (const [id] of now) if (!old.has(id))
+    changes.push(Object.freeze({id,action:"added"}));
+  return Object.freeze({fromRevision:left.revision,toRevision:right.revision,
+    status:"review-only",changes:Object.freeze(changes)});
+}
