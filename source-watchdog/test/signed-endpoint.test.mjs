@@ -12,10 +12,10 @@ const production = {
   WATCHDOG_SNAPSHOT_ENABLED: "true",
   SOURCES_DB: db,
 };
-const approvedEvidenceRefs=["rights/test/fixture-license.md"];
+const approvedEvidenceRefs=["rights/2026/licensed-demo.md"];
 const realRecords = [{id:"licensed-demo",config:{
   id:"licensed-demo",enabled:true,integrationApproved:true,
-  approvalRef:"rights/test/fixture-license.md",
+  approvalRef:"rights/2026/licensed-demo.md",
   currentUrl:"https://licensed.example.com",mediaKind:"movie",adapterVersion:3,
 }}];
 const snapshot = () => ({
