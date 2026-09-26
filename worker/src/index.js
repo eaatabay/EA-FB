@@ -153,8 +153,12 @@ export default {
     const cacheKey = new Request(cacheUrl.toString(), { method: "GET" });
     const cache = typeof caches === "undefined" ? null : caches.default;
     if (cache) {
-      const cached = await cache.match(cacheKey);
-      if (cached) return cached;
+      try {
+        const cached = await cache.match(cacheKey);
+        if (cached) return cached;
+      } catch {
+        // Edge cache failure is not a TMDb outage. Fetch metadata normally.
+      }
     }
     const upstreamUrl = UPSTREAM + catalog.upstreamPath + "?" + catalog.params;
     // Some dashboards copy an optional Bearer prefix. Never send Bearer Bearer.
@@ -297,7 +301,13 @@ export default {
         "access-control-allow-origin": "*",
       },
     });
-    if (cache && ctx?.waitUntil) ctx.waitUntil(cache.put(cacheKey, response.clone()));
+    if (cache && ctx?.waitUntil) {
+      try {
+        // A failed background cache write must never fail the user request.
+        ctx.waitUntil(Promise.resolve(cache.put(cacheKey,response.clone()))
+          .catch(()=>{}));
+      } catch { /* Cache unavailable; serve the successful metadata. */ }
+    }
     return response;
   },
 };
