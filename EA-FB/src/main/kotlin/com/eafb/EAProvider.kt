@@ -516,7 +516,7 @@ class EAProvider : MainAPI() {
         // beneath long descriptions; native nextAiring handles near-term dates.
         // Film collection text is a short cue, never a long duplicate title list.
         val seriesNote = if (collectionCards.size >= 2)
-            "Seri: " + collectionCards.size + " film; vizyon sırasıyla Önerilenler'in başında."
+            collectionLabel + "\n" + "İlk " + collectionCards.size + " kart Önerilenler bölümünde vizyon sırasıyla."
         else null
         val combinedPlot = listOfNotNull(
             upcomingLabel, overview, director, seriesNote
