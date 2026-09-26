@@ -13,6 +13,9 @@ const production = {
   SOURCES_DB: db,
 };
 const approvedEvidenceRefs=["rights/2026/licensed-demo.md"];
+const approvedSourceGrants=[{id:"licensed-demo",evidenceReference:approvedEvidenceRefs[0],
+  mediaKind:"movie",adapterVersion:3,approvedHosts:["licensed.example.com"],
+  approvedPathPrefix:"/",reviewedAt:now-86_400_000,validUntil:now+7*86_400_000}];
 const realRecords = [{id:"licensed-demo",config:{
   id:"licensed-demo",enabled:true,integrationApproved:true,
   approvalRef:"rights/2026/licensed-demo.md",
@@ -91,6 +94,7 @@ test("real Ed25519 private Worker secret signs and verifies public-only snapshot
   const worker=createWatchdogWorker({
     readRegistry:async()=>realRecords,
     approvedEvidenceRefs,
+    approvedSourceGrants,
     readSnapshot:async()=>snapshot(),
     nowMillis:()=>now,logger,
   });
@@ -129,6 +133,7 @@ test("production signing fails closed on missing rights, disabled source and con
     const worker=createWatchdogWorker({
       readRegistry:async()=>[record],
       approvedEvidenceRefs,
+      approvedSourceGrants,
       readSnapshot:async()=>snapshot(),
       signSnapshot:async(db,env,at,build)=>{
         await build(db,at);
