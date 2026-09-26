@@ -2,6 +2,7 @@ package com.eafb
 
 import android.content.Context
 import java.nio.charset.StandardCharsets
+import kotlinx.coroutines.CancellationException
 
 /**
  * All replay metadata and the signed cache are committed atomically. The
@@ -26,7 +27,9 @@ class WatchdogClientStore(
             raw.toByteArray(StandardCharsets.UTF_8).size > 32_768) {
             return SnapshotCheck.Rejected("invalid_envelope")
         }
-        val envelope = runCatching { parseEnvelope(raw) }.getOrNull()
+        val envelope = try { parseEnvelope(raw) }
+            catch (cancelled: CancellationException) { throw cancelled }
+            catch (_: Exception) { null }
             ?: return SnapshotCheck.Rejected("invalid_envelope")
         val previousRevision = preferences.getLong("last_revision", -1L)
         val previousGeneratedAt = preferences.getLong("last_generated_at", -1L)
