@@ -325,3 +325,6 @@ MFA'li admin pilotu. Gercek v5/main ve canli Worker degismez.
 
 ## 26.09.2026 — SHA eşleşmeli Worker JSON byte limiti
 - [x] Güncel `bounded-response.mjs` SHA `c9179f87fb40a7ab2a1839b2d333e885a29dfb9c` ve gerçek `bounded-response.test.mjs` SHA `cbe9479bda633225e5476cb501ecf9e72328342b` birebir yerel kopyalarla **6/6 Node testi geçti**. IMDb kontratıyla birleşik Worker seçilmiş testleri **9/9**.
+
+## 26.09.2026 — SHA eşleşmeli Worker deadline testi
+- [x] Güncel `upstream-deadline.mjs` SHA `ee60afd6a329e4be1594b52afdcd9d1d5c912884` ve gerçek `upstream-deadline.test.mjs` SHA `59f6233238501be2995e5de033750f10ccfe99b5` birebir yerel kopyalarla **8/8**; Worker seçilmiş deadline+byte+IMDb toplam **17/17** geçti.
