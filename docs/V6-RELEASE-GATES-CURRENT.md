@@ -19,14 +19,14 @@ descriptions of the hero score or test counts may be superseded.
   `ea-fb-catalog.eaatabay.workers.dev` origin with `status=ready`.
   A previously pinned origin can survive a config-fetch outage for 24h;
   an explicit disabled config cannot be bypassed with the cache.
-- Source Watchdog scheduler: mismatched config/state IDs and incomplete\n  incident metadata fail closed; legitimate first incident remains eligible.\n- Source Watchdog: no live signing pins, approved source grants or production
+- Live stream URL policy: reject literal private/loopback IPs, local\n  hostnames, explicit ports, fragments and path traversal; signed HLS query\n  parameters remain allowed. This is URL hygiene, **not** DNS/IP pinning\n  or proof of distribution rights. Current channel list is empty.\n- Source Watchdog scheduler: mismatched config/state IDs and incomplete\n  incident metadata fail closed; legitimate first incident remains eligible.\n- Source Watchdog: no live signing pins, approved source grants or production
   adapters are compiled into the public plugin. No live probing enabled.
 
 ## Verified locally in isolated reconstruction this parkur
 - Kotlin HTTPS transport: 6/6 smoke checks.
 - Kotlin signed refresh: 5/5 smoke checks, including cancellation races.
 - Kotlin failed SharedPreferences commit and second-store guard: 7/7 smoke checks.
-- Kotlin metadata relay pin: 18/18 pure policy checks.
+- Kotlin metadata relay pin: 18/18 pure policy checks.\n- Kotlin live URL policy: 19/19 selected URL checks in isolated compile;\n  full domain/channel merger test remains a full-suite gate.
 - Node relay wiring: 3/3 equivalent static checks.
 - Node scheduler: 3/3 selected checks, including mismatched identity\n  and missing incident timestamps.
 These are **not** a claim that the exact complete GitHub checkout or Android
