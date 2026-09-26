@@ -6,6 +6,10 @@ import java.security.cert.Certificate
 import javax.net.ssl.HttpsURLConnection
 import java.net.URL
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.async
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.CancellationException
+import kotlin.coroutines.coroutineContext
 
 private val sampleUrl="https://watchdog.example.org/v1/sources"
 private class FakeHttps(
@@ -18,6 +22,7 @@ private class FakeHttps(
 ):HttpsURLConnection(URL(sampleUrl)){
     var disconnected=false
     var openedStream=false
+    var onStatus: (() -> Unit)? = null
     val headers=mutableMapOf<String,String>()
     override fun connect() {}
     override fun disconnect(){disconnected=true}
@@ -25,7 +30,7 @@ private class FakeHttps(
     override fun getCipherSuite():String="TEST_ONLY"
     override fun getLocalCertificates():Array<Certificate>?=null
     override fun getServerCertificates():Array<Certificate> = emptyArray()
-    override fun getResponseCode():Int=httpStatus
+    override fun getResponseCode():Int { onStatus?.invoke(); return httpStatus }
     override fun getContentType():String=mime
     override fun getContentEncoding():String?=encoding
     override fun getContentLengthLong():Long=declaredLength
@@ -81,5 +86,15 @@ fun main()=runBlocking {
         { if (streamTick++ < 3) 0L else 13_000_000_000L }).get(sampleUrl) }
     yes(slowStream.exceptionOrNull() is IOException && streamDeadline.disconnected,
         "slow streaming body cannot extend deadline with small chunks")
+    val cancelled=FakeHttps()
+    val cancelledCall=async {
+        val ownJob=coroutineContext[Job]!!
+        cancelled.onStatus={ ownJob.cancel() }
+        WatchdogHttpsTransport { cancelled }.get(sampleUrl)
+    }
+    val cancellation=runCatching { cancelledCall.await() }
+    yes(cancellation.exceptionOrNull() is CancellationException && cancelled.disconnected &&
+        !cancelled.openedStream,
+        "cancelled coroutine stops after headers without reading body")
     println("PASS: $count/$count fake HTTPS connection transport safety checks")
 }
