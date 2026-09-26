@@ -2,7 +2,7 @@ import { commitProbe, getPrivateRegistry, getSource, RegistryConflict } from "./
 import { dueSources, incidentEligible } from "./scheduler.mjs";
 import { claimProbeLease, releaseProbeLease } from "./lease.mjs";
 import { HEALTH } from "./policy.mjs";
-import { validAdapterProbe } from "./adapter-contract.mjs";
+import { sanitizeAdapterProbe } from "./adapter-contract.mjs";
 
 function checkAdapters(adapters) {
   if (!(adapters instanceof Map)) throw new Error("adapter_map_required");
