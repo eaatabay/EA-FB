@@ -15,7 +15,8 @@ function plainObject(value) {
 export function validAdapterProbe(probe, config) {
   if (!plainObject(probe) || !plainObject(probe.checks) ||
       Object.keys(probe).some(key => !PROBE_KEYS.has(key)) ||
-      Object.keys(probe.checks).some(key => !CHECK_KEYS.has(key)) ||
+      Object.keys(probe.checks).some(key => !CHECK_KEYS.has(key) ||
+        typeof probe.checks[key] !== "boolean") ||
       "runnerFailure" in probe ||
       typeof probe.reached !== "boolean" ||
       typeof probe.finalUrl !== "string" ||
