@@ -20,6 +20,7 @@ test("rejects unapproved playback fields, malformed filters, duplicate IDs",()=>
     [{...base,region:"TR"}],
     [{...base},{...base}],
     [{...base,title:"<script>"}],
+    [{...base,title:"Two"+String.fromCharCode(10)+"Lines"}],
     [{...base,order:-1}],
     [{...base,enabled:"true"}],
     [{...base,id:"netflix-movie"}],
