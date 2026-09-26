@@ -77,6 +77,9 @@ class EAProvider : MainAPI() {
 
     /** Repository-curated sources: "authorized" is a manual record, not proof of distribution rights. */
     private suspend fun liveChannels(): List<Channel> {
+        // A remote JSON edit is not independent rights approval. The checked-in
+        // public plugin has no compiled live-channel authorization.
+        if (!LiveChannelDeliveryConfig.enabled) return emptyList()
         val json = try { JSONObject(app.get(channelsUrl).text) }
             catch (cancelled: CancellationException) { throw cancelled }
             catch (_: Exception) { return emptyList() }
@@ -214,8 +217,11 @@ class EAProvider : MainAPI() {
     override suspend fun search(query: String): List<SearchResponse> {
         if (query.isBlank()) return emptyList()
         val q = java.net.URLEncoder.encode(query, "UTF-8")
-        val demo = if (Identity.normalize("Big Buck Bunny").contains(Identity.normalize(query))) listOf(demoMovie()) else emptyList()
-        val live = liveChannels().filter { Identity.normalize(it.name).contains(Identity.normalize(query)) }.map(::liveSearch)
+        val normalized = Identity.normalize(query)
+        val demo = if (normalized.isNotEmpty() && Identity.normalize("Big Buck Bunny").contains(normalized))
+            listOf(demoMovie()) else emptyList()
+        val live = if (normalized.isEmpty()) emptyList() else liveChannels()
+            .filter { Identity.normalize(it.name).contains(normalized) }.map(::liveSearch)
         val arr = getJson("/search/multi?query=$q")?.optJSONArray("results")
         val catalog = if (arr == null) emptyList() else (0 until arr.length()).mapNotNull { i ->
             arr.optJSONObject(i)?.takeIf { it.optString("media_type") in setOf("movie", "tv") }
