@@ -21,7 +21,7 @@ function setup() {
     GLOBAL_LIMIT: { limit: async () => ({ success: true }) },
   };
   const ctx = { waitUntil: (x) => x };
-  return { env, ctx, calls };
+  return { env, ctx, calls, clearCache: () => cache.clear() };
 }
 
 test("health never discloses secret", async () => {
@@ -221,6 +221,52 @@ test("never invents IMDb rating if OMDb is unavailable or responds N/A", async (
   assert.equal(r.status,200);
   assert.equal(body.vote_average,7.4);
   assert.equal(body.ea_fb_ratings,undefined);
+});
+
+test("transient OMDb failure caches TMDb detail only 60 seconds then retries",async()=>{
+  const {env,ctx,calls,clearCache}=setup();
+  env.OMDB_API_KEY="SERVER_ONLY_TEST_KEY";
+  let outage=true;
+  globalThis.fetch=async url=>{
+    calls.push(url);
+    if(url.startsWith("https://api.themoviedb.org/")) {
+      return new Response(JSON.stringify({id:123,vote_average:8.4,vote_count:80,
+        external_ids:{imdb_id:"tt14688458"}}),
+        {headers:{"content-type":"application/json"}});
+    }
+    if(outage) return new Response("upstream temporarily unavailable",{status:503});
+    return new Response(JSON.stringify({Response:"True",imdbID:"tt14688458",
+      imdbRating:"8.2"}),{headers:{"content-type":"application/json"}});
+  };
+  const req=new Request("https://example.workers.dev/v1/movie/123?append_to_response=external_ids");
+  const first=await gateway.fetch(req,env,ctx);
+  assert.equal(first.status,200);
+  assert.equal(first.headers.get("cache-control"),"public, max-age=60");
+  assert.equal((await first.json()).ea_fb_ratings,undefined);
+  const cached=await gateway.fetch(req,env,ctx);
+  assert.equal(cached.headers.get("cache-control"),"public, max-age=60");
+  assert.equal(calls.length,2);
+  // The test cache has no clock. Explicitly expire its 60-second entry.
+  clearCache();outage=false;
+  const recovered=await gateway.fetch(req,env,ctx);
+  assert.equal((await recovered.json()).ea_fb_ratings.imdb,8.2);
+  assert.notEqual(recovered.headers.get("cache-control"),"public, max-age=60");
+  assert.equal(calls.length,4);
+});
+
+test("a genuine OMDb N/A rating keeps the normal detail TTL",async()=>{
+  const {env,ctx}=setup();env.OMDB_API_KEY="SERVER_ONLY_TEST_KEY";
+  globalThis.fetch=async url=>url.startsWith("https://api.themoviedb.org/")
+    ?new Response(JSON.stringify({id:123,vote_average:7.2,vote_count:35,
+      external_ids:{imdb_id:"tt14688458"}}),
+      {headers:{"content-type":"application/json"}})
+    :new Response(JSON.stringify({Response:"True",imdbID:"tt14688458",
+      imdbRating:"N/A"}),{headers:{"content-type":"application/json"}});
+  const res=await gateway.fetch(new Request(
+    "https://example.workers.dev/v1/movie/123?append_to_response=external_ids"),env,ctx);
+  assert.equal(res.status,200);
+  assert.equal((await res.json()).ea_fb_ratings,undefined);
+  assert.notEqual(res.headers.get("cache-control"),"public, max-age=60");
 });
 
 test("no optional OMDb key means zero extra external requests", async () => {
