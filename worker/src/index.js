@@ -10,6 +10,14 @@ const UPSTREAM = "https://api.themoviedb.org/3";
 const LANGUAGES = new Set(["tr-TR", "en-US"]);
 const MONETIZATION = new Set(["flatrate", "free", "ads", "rent", "buy"]);
 const SORTS = new Set(["popularity.desc", "vote_average.desc", "primary_release_date.desc", "first_air_date.desc"]);
+// Exact calendar date, not Date.parse's permissive rollover (e.g. February 31).
+function validIsoDate(value) {
+  if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(value)) return false;
+  const timestamp = Date.parse(value + "T00:00:00.000Z");
+  return Number.isFinite(timestamp) &&
+    new Date(timestamp).toISOString().slice(0, 10) === value;
+}
+
 const APPENDS = {
   movie: new Set(["credits", "recommendations", "external_ids", "images", "similar", "videos", "watch/providers"]),
   tv: new Set(["aggregate_credits", "recommendations", "external_ids", "images", "similar", "videos", "watch/providers"]),
@@ -70,7 +78,7 @@ function catalogRequest(url) {
         k === "with_watch_monetization_types" ? MONETIZATION.has(v) :
         k === "with_genres" ? /^\d{1,4}(,\d{1,4}){0,4}$/.test(v) :
         k === "vote_count.gte" ? /^\d{1,5}$/.test(v) && +v >= 1 && +v <= 10000 :
-        k === "first_air_date.lte" ? parts[1] === "tv" && /^\d{4}-\d{2}-\d{2}$/.test(v) && !Number.isNaN(Date.parse(v)) :
+        k === "first_air_date.lte" ? parts[1] === "tv" && validIsoDate(v) :
         k === "primary_release_date.lte" ? parts[1] === "movie" && /^\d{4}-\d{2}-\d{2}$/.test(v) && !Number.isNaN(Date.parse(v)) :
         SORTS.has(v) &&
           (v !== "first_air_date.desc" || parts[1] === "tv") &&
