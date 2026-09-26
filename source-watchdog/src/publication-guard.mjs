@@ -36,6 +36,7 @@ export function assertReviewedPublication(records, snapshot,
     if (!config || config.id !== item.id ||
         config.enabled !== true || config.integrationApproved !== true ||
         !validApprovalReference(config.approvalRef) ||
+        !new RegExp("^rights/[0-9]{4}/" + item.id + "\\.md$").test(config.approvalRef) ||
         !approved.has(config.approvalRef) ||
         config.currentUrl !== item.baseUrl ||
         config.mediaKind !== item.mediaKind ||
