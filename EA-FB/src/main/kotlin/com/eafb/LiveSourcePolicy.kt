@@ -11,6 +11,11 @@ data class ApprovedLiveSource(
     val audioLanguage: String? = null
 )
 
+/** Remote live-channel JSON cannot enable distribution in an unreviewed release. */
+object LiveChannelDeliveryConfig {
+    const val enabled = false
+}
+
 /** A repository-controlled list; never automatically import unlicensed third-party playlists. */
 object LiveSourcePolicy {
     fun acceptedUrl(url: String): Boolean = runCatching {
