@@ -19,7 +19,7 @@ class StageReleaseTests(unittest.TestCase):
         (self.root / "build").mkdir()
         (self.root / "EA-FB" / "build").mkdir(parents=True)
         (self.root / "build" / "plugins.json").write_text(json.dumps([
-            {"internalName": "EA-FB", "version": 1}
+            {"internalName": "EA-FB", "version": 6}
         ]))
 
     def make_archive(self):
@@ -40,6 +40,15 @@ class StageReleaseTests(unittest.TestCase):
         self.assertEqual(metadata[0]["iconUrl"], module.ICON)
         self.assertEqual(repo_meta["iconUrl"], module.ICON)
 
+    def test_reject_stale_plugin_version(self):
+        self.make_archive()
+        for version in (4, 5, 7, None):
+            (self.root / "build" / "plugins.json").write_text(json.dumps([
+                {"internalName": "EA-FB", "version": version}
+            ]))
+            with self.assertRaisesRegex(ValueError, "Expected EA-FB v6"):
+                module.stage(self.root)
+
     def test_reject_missing_binary(self):
         with self.assertRaisesRegex(ValueError, "Expected exactly one"):
             module.stage(self.root)
@@ -59,7 +68,7 @@ class StageReleaseTests(unittest.TestCase):
     def test_reject_multiple_extensions(self):
         self.make_archive()
         (self.root / "build" / "plugins.json").write_text(json.dumps([
-            {"internalName": "EA-FB", "version": 1},
+            {"internalName": "EA-FB", "version": 6},
             {"internalName": "Other", "version": 1}
         ]))
         with self.assertRaisesRegex(ValueError, "exactly one"):
