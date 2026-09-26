@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { validAdapterProbe } from "../src/adapter-contract.mjs";
+import { validAdapterProbe,sanitizeAdapterProbe } from "../src/adapter-contract.mjs";
 
 const config={requiredChecks:["reachability","search","detail","episode","playback"]};
 const good=()=>({reached:true,finalUrl:"https://demo.example.org",
@@ -47,4 +47,32 @@ test("movie-only adapters need not return episode/playback but still require sea
   assert.equal(validAdapterProbe(probe,movie),true);
   assert.equal(validAdapterProbe(probe,config),false);
   assert.equal(validAdapterProbe(probe,{requiredChecks:"search"}),false);
+});
+
+test("sanitized probe snapshot is independent of adapter mutations",()=>{
+  const raw=good();
+  const safe=sanitizeAdapterProbe(raw,config);
+  assert.ok(safe);
+  assert.notEqual(safe,raw);
+  assert.notEqual(safe.checks,raw.checks);
+  raw.reached=false;raw.finalUrl="https://evil.example.org";
+  raw.checks.search=false;
+  assert.equal(safe.reached,true);
+  assert.equal(safe.finalUrl,"https://demo.example.org");
+  assert.equal(safe.checks.search,true);
+});
+
+test("getters, setters and symbol properties cannot cross the parser boundary",()=>{
+  const getter={...good()};
+  Object.defineProperty(getter,"reached",{enumerable:true,get(){
+    throw Error("secret getter side effect");
+  }});
+  assert.equal(sanitizeAdapterProbe(getter,config),null);
+  const nested={...good()};
+  Object.defineProperty(nested.checks,"search",{enumerable:true,get(){return true}});
+  assert.equal(sanitizeAdapterProbe(nested,config),null);
+  const symbol={...good(),[Symbol("hidden")]:"secret"};
+  assert.equal(sanitizeAdapterProbe(symbol,config),null);
+  const clean=sanitizeAdapterProbe(good(),config);
+  assert.deepEqual(clean,good());
 });
