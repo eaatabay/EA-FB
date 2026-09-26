@@ -6,6 +6,8 @@ import java.nio.charset.CharacterCodingException
 import java.nio.charset.CodingErrorAction
 import java.nio.charset.StandardCharsets
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
@@ -69,6 +71,7 @@ class WatchdogSnapshotRefresh(
     private var nextAttempt: Long = 0L
 
     suspend fun refresh(now: Long): WatchdogRefreshResult = mutex.withLock {
+        currentCoroutineContext().ensureActive()
         if (!isApprovedConfiguration(options) || now < 0L || now > MAX_SAFE) {
             return@withLock WatchdogRefreshResult(null, false, "not_configured", null)
         }
@@ -88,12 +91,16 @@ class WatchdogSnapshotRefresh(
         if (now < nextAttempt) {
             return@withLock WatchdogRefreshResult(cached, false, "throttled", nextAttempt)
         }
+        currentCoroutineContext().ensureActive()
         lastAttempt = now
         val reply = try { transport.get(options.endpoint) }
         catch (cancelled: CancellationException) { throw cancelled }
         catch (_: Exception) {
             return@withLock failure(now, cached, "network_unavailable")
         }
+        // A transport can complete just as its caller is cancelled. Never
+        // persist its signed response after that cancellation.
+        currentCoroutineContext().ensureActive()
         if (reply.status != 200) {
             // Redirects (including 304/Location) are never followed or trusted.
             return@withLock failure(now, cached, "http_unavailable")
@@ -112,6 +119,7 @@ class WatchdogSnapshotRefresh(
         } catch (_: CharacterCodingException) {
             return@withLock failure(now, cached, "invalid_response")
         }
+        currentCoroutineContext().ensureActive()
         val verified = try { acceptSigned(json, now) }
         catch (cancelled: CancellationException) { throw cancelled }
         catch (_: Exception) { SnapshotCheck.Rejected("invalid_envelope") }
