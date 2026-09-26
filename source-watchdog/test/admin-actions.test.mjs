@@ -109,6 +109,28 @@ test("origin, custom header, JSON type and actual streaming body size are enforc
   await assert.rejects(parseAdminMutationRequest(request(
     "licensed-demo","disable",0,{body:"not json"}),env),AdminMutationError);
 });
+test("noncanonical admin request URL aliases fail before parsing body",async()=>{
+  const suffixes=["?","#","?x=1","#fragment","%2F","/./",
+    "/../licensed-demo","%2elicensed-demo"];
+  const body=JSON.stringify({action:"disable",expectedRevision:0});
+  for(const suffix of suffixes){
+    const req=new Request(origin+"/admin/api/sources/licensed-demo"+suffix,{
+      method:"POST",headers:{origin,"content-type":"application/json",
+        "x-eafb-admin-action":"confirmed"},body,
+    });
+    await assert.rejects(parseAdminMutationRequest(req,env),
+      e=>e instanceof AdminMutationError&&[403,404].includes(e.status),
+      suffix);
+  }
+  const credential=new Request(
+    "https://user:pass@watchdog.example.org/admin/api/sources/licensed-demo",{
+      method:"POST",headers:{origin,"content-type":"application/json",
+        "x-eafb-admin-action":"confirmed"},body,
+    });
+  await assert.rejects(parseAdminMutationRequest(credential,env),
+    e=>e instanceof AdminMutationError&&e.status===403);
+});
+
 test("admin body limit remains 413 when a malicious stream cancel throws",async()=>{
   const stream=new ReadableStream({
     start(controller){controller.enqueue(new Uint8Array(1100));},
