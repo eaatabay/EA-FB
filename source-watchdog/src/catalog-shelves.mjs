@@ -37,8 +37,8 @@ export function validateCatalogShelves(input) {
     const provider=item.providerId;
     const genres=item.genres;
     if ((provider===undefined)===(genres===undefined) ||
-      (provider!==undefined && (!PROVIDER.test(String(provider)) || !REGION.test(item.region))) ||
-      (genres!==undefined && (!GENRES.test(genres) || item.region!==undefined))) {
+      (provider!==undefined && (typeof provider!=="string" && !Number.isSafeInteger(provider) || !PROVIDER.test(String(provider)) || typeof item.region!=="string" || !REGION.test(item.region))) ||
+      (genres!==undefined && (typeof genres!=="string" || !GENRES.test(genres) || item.region!==undefined))) {
       throw Error("invalid_catalog_filter");
     }
     seen.add(item.id);
@@ -82,7 +82,9 @@ export function buildCatalogDraft(input,revision) {
  * No HTTP handler, D1 writes, source grants, or automatic publication.
  */
 export function editCatalogDraft(draft,expectedRevision,operation) {
-  if (!draft || draft.status!=="draft-v6-not-published" ||
+  if (!draft || typeof draft!=="object" || Array.isArray(draft) ||
+      Object.keys(draft).sort().join(",")!=="revision,shelves,status,version" ||
+      draft.version!==1 || draft.status!=="draft-v6-not-published" ||
       !Number.isSafeInteger(expectedRevision) || draft.revision!==expectedRevision)
     throw Error("catalog_revision_conflict");
   if (!operation || typeof operation!=="object" || Array.isArray(operation) ||
