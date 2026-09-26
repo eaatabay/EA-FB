@@ -8,7 +8,7 @@ enum class MediaKind { MOVIE, SERIES, LIVE }
 
 data class CatalogCategory(val id: String, val title: String, val kind: MediaKind, val tmdbPath: String? = null)
 
-/** The 28 sections documented from the user's PLT-Stream screenshots. */
+/** 29 built-in sections: original 28 plus the Paramount+ film shelf. */
 object HomeCategories {
     val all: List<CatalogCategory> = listOf(
         CatalogCategory("continue", "İzlemeye Devam Et", MediaKind.SERIES),
