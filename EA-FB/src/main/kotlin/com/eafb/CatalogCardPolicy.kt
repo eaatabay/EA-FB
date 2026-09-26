@@ -7,7 +7,7 @@ object CatalogCardPolicy {
     /** Poster first, then TMDb backdrop; never show an empty TV card. */
     fun bestArtwork(poster: String?, backdrop: String?): String? =
         listOf(poster, backdrop).firstOrNull { path ->
-            hasPoster(path) && path != null && !path.startsWith("//")
+            path != null && hasPoster(path) && !path.startsWith("//")
         }
 
     /** TMDb total_pages is authoritative; infer only if omitted. */
