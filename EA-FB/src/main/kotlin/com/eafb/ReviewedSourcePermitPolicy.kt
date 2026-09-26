@@ -55,7 +55,8 @@ object ReviewedSourcePermitPolicy {
             val hostname = uri.host?.lowercase(Locale.ROOT) ?: return false
             if (uri.scheme != "https" || uri.userInfo != null || uri.port != -1 ||
                 uri.rawQuery != null || uri.rawFragment != null ||
-                value != uri.toASCIIString() || uri.rawAuthority != hostname ||\n                !validHost(hostname) ||
+                value != uri.toASCIIString() || uri.rawAuthority != hostname ||
+                !validHost(hostname) ||
                 !permit.approvedHosts.contains(hostname)) return false
             val rawPath = uri.rawPath?.ifEmpty { "/" } ?: "/"
             val prefix = permit.approvedPathPrefix
@@ -98,7 +99,8 @@ object ReviewedSourcePermitPolicy {
         now: Long,
         permits: List<ReviewedSourcePermit>
     ): VerifiedSourceSnapshot? {
-        if (snapshot == null || now < 0 || permits.isEmpty() || permits.size > 32 ||\n            snapshot.usableSources.map { it.id }.toSet().size != snapshot.usableSources.size ||
+        if (snapshot == null || now < 0 || permits.isEmpty() || permits.size > 32 ||
+            snapshot.usableSources.map { it.id }.toSet().size != snapshot.usableSources.size ||
             permits.map { it.id }.toSet().size != permits.size ||
             permits.any { !validPermit(it, now) }) return null
         val byId = permits.associateBy { it.id }
