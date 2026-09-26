@@ -37,3 +37,18 @@ test("untrusted arbitrary failure text is not rendered",()=>{
  ],1800000000000));
  assert.ok(!html.includes("SECRET_ERROR"));
 });
+
+
+test("dashboard shows only sanctioned runner timeout/error codes",()=>{
+ const stats=summarizeSources([
+  row("timed-out","degraded","probe_timeout"),
+  row("crashed","quarantined","adapter_error"),
+  row("untrusted","degraded","SECRET_ADAPTER_EXCEPTION"),
+ ],1800000000000);
+ assert.equal(stats.rows.find(x=>x.id==="timed-out").error,"probe_timeout");
+ assert.equal(stats.rows.find(x=>x.id==="crashed").error,"adapter_error");
+ assert.equal(stats.rows.find(x=>x.id==="untrusted").error,"—");
+ const html=renderAdminDashboard(stats);
+ assert.ok(html.includes("probe_timeout") && html.includes("adapter_error"));
+ assert.ok(!html.includes("SECRET_ADAPTER_EXCEPTION"));
+});
