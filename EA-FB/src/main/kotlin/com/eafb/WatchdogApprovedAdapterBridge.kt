@@ -1,5 +1,7 @@
 package com.eafb
 
+import kotlinx.coroutines.CancellationException
+
 /**
  * Explicit future integration point for EAProvider. The current public v6
  * package pins NO signing keys, approves NO Watchdog endpoint and bundles NO
@@ -31,6 +33,7 @@ class WatchdogApprovedAdapterBridge(
             return emptyList()
         }
         val snapshot = try { store.restoreVerifiedOffline(now) }
+            catch (cancelled: CancellationException) { throw cancelled }
             catch (_: Exception) { null }
         // Cryptographic validity does not by itself grant distribution rights.
         // Every signed source also needs an unexpired, release-compiled
