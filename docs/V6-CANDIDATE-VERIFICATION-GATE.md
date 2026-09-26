@@ -22,3 +22,10 @@ This is a **development checklist**, not a release authorization. Do not modify 
 ## Release blockers
 
 Automated test output, Gradle compilation, new cs3 package inspection, device validation, approved v6 Worker/OMDb deployment and reviewed remote catalog publication are **not established** by these feature-branch commits.
+
+## 27 September — additional development checks
+
+- New `CatalogPagePolicy` is exercised by 18 pure JVM assertions via `scripts/test-core.sh`. Its bounded page-2/page-3 scan is only eligible on an empty, valid first page of a newest discover feed; a scanned/fallback rail never advertises further pagination. This prevents a previous silent duplicate-card risk.
+- Admin drafts now reject coercible genre/provider values and forged envelope fields, normalize contiguous order after edits, append new rails without moving existing ones, and preserve the edited rail's position on replace.
+- `node source-watchdog/dev/catalog-draft-cli.mjs diff BEFORE.catalog-draft.json AFTER.catalog-draft.json` produces a metadata-only review report (added/removed/changed title, order, platform, language, year, enabled). This remains an **offline review tool**, not a remote publication endpoint.
+- A standalone local copy of the new page-policy assertions passed 18/18. This does **not** establish that the full repository Node suite, Gradle build or device checks passed.
