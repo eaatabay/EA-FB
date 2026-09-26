@@ -83,6 +83,8 @@
 - [x] 26.09.2026: Ag preflight'inda kullanilmayan query/fragment ayiraclari, buyuk harfli/encoded host ve acik :443 alias'i engellendi; DNS label boyutu ve bas/son tire kontrolleri eklendi; 192.88.99/24 6to4 anycast de ihtiyatli engel listesine alindi (15d31fd4, eadb295b, 6c107f19). Yerel network test 5/5 gecti; gercek IP-pinned HTTP transport acik is.
 - [x] 26.09.2026: SourceSnapshotGate + WatchdogAdapterSelection ve 15 test senaryosu yerel test-only domain bagimliliklariyla JVM'de 15/15 yeniden calistirildi. Bu SHA-eslesmeli tam dosya kopyasi ve Android entegrasyon sonucu DEGIL.
 - [x] 26.09.2026: Network preflight'a 18 URL authority varyantini DNS'e dokunmadan reddeden altinci regresyon eklendi (87c44283); yerel adversarial 23 URL + 21 IP + 2 gecerli URL kontrolu gecti. Yerel secilmis Node paketi 33/33 gecti; tum repo Node paketi hala acik.
+- [x] 26.09.2026: Staging artik sadece internalName EA-FB ve tam integer version=6 kabul ediyor; v4/v5/v7/null/float/string/bool alias reddediliyor (09a88f2f, ab6008df). Yeni testle 6/6 yerel yeniden olusturulmus Python staging testi gecti. Gercek Gradle/.cs3 paketi henuz derlenmedi.
+- [x] 26.09.2026: Network preflight 18 URL parser alias'i icin ek fail-closed regresyonla 6 teste ulasti (87c44283). Yerel secilmis Node suite 33/33; ayrica 23 kotu URL, 21 kotu IP ve 2 gecerli URL ile adversarial kontrol gecti.
 - [ ] Genisletilmis 68/68 Kotlin izin testi ve 11/11 bridge JVM testini gercek v6 checkout'unda calistirip dogrula. Node wiring 5/5, onceki SHA-eslesmeli yerel dosyalarda gecti.
 - [x] Kullanici acik kaynak-bazli onayi ve hak sahibi delili gerektiren docs/SOURCE-RIGHTS-REVIEW-v6.md olusturuldu.
 - [ ] Gercek kaynagin izin kapsami, kanit referansi, rate limit, bolge ve yenileme tarihini tek tek onaylat.
