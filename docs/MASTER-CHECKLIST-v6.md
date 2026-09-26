@@ -341,3 +341,11 @@ MFA'li admin pilotu. Gercek v5/main ve canli Worker degismez.
 - [x] `nanoClock` ilk, `open` son constructor parametresi yapılarak mevcut `WatchdogHttpsTransport { fakeConnection }` trailing-lambda test çağrıları korundu; süre testleri isimli parametreye geçirildi.
 - [x] Kaynaktaki HTTPS transport mantığı ve enjekte edilmiş test bağlantısı yerel JVM üzerinde izole derlendi; 8/8 seçili test geçti. Bu, gerçek GitHub checkout'taki tüm Kotlin testlerinin koştuğu anlamına gelmez.
 - [ ] Tam `scripts/test-core.sh` ve `scripts/verify-v6.sh` gerçek repo checkout'unda çalıştırılacak; mevcut ortamda özel repo klonlaması yapılamıyor. Canlı sistemler ve `main` değiştirilmedi.
+
+## 26.09.2026 — İptal, Android kalıcılık ve metadata relay güvenliği
+- [x] Android snapshot refresh artık cache restore, HTTP yanıtı ve imza doğrulama callback'lerinden sonra coroutine iptalini kontrol ediyor; iptal edilmiş transport cevabı imzalı depoya gönderilmiyor. İki yeni regresyon: transport dönüşünde ve cache callback'inde iptal.
+- [x] `WatchdogClientStore`: Android SharedPreferences başarısız disk commit sonrasında bellekte değerleri değiştirmiş olabileceği için aynı store örneği kalıcı olarak fail-closed; imzası doğrulansa bile geçici bellekteki snapshot offline kullanıma sunulmuyor. Bu davranışı simüle eden üç JVM regresyon kontrolü eklendi.
+- [x] Katalog backend ayarındaki uzak URL artık sadece sürüme derlenmiş `https://ea-fb-catalog.eaatabay.workers.dev` origin'i ve `status=ready` ile kabul ediliyor. Geçici ayar indirme hatasında sadece daha önce doğrulanmış origin en fazla 24 saat kullanılabiliyor; `disabled` ayarı cache ile atlatılmıyor.
+- [x] Saf Kotlin relay politikası ve 18 regresyon kontrolü eklendi; yerel izole derlemede 18/18 geçti. Kaynak kablolama için üç Node statik regresyonu eklendi; yerel yeniden kurulmuş eşdeğer kontrol 3/3 geçti.
+- [x] Yerel izole Kotlin smoke: HTTPS transport 6/6, refresh 5/5, başarısız SharedPreferences commit 5/5 geçti. Bu smoke testleri GitHub'daki tüm Kotlin/Android test paketinin yerine geçmez.
+- [ ] Tam repo `scripts/test-core.sh`, `scripts/verify-v6.sh`, Android Gradle `.cs3`, Wrangler/D1 ve Mi Box gerçek doğrulaması bekliyor; `main`, v5, canlı Worker/D1 ve izinler değişmedi.
