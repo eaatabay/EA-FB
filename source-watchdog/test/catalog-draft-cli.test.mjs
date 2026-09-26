@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import {mkdtemp,readFile,writeFile,rm} from "node:fs/promises";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
-import {applyLocalCatalogEdit,previewLocalCatalogDraft} from "../dev/catalog-draft-cli.mjs";
+import {applyLocalCatalogEdit,previewLocalCatalogDraft,initLocalCatalogDraft} from "../dev/catalog-draft-cli.mjs";
 test("local draft editor atomically applies CAS and renders safe preview",async()=>{
   const dir=await mkdtemp(join(tmpdir(),"eafb-catalog-"));
   try {
@@ -24,5 +24,18 @@ test("local draft editor atomically applies CAS and renders safe preview",async(
       operation:{action:"remove",id:"custom-tv"}}),{code:"EEXIST"});
     await rm(file+".lock");
     await assert.rejects(applyLocalCatalogEdit(join(dir,"wrong.json"),{}),/draft_filename_required/);
+  } finally {await rm(dir,{recursive:true,force:true});}
+});
+
+test("local draft initialization is create-only and private",async()=>{
+  const dir=await mkdtemp(join(tmpdir(),"eafb-catalog-init-"));
+  try {
+    const file=join(dir,"new.catalog-draft.json");
+    const draft=await initLocalCatalogDraft(file);
+    assert.equal(draft.revision,0);
+    assert.equal(draft.shelves.length,0);
+    assert.equal(JSON.parse(await readFile(file,"utf8")).status,"draft-v6-not-published");
+    await assert.rejects(initLocalCatalogDraft(file),{code:"EEXIST"});
+    await assert.rejects(initLocalCatalogDraft(join(dir,"other.json")),/draft_filename_required/);
   } finally {await rm(dir,{recursive:true,force:true});}
 });
