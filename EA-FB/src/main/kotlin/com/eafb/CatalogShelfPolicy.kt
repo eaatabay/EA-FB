@@ -22,7 +22,7 @@ object CatalogShelfPolicy {
     private val genreIds = Regex("[0-9]{1,4}(,[0-9]{1,4}){0,4}")
 
     fun category(shelf: CatalogShelfDefinition): CatalogCategory? {
-        if (!shelf.enabled || !ids.matches(shelf.id) || shelf.title.length !in 2..64 ||
+        if (!shelf.enabled || !ids.matches(shelf.id) || HomeCategories.all.any { it.id == shelf.id } || shelf.title.length !in 2..64 ||
             shelf.kind == MediaKind.LIVE || shelf.title.any { it == '<' || it == '>' } ||
             (shelf.providerId == null) == (shelf.genres == null) ||
             shelf.language?.let { !languages.matches(it) } == true ||
