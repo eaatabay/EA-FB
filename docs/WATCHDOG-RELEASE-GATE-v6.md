@@ -133,3 +133,7 @@ The bridge now returns immediately when the release-compiled rights list is empt
 ## 26 Sep 2026: bridge JVM coverage expansion
 
 The exact repository bridge JVM test file now contains **11 assertions**: the original five production-off cases plus six negative-clock and empty-adapter cases across MOVIE, SERIES and LIVE. A separate isolated JVM harness exercised the SHA-matched bridge and policy with test-only dependencies across 18 combinations (**18/18 passed**, no cache access, no delivery configuration and no adapter selection). This is not a claim that the complete 11-case repository JVM suite or the 62-case Kotlin rights suite has run. Keep both release-gate items open until the exact checkout is executed.
+
+## 26 Sep 2026: rights-record identity hardening
+
+The compiled rights gate now requires an exact canonical evidence reference `rights/YYYY/<permit-id>.md`. It rejects references to another source's record, nested aliases and non-numeric years. A prior-year record remains syntactically valid when the separately recorded permit expiry has not elapsed. Four committed Kotlin regressions increase the checked-in rights suite from 62 to **66** cases. The exact updated policy file (Git blob `bf544b12`) passed **47/47 independent offline JVM checks** with a test-only snapshot model. This is not the exact 66-case repository test run, nor verification of actual legal rights or document existence. The 11-case bridge JVM suite and real local Wrangler+D1 release gate remain pending.
