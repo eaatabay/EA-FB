@@ -205,8 +205,19 @@
 - [x] TMDb film koleksiyonu vizyon sirasi icin sadece YYYY-MM-DD regex degil, gercek takvim gunu kontrolu eklendi; 2026-02-31 ve 2025-02-29 sona atilir, 2024-02-29 korunur.
 - [x] OMDb rating parser ayri pure module: yalniz gercek eslesen IMDb ID, 1.0-10.0 arasi kanonik ondalik; N/A ile gecici ariza ayrilir. API key istemciye verilmez.
 - [x] Yerel SHA-eslesmeli Node 22: exact adapter-contract source/test 6/6, exact runner source + yalniz test-only fake registry/lease/scheduler ile 8/8, exact OMDb policy source/test 3/3 = 17/17. Exact Kotlin FilmCollectionPolicy + test 15/15 (gecersiz Subat ve artik yil tarihleri dahil). Toplam bu parkurda 32/32 secilmis offline test. Bunlar tam repo Node suite/gercek D1/Worker/Gradle degildir.
-- [ ] Bu parkurda degisen gercek `runner.test.mjs`, `admin-actions.test.mjs`, `signed-endpoint.test.mjs`, `worker/test/catalog.test.mjs` tum bagimliliklarla full checkout'ta calistirilmali. Wrangler/workerd+D1, Gradle .cs3, Mi Box ve gercek kaynak haklari release kapisi kapali.
+- [ ] Bu parkurda degisen gercek `runner.test.mjs`, `admin-actions.test.mjs`, `signed-endpoint.test.mjs` tum bagimliliklarla full checkout'ta calistirilmali. Wrangler/workerd+D1, Gradle .cs3, Mi Box ve gercek kaynak haklari release kapisi kapali.
 - [ ] Iki puanin detay sayfasinda CloudStream stok tema nedeniyle native hero puani yerine kaynak etiketli tags oldugu Mi Box uzerinde kontrol edilmeli; franchise kartlari resmi TMDb collection verisiyle vizyon sirasinda, ayrik native seri seridi degil Onerilenler basinda.
+
+## 26.09.2026 — 4. 30 dakikalik parkur (offline; tam Worker Node suite)
+- [x] GitHub blob SHA birebir eslesen gercek `worker/src/index.js`, `bounded-response.mjs`, `ratings-enrichment.mjs` ve 3 test dosyasi yerel Node22'de yeniden kuruldu. **Worker tam suite 35/35 PASS**; OMDb 3.5 sn deadline, 60 sn transient TTL, byte budget, cache, TMDb kimlik/JSON, canonical URL testleri dahil. Bu kez izole helper degil gercek Worker entrypoint calisti.
+- [x] 2MB TMDb / 50KB OMDb body limitinde `reader.cancel()` asla beklenmez; asla cozulmeyen cancel() bile 502 byte-limit cevabini geciktiremez. Ayrica 1KB admin POST icin 413 ve 64KB Cloudflare Access JWKS icin boyut hatasi ayni sekilde fail-closed. Gercek SHA eslesmeli bounded-response 6/6, admin-auth 9/9, adapter-contract 6/6 gecti.
+- [x] Admin URL regresyon testinde WHATWG Request'in `/../` yolunu daha parse asamasinda normalize ettigi goruldu; imkansiz beklenti duzeltildi. Gercek SHA eslesmeli admin-actions kaynagi + acikca test-only registry stub ile 9/9 izole HTTP sinir testi gecti. Tam admin-actions/Worker+D1 testleri bekliyor.
+- [x] TMDb null/array/primitive JSON 502; beklenmedik TMDb film ID 502; upstream'den gelen `ea_fb_ratings` adli sahte IMDb alani siliniyor, yalniz dogrulanmis OMDb puani ekleniyor. Tekrarlanan/trailing slash, bos ?/# ve fragmentli katalog alias'lari upstream'e gidemiyor.
+- [x] Mi Box bos kartlari icin TMDb poster yoksa backdrop kullaniliyor; ikisi de yoksa bos kart uretilmiyor. Resmi koleksiyon verisinde secili filme ait poster eksikse ayni filmin detay posterine dusuluyor; baska filmden afis odunc alinmiyor. Gercek SHA eslesmeli Kotlin CatalogCardPolicy 25/25; FilmCollectionPolicy 15/15.
+- [x] Gercek SHA eslesmeli `0001_registry.sql`, `0002_source_leases.sql` ve Python migration suite **7/7**: CAS, trigger audit, duplicate run rollback, stale CAS, lease takeover ve idempotency.
+- [x] Bu parkurun yerel secilmis test toplamı: **35 Worker + 9 Access JWT + 6 adapter + 9 izole admin + 7 SQLite + 25 katalog Kotlin + 15 seri Kotlin = 106/106**. Admin 9/9 ve Kotlin testleri Android derlemesi veya gercek Wrangler D1 anlamina gelmez.
+- [ ] Gercek `source-watchdog/test/runner.test.mjs`, `admin-actions.test.mjs`, `signed-endpoint.test.mjs` ve tam Node suite'i tum gercek modullerle tek checkout'ta calistir.
+- [ ] Android Gradle .cs3, Mi Box afis/puan/seri gorsel testi, Wrangler/workerd+D1 ve gercek hak/anahtar izinleri release kapisinda bekliyor. Main/v5/canli Worker'a dokunulmadi.
 
 ## Sonraki en yakin is
 Actions kotasi sifirken hak/izin kayitlarini birer birer incele ve kullanicidan onay al;
