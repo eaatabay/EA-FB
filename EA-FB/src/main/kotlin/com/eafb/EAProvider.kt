@@ -269,9 +269,12 @@ class EAProvider : MainAPI() {
         val tmdb = ratingValue(item)
         // Only the server may attach independent IMDb data. TMDb external_ids
         // contains an IMDb ID, NOT an IMDb rating.
-        val imdb = item.optJSONObject("ea_fb_ratings")
-            ?.optDouble("imdb", 0.0)
-            ?.takeIf { it > 0.0 && it <= 10.0 }
+        val enriched = item.optJSONObject("ea_fb_ratings")
+        val imdb = enriched?.takeIf {
+            it.optString("source") == "OMDb API" &&
+                item.optJSONObject("external_ids")?.optString("imdb_id")
+                    ?.matches(Regex("tt[0-9]{7,10}")) == true
+        }?.optDouble("imdb", 0.0)?.takeIf { it > 0.0 && it <= 10.0 }
         return Pair(imdb, tmdb)
     }
 
