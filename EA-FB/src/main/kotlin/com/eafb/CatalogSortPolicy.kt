@@ -29,8 +29,9 @@ object CatalogSortPolicy {
                 it.startsWith("first_air_date.lte=") || it.startsWith("primary_release_date.lte=")
         }
         // TMDb otherwise sorts future releases ahead of released titles.
-        val today = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US)
-            .format(java.util.Date())
+        val today = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US).apply {
+            timeZone = java.util.TimeZone.getTimeZone("UTC")
+        }.format(java.util.Date())
         val releaseBound = if (mode == CatalogSortMode.NEWEST) {
             if (kind == MediaKind.SERIES) "&first_air_date.lte=$today"
             else "&primary_release_date.lte=$today"
