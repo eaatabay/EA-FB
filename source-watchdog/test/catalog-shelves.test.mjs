@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {validateCatalogShelves,publicCatalogShelves,compileCatalogShelf} from "../src/catalog-shelves.mjs";
+import {validateCatalogShelves,publicCatalogShelves,compileCatalogShelf,buildCatalogDraft} from "../src/catalog-shelves.mjs";
 const base={id:"new-turkish-tv",title:"Yeni Türk Dizileri",kind:"tv",
   genres:"18",language:"tr",yearFrom:2024,yearTo:2026,enabled:true,order:0};
 test("validates catalog-only shelf and preserves order",()=>{
@@ -40,4 +40,14 @@ test("compile only relay-compatible catalog filters, never silently drop constra
     "/discover/movie?with_watch_providers=350&watch_region=TR&with_watch_monetization_types=flatrate");
   assert.throws(()=>compileCatalogShelf(base),/unsupported_catalog_filter/);
   assert.throws(()=>compileCatalogShelf({...safe,yearFrom:2020}),/unsupported_catalog_filter/);
+});
+
+test("revisioned catalog draft is deterministic and never self-publishes",()=>{
+  const draft=buildCatalogDraft([{...base,enabled:false}],4);
+  assert.equal(draft.revision,4);
+  assert.equal(draft.status,"draft-v6-not-published");
+  assert.equal(draft.shelves[0].enabled,false);
+  assert.equal(Object.isFrozen(draft),true);
+  assert.throws(()=>buildCatalogDraft([base],-1));
+  assert.throws(()=>buildCatalogDraft([base],1.5));
 });
