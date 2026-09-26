@@ -272,3 +272,7 @@ MFA'li admin pilotu. Gercek v5/main ve canli Worker degismez.
 - [x] `stage-release.py` Gradle `plugins.json` v6 denetimine ek olarak, derlenmiş .cs3 içindeki `manifest.json` sürüm alanı varsa bunun da tam integer 6 olmasını şart koşuyor; olmayan alan eski uyum için kabul ediliyor.
 - [x] Gömülü v4/v5/v7, string, float, boolean ve null sürümler için yeni Python regresyon testi eklendi; izole fixture mantığı 9/9 geçti.
 - [ ] Gerçek Gradle tarafından üretilen .cs3 ile staging ve Android kurulum testi bekliyor.
+
+## 26.09.2026 — Yönetici sağlık paneli tanı kodları
+- [x] Dashboard yalnız önceden tanımlı `adapter_error` ve `probe_timeout` kodlarını da gösteriyor; ham adapter istisnaları gizli kalıyor.
+- [x] İki izinli kod ve rastgele gizli hata metni için Node regresyon testi eklendi; izole whitelist kontrolü 4/4 geçti.
