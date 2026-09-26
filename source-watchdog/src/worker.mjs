@@ -54,6 +54,7 @@ export function createWatchdogWorker({
   nowMillis = Date.now,
   // Test-only injection; the deployed default has ZERO approved rights refs.
   approvedEvidenceRefs = [],
+  approvedSourceGrants = [],
 } = {}) {
   async function runScheduledFixture(controller, env) {
     // An accidental Worker deployment must remain read-only and inert.
@@ -162,7 +163,8 @@ export function createWatchdogWorker({
           typeof env.SNAPSHOT_SIGNING_PKCS8_B64 !== "string" ||
           // The checked-in production allowlist is empty. Do not even import
           // a signing key or publish an empty snapshot before rights review.
-          !Array.isArray(approvedEvidenceRefs) || approvedEvidenceRefs.length === 0) {
+          !Array.isArray(approvedEvidenceRefs) || approvedEvidenceRefs.length === 0 ||
+          !Array.isArray(approvedSourceGrants) || approvedSourceGrants.length === 0) {
         return response({error:"source_snapshot_unavailable"},503);
       }
       try {
@@ -181,7 +183,8 @@ export function createWatchdogWorker({
                 x.baseUrl?.includes(".example.org"))) {
             throw new Error("unsafe_production_snapshot");
           }
-          assertReviewedPublication(records, snapshot, approvedEvidenceRefs);
+          assertReviewedPublication(records, snapshot, approvedEvidenceRefs,
+            approvedSourceGrants);
           return snapshot;
         });
         return response(signed);
