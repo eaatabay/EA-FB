@@ -212,3 +212,19 @@ test("malformed adapter response counts as failed health check",
     assert.equal((await getSource(db,"fixture-null")).state.lastFailure,"adapter_error");
   }finally{db.close();}
 });
+
+
+test("adapter-thrown probe_timeout string cannot impersonate the runner's real timer",
+  {skip: !DatabaseSync},async()=>{
+  const db=new SQLiteD1();
+  try{
+    await registerSource(db,source("fixture-spoof"),"admin:alice",0);
+    const adapters=new Map([["fixture-spoof",{
+      id:"fixture-spoof",async probe(){throw Error("probe_timeout");},
+    }]]);
+    const result=await runDueChecks({db,adapters,now:0});
+    assert.equal(result[0].status,"probe_failed");
+    assert.equal(result[0].error,"adapter_error");
+    assert.equal((await getSource(db,"fixture-spoof")).state.lastFailure,"adapter_error");
+  }finally{db.close();}
+});
