@@ -216,5 +216,7 @@ Production signed publication now binds evidence to the exact rights/YYYY/<sourc
 
 ## 26 Sep 2026 — next offline parkur: hostile adapter Proxy traps
 - `sanitizeAdapterProbe` now catches throwing Proxy getPrototypeOf, ownKeys and property-descriptor traps on both root probe and nested checks. A parser exception caused by a hostile object is a **schema anomaly** (audited admin hold), not evidence of a publisher outage. No exception text or raw URL enters the public result.
-- Exact GitHub SHA-matched adapter contract and regression tests: **7/7 PASS** on local Node22. New exact `runner.test.mjs` SQLite/D1-emulator integration case checks one probe, one audit and no subsequent scheduled retry after admin hold; full exact runner suite not executed in this parkur.
+- Exact GitHub SHA-matched adapter contract and regression tests: **8/8 PASS** on local Node22. New exact `runner.test.mjs` SQLite/D1-emulator integration case checks one probe, one audit and no subsequent scheduled retry after admin hold; full exact runner suite not executed in this parkur.
 - Production safety gates remain unchanged: no rights grants, signing pins, approved adapters, enabled delivery, remote D1, Actions runs, live source probes or deploys.
+
+- Son duzeltme: zorunlu olmayan adapter check alanlari da yalniz boolean olabilir; nesne, string veya gizli veri kontrol nesnesine gecemez. Exact SHA eslesmeli adapter testi 8/8.
