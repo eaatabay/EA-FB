@@ -18,6 +18,7 @@ function validHttpsBaseUrl(value) {
     const host = u.hostname;
     return u.protocol === 'https:' && u.username === '' && u.password === '' &&
       u.port === '' && u.search === '' && u.hash === '' &&
+      !u.pathname.includes('%') && !u.pathname.includes('//') &&
       /^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)+$/.test(host) &&
       host.length <= 253 && host.split('.').every(label => label.length <= 63) &&
       !/^\d+(?:\.\d+){3}$/.test(host) &&
