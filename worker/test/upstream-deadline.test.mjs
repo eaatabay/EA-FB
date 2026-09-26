@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {withUpstreamDeadline} from "../src/upstream-deadline.mjs";
+import {readBoundedText} from "../src/bounded-response.mjs";
 
 test("one deadline covers fast headers and slow body", async () => {
   let aborted=false;
@@ -48,6 +49,30 @@ test("byte-budget rejection aborts the still-open upstream fetch",async()=>{
   await assert.rejects(withUpstreamDeadline(signal=>{
     signal.addEventListener("abort",()=>{aborted=true;},{once:true});
     throw new Error("upstream_too_large");
+  },100),/upstream_too_large/);
+  assert.equal(aborted,true);
+});
+
+test("real bounded JSON stream that never closes obeys upstream deadline",async()=>{
+  let aborted=false;
+  const response=new Response(new ReadableStream({
+    start(controller){controller.enqueue(new TextEncoder().encode("{\"id\":"));}
+  }),{headers:{"content-type":"application/json"}});
+  await assert.rejects(withUpstreamDeadline(signal=>{
+    signal.addEventListener("abort",()=>{aborted=true;},{once:true});
+    return readBoundedText(response,2_000_000);
+  },100),{name:"TimeoutError"});
+  assert.equal(aborted,true);
+});
+
+test("actual oversized body preserves size error and aborts upstream",async()=>{
+  let aborted=false;
+  const response=new Response(new ReadableStream({
+    start(controller){controller.enqueue(new Uint8Array(101));controller.close();}
+  }),{headers:{"content-type":"application/json","content-length":"1"}});
+  await assert.rejects(withUpstreamDeadline(signal=>{
+    signal.addEventListener("abort",()=>{aborted=true;},{once:true});
+    return readBoundedText(response,100);
   },100),/upstream_too_large/);
   assert.equal(aborted,true);
 });
