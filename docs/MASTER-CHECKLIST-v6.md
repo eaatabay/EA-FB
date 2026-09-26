@@ -255,3 +255,8 @@ MFA'li admin pilotu. Gercek v5/main ve canli Worker degismez.
 - [x] Salt-okunur `/admin` yolunda Access doğrulayıcı istisnası artık kayıt okumadan önce 403 ile güvenli kapanıyor; ayrı regresyon testi eklendi.
 - [x] Aynı JWKS deadline algoritması izole Node v22 yerel kontrolünde 4/4 senaryodan geçti; Kotlin iptal/Elvis kontrolü izole `kotlinc` ile geçti. Bunlar tam repo testinin yerine geçmez.
 - [ ] GitHub'daki gerçek `source-watchdog` Node paketinin tüm testleri ve tam Kotlin/JVM paketi çalışma ortamında tekrar çalıştırılmalı.
+
+## 26.09.2026 — Yönetici POST gövdesi zaman aşımı
+- [x] En fazla 1024 baytlık yönetici JSON gövdesi artık ayrıca toplam 4 saniyelik okuma süresiyle sınırlı; takılan `reader.cancel()` beklenmiyor.
+- [x] Asılı stream ve asılı cancel için 408 regresyon vakası eklendi.
+- [x] İzole Node v22 kontrolünde normal/çok büyük/asılı body davranışı 3/3 geçti; tam `source-watchdog` test paketi çalıştırılmayı bekliyor.
