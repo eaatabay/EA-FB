@@ -4,8 +4,8 @@
  */
 const ID=/^[a-z][a-z0-9-]{2,47}$/;
 const REGION=/^[A-Z]{2}$/;
-const GENRES=/^\\d{1,4}(,\\d{1,4}){0,4}$/;
-const PROVIDER=/^\\d{1,6}$/;
+const GENRES=/^\d{1,4}(,\d{1,4}){0,4}$/;
+const PROVIDER=/^\d{1,6}$/;
 const MAX=40;
 export function validateCatalogShelves(input) {
   if (!Array.isArray(input) || input.length>MAX) throw Error("invalid_shelf_count");
