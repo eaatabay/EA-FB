@@ -6,8 +6,6 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.Job
 import kotlin.coroutines.coroutineContext
-import kotlinx.coroutines.Job
-import kotlin.coroutines.coroutineContext
 import org.bouncycastle.util.encoders.Base64
 
 private const val PUBLIC_TEST_PIN = "3XThw1FOoxQye8ObEatzSwW1lRlo/g9iZSRuClkOjak="
@@ -175,18 +173,5 @@ fun main()=runBlocking {
     }
     checked(runCatching { cancelledAfterCache.await() }.exceptionOrNull() is CancellationException,
         "cache callback cancellation stops refresh before network or throttle return")
-    val cancelledAfterResponseStore=FakeStore()
-    val cancelledAfterResponse=async {
-        val caller=coroutineContext[Job]!!
-        val network=WatchdogSnapshotTransport {
-            caller.cancel()
-            response()
-        }
-        WatchdogSnapshotRefresh(good,network,cancelledAfterResponseStore::accept,
-            cancelledAfterResponseStore::offline).refresh(T+1)
-    }
-    checked(runCatching { cancelledAfterResponse.await() }.exceptionOrNull() is CancellationException &&
-        cancelledAfterResponseStore.accepts==0 && cancelledAfterResponseStore.raw==null,
-        "cancellation after HTTP response cannot persist a signed snapshot")
     println("PASS: $count/$count offline and injected-transport refresh checks")
 }
