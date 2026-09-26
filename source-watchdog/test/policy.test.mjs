@@ -174,3 +174,19 @@ test("corrupt persisted state cannot be silently healed by a successful probe",(
   assert.throws(()=>applyProbe(source,baseline,good(),
     Number.MAX_SAFE_INTEGER),/invalid_watchdog_state/);
 });
+
+
+test("internal runner failure markers retain distinct audit reasons",()=>{
+  const initial=initialState(source,0);
+  for(const reason of ["adapter_error","probe_timeout"]){
+    const result=evaluateProbe(source,{runnerFailure:reason});
+    assert.equal(result.ok,false);
+    assert.equal(result.reason,reason);
+    assert.equal(result.needsAdmin,false);
+    const next=applyProbe(source,initial,{runnerFailure:reason},HOUR);
+    assert.equal(next.lastFailure,reason);
+    assert.equal(next.status,HEALTH.DEGRADED);
+  }
+  assert.throws(()=>evaluateProbe(source,{runnerFailure:"untrusted_marker"}),
+    /invalid_probe/);
+});
