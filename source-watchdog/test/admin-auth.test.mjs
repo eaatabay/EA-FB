@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {adminAccessConfigured,verifyAdminAccess,readLimitedJwks} from "../src/admin-auth.mjs";
+import {adminAccessConfigured,verifyAdminAccess,readLimitedJwks,loadJwks} from "../src/admin-auth.mjs";
 
 const NOW=1_800_000_000;
 const TEAM="https://ea-fixture.cloudflareaccess.com";
@@ -128,4 +128,34 @@ test("never-settling JWKS stream cancellation cannot block size rejection",async
   ]);
   assert.equal(result,"oversized_access_certs");
   assert.equal(cancelled,true);
+});
+
+
+test("JWKS fetch deadline covers a body stream that ignores abort",async()=>{
+  const originalFetch=globalThis.fetch;
+  let aborted=false;
+  try {
+    globalThis.fetch=async (_url,options)=>{
+      options.signal.addEventListener("abort",()=>{aborted=true;},{once:true});
+      return new Response(new ReadableStream({
+        start(c){c.enqueue(new TextEncoder().encode("{"));}
+        // Never closes, even after AbortController aborts.
+      }),{headers:{"content-type":"application/json"}});
+    };
+    const started=Date.now();
+    await assert.rejects(loadJwks(TEAM,75),/access_certs_timeout/);
+    assert.equal(aborted,true);
+    assert.ok(Date.now()-started<1500);
+  }finally{globalThis.fetch=originalFetch;}
+});
+
+test("JWKS fetch deadline covers response headers and clears on success",async()=>{
+  const originalFetch=globalThis.fetch;
+  try {
+    globalThis.fetch=async()=>new Promise(()=>{});
+    await assert.rejects(loadJwks(TEAM,75),/access_certs_timeout/);
+    globalThis.fetch=async()=>new Response(JSON.stringify({keys:[]}));
+    assert.deepEqual(await loadJwks(TEAM,75),{keys:[]});
+    await assert.rejects(loadJwks(TEAM,0),/invalid_access_deadline/);
+  }finally{globalThis.fetch=originalFetch;}
 });
