@@ -4,6 +4,8 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.Job
+import kotlin.coroutines.coroutineContext
 import org.bouncycastle.util.encoders.Base64
 
 private const val PUBLIC_TEST_PIN = "3XThw1FOoxQye8ObEatzSwW1lRlo/g9iZSRuClkOjak="
@@ -151,5 +153,17 @@ fun main()=runBlocking {
         { _, _ -> throw CancellationException("cancelled") },offline::offline)
     checked(runCatching{verifyCancelled.refresh(T+1)}.exceptionOrNull() is CancellationException,
         "cancelled verification propagates")
+    var lateAccepts=0
+    val cancelledAfterResponse=async {
+        val job=coroutineContext[Job]!!
+        val refresh=WatchdogSnapshotRefresh(good,
+            WatchdogSnapshotTransport { job.cancel(); response() },
+            { _, _ -> lateAccepts++; SnapshotCheck.Rejected("unexpected") },
+            { null })
+        refresh.refresh(T+1)
+    }
+    checked(runCatching { cancelledAfterResponse.await() }.exceptionOrNull() is CancellationException &&
+        lateAccepts==0,
+        "cancellation after transport response prevents signed snapshot persistence")
     println("PASS: $count/$count offline and injected-transport refresh checks")
 }
