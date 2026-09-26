@@ -79,7 +79,7 @@ function catalogRequest(url) {
         k === "with_genres" ? /^\d{1,4}(,\d{1,4}){0,4}$/.test(v) :
         k === "vote_count.gte" ? /^\d{1,5}$/.test(v) && +v >= 1 && +v <= 10000 :
         k === "first_air_date.lte" ? parts[1] === "tv" && validIsoDate(v) :
-        k === "primary_release_date.lte" ? parts[1] === "movie" && /^\d{4}-\d{2}-\d{2}$/.test(v) && !Number.isNaN(Date.parse(v)) :
+        k === "primary_release_date.lte" ? parts[1] === "movie" && validIsoDate(v) :
         SORTS.has(v) &&
           (v !== "first_air_date.desc" || parts[1] === "tv") &&
           (v !== "primary_release_date.desc" || parts[1] === "movie");
