@@ -53,7 +53,7 @@ export function validateCatalogShelves(input) {
   }).sort((a,b)=>a.order-b.order||a.id.localeCompare(b.id));
 }
 /** Compile validated metadata shelves to a strictly allowlisted TMDb query.
- * Draft language/year filters are omitted until the metadata relay is released.
+ * Enabled language/year filters are rejected until the metadata relay supports them.
  */
 export function compileCatalogShelf(shelf) {
   const [item]=validateCatalogShelves([shelf]);
