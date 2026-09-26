@@ -76,6 +76,9 @@
 - [x] 26.09.2026: SHA-eslesmeli bridge kaynak kodu ve 11 senaryonun yerel transkripsiyonu, test-only Android/adapter bagimliliklariyla JVM'de 11/11 gecti; tam Android bagimliliklariyla gercek repo suite henuz acik.
 - [x] 26.09.2026: Yerelde 24/24 Node (bridge wiring 5, policy 12, fixture seed 2, network preflight 5), 7/7 SQLite migration senaryosu gecti. Policy, fixture, network ve Python testleri GitHub kaynaklarindan yerel yeniden olusturuldu; tam repo npm test DEGIL.
 - [x] 26.09.2026: Network preflight yalniz kanonik HTTPS authority, query/fragment olmayan URL, gecerli DNS label ve her hop yeniden DNS kontrolunu kabul ediyor; yeni negatif testler eklendi (8bdb3b82, 27f15e6d, 15d31fd4, f90e8d97, eadb295b, 5fec564c). IP-pinned gercek tasima henuz YOK.
+- [x] 26.09.2026: Yereldeki secilmis Node paketi 32/32'ye ulasti (lease 4 eklendi); Python SQLite migration paketi 7/7. Kaynaklari GitHub'dan yeniden olusturulmus yerel kopyalardir; SHA-eslesmeli tam depo npm test sonucu DEGIL.
+- [x] 26.09.2026: Yeniden olusturulmus policy+scheduler, fixture SQL ve gercek bellek ici SQLite migration tetikleyicileriyle 30 kurgusal kaynak 8x15dk cevrimdisi simule edildi: 59 probe, 89 audit, rev89, 29 healthy, 1 admin hold, 2 domain move, 0 lease ve ayni tick tekrarinda 0 yeni yazim. Gercek Worker/workerd/Wrangler D1 testi DEGIL.
+- [x] 26.09.2026: Scheduler unknown status, kesirli/negatif/sonsuz due saati ve bozuk incident son-kontrol zamanini fail-closed reddediyor; yeni regresyon eklendi (c8248a2c, f13720cb). Yerel 4/4 scheduler gecti.
 - [ ] Genisletilmis 68/68 Kotlin izin testi ve 11/11 bridge JVM testini gercek v6 checkout'unda calistirip dogrula. Node wiring 5/5, onceki SHA-eslesmeli yerel dosyalarda gecti.
 - [x] Kullanici acik kaynak-bazli onayi ve hak sahibi delili gerektiren docs/SOURCE-RIGHTS-REVIEW-v6.md olusturuldu.
 - [ ] Gercek kaynagin izin kapsami, kanit referansi, rate limit, bolge ve yenileme tarihini tek tek onaylat.
