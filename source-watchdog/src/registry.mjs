@@ -41,6 +41,12 @@ function runIdText(runId) {
   return runId;
 }
 
+function validApprovalReference(value) {
+  return typeof value === "string" && value.length >= 8 && value.length <= 160 &&
+    /^[A-Za-z0-9_-]+(?:\/[A-Za-z0-9_.-]+)*$/.test(value) &&
+    value.split("/").every(part => part !== "." && part !== "..");
+}
+
 function requireApprovedConfig(input) {
   const config = validateSource(input);
   if (typeof config.integrationApproved !== "boolean" ||
@@ -62,8 +68,7 @@ function requireApprovedConfig(input) {
     requiredChecks: [...config.requiredChecks],
   };
   if (config.approvalRef != null) {
-    if (typeof config.approvalRef !== "string" ||
-        !/^[a-zA-Z0-9_./:-]{8,160}$/.test(config.approvalRef)) {
+    if (!validApprovalReference(config.approvalRef)) {
       throw new Error("invalid_approval_reference");
     }
     clean.approvalRef = config.approvalRef;
@@ -228,8 +233,7 @@ export async function setIntegrationApproval(db, id, approved, evidenceRef, acto
   actorName(actor, "admin");
   clock(now);
   if (typeof approved !== "boolean" ||
-      typeof evidenceRef !== "string" ||
-      !/^[a-zA-Z0-9_./:-]{8,160}$/.test(evidenceRef)) {
+      !validApprovalReference(evidenceRef)) {
     throw new Error("invalid_approval_evidence");
   }
   const previous = await getSource(db, id);
