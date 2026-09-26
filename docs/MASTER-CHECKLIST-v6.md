@@ -322,3 +322,6 @@ MFA'li admin pilotu. Gercek v5/main ve canli Worker degismez.
 
 ## 26.09.2026 — SHA eşleşmeli IMDb/OMDb puan kontratı
 - [x] Güncel `worker/src/ratings-enrichment.mjs` SHA `102ccc3594fef12a54c59084256554a9d1753a72` ve gerçek `worker/test/ratings-enrichment.test.mjs` SHA `d6e0587737ad5455db7169816c1e38eb99d57b8b` birebir yerel kopyalarla **3/3 Node testi geçti**. Canlı OMDb anahtarı veya upstream isteği yok.
+
+## 26.09.2026 — SHA eşleşmeli Worker JSON byte limiti
+- [x] Güncel `bounded-response.mjs` SHA `c9179f87fb40a7ab2a1839b2d333e885a29dfb9c` ve gerçek `bounded-response.test.mjs` SHA `cbe9479bda633225e5476cb501ecf9e72328342b` birebir yerel kopyalarla **6/6 Node testi geçti**. IMDb kontratıyla birleşik Worker seçilmiş testleri **9/9**.
