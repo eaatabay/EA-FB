@@ -2,6 +2,7 @@ import { commitProbe, getPrivateRegistry, getSource, RegistryConflict } from "./
 import { dueSources, incidentEligible } from "./scheduler.mjs";
 import { claimProbeLease, releaseProbeLease } from "./lease.mjs";
 import { HEALTH } from "./policy.mjs";
+import { validAdapterProbe } from "./adapter-contract.mjs";
 
 function checkAdapters(adapters) {
   if (!(adapters instanceof Map)) throw new Error("adapter_map_required");
@@ -12,23 +13,6 @@ function checkAdapters(adapters) {
 }
 
 const TIMEOUT = Symbol("probe_timeout");
-
-// A parser that returns an incomplete object is not evidence that the
-// publisher is down. Escalate schema drift for human review immediately.
-function validAdapterProbe(probe, config) {
-  if (!probe || typeof probe !== "object" || Array.isArray(probe) ||
-      "runnerFailure" in probe ||
-      typeof probe.reached !== "boolean" ||
-      typeof probe.finalUrl !== "string" ||
-      typeof probe.identityVerified !== "boolean" ||
-      (probe.structuralChange !== undefined &&
-       typeof probe.structuralChange !== "boolean") ||
-      !probe.checks || typeof probe.checks !== "object" ||
-      Array.isArray(probe.checks)) return false;
-  return config.requiredChecks.every(check => check === "reachability" ||
-    typeof probe.checks[check] === "boolean");
-}
-
 
 async function withTimeout(task, timeoutMs) {
   if (!Number.isSafeInteger(timeoutMs) || timeoutMs < 500 || timeoutMs > 60000) {
