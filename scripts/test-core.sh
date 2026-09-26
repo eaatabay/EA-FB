@@ -71,7 +71,7 @@ kotlinc "$DOMAIN" EA-FB/src/main/kotlin/com/eafb/CatalogSortPolicy.kt \
   core-tests/CatalogSortPolicyTest.kt -include-runtime -d "$TMP/catalog-sort.jar"
 java -jar "$TMP/catalog-sort.jar"
 # En Yeni: reject future/invalid premieres, including popular fallback.
-kotlinc EA-FB/src/main/kotlin/com/eafb/CatalogReleasePolicy.kt \\
+kotlinc EA-FB/src/main/kotlin/com/eafb/CatalogReleasePolicy.kt \
   core-tests/CatalogReleasePolicyTest.kt -include-runtime -d "$TMP/catalog-release.jar"
 java -jar "$TMP/catalog-release.jar"
 # Pin the public metadata relay; reject remotely configured unreviewed origins.
