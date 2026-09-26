@@ -28,7 +28,7 @@ function response(body, status = 200) {
 function snapshotModeEnabled(env) {
   return env?.WATCHDOG_MODE === "production" &&
     env?.WATCHDOG_SNAPSHOT_ENABLED === "true" &&
-    env?.WATCHDOG_FIXTURE_ENABLED !== "true";
+    env?.WATCHDOG_FIXTURE_ENABLED === "false";
 }
 
 function fixtureModeEnabled(env) {
