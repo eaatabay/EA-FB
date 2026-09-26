@@ -313,3 +313,6 @@ MFA'li admin pilotu. Gercek v5/main ve canli Worker degismez.
 
 ## 26.09.2026 — SHA eşleşmeli HTTPS transport tam JVM testi
 - [x] Güncel `WatchdogHttpsTransport.kt` SHA `3ddfc39500300ead3e685ef3b212e05296167c99` ve `WatchdogHttpsTransportTest.kt` SHA `020e69ef6f9e86ce144c0cf2a52e5f801ce6aba5` birebir yerel kopyalarla **9/9 JVM test geçti**. Gerçek HTTPS bağlantısı yok; sahte HttpsURLConnection kullanıldı.
+
+## 26.09.2026 — SHA eşleşmeli scheduler regresyonu
+- [x] Güncel `scheduler.mjs` SHA `3c6e37ad2d30f146445b654f2435dc6d9af07d89` ve `scheduler.test.mjs` SHA `f206af9250f5b3f67387230d77d52e5f8d6be729` birebir yerel kopyalarla **5/5 Node testi geçti**; HEALTH enum test-only sabit, D1/runner entegrasyonu değil.
