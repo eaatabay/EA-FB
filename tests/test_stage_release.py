@@ -114,6 +114,23 @@ class StageReleaseTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "Oversized"):
             module.stage(self.root)
 
+    def test_reject_traversal_directory_zip_member(self):
+        path = self.make_archive()
+        with zipfile.ZipFile(path, "a") as z:
+            z.writestr("../escaped/", "")
+        with self.assertRaisesRegex(ValueError, "Unsafe"):
+            module.stage(self.root)
+
+    def test_reject_embedded_zip_symlink(self):
+        path = self.make_archive()
+        info = zipfile.ZipInfo("linked-file")
+        info.create_system = 3
+        info.external_attr = (0o120777 << 16)
+        with zipfile.ZipFile(path, "a") as z:
+            z.writestr(info, "../../outside")
+        with self.assertRaisesRegex(ValueError, "Symlink member"):
+            module.stage(self.root)
+
     def test_reject_symlinked_dist_directory(self):
         self.make_archive()
         external = self.root / "external-dist"
