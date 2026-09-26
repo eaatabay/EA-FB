@@ -393,3 +393,38 @@ test("a broken stream cancel cannot turn oversized TMDb data into another error"
   assert.equal(res.status,502);
   assert.deepEqual(await res.json(),{error:"catalog_response_too_large"});
 });
+
+test("TMDb primitive and array JSON never become successful catalog responses",async()=>{
+  const {env,ctx}=setup();
+  for(const value of ["null","[]","42","true","\"a string\""]){
+    globalThis.fetch=async()=>new Response(value,{
+      headers:{"content-type":"application/json"},
+    });
+    const res=await gateway.fetch(new Request(
+      "https://example.workers.dev/v1/movie/123"),env,ctx);
+    assert.equal(res.status,502,value);
+    assert.deepEqual(await res.json(),{error:"invalid_catalog_response"});
+  }
+});
+
+test("upstream cannot forge reserved IMDb rating or mismatch requested TMDb ID",async()=>{
+  const {env,ctx}=setup();
+  globalThis.fetch=async()=>new Response(JSON.stringify({
+    id:123,vote_average:8.2,vote_count:100,
+    ea_fb_ratings:{imdb:10,source:"forged upstream"},
+    external_ids:{imdb_id:"tt14688458"},
+  }),{headers:{"content-type":"application/json"}});
+  const req=new Request("https://example.workers.dev/v1/movie/123?append_to_response=external_ids");
+  const safe=await gateway.fetch(req,env,ctx);
+  assert.equal(safe.status,200);
+  assert.equal((await safe.json()).ea_fb_ratings,undefined);
+  env.OMDB_API_KEY="SERVER_ONLY_TEST_KEY";
+  globalThis.fetch=async url=>url.startsWith("https://api.themoviedb.org/")
+    ?new Response(JSON.stringify({id:999,external_ids:{imdb_id:"tt14688458"}}),
+      {headers:{"content-type":"application/json"}})
+    :new Response(JSON.stringify({Response:"True",imdbID:"tt14688458",
+      imdbRating:"9.9"}),{headers:{"content-type":"application/json"}});
+  const mismatch=await gateway.fetch(req,env,ctx);
+  assert.equal(mismatch.status,502);
+  assert.deepEqual(await mismatch.json(),{error:"invalid_catalog_response"});
+});
