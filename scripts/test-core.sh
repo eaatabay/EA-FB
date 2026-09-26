@@ -20,7 +20,8 @@ if ! command -v kotlinc >/dev/null 2>&1; then
     curl --fail --silent --show-error --location --retry 2 \
       "https://github.com/JetBrains/kotlin/releases/download/v$KOTLIN_VERSION/kotlin-compiler-$KOTLIN_VERSION.zip" \
       -o "$TMP/kotlin-compiler.zip"
-    printf '%s  %s\n' \
+    printf '%s  %s
+' \
       "ba1b9e6eb6ddc3275079224f2e9ea4a2b02eef7d59ce2d38404f04b22613c20a" \
       "$TMP/kotlin-compiler.zip" | sha256sum -c -
     mkdir -p "$TMP/compiler-unpack"
@@ -69,7 +70,11 @@ java -jar "$TMP/catalog-cards.jar"
 kotlinc "$DOMAIN" EA-FB/src/main/kotlin/com/eafb/CatalogSortPolicy.kt \
   core-tests/CatalogSortPolicyTest.kt -include-runtime -d "$TMP/catalog-sort.jar"
 java -jar "$TMP/catalog-sort.jar"
-# En Yeni: reject future/invalid premieres, including popular fallback.\nkotlinc EA-FB/src/main/kotlin/com/eafb/CatalogReleasePolicy.kt \\\n  core-tests/CatalogReleasePolicyTest.kt -include-runtime -d "$TMP/catalog-release.jar"\njava -jar "$TMP/catalog-release.jar"\n# Pin the public metadata relay; reject remotely configured unreviewed origins.
+# En Yeni: reject future/invalid premieres, including popular fallback.
+kotlinc EA-FB/src/main/kotlin/com/eafb/CatalogReleasePolicy.kt \\
+  core-tests/CatalogReleasePolicyTest.kt -include-runtime -d "$TMP/catalog-release.jar"
+java -jar "$TMP/catalog-release.jar"
+# Pin the public metadata relay; reject remotely configured unreviewed origins.
 kotlinc EA-FB/src/main/kotlin/com/eafb/CatalogRelayPolicy.kt \
   core-tests/CatalogRelayPolicyTest.kt -include-runtime -d "$TMP/catalog-relay.jar"
 java -jar "$TMP/catalog-relay.jar"
