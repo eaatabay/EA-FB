@@ -136,6 +136,8 @@ test("discovery sort validates film, series, and rated-list safeguards", async (
     "/v1/discover/tv?primary_release_date.lte=2026-09-26",
     "/v1/discover/movie?first_air_date.lte=2026-09-26",
     "/v1/discover/movie?primary_release_date.lte=not-a-date",
+    "/v1/discover/movie?primary_release_date.lte=2026-02-31",
+    "/v1/discover/tv?first_air_date.lte=2026-13-01",
   ]) {
     const res = await gateway.fetch(new Request("https://example.workers.dev" + path), env, ctx);
     assert.equal(res.status, 400, path);
