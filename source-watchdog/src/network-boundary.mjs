@@ -4,7 +4,7 @@
  * MUST separately pin/validate the actual remote IP (including redirects)
  * before enabling live probes; DNS pre-flight alone cannot stop rebinding.
  */
-const HOST = /^(?=.{4,253}$)[a-z0-9-]+(?:\.[a-z0-9-]+)+$/;
+const HOST = /^(?=.{4,253}$)[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)+$/;
 const MAX_HOPS = 3;
 
 function normalizedTarget(value) {
@@ -12,8 +12,10 @@ function normalizedTarget(value) {
   try {
     const url = new URL(value);
     if (url.protocol !== 'https:' || url.username || url.password ||
-        url.port || url.hash || url.hostname.includes(':') ||
-        !HOST.test(url.hostname) || url.hostname.endsWith('.local') ||
+        url.port || url.search || url.hash || url.hostname.includes(':') ||
+        (!HOST.test(url.hostname) ||
+         url.hostname.split('.').some(label => label.length > 63)) ||
+        url.hostname.endsWith('.local') ||
         url.hostname.endsWith('.internal') ||
         url.hostname.endsWith('.localhost') ||
         url.hostname.endsWith('.invalid') ||
@@ -52,7 +54,8 @@ export async function preflightTarget(source, targetUrl, resolveAddresses) {
   const hosts = source?.verifiedDomains;
   if (!Array.isArray(hosts) || hosts.length < 1 || hosts.length > 12 ||
       !hosts.every(x => typeof x === 'string' && x === x.toLowerCase() &&
-        HOST.test(x) && !/^(?:\d+\.){3}\d+$/.test(x))) {
+        HOST.test(x) && x.split('.').every(label => label.length <= 63) &&
+        !/^(?:\d+\.){3}\d+$/.test(x))) {
     return {allowed:false, reason:'invalid_host_allowlist'};
   }
   if (!hosts.includes(url.hostname)) {
