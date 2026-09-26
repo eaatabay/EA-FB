@@ -10,6 +10,13 @@ object CatalogCardPolicy {
             path != null && hasPoster(path) && !path.startsWith("//")
         }
 
+    /** Never borrow another franchise installment's poster. */
+    fun collectionArtwork(
+        partId: Int, ownId: Int, poster: String?, backdrop: String?,
+        selectedArtwork: String?
+    ): String? = bestArtwork(poster, backdrop)
+        ?: if (partId == ownId) bestArtwork(selectedArtwork, null) else null
+
     /** TMDb total_pages is authoritative; infer only if omitted. */
     fun hasNext(page: Int, rawResultCount: Int, totalPages: Int): Boolean {
         if (page !in 1..20 || rawResultCount <= 0) return false
