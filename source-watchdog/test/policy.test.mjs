@@ -171,7 +171,7 @@ test("corrupt persisted state cannot be silently healed by a successful probe",(
     {lastCheckedAt:Infinity},{currentUrl:"https://new.example.org"},
     {lastKnownGoodUrl:"https://other.example.org"},
     {consecutiveFailures:1_000_001},{consecutiveSuccesses:3},
-    {nextCheckAt:"tomorrow"},{nextCheckAt:-1},
+    {nextCheckAt:"tomorrow"},{nextCheckAt:-1},{nextCheckAt:null},
   ])assert.throws(()=>applyProbe(source,{...baseline,...mutation},good(),HOUR),
     /invalid_watchdog_state/,JSON.stringify(mutation));
   assert.throws(()=>applyProbe(source,baseline,good(),
