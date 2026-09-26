@@ -17,6 +17,11 @@ test("rejects unapproved playback fields, malformed filters, duplicate IDs",()=>
     [{...base,authorized:true}],
     [{...base,providerId:"350"}],
     [{...base,genres:"18;DROP"}],
+    [{...base,genres:18}],
+    [{...base,genres:true}],
+    [{...base,genres:[]}],
+    [{...base,providerId:350,region:"TR",genres:undefined}],
+    [{...base,providerId:"350",region:12,genres:undefined}],
     [{...base,region:"TR"}],
     [{...base},{...base}],
     [{...base,title:"<script>"}],
@@ -132,4 +137,18 @@ test("add and replace cannot secretly reorder sparse catalog drafts",()=>{
     shelf:{...draft.shelves[1],title:"Yeni Arşiv",order:0}});
   assert.deepEqual(draft.shelves.map(x=>x.id),["new-turkish-tv","archive-film"]);
   assert.deepEqual(draft.shelves.map(x=>x.order),[0,1]);
+});
+
+test("CAS refuses forged draft envelopes before any edit",()=>{
+  const draft=buildCatalogDraft([base],0);
+  for (const forged of [
+    {...draft,playbackGrant:true},
+    {...draft,version:2},
+    {...draft,status:"published"},
+    {...draft,revision:"0"},
+    {...draft,shelves:"not-an-array"},
+    Object.assign([],draft)
+  ]) assert.throws(()=>editCatalogDraft(forged,0,{
+    action:"toggle",id:base.id,enabled:false
+  }));
 });
