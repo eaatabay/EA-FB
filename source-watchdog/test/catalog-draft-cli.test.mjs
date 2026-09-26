@@ -23,6 +23,12 @@ test("local draft editor atomically applies CAS and renders safe preview",async(
     await assert.rejects(applyLocalCatalogEdit(file,{expectedRevision:1,
       operation:{action:"remove",id:"custom-tv"}}),{code:"EEXIST"});
     await rm(file+".lock");
+    const original=JSON.parse(await readFile(file,"utf8"));
+    await writeFile(file,JSON.stringify({...original,playbackGrant:true}));
+    await assert.rejects(previewLocalCatalogDraft(file),/not_an_unpublished_draft/);
+    await assert.rejects(applyLocalCatalogEdit(file,{expectedRevision:1,
+      operation:{action:"remove",id:"custom-tv"}}),/invalid_draft_envelope/);
+    await writeFile(file,JSON.stringify(original));
     await assert.rejects(applyLocalCatalogEdit(join(dir,"wrong.json"),{}),/draft_filename_required/);
   } finally {await rm(dir,{recursive:true,force:true});}
 });
