@@ -141,3 +141,9 @@ The compiled rights gate now requires an exact canonical evidence reference `rig
 ## 26 Sep 2026: review-lifetime boundary
 
 The compiled permit gate now explicitly requires a positive lifetime of at most 366 days. Two new committed regressions cover a far-future validity interval and the exact 366-day accepted boundary; the checked-in Kotlin rights suite contains **68** cases. These two cases have not yet run as part of the exact repository JVM suite. The SHA-matched independent **47/47** run predates this change and must not be presented as verification of the new guard. The production rights list remains empty.
+
+## 26 Sep 2026: offline preflight, scheduler and fixture validation
+
+An isolated local reconstruction of selected GitHub source/test modules passed **32/32 Node tests** (bridge wiring 5, policy 12, fixture seed 2, network preflight 5, scheduler 4, D1 lease 4), plus **7/7 reconstructed SQLite migration tests**. The 68 rights-policy and 11 bridge cases also passed in local JVM harnesses using test-only snapshot/Android/adapter dependencies. The new rights-record identity rule initially invalidated the existing distinct-ID test fixture; its evidence reference was corrected in commit `cfea4dc4` and the reconstructed 68-case run then passed.
+
+The preflight now rejects query-bearing URLs (including empty delimiters), fragments, noncanonical literal HTTPS authorities (including uppercase, percent-encoded hostnames and explicit :443), invalid DNS-label boundaries and oversized labels. Scheduler now rejects unknown health states and malformed due/incident timestamps. New committed regressions cover these boundaries. All these runs are **selected isolated tests**, not the full exact repository `npm test` / `scripts/test-core.sh` / real Wrangler workerd+D1 release gate. No live network source, Actions or remote D1 was used.
