@@ -276,3 +276,7 @@ MFA'li admin pilotu. Gercek v5/main ve canli Worker degismez.
 ## 26.09.2026 — Yönetici sağlık paneli tanı kodları
 - [x] Dashboard yalnız önceden tanımlı `adapter_error` ve `probe_timeout` kodlarını da gösteriyor; ham adapter istisnaları gizli kalıyor.
 - [x] İki izinli kod ve rastgele gizli hata metni için Node regresyon testi eklendi; izole whitelist kontrolü 4/4 geçti.
+
+## 26.09.2026 — SHA eşleşmeli staging tam testi
+- [x] GitHub'daki güncel `scripts/stage-release.py` blob SHA `3fc32b111b821ce93a5e01ae6291099e9a161064` ve `tests/test_stage_release.py` blob SHA `c5ac2ee169ac876cbaffd815f13315851d9a75b1` yerelde **birebir** yeniden oluşturulup SHA karşılaştırıldı.
+- [x] Aynı iki dosyayla gerçek Python unittest staging paketi **20/20 geçti** (derlenmiş gerçek Android .cs3 yerine test ZIP fixture'ları kullanıldı).
