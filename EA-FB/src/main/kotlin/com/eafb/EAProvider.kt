@@ -196,11 +196,18 @@ class EAProvider : MainAPI() {
             category.kind,
             EASettings.sortMode()
         )
+        val sortMode = EASettings.sortMode()
         fun cards(response: JSONObject?): List<SearchResponse> {
             val rows = response?.optJSONArray("results") ?: return emptyList()
-            // No blank poster cards, regardless of the selected sort.
+            // No blank posters or future premieres in the "En Yeni" mode,
+            // including when a regional platform needs a popular fallback.
             return (0 until rows.length()).mapNotNull { i ->
-                rows.optJSONObject(i)?.let { newItem(it, category.kind) }
+                val item = rows.optJSONObject(i) ?: return@mapNotNull null
+                if (sortMode == CatalogSortMode.NEWEST &&
+                    !CatalogReleasePolicy.released(item.optString(
+                        if (category.kind == MediaKind.SERIES) "first_air_date" else "release_date"
+                    ), System.currentTimeMillis())) return@mapNotNull null
+                newItem(item, category.kind)
             }.distinctBy { it.url }
         }
         val response = getJson(route, page)
