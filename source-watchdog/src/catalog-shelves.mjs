@@ -4,6 +4,7 @@
  */
 const ID=/^[a-z][a-z0-9-]{2,47}$/;
 const REGION=/^[A-Z]{2}$/;
+const LANGUAGE=/^[a-z]{2}$/;
 const GENRES=/^\d{1,4}(,\d{1,4}){0,4}$/;
 const PROVIDER=/^\d{1,6}$/;
 const MAX=40;
@@ -12,7 +13,7 @@ export function validateCatalogShelves(input) {
   const seen=new Set();
   return input.map((item,index)=>{
     if (!item || typeof item!=="object" || Array.isArray(item) ||
-      Object.keys(item).some(k=>!["id","title","kind","providerId","region","genres","enabled","order"].includes(k)) ||
+      Object.keys(item).some(k=>!["id","title","kind","providerId","region","genres","enabled","order","language"].includes(k)) ||
       !ID.test(item.id) || seen.has(item.id) ||
       typeof item.title!=="string" || item.title.trim().length<2 ||
       item.title.length>64 || /[<>]/.test(item.title) ||
@@ -20,6 +21,9 @@ export function validateCatalogShelves(input) {
       typeof item.enabled!=="boolean" ||
       !Number.isSafeInteger(item.order) || item.order<0 || item.order>=MAX) {
       throw Error("invalid_catalog_shelf");
+    }
+    if (item.language!==undefined && (typeof item.language!=="string" || !LANGUAGE.test(item.language))) {
+      throw Error("invalid_catalog_language");
     }
     const provider=item.providerId;
     const genres=item.genres;
@@ -33,6 +37,7 @@ export function validateCatalogShelves(input) {
       id:item.id,title:item.title.trim(),kind:item.kind,
       enabled:item.enabled,order:item.order,
       ...(provider!==undefined?{providerId:String(provider),region:item.region}:{genres}),
+      ...(item.language!==undefined?{language:item.language}:{}),
     });
   }).sort((a,b)=>a.order-b.order||a.id.localeCompare(b.id));
 }
