@@ -159,3 +159,17 @@ test("JWKS fetch deadline covers response headers and clears on success",async()
     await assert.rejects(loadJwks(TEAM,0),/invalid_access_deadline/);
   }finally{globalThis.fetch=originalFetch;}
 });
+
+
+test("malformed JWKS body aborts transport without leaking response bytes",async()=>{
+ const originalFetch=globalThis.fetch;
+ let aborted=false;
+ try {
+  globalThis.fetch=async(_url,options)=>{
+   options.signal.addEventListener("abort",()=>{aborted=true;},{once:true});
+   return new Response(Uint8Array.of(0xff));
+  };
+  await assert.rejects(loadJwks(TEAM,1000));
+  assert.equal(aborted,true);
+ }finally{globalThis.fetch=originalFetch;}
+});
