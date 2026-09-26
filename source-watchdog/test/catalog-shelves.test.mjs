@@ -39,6 +39,16 @@ test("rejects unapproved playback fields, malformed filters, duplicate IDs",()=>
   ]) assert.throws(()=>validateCatalogShelves(bad));
 });
 
+test("valid built-in provider number and reserved Apple ID remain distinct",()=>{
+  const custom={id:"apple-archive",title:"Apple Arşivi",kind:"movie",
+    providerId:350,region:"TR",enabled:true,order:0};
+  const compiled=compileCatalogShelf(custom);
+  assert.equal(compiled.path,
+    "/discover/movie?with_watch_providers=350&watch_region=TR&with_watch_monetization_types=flatrate");
+  assert.throws(()=>validateCatalogShelves([{...custom,id:"apple-movie"}]),
+    /invalid_catalog_shelf/);
+});
+
 test("public metadata projection fails closed on enabled unsupported filters",()=>{
   const safe={...base,language:undefined,yearFrom:undefined,yearTo:undefined};
   assert.throws(()=>publicCatalogShelves([base]),/unsupported_catalog_filter/);
