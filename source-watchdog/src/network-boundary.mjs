@@ -15,7 +15,13 @@ function normalizedTarget(value) {
     // percent-encoded hostnames and explicit default :443 ports.
     const authority = value.startsWith('https://')
       ? value.slice('https://'.length).split(/[/?#]/, 1)[0] : '';
-    if (authority !== url.hostname || url.protocol !== 'https:' || url.username || url.password ||
+    const rawPath = value.slice('https://'.length + authority.length).split(/[?#]/, 1)[0];
+    // The URL parser silently removes dot segments and decodes aliases. The
+    // transport must never probe a different path than the reviewed base URL.
+    if (rawPath.includes('%') || rawPath.includes('\\\\') ||
+        rawPath.includes('//') ||
+        rawPath.split('/').some(segment => segment === '.' || segment === '..') ||
+        authority !== url.hostname || url.protocol !== 'https:' || url.username || url.password ||
         // URL.search/hash are empty for bare '?' and '#'; reject those too.
         value.includes('?') || value.includes('#') ||
         url.port || url.search || url.hash || url.hostname.includes(':') ||
