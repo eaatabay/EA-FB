@@ -292,3 +292,28 @@ test("nonboolean parser fields cannot masquerade as a verified source",
       HEALTH.ADMIN_REQUIRED);
   }finally{db.close();}
 });
+
+test("hostile adapter Proxy traps are audited as structural admin holds",
+  {skip: !DatabaseSync},async()=>{
+  const db=new SQLiteD1();
+  try {
+    await registerSource(db,source("fixture-proxy"),"admin:alice",0);
+    let calls=0;
+    const adapters=new Map([["fixture-proxy",{id:"fixture-proxy",
+      async probe(){calls++;return new Proxy(good(),{
+        ownKeys(){throw Error("SECRET_PROXY_TRAP");},
+      });},
+    }]]);
+    const result=await runDueChecks({db,adapters,now:0});
+    assert.equal(result[0].status,"anomaly_held");
+    const state=(await getSource(db,"fixture-proxy")).state;
+    assert.equal(state.status,HEALTH.ADMIN_REQUIRED);
+    assert.equal(state.lastFailure,"structural_change");
+    assert.equal(state.consecutiveFailures,0);
+    assert.equal((await runDueChecks({db,adapters,now:HOUR})).length,0);
+    assert.equal(calls,1);
+    assert.equal((await db.prepare(
+      "SELECT COUNT(*) AS n FROM source_probe_runs WHERE source_id=?")
+      .bind("fixture-proxy").first()).n,1);
+  }finally{db.close();}
+});
