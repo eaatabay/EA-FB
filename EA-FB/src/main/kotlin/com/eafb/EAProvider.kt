@@ -8,6 +8,7 @@ import com.lagradost.cloudstream3.Score
 import com.lagradost.cloudstream3.ShowStatus
 import com.lagradost.cloudstream3.addDate
 import com.lagradost.cloudstream3.newEpisode
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -76,7 +77,9 @@ class EAProvider : MainAPI() {
 
     /** Repository-curated sources: "authorized" is a manual record, not proof of distribution rights. */
     private suspend fun liveChannels(): List<Channel> {
-        val json = runCatching { JSONObject(app.get(channelsUrl).text) }.getOrNull() ?: return emptyList()
+        val json = try { JSONObject(app.get(channelsUrl).text) }
+            catch (cancelled: CancellationException) { throw cancelled }
+            catch (_: Exception) { return emptyList() }
         val rows = json.optJSONArray("channels") ?: return emptyList()
         val entries = (0 until rows.length()).flatMap { i ->
             val channel = rows.optJSONObject(i) ?: return@flatMap emptyList()
@@ -110,10 +113,12 @@ class EAProvider : MainAPI() {
         val now = System.currentTimeMillis()
         val cached = relayBase
         if (!cached.isNullOrBlank() && now - relayCheckedAt < 3_600_000L) return cached
-        val config = runCatching { JSONObject(app.get(catalogConfigUrl).text) }.getOrElse {
-            if (!cached.isNullOrBlank()) return cached
-            error("EA-FB katalog servisi ayarına ulaşılamıyor. İnternet bağlantısını kontrol et.")
-        }
+        val config = try { JSONObject(app.get(catalogConfigUrl).text) }
+            catch (cancelled: CancellationException) { throw cancelled }
+            catch (_: Exception) {
+                if (!cached.isNullOrBlank()) return cached
+                error("EA-FB katalog servisi ayarına ulaşılamıyor. İnternet bağlantısını kontrol et.")
+            }
         val url = config.optString("apiBaseUrl").trim().trimEnd('/')
         if (!url.startsWith("https://") || url.length > 200 ||
             url.contains("@") || url.contains("?") || url.contains("#") || url.contains(" ")) {
@@ -129,7 +134,9 @@ class EAProvider : MainAPI() {
         val join = if ('?' in path) '&' else '?'
         val url = "$relay/v1$path${join}language=$language${if (page != null) "&page=$page" else ""}"
         // No TMDb credential or Authorization header ever reaches the client.
-        return runCatching { JSONObject(app.get(url).text) }.getOrNull()
+        return try { JSONObject(app.get(url).text) }
+            catch (cancelled: CancellationException) { throw cancelled }
+            catch (_: Exception) { null }
     }
     private fun mediaKind(item: JSONObject, fallback: MediaKind): MediaKind =
         if (item.optString("media_type") == "tv" || (item.has("name") && !item.has("title"))) MediaKind.SERIES
