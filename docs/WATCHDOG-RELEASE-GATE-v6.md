@@ -120,3 +120,5 @@ uçtan uca playback testi **ayrı aşamalardır**.
 
 ## Rights gate validation status (26 Sep 2026)
 The independent Kotlin rights suite and bridge JVM suite are included in `scripts/test-core.sh`; new offline rights regressions and a Node bridge-wiring check have been committed on the v6 feature branch but not rerun here. These checks do not substitute for the outstanding real LOCAL Wrangler+D1/Cron smoke, Android Gradle packaging or Mi Box verification. No Actions, remote D1 or live-source requests were used.
+
+**26.09 hak/izin test durumu:** `scripts/test-core.sh` izin politikasi ve kapali bridge JVM testlerini icerir. Kanit referansi yol normallestirme duzeltmesiyle Kotlin izin dosyasi 57 senaryoya ulasti. Yeni 34 senaryo henuz calistirilmadi; basari sonucu ancak yerel JVM cikti loguyla isaretlenecek. Gercek yerel Wrangler+D1/Cron kapisi ayri ve acik kalir.
