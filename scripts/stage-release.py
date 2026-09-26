@@ -19,8 +19,8 @@ def stage(root=ROOT):
     if not isinstance(entries, list) or len(entries) != 1:
         raise ValueError("EA-FB must contain exactly one CloudStream plugin")
     entry = entries[0]
-    if not isinstance(entry, dict) or entry.get("internalName") != "EA-FB" or entry.get("version") is None:
-        raise ValueError("Unexpected or incomplete Gradle plugin metadata")
+    if not isinstance(entry, dict) or entry.get("internalName") != "EA-FB" or entry.get("version") != 6:
+        raise ValueError("Expected EA-FB v6 Gradle plugin metadata")
     binaries = list((root / "EA-FB" / "build").glob("*.cs3"))
     if len(binaries) != 1:
         raise ValueError(f"Expected exactly one compiled .cs3, found {len(binaries)}")
