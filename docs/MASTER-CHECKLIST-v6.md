@@ -56,6 +56,8 @@
 - [x] 26.09.2026: Hak/izin kapisinda buyuk harfli noncanonical signed URL authority ve tekrarlanan signed kaynak kimligi icin ek fail-closed kontrol ve 2 regresyon eklendi (99b10dc0, a6fcf3e6); test dosyasi 59 senaryo, yeni ikisi henuz calistirilmadi.
 - [x] 26.09.2026: URL ve izin kapsamindaki /./ yol segmenti engellendi; normal dosya adindaki a..b gecerliligi korundu. 3 yeni cevrimdisi test eklendi (0ba861c8, 58dc5b78). Kotlin izin dosyasi 62 senaryo; yeni testler calistirilmadi.
 - [x] 26.09.2026: Node bridge kaynak-baglanti regresyonu scripts/test-core.sh sonuna eklendi; Node yoksa fail-closed durur (1fae33e1). Gercek checkout uzerinde tam betik henuz calistirilmadi.
+- [x] 26.09.2026: MASTER dosyasindaki 3 yanlis literal satir-sonu kacisi duzeltildi (306d6b2b); Kotlin izin politikasindaki derlemeyi bozabilecek literal kacislar onceki 96831b25 commit'inde duzeltildi.
+- [x] 26.09.2026: GitHub'daki guncel Kotlin/bridge/test-runner dosyalarinda 9/9 salt-okunur kaynak kontrolu gecti; izole eski Kotlin kopyasindaki 38/38 test yeniden calistirildi. Bunlar 62/62 tam repo JVM testi degildir.
 - [ ] Genisletilmis 62/62 Kotlin izin testi, 5/5 bridge JVM ve 2/2 Node wiring testini gercek v6 checkout'unda calistirip dogrula.
 - [x] Kullanici acik kaynak-bazli onayi ve hak sahibi delili gerektiren docs/SOURCE-RIGHTS-REVIEW-v6.md olusturuldu.
 - [ ] Gercek kaynagin izin kapsami, kanit referansi, rate limit, bolge ve yenileme tarihini tek tek onaylat.
