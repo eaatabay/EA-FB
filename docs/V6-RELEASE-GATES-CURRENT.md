@@ -22,7 +22,8 @@ descriptions of the hero score or test counts may be superseded.
 - Live stream URL policy: reject literal private/loopback IPs, local
   hostnames, explicit ports, fragments and path traversal; signed HLS query
   parameters remain allowed. This is URL hygiene, **not** DNS/IP pinning
-  or proof of distribution rights. Current channel list is empty.
+  or proof of distribution rights. Current channel list is empty and the
+  public plugin has a compile-time disabled live-delivery gate.
 - Source Watchdog scheduler: mismatched config/state IDs and incomplete
   incident metadata fail closed; legitimate first incident remains eligible.
 - Source Watchdog: no live signing pins, approved source grants or production
@@ -33,9 +34,13 @@ descriptions of the hero score or test counts may be superseded.
 - Kotlin signed refresh: 5/5 smoke checks, including cancellation races.
 - Kotlin failed SharedPreferences commit and second-store guard: 7/7 smoke checks.
 - Kotlin metadata relay pin: 18/18 pure policy checks.
-- Kotlin live URL policy: 23/23 locally reconstructed full policy
-  assertions, including channel merging and private-address rejection.
+- Kotlin live URL policy: 24/24 locally reconstructed full policy
+  assertions, including channel merging, private-address rejection and
+  compiled live-delivery disabled flag.
 - Node relay wiring: 3/3 equivalent static checks.
+- Node live-channel wiring: 3/3 equivalent static checks; compiled gate
+  precedes remote JSON fetch and punctuation-only search cannot match all
+  local demo/live entries.
 - Node scheduler: 6/6 locally reconstructed policy checks, including
   mismatched identity, missing incident timestamps and original priorities.
 These are **not** a claim that the exact complete GitHub checkout or Android
