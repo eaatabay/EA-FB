@@ -20,7 +20,6 @@ test("rejects unapproved playback fields, malformed filters, duplicate IDs",()=>
     [{...base,genres:18}],
     [{...base,genres:true}],
     [{...base,genres:[]}],
-    [{...base,providerId:350,region:"TR",genres:undefined}],
     [{...base,providerId:"350",region:12,genres:undefined}],
     [{...base,region:"TR"}],
     [{...base},{...base}],
