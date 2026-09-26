@@ -14,11 +14,21 @@ data class ApprovedLiveSource(
 /** A repository-controlled list; never automatically import unlicensed third-party playlists. */
 object LiveSourcePolicy {
     fun acceptedUrl(url: String): Boolean = runCatching {
+        if (url.length !in 20..2048 || !url.startsWith("https://")) return false
         val uri = URI(url)
-        uri.scheme.equals("https", ignoreCase = true) &&
-            !uri.host.isNullOrBlank() && uri.userInfo == null &&
-            uri.host.lowercase() !in setOf("localhost", "127.0.0.1", "::1") &&
-            (uri.path.endsWith(".m3u8", true) || uri.path.endsWith(".mp4", true))
+        val host = uri.host?.lowercase() ?: return false
+        val path = uri.rawPath.orEmpty()
+        val publicHostname = host.matches(Regex(
+            "[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)+"
+        )) && host.length <= 253 && host.split('.').all { it.length <= 63 } &&
+            !host.matches(Regex("[0-9]+(?:\\.[0-9]+){3}")) &&
+            listOf(".local", ".localhost", ".internal", ".invalid")
+                .none { host.endsWith(it) }
+        publicHostname && uri.scheme == "https" && uri.userInfo == null &&
+            uri.port == -1 && uri.rawFragment == null &&
+            !path.contains('%') && !path.contains('\\') &&
+            !path.contains("//") && path.split('/').none { it == "." || it == ".." } &&
+            (path.endsWith(".m3u8", true) || path.endsWith(".mp4", true))
     }.getOrDefault(false)
 
     fun channels(entries: List<ApprovedLiveSource>): List<Channel> =
