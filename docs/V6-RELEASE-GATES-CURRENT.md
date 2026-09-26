@@ -32,7 +32,8 @@ descriptions of the hero score or test counts may be superseded.
 ## Verified locally in isolated reconstruction this parkur
 - Kotlin HTTPS transport: 6/6 smoke checks.
 - Kotlin signed refresh: 5/5 smoke checks, including cancellation races.
-- Kotlin failed SharedPreferences commit and second-store guard: 7/7 smoke checks.
+- Kotlin failed SharedPreferences commit, throwing/cancelled commit and
+  second-store guard: 11/11 smoke checks.
 - Kotlin metadata relay pin: 18/18 pure policy checks.
 - Kotlin live URL policy: 24/24 locally reconstructed full policy
   assertions, including channel merging, private-address rejection and
