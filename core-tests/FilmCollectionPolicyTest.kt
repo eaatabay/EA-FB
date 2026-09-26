@@ -34,5 +34,12 @@ fun main() {
     checkCase(FilmCollectionPolicy.chronological(movies + badLeap,2).last().id == 9)
     checkCase(FilmCollectionPolicy.chronological(movies + leap,2).map { it.id } ==
         listOf(1,2,3,11))
-    println("PASS: $count/15 film collection chronology and identity cases")
+    val chronology = FilmCollectionPolicy.chronological(movies,2)
+    checkCase(FilmCollectionPolicy.visibleChronology(chronology,setOf(1,3)).map { it.id } ==
+        listOf(1,3))
+    checkCase(FilmCollectionPolicy.visibleChronology(chronology,setOf(1,2,3),2).map { it.id } ==
+        listOf(1,2))
+    checkCase(FilmCollectionPolicy.visibleChronology(chronology,setOf(99)).isEmpty())
+    checkCase(FilmCollectionPolicy.visibleChronology(chronology,setOf(1),0).isEmpty())
+    println("PASS: $count/19 film collection chronology, identity and visibility cases")
 }
