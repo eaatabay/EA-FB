@@ -280,3 +280,8 @@ MFA'li admin pilotu. Gercek v5/main ve canli Worker degismez.
 ## 26.09.2026 — SHA eşleşmeli staging tam testi
 - [x] GitHub'daki güncel `scripts/stage-release.py` blob SHA `3fc32b111b821ce93a5e01ae6291099e9a161064` ve `tests/test_stage_release.py` blob SHA `c5ac2ee169ac876cbaffd815f13315851d9a75b1` yerelde **birebir** yeniden oluşturulup SHA karşılaştırıldı.
 - [x] Aynı iki dosyayla gerçek Python unittest staging paketi **20/20 geçti** (derlenmiş gerçek Android .cs3 yerine test ZIP fixture'ları kullanıldı).
+
+## 26.09.2026 — SHA eşleşmeli Access JWT/JWKS tam testi
+- [x] Güncel GitHub `source-watchdog/src/admin-auth.mjs` blob SHA `0eeb78ae0dc5b6d1690e9524510d61be6f4f70b4` ve `test/admin-auth.test.mjs` blob SHA `2c2e91f46105ea8fa7e90e96002b90954f14476c` yerelde birebir doğrulandı.
+- [x] **Gerçek kaynak ve gerçek test dosyası** ile Node 22.16.0 Access JWT/JWKS paketi **12/12 geçti**; yeni asılı body, başlık timeout'u ve hatalı UTF-8 abort regresyonları dahil.
+- [ ] Diğer watchdog Node/SQLite dosyalarının ve Wrangler/workerd'ın tam repo testi hâlâ bekliyor.
