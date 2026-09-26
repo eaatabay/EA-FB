@@ -12,6 +12,7 @@ test("v6 settings changes refresh host only on dismissal and never twice",()=>{
 });
 test("newest date filtering never blanks native trending or top-rated rails",()=>{
   assert.match(provider,/sortMode == CatalogSortMode\.NEWEST &&\s*category\.tmdbPath\?\.startsWith\("\/discover\/"\) == true/);
+  assert.match(provider,/CatalogPagePolicy\.extraNewestPages/);
+  assert.match(provider,/CatalogPagePolicy\.allowNextPage/);
   assert.match(provider,/scannedExtraPages/);
-  assert.match(provider,/!usedFallback && !scannedExtraPages/);
 });
