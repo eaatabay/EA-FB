@@ -198,6 +198,19 @@ fun main() {
         evidenceReference="rights/2026/fixture-movie.md"),series,both))
         .any { it.id=="fixture-movie" },
         "canonical reviewed evidence path remains valid")
+    test(only(list=listOf(movie.copy(
+        evidenceReference="rights/2026/fixture-series.md"),series,both)).isEmpty(),
+        "a source cannot borrow a different source's rights record")
+    test(only(list=listOf(movie.copy(
+        evidenceReference="rights/2026/other/fixture-movie.md"),series,both)).isEmpty(),
+        "nested evidence aliases are not canonical")
+    test(only(list=listOf(movie.copy(
+        evidenceReference="rights/year/fixture-movie.md"),series,both)).isEmpty(),
+        "review evidence directory must be a four-digit year")
+    test(only(list=listOf(movie.copy(
+        evidenceReference="rights/2025/fixture-movie.md"),series,both))
+        .any { it.id=="fixture-movie" },
+        "canonical prior-year review remains valid until its recorded expiry")
     test(movieUrl("https://FILMS.example.org/public").none { it.id=="fixture-movie" },
         "noncanonical uppercase signed authority rejected")
     val duplicateSigned=defaultSnapshot.copy(usableSources=
