@@ -26,10 +26,19 @@ def stage(root=ROOT):
     if len(binaries) != 1:
         raise ValueError(f"Expected exactly one compiled .cs3, found {len(binaries)}")
     binary = binaries[0]
+    if binary.is_symlink():
+        raise ValueError("Refusing a symlinked .cs3 build artifact")
     if binary.stat().st_size < 100 or not zipfile.is_zipfile(binary):
         raise ValueError("Invalid or empty .cs3 archive")
     with zipfile.ZipFile(binary) as archive:
-        if not {"classes.dex", "manifest.json"}.issubset(archive.namelist()):
+        members = archive.namelist()
+        if len(members) != len(set(members)):
+            raise ValueError("Duplicate .cs3 ZIP members")
+        if any(name.startswith("/") or "\\" in name or
+               any(part in ("", ".", "..") for part in name.split("/"))
+               for name in members if not name.endswith("/")):
+            raise ValueError("Unsafe .cs3 ZIP member path")
+        if not {"classes.dex", "manifest.json"}.issubset(members):
             raise ValueError("The .cs3 is missing required dex or manifest files")
         corrupt_member = archive.testzip()
         if corrupt_member:
