@@ -30,5 +30,13 @@ fun main() {
     check(CatalogShelfPolicy.categories(emptyList())?.isEmpty() == true)
     check(CatalogShelfPolicy.category(basic.copy(title="İki\nSatır")) == null)
     check(CatalogShelfPolicy.category(platform.copy(providerId=0)) == null)
-    println("PASS: 17/17 catalog shelf route and batch assertions")
+    check(CatalogShelfPolicy.categories(listOf(basic.copy(
+        id="disabled-archive",enabled=false,genres="18;evil"))) == null)
+    check(CatalogShelfPolicy.categories(listOf(basic.copy(
+        id="disabled-archive",enabled=false,title="<script>"))) == null)
+    check(CatalogShelfPolicy.categories(listOf(platform.copy(
+        id="disabled-platform",enabled=false,providerId=0))) == null)
+    check(CatalogShelfPolicy.categories(listOf(basic.copy(
+        id="disabled-archive",enabled=false,language="tr",yearFrom=2024)))?.isEmpty() == true)
+    println("PASS: 21/21 catalog shelf route and batch assertions")
 }
