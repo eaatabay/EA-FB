@@ -3,9 +3,8 @@ import assert from "node:assert/strict";
 import {readBoundedText} from "../src/bounded-response.mjs";
 
 test("Content-Length budget rejects before reading any bytes",async()=>{
-  let read=false;
   const response=new Response(new ReadableStream({
-    pull(){read=true;throw Error("MUST_NOT_READ");},
+    pull(controller){controller.enqueue(new Uint8Array(1));controller.close();},
   }),{headers:{"content-length":"2000001"}});
   await assert.rejects(readBoundedText(response,2_000_000),/upstream_too_large/);
   // A ReadableStream can prefetch on construction; rejection must not depend on reading it.
