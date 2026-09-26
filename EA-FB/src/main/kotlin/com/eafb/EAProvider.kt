@@ -400,6 +400,7 @@ class EAProvider : MainAPI() {
         if (cards.size < 2) return Pair(null, emptyList())
         // Only label installments that actually have visible artwork cards.
         val visibleIds = cards.mapNotNull { it.url.substringAfterLast('/').toIntOrNull() }.toSet()
+        if (ownId !in visibleIds) return Pair(null, emptyList())
         val labels = FilmCollectionPolicy.visibleChronology(sortedParts, visibleIds)
             .joinToString(" • ") { part ->
                 val year = part.releaseDate?.take(4)?.toIntOrNull()
