@@ -193,7 +193,7 @@
 - [x] Imzali yayin icin iki ayri release-pinned hak kapisi: kaynak-kimligine bagli belge referansi VE tarihli grant (tam HTTPS host, yol oneki, mediaKind, adapterVersion, reviewedAt, validUntil). Snapshot TTL izin bitisinden ileri gidemez. Yinelenen izinler, 32'den fazla grant, fazladan secret alanlari reddedilir. Her iki production listesi BOS.
 - [x] Bos production izinleri ile imza anahtari yukleme/D1 okuma dahi baslatilmaz; bos snapshot bile imzalanmaz. Fixture'lar sadece offline test injection ile gecer.
 - [x] Persisted Watchdog state'de bozuk basari/basarisizlik sayaclari, son iyi URL, nextCheckAt ve overflow saatleri fail-closed.
-- [x] Gercek GitHub blob SHA eslesmeli Node policy 18/18 ve publication guard 8/8; exact runner ve Worker kaynak koduyla izole/mock testler 10+10, ek policy 14, grant 21. Node TOPLAM 81/81; gercek GitHub 0001/0002 SQL migration'lariyla yerel SQLite 8/8; toplam bu parkurda 89/89 secilmis test. Onceki 200 testin uzerine eklenen AYRI parkur, hepsi ayni full-suite degil.
+- [x] Gercek GitHub blob SHA eslesmeli Node policy 18/18 ve publication guard 9/9; exact runner ve Worker kaynak koduyla izole/mock testler 10+10, ek policy 14, grant 21. Node TOPLAM 82/82; gercek GitHub 0001/0002 SQL migration'lariyla yerel SQLite 8/8; toplam bu parkurda 90/90 secilmis test. Onceki 200 testin uzerine eklenen AYRI parkur, hepsi ayni full-suite degil.
 - [ ] Yeni runner.test ve signed-endpoint.test dosyalarinin tamamini GERCEK SQLite registry ve tum Worker bagimliliklariyla tam checkout'ta calistir; bu parkurda exact Node policy/guard calisti, runner/Worker sadece izole testlerle dogrulandi.
 - [ ] Gercek Wrangler/workerd+D1, Android Gradle .cs3, Mi Box Beta; Cloudflare Actions kotasi nedeniyle workflow tetikleme YOK.
 
