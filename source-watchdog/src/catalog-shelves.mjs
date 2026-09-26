@@ -51,6 +51,23 @@ export function validateCatalogShelves(input) {
     });
   }).sort((a,b)=>a.order-b.order||a.id.localeCompare(b.id));
 }
+/** Compile validated metadata shelves to a strictly allowlisted TMDb query.
+ * Draft language/year filters are omitted until the metadata relay is released.
+ */
+export function compileCatalogShelf(shelf) {
+  const [item]=validateCatalogShelves([shelf]);
+  if (item.language!==undefined || item.yearFrom!==undefined ||
+      item.yearTo!==undefined) throw Error("unsupported_catalog_filter");
+  const kind=item.kind==="tv"?"tv":"movie";
+  const q=new URLSearchParams();
+  if (item.providerId!==undefined) {
+    q.set("with_watch_providers",item.providerId);
+    q.set("watch_region",item.region);
+    q.set("with_watch_monetization_types","flatrate");
+  } else q.set("with_genres",item.genres);
+  return {id:item.id,title:item.title,kind:item.kind,enabled:item.enabled,
+    order:item.order,path:"/discover/"+kind+"?"+q.toString()};
+}
 export function publicCatalogShelves(input) {
   return {version:1,shelves:validateCatalogShelves(input).filter(x=>x.enabled)};
 }
