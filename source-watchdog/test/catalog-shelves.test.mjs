@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {validateCatalogShelves,publicCatalogShelves} from "../src/catalog-shelves.mjs";
+import {validateCatalogShelves,publicCatalogShelves,compileCatalogShelf} from "../src/catalog-shelves.mjs";
 const base={id:"new-turkish-tv",title:"Yeni Türk Dizileri",kind:"tv",
   genres:"18",language:"tr",yearFrom:2024,yearTo:2026,enabled:true,order:0};
 test("validates catalog-only shelf and preserves order",()=>{
@@ -30,4 +30,14 @@ test("rejects unapproved playback fields, malformed filters, duplicate IDs",()=>
     [{...base,yearFrom:"2024"}],
     [{...base,yearTo:1800}],
   ]) assert.throws(()=>validateCatalogShelves(bad));
+});
+
+test("compile only relay-compatible catalog filters, never silently drop constraints",()=>{
+  const safe={...base,language:undefined,yearFrom:undefined,yearTo:undefined};
+  assert.equal(compileCatalogShelf(safe).path,"/discover/tv?with_genres=18");
+  assert.equal(compileCatalogShelf({id:"apple-archive",title:"Apple Archive",
+    kind:"movie",providerId:350,region:"TR",enabled:true,order:0}).path,
+    "/discover/movie?with_watch_providers=350&watch_region=TR&with_watch_monetization_types=flatrate");
+  assert.throws(()=>compileCatalogShelf(base),/unsupported_catalog_filter/);
+  assert.throws(()=>compileCatalogShelf({...safe,yearFrom:2020}),/unsupported_catalog_filter/);
 });
