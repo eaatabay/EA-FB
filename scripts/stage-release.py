@@ -40,6 +40,13 @@ def stage(root=ROOT):
             raise ValueError("Unsafe .cs3 ZIP member path")
         if not {"classes.dex", "manifest.json"}.issubset(members):
             raise ValueError("The .cs3 is missing required dex or manifest files")
+        try:
+            package_manifest = json.loads(archive.read("manifest.json"))
+        except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+            raise ValueError("Invalid .cs3 manifest JSON") from exc
+        if (not isinstance(package_manifest, dict) or
+                ("name" in package_manifest and package_manifest["name"] != "EA-FB")):
+            raise ValueError("Unexpected .cs3 manifest identity")
         corrupt_member = archive.testzip()
         if corrupt_member:
             raise ValueError(f"Corrupt .cs3 archive entry: {corrupt_member}")
