@@ -53,3 +53,13 @@ Run `bash scripts/verify-v6.sh` on the **feature branch**, inspect Android UI on
 - Detail IMDb badges now require an explicit OMDb API provenance marker and a valid TMDb-provided IMDb title ID. This protects display provenance but **does not** configure the production OMDb secret or prove that IMDb scores are available on the user's Mi Box.
 - The explicit settings refresh now unwraps Android ContextWrapper to locate its Activity; TV host behavior and focus retention still require device testing.
 - No production Worker, D1, permissions, keys, main, or v5 release changes. Build and offline suites must be run on the latest v6 branch before creating a new .cs3.
+
+## 27.09.2026 — uninterrupted v6 development parkur
+
+- Admin metadata shelf drafts now support **add, replace, remove, rename, reorder and enable/disable** as pure revision-checked operations. Drafts are deep-frozen and cannot silently grant streaming rights or publish themselves.
+- Local-only `source-watchdog/dev/catalog-draft-cli.mjs` supports `init`, `edit` and `preview` for files ending `.catalog-draft.json`. It uses create-only initialization, an exclusive lock and atomic replacement for edits. Preview renders escaped navy/yellow HTML. This is **not a remote production admin endpoint**.
+- Example: `node source-watchdog/dev/catalog-draft-cli.mjs init ./my.catalog-draft.json`; edit commands are local JSON files with `expectedRevision` and `operation` (for example `{"expectedRevision":0,"operation":{"action":"add","id":"custom-tv","shelf":{"id":"custom-tv","title":"Özel Diziler","kind":"tv","genres":"18","enabled":true,"order":0}}}`). `preview` prints HTML to stdout, which may be redirected to a local HTML file.
+- Settings now marks changes as dirty and requests one Activity refresh on dialog dismissal; the explicit refresh button suppresses duplicate recreation. The host's focus restoration is **not verified on Mi Box**.
+- A discover shelf whose first En Yeni page has no released artwork now scans at most two more pages before trying the clearly labeled popular fallback. Scanned first-page results are non-paginated to avoid duplicate page-2 cards. Native trending/top-rated feeds are never filtered by this discover-only rule.
+- Fixed a serious Worker bug in the new strict ISO date regex (it previously had over-escaped digits); added leap-day and invalid-year test cases. Production Worker is unchanged.
+- New Node regression tests cover offline draft CLI locking, create-only initialization, CAS mutations, preview escaping and Android source wiring. **No test execution or Android build has been confirmed for these commits.** Do not release a new cs3 until the complete v6 verification suite passes.
