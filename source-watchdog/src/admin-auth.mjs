@@ -71,7 +71,8 @@ export async function verifyAdminAccess(request,env,{
        !Number.isSafeInteger(claims.exp) || !Number.isSafeInteger(claims.iat)) return null;
     const now=nowSeconds();
     if(!Number.isSafeInteger(now) || claims.exp<=now ||
-       claims.iat>now+60 ||
+       claims.exp<=claims.iat || claims.exp-claims.iat>24*3600 ||
+       claims.iat>now+60 || now-claims.iat>24*3600 ||
        (claims.nbf!==undefined &&
         (!Number.isSafeInteger(claims.nbf)||claims.nbf>now))) return null;
     const email=claims.email.toLowerCase();
