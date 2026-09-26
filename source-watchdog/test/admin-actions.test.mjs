@@ -156,6 +156,26 @@ test("admin body limit remains 413 when a malicious stream cancel throws",async(
     e=>e instanceof AdminMutationError&&e.status===413);
 });
 
+test("never-settling cancel cannot hang an oversized admin POST",async()=>{
+  let cancelled=false;
+  const stream=new ReadableStream({
+    start(controller){controller.enqueue(new Uint8Array(1100));},
+    cancel(){cancelled=true;return new Promise(()=>{});},
+  });
+  const req=new Request(origin+"/admin/api/sources/licensed-demo",{
+    method:"POST",duplex:"half",body:stream,
+    headers:{origin,"content-type":"application/json",
+      "x-eafb-admin-action":"confirmed"},
+  });
+  const result=await Promise.race([
+    parseAdminMutationRequest(req,env).then(()=>"unexpected_success",
+      e=>e instanceof AdminMutationError ? e.status : "wrong_error"),
+    new Promise(resolve=>setTimeout(()=>resolve("hung_cancel"),150)),
+  ]);
+  assert.equal(result,413);
+  assert.equal(cancelled,true);
+});
+
 sqliteTest("verified actor, disable, stale replay and enable use D1 CAS + audit",async()=>{
   const db=d1();try{
     await registerSource(db,source,"admin:fixture",0);
