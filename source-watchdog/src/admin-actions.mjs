@@ -90,7 +90,10 @@ export async function parseAdminMutationRequest(request, env) {
   if (!adminWritesConfigured(env)) throw new AdminMutationError("not_found", 404);
   if (request?.method !== "POST") throw new AdminMutationError("method_not_allowed", 405);
   const url = new URL(request.url);
-  if (url.origin !== env.WATCHDOG_ADMIN_ORIGIN ||
+  // Compare the RAW request URL, not only URL.pathname/search: URL parsing
+  // canonicalizes dot segments and drops empty ?/# markers and credentials.
+  if (request.url !== env.WATCHDOG_ADMIN_ORIGIN + url.pathname ||
+      url.origin !== env.WATCHDOG_ADMIN_ORIGIN ||
       request.headers.get("origin") !== env.WATCHDOG_ADMIN_ORIGIN ||
       request.headers.get("x-eafb-admin-action") !== "confirmed" ||
       !/^application\/json(?:\s*;\s*charset=utf-8)?$/i.test(
