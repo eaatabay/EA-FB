@@ -68,6 +68,22 @@ test("caches repeated TMDb catalog calls by canonicalized request", async () => 
   assert.equal(calls.length, 1);
 });
 
+test("edge cache read/write outages never suppress valid TMDb metadata",async()=>{
+  const {env,ctx,calls}=setup();
+  globalThis.caches.default.match=async()=>{throw Error("SECRET_CACHE_READ_ERROR");};
+  globalThis.caches.default.put=async()=>{throw Error("SECRET_CACHE_WRITE_ERROR");};
+  const req=new Request("https://example.workers.dev/v1/movie/123");
+  const res=await gateway.fetch(req,env,ctx);
+  assert.equal(res.status,200);
+  assert.equal((await res.json()).ok,true);
+  assert.equal(calls.length,1);
+  // Synchronous cache failures and missing cache backend are also optional.
+  globalThis.caches.default.put=()=>{throw Error("SECRET_CACHE_SYNC_ERROR");};
+  const second=await gateway.fetch(req,env,ctx);
+  assert.equal(second.status,200);
+  assert.equal(calls.length,2);
+});
+
 test("serves exact paths used by EA-FB 28-category catalog", async () => {
   const { env, ctx, calls } = setup();
   for (const path of [
