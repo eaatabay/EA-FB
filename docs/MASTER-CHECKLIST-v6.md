@@ -1,5 +1,7 @@
 # EA-FB v6 — MASTER CHECKLIST
 
+> **Güncel tek sayfalık release kapıları:** [V6-RELEASE-GATES-CURRENT.md](V6-RELEASE-GATES-CURRENT.md). Aşağıdaki parkur notları tarihsel kayıttır; tekrar eden bekleyen işler ve eski test sayıları güncel durumun yerine geçmez.
+
 > Durum: Bu dosyadaki [x], kodun v6 gelistirme dalina kaydedildigi anlamina gelir.
 > Canli calisma/derleme/Mi Box dogrulamasi tamamlanmadan production bitti sayilmaz.
 > v5/main ve canli ea-fb-catalog Worker bu gelistirmelerin disindadir.
