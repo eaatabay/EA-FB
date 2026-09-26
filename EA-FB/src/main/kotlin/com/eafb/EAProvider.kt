@@ -204,6 +204,7 @@ class EAProvider : MainAPI() {
             return (0 until rows.length()).mapNotNull { i ->
                 val item = rows.optJSONObject(i) ?: return@mapNotNull null
                 if (sortMode == CatalogSortMode.NEWEST &&
+                    category.tmdbPath?.startsWith("/discover/") == true &&
                     !CatalogReleasePolicy.released(item.optString(
                         if (category.kind == MediaKind.SERIES) "first_air_date" else "release_date"
                     ), System.currentTimeMillis())) return@mapNotNull null
