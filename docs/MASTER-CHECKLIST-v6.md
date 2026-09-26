@@ -248,3 +248,10 @@ MFA'li admin pilotu. Gercek v5/main ve canli Worker degismez.
 - [x] `WatchdogClientStore.acceptSignedJson` parser iptalini artık yutmuyor; ayrı JVM regresyon vakası eklendi.
 - [x] Kotlin `try/catch` + Elvis sözdizimi yerel `kotlinc` ile bağımsız kontrol edildi; tam proje derlemesi yerine geçmez.
 - [ ] Dört yeni iptal regresyonunu gerçek Kotlin/JVM paketinde çalıştır; Android yaşam döngüsü ve tam Gradle derlemesi hâlâ bekliyor.
+
+## 26.09.2026 — JWKS ve admin hata güvenliği
+- [x] Cloudflare Access JWKS isteğinin 4 saniyelik sınırı yalnız `fetch` başlıklarını değil, asılı kalan body stream okumalarını da kapsıyor (`loadJwks` yarış/zamanlayıcı + abort).
+- [x] Asılı başlık, abort'u yok sayan body, normal JSON ve geçersiz deadline için Node regresyon vakaları eklendi.
+- [x] Salt-okunur `/admin` yolunda Access doğrulayıcı istisnası artık kayıt okumadan önce 403 ile güvenli kapanıyor; ayrı regresyon testi eklendi.
+- [x] Aynı JWKS deadline algoritması izole Node v22 yerel kontrolünde 4/4 senaryodan geçti; Kotlin iptal/Elvis kontrolü izole `kotlinc` ile geçti. Bunlar tam repo testinin yerine geçmez.
+- [ ] GitHub'daki gerçek `source-watchdog` Node paketinin tüm testleri ve tam Kotlin/JVM paketi çalışma ortamında tekrar çalıştırılmalı.
