@@ -398,7 +398,10 @@ class EAProvider : MainAPI() {
             newItem(part, MediaKind.MOVIE, artwork)
         }
         if (cards.size < 2) return Pair(null, emptyList())
-        val labels = ordered.take(12).joinToString(" • ") { part ->
+        // Only label installments that actually have visible artwork cards.
+        val visibleIds = cards.mapNotNull { it.url.substringAfterLast('/').toIntOrNull() }.toSet()
+        val labels = ordered.filter { it.optInt("id") in visibleIds }
+            .take(12).joinToString(" • ") { part ->
             val title = part.optString("title")
             val year = mediaYear(part, MediaKind.MOVIE)
             if (year != null) "$title ($year)" else title
