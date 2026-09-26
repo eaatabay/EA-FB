@@ -74,3 +74,20 @@ test("corrupt IDs and truthy non-boolean enabled flags cannot schedule or trigge
   assert.equal(incidentEligible(malformedId,1000),false);
   assert.equal(incidentEligible(enabledString,1000),false);
 });
+
+test("scheduler refuses mismatched registry identities and missing incident metadata",()=>{
+  const good=record("valid-source",HEALTH.DEGRADED,0);
+  const wrongConfig={...good,config:{...good.config,id:"different-source"}};
+  const wrongState={...good,state:{...good.state,id:"different-source"}};
+  assert.deepEqual(dueSources([wrongConfig,wrongState,good],1000).map(x=>x.id),
+    ["valid-source"]);
+  assert.equal(incidentEligible(wrongConfig,1000),false);
+  assert.equal(incidentEligible(wrongState,1000),false);
+  const missingLast={...good,state:{...good.state}};
+  delete missingLast.state.lastCheckedAt;
+  assert.equal(incidentEligible(missingLast,1000),false);
+  const missingNext={...good,state:{...good.state}};
+  delete missingNext.state.nextCheckAt;
+  assert.equal(incidentEligible(missingNext,1000),false);
+  assert.equal(incidentEligible(good,1000),true);
+});
