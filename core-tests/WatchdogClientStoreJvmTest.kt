@@ -3,6 +3,7 @@ package com.eafb
 import android.content.Context
 import android.content.SharedPreferences
 import org.bouncycastle.util.encoders.Base64
+import kotlinx.coroutines.CancellationException
 
 private const val PUBLIC_KEY = "3XThw1FOoxQye8ObEatzSwW1lRlo/g9iZSRuClkOjak="
 private const val SIGNATURE = "pcw-_1oE7BZMdmSjTJgVuurK04lxCVpHrcCLEchUueMtiI3B7lrrCl1NbbWNELG-HgEbw12OA14c4nC9gtp1DA"
@@ -77,5 +78,10 @@ fun main(){
         "oversized signed payload rejected")
     ok(ctx.prefs.getLong("last_revision",-1L)==42L,
         "rejected response never overwrites durable replay guards")
+    val cancelledStore=WatchdogClientStore(FakeContext(),trust,
+        { throw CancellationException("cancelled") })
+    ok(runCatching { cancelledStore.acceptSignedJson("signed",NOW) }
+        .exceptionOrNull() is CancellationException,
+        "cancelled signed JSON parser propagates to caller")
     println("PASS: $total/$total Android store JVM atomic-cache tests (stub Context/JSON)")
 }
