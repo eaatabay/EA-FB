@@ -20,7 +20,9 @@ export function dueSources(records, now, limit = 8) {
       const config = record?.config, state = record?.state;
       if (!config || !state || !config.enabled || config.integrationApproved !== true) return false;
       // Unknown/corrupt statuses and timestamps must never become runnable.
-      if (!Object.hasOwn(PRIORITY, state.status)) return false;
+      if (typeof state.status !== 'string' ||
+          (typeof state.status !== 'string' ||
+       !Object.hasOwn(PRIORITY, state.status))) return false;
       return Number.isSafeInteger(state.nextCheckAt) &&
         state.nextCheckAt >= 0 && state.nextCheckAt <= now;
     })
