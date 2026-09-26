@@ -165,7 +165,7 @@ object EASettingsDialog {
             dialog.dismiss()
             var host: Context? = ctx
             while (host is ContextWrapper && host !is Activity) host = host.baseContext
-            (host as? Activity)?.recreate()
+            (host as? Activity)?.takeUnless { it.isFinishing || it.isDestroyed }?.recreate()
         }
         root.addView(refresh, margin(ctx, 12, 8))
 
@@ -186,8 +186,10 @@ object EASettingsDialog {
                 val sortButtons = mutableMapOf<CatalogSortMode, TextView>()
                 for (mode in CatalogSortMode.entries) {
                     val current = button(ctx, mode.title) {
-                        EASettings.setSortMode(mode)
-                        dirty = true
+                        if (EASettings.sortMode() != mode) {
+                            EASettings.setSortMode(mode)
+                            dirty = true
+                        }
                         sortButtons.forEach { (itemMode, b) ->
                             val selected = itemMode == mode
                             b.isSelected = selected
@@ -270,7 +272,7 @@ object EASettingsDialog {
             if (dirty && !manualRefresh) {
                 var host: Context? = ctx
                 while (host is ContextWrapper && host !is Activity) host = host.baseContext
-                (host as? Activity)?.recreate()
+                (host as? Activity)?.takeUnless { it.isFinishing || it.isDestroyed }?.recreate()
             }
         }
         render()
