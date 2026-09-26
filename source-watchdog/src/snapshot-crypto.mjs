@@ -18,7 +18,8 @@ function validHttpsBaseUrl(value) {
     const host = u.hostname;
     return u.protocol === 'https:' && u.username === '' && u.password === '' &&
       u.port === '' && u.search === '' && u.hash === '' &&
-      /^[a-z0-9-]+(?:\.[a-z0-9-]+)+$/.test(host) &&
+      /^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)+$/.test(host) &&
+      host.length <= 253 && host.split('.').every(label => label.length <= 63) &&
       !/^\d+(?:\.\d+){3}$/.test(host) &&
       !/\.(?:local|localhost|internal|invalid)$/.test(host) &&
       u.origin + (u.pathname === '/' ? '' : u.pathname.replace(/\/+$/, '')) === value;
