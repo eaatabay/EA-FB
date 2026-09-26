@@ -3,7 +3,7 @@
  * unverified email header by itself grants NO privileges.
  * The team-domain JWKS URL is fixed by an admin-only env setting.
  */
-const TEAM=/^https:\/\/[a-z0-9-]{1,63}\.cloudflareaccess\.com$/;
+const TEAM=/^https:\/\/[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.cloudflareaccess\.com$/;
 const AUD=/^[A-Za-z0-9_-]{16,128}$/;
 const EMAIL=/^[^@\s,]+@[^@\s,]+\.[^@\s,]+$/;
 const MAX_JWT=8192;
