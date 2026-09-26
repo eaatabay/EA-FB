@@ -113,7 +113,7 @@ test("origin, custom header, JSON type and actual streaming body size are enforc
 });
 test("noncanonical admin request URL aliases fail before parsing body",async()=>{
   const suffixes=["?","#","?x=1","#fragment","%2F","/./",
-    "/../licensed-demo","%2elicensed-demo"];
+    "%2elicensed-demo"];
   const body=JSON.stringify({action:"disable",expectedRevision:0});
   for(const suffix of suffixes){
     const req=new Request(origin+"/admin/api/sources/licensed-demo"+suffix,{
@@ -124,6 +124,14 @@ test("noncanonical admin request URL aliases fail before parsing body",async()=>
       e=>e instanceof AdminMutationError&&[403,404].includes(e.status),
       suffix);
   }
+  // Request() normalizes literal /../ before the handler sees it; test
+  // raw parser rejection separately rather than expecting impossible behavior.
+  const dotSegment={url:origin+
+    "/admin/api/sources/licensed-demo/../licensed-demo",
+    method:"POST",headers:new Headers({origin,"content-type":"application/json",
+      "x-eafb-admin-action":"confirmed"})};
+  await assert.rejects(parseAdminMutationRequest(dotSegment,env),
+    e=>e instanceof AdminMutationError&&e.status===403);
   // Request() itself refuses credentialed URLs; a direct parser boundary
   // test uses a request-like object to ensure the check is independent.
   const credential={url:
