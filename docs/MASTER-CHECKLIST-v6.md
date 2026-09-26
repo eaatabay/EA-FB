@@ -50,7 +50,8 @@
 - [x] 5/5 mevcut bridge JVM testi yeni izin kapisiyla yeniden derlenip gecti (test-only Android/MediaSource stublari).
 - [x] 26.09.2026: Izin testi 23 onceki + 24 yeni + 6 ek regresyonla 53 senaryoya genisletildi; LIVE/unknown signed media icin fail-closed hata duzeltildi (ac906b56, 20fbbdd). Testler scripts/test-core.sh icinde; yeni 30 senaryo henuz JVM'de calistirilmadi.
 - [x] 26.09.2026: Bridge'in izin kisitlamasini adapter seciminden once uyguladigini ve production permit listesinin bos oldugunu koruyan Node kaynak-baglanti testi eklendi (5681ca14); henuz calistirilmadi.
-- [ ] Genisletilmis 53/53 Kotlin izin testi ve 5/5 bridge testini gercek v6 checkout'unda yeniden calistirip dogrula.
+- [x] 26.09.2026: Kanit referansindaki bos ve nokta yol bilesenlerini reddeden fail-closed duzeltme ve 4 cevrimdisi regresyon eklendi (6bbe2a84, c59b7d87). Kotlin izin testi toplam 57 senaryo; yeni senaryolar henuz JVM'de calistirilmadi.
+- [ ] Genisletilmis 57/57 Kotlin izin testi ve 5/5 bridge testini gercek v6 checkout'unda yeniden calistirip dogrula.
 - [x] Kullanici acik kaynak-bazli onayi ve hak sahibi delili gerektiren docs/SOURCE-RIGHTS-REVIEW-v6.md olusturuldu.
 - [ ] Gercek kaynagin izin kapsami, kanit referansi, rate limit, bolge ve yenileme tarihini tek tek onaylat.
 - [ ] Ayrica onaylanmis, izinli gercek kaynak adapterlerini secip inceleme.
