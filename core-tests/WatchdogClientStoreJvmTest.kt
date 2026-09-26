@@ -19,6 +19,7 @@ private class FakePreferences: SharedPreferences {
     val values=mutableMapOf<String,Any>()
     var allowCommit=true
     var updateMemoryOnFailure=false
+    var commitError: Exception?=null
     override fun getLong(key:String,default:Long):Long=(values[key] as? Long)?:default
     override fun getString(key:String,default:String?):String?=(values[key] as? String)?:default
     override fun edit():SharedPreferences.Editor=object:SharedPreferences.Editor {
@@ -30,6 +31,10 @@ private class FakePreferences: SharedPreferences {
             pending[key]=value;this
         }()
         override fun commit():Boolean {
+            commitError?.let { error ->
+                if(updateMemoryOnFailure)values.putAll(pending)
+                throw error
+            }
             if(!allowCommit){
                 if(updateMemoryOnFailure)values.putAll(pending)
                 return false
@@ -105,5 +110,25 @@ fun main(){
     ok(runCatching { cancelledStore.acceptSignedJson("signed",NOW) }
         .exceptionOrNull() is CancellationException,
         "cancelled signed JSON parser propagates to caller")
+    val throwingCtx=FakeContext()
+    throwingCtx.prefs.updateMemoryOnFailure=true
+    throwingCtx.prefs.commitError=IllegalStateException("disk unavailable")
+    val throwingStore=WatchdogClientStore(throwingCtx,trust,parse)
+    val thrown=throwingStore.acceptSignedJson("signed",NOW)
+    ok(thrown is SnapshotCheck.Rejected && thrown.reason=="cannot_persist_replay_guard" &&
+        throwingStore.restoreVerifiedOffline(NOW)==null,
+        "throwing commit cannot expose volatile signed cache")
+    ok(WatchdogClientStore(throwingCtx,trust,parse).restoreVerifiedOffline(NOW)==null,
+        "second store cannot bypass throwing commit guard")
+    val cancelledCtx=FakeContext()
+    cancelledCtx.prefs.updateMemoryOnFailure=true
+    cancelledCtx.prefs.commitError=CancellationException("commit interrupted")
+    val cancelledCommitStore=WatchdogClientStore(cancelledCtx,trust,parse)
+    ok(runCatching { cancelledCommitStore.acceptSignedJson("signed",NOW) }
+        .exceptionOrNull() is CancellationException,
+        "commit cancellation propagates to caller")
+    ok(cancelledCommitStore.restoreVerifiedOffline(NOW)==null &&
+        WatchdogClientStore(cancelledCtx,trust,parse).restoreVerifiedOffline(NOW)==null,
+        "cancelled commit cannot expose in-memory signed snapshot")
     println("PASS: $total/$total Android store JVM atomic-cache tests (stub Context/JSON)")
 }
