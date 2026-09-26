@@ -17,7 +17,10 @@ test("production permit list is empty and no runtime mutation API exists",()=>{
 });
 
 test("empty compiled rights fail before any offline cache read",()=>{
-  const emptyGate = bridge.indexOf("if (ReviewedSourcePermits.bundled.isEmpty()) return emptyList()");
+  const emptyGate = bridge.indexOf("ReviewedSourcePermits.bundled.isEmpty()) return emptyList()");
+  const earlyGate = bridge.indexOf("if (kind == MediaKind.LIVE || now < 0L ||");
+  assert.ok(earlyGate >= 0 && emptyGate > earlyGate,
+    "LIVE, invalid clock and empty rights must share the early guard");
   const restore = bridge.indexOf("store.restoreVerifiedOffline(now)");
   assert.ok(emptyGate >= 0 && restore > emptyGate,
     "empty rights must return before restoring any cached source");
@@ -28,4 +31,11 @@ test("rights restriction must precede adapter selection in source order",()=>{
   const selection = bridge.indexOf("WatchdogAdapterSelection.forNewSearch(");
   assert.ok(rights >= 0 && selection > rights,
     "do not select an adapter before compiled rights are enforced");
+});
+
+test("LIVE and invalid timestamps cannot reach cached snapshot restoration",()=>{
+  const earlyGate = bridge.indexOf("if (kind == MediaKind.LIVE || now < 0L ||");
+  const restore = bridge.indexOf("store.restoreVerifiedOffline(now)");
+  assert.ok(earlyGate >= 0 && restore > earlyGate,
+    "unsupported media and invalid time must return before cache access");
 });
