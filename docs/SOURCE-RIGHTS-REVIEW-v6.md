@@ -43,6 +43,18 @@ konmayacak.
 | Test sonucu | İzinli fixture, ağ güvenliği, parser ve geri alma testleri |
 | Kullanıcı onayı | Kaynak özelinde açık nihai onay ve tarih |
 
+## Kanit referansi denetiminin siniri
+
+`ReviewedSourcePermitPolicy`, `evidenceReference` alaninin yalnizca
+`rights/YYYY/source-id.md` benzeri kanonik yerel yol bicimini ve
+zaman/host/kapsam kaydini denetler. **Dosyanin gercekte varligini,
+belgenin imzasini, hak sahibinin yetkisini, izin kapsaminda playback
+bulunup bulunmadigini veya lisansin gercekligini dogrulamaz.**
+Bu isler kaynak bazinda insan incelemesi, ayrica release onayi ve
+kanit kaydinin release incelemesinde karsilastirilmasini gerektirir.
+Yalnizca gecen bir Kotlin fixture testi, lisans kaniti degildir.
+Production `ReviewedSourcePermits.bundled` halen bostur.
+
 ## Aktivasyon kontrol kapısı
 
 - Yazılı hak doğrulaması ve kullanıcı onayı **yoksa** gerçek adaptör yok.
