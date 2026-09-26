@@ -173,5 +173,15 @@ fun main()=runBlocking {
     }
     checked(runCatching { cancelledAfterCache.await() }.exceptionOrNull() is CancellationException,
         "cache callback cancellation stops refresh before network or throttle return")
+    val cancelledAfterVerifyStore=FakeStore()
+    val cancelledAfterVerify=async {
+        val job=coroutineContext[Job]!!
+        val refresh=WatchdogSnapshotRefresh(good,FakeTransport(),
+            { json, now -> cancelledAfterVerifyStore.accept(json,now).also { job.cancel() } },
+            cancelledAfterVerifyStore::offline)
+        refresh.refresh(T+1)
+    }
+    checked(runCatching { cancelledAfterVerify.await() }.exceptionOrNull() is CancellationException,
+        "cancellation immediately after verifier prevents updated result publication")
     println("PASS: $count/$count offline and injected-transport refresh checks")
 }
