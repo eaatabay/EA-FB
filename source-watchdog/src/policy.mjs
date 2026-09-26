@@ -106,6 +106,16 @@ export function initialState(source, now) {
 export function evaluateProbe(source, probe) {
   const config = validateSource(source);
   if (!probe || typeof probe !== "object") throw new Error("invalid_probe");
+  // Internal runner failures are not evidence that a website is unreachable.
+  // Keep a distinct audited reason while still backing off and quarantining
+  // repeated failed checks. Unknown marker values must fail closed.
+  if (probe.runnerFailure !== undefined) {
+    if (!["probe_timeout","adapter_error"].includes(probe.runnerFailure)) {
+      throw new Error("invalid_probe");
+    }
+    return {ok:false, reason:probe.runnerFailure, needsAdmin:false,
+      proposedUrl:null};
+  }
   const finalUrl = normalizedHttpsUrl(probe.finalUrl);
   const hostname = finalUrl ? new URL(finalUrl).hostname : null;
   const approvedHost = hostname !== null && config.verifiedDomains.includes(hostname);
