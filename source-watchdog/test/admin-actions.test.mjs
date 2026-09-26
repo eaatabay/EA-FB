@@ -74,6 +74,9 @@ test("writes gate is independent of read-only admin access",()=>{
     {WATCHDOG_FIXTURE_ENABLED:"true"},
     {WATCHDOG_ADMIN_ORIGIN:"https://localhost"},
     {WATCHDOG_ADMIN_ORIGIN:"http://watchdog.example.org"},
+    {WATCHDOG_ADMIN_ORIGIN:"https://-watchdog.example.org"},
+    {WATCHDOG_ADMIN_ORIGIN:"https://watchdog-.example.org"},
+    {WATCHDOG_ADMIN_ORIGIN:"https://"+"a".repeat(64)+".example.org"},
   ]) assert.equal(adminWritesConfigured({...env,...change}),false);
 });
 test("strict mutation schema refuses permission grants, unknown keys and stale formats",()=>{
