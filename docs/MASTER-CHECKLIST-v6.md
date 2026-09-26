@@ -285,3 +285,6 @@ MFA'li admin pilotu. Gercek v5/main ve canli Worker degismez.
 - [x] Güncel GitHub `source-watchdog/src/admin-auth.mjs` blob SHA `0eeb78ae0dc5b6d1690e9524510d61be6f4f70b4` ve `test/admin-auth.test.mjs` blob SHA `2c2e91f46105ea8fa7e90e96002b90954f14476c` yerelde birebir doğrulandı.
 - [x] **Gerçek kaynak ve gerçek test dosyası** ile Node 22.16.0 Access JWT/JWKS paketi **12/12 geçti**; yeni asılı body, başlık timeout'u ve hatalı UTF-8 abort regresyonları dahil.
 - [ ] Diğer watchdog Node/SQLite dosyalarının ve Wrangler/workerd'ın tam repo testi hâlâ bekliyor.
+
+## 26.09.2026 — SHA eşleşmeli yönetici paneli tam testi
+- [x] Güncel GitHub `admin-view.mjs` SHA `b645f11ce6480421bbc42ce452a48e89e6f2b365` ve `admin-view.test.mjs` SHA `83131b1e18adfed11db75536c34a568aa7d377ca` birebir yerel kopyalarla **6/6 Node testi geçti**. Güvenli tanı kodları, bilinmeyen durum alarmı, HTML escape ve ham hata gizleme dahil.
