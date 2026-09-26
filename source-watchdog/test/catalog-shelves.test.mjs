@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {validateCatalogShelves,publicCatalogShelves,compileCatalogShelf,buildCatalogDraft,editCatalogDraft} from "../src/catalog-shelves.mjs";
+import {validateCatalogShelves,publicCatalogShelves,compileCatalogShelf,buildCatalogDraft,editCatalogDraft,compileCatalogDraftPreview} from "../src/catalog-shelves.mjs";
 const base={id:"new-turkish-tv",title:"Yeni Türk Dizileri",kind:"tv",
   genres:"18",language:"tr",yearFrom:2024,yearTo:2026,enabled:true,order:0};
 test("validates catalog-only shelf and preserves order",()=>{
@@ -86,4 +86,22 @@ test("CAS catalog editor rejects stale revisions and unauthorized mutations",()=
   assert.throws(()=>editCatalogDraft(draft,1,{action:"remove",id:base.id}),
     /catalog_revision_conflict/);
   assert.equal(draft.shelves.length,1);
+});
+
+test("unpublished compiled preview includes only enabled relay-compatible rails",()=>{
+  const safe={...base,language:undefined,yearFrom:undefined,yearTo:undefined};
+  const draft=buildCatalogDraft([safe,{
+    id:"archived-drama",title:"Arşiv Dramaları",kind:"tv",genres:"18",
+    language:"tr",enabled:false,order:1
+  }],8);
+  const preview=compileCatalogDraftPreview(draft);
+  assert.equal(preview.status,"preview-v6-not-published");
+  assert.equal(preview.revision,8);
+  assert.equal(preview.shelves.length,1);
+  assert.equal(preview.shelves[0].path,"/discover/tv?with_genres=18");
+  assert.equal(Object.isFrozen(preview.shelves),true);
+  assert.throws(()=>compileCatalogDraftPreview(buildCatalogDraft([base],8)),
+    /unsupported_catalog_filter/);
+  assert.throws(()=>compileCatalogDraftPreview({...draft,authorized:true}),
+    /invalid_draft_envelope/);
 });
