@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Prepare manifests from a real, locally compiled CloudStream package."""
 import json
+import stat
 import shutil
 import sys
 import zipfile
@@ -38,10 +39,14 @@ def stage(root=ROOT):
             raise ValueError("Oversized or encrypted .cs3 archive")
         if len(members) != len(set(members)):
             raise ValueError("Duplicate .cs3 ZIP members")
-        if any(name.startswith("/") or "\\" in name or
-               any(part in ("", ".", "..") for part in name.split("/"))
-               for name in members if not name.endswith("/")):
+        if any(name.startswith("/") or "\\" in name or name.endswith("//") or
+               any(part in ("", ".", "..") for part in name.rstrip("/").split("/"))
+               for name in members):
             raise ValueError("Unsafe .cs3 ZIP member path")
+        if any(info.create_system == 3 and
+               stat.S_IFMT(info.external_attr >> 16) == stat.S_IFLNK
+               for info in infos):
+            raise ValueError("Symlink member inside .cs3 archive")
         if not {"classes.dex", "manifest.json"}.issubset(members):
             raise ValueError("The .cs3 is missing required dex or manifest files")
         try:
