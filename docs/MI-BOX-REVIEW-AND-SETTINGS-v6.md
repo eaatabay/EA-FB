@@ -43,3 +43,13 @@ Run `bash scripts/verify-v6.sh` on the **feature branch**, inspect Android UI on
 - Real IMDb enrichment remains conditional on the **server-side** OMDb secret and Worker deployment. No synthetic IMDb values or credential changes were made.
 - Automatic home refresh on settings changes and admin-configurable dynamic shelves remain open: the plugin currently stores preferences immediately but stock CloudStream owns the home screen lifecycle. Do not promise automatic focus-preserving reload without a verified host API.
 - This section documents code changes, **not** a successful Kotlin/Android build, Mi Box visual test, Worker deployment, or new cs3 package.
+
+
+## 27.09.2026 — offline catalog hardening (v6 branch only)
+
+- Fixed a regression: future-premiere filtering now applies only to sortable discovery shelves, never to TMDb native trending/top-rated rows.
+- Admin shelf validation now rejects IDs colliding with any built-in home category and accepts strictly bounded optional yearFrom/yearTo and two-letter original-language filters. Invalid year ranges, malformed filters, or playback-authorization fields fail closed.
+- Added a pure Kotlin shelf-to-TMDb-route policy and offline tests. **Important:** the current production metadata relay does not support admin language/year filters; the client policy therefore refuses to activate shelves using those draft filters. The admin-to-Mi-Box publishing pipeline is not wired and no dynamic shelf is currently enabled.
+- Detail IMDb badges now require an explicit OMDb API provenance marker and a valid TMDb-provided IMDb title ID. This protects display provenance but **does not** configure the production OMDb secret or prove that IMDb scores are available on the user's Mi Box.
+- The explicit settings refresh now unwraps Android ContextWrapper to locate its Activity; TV host behavior and focus retention still require device testing.
+- No production Worker, D1, permissions, keys, main, or v5 release changes. Build and offline suites must be run on the latest v6 branch before creating a new .cs3.
