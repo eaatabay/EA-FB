@@ -357,3 +357,12 @@ MFA'li admin pilotu. Gercek v5/main ve canli Worker degismez.
 - [x] `scripts/test-core.sh` offline politika JVM çalıştırma classpath'ine `$COROUTINES` eklendi; derleme classpath'i zaten önceki turda düzeltilmişti.
 - [x] `WatchdogSnapshotRefresh.refresh` iptal kontrolü ağ yanıtından sonra, doğrulama öncesi ve doğrulama sonrası yerinde kaldı; canlı ağ veya üretim izni açılmadı.
 - [ ] Gerçek repo checkout'u ile `scripts/test-core.sh` ve `scripts/verify-v6.sh` tam çalıştırılmadı; son turda GitHub dosyaları tekrar okunarak kaynak tutarlılığı incelendi. Başarısız/çalıştırılmamış testlere başarı atfedilmez.
+
+## 26.09.2026 — Son tur / cancellation commit sınırı
+- [x] `WatchdogSnapshotRefresh` artık cache dönüşü, ağ yanıtı ve imza doğrulama dönüşü sonrasında coroutine durumunu tekrar kontrol ediyor; iptal edilmiş çağrı `updated` sonucu yayımlamıyor.
+- [x] Ağ yanıtı tamamlandığı anda iptal edilen çağrının `acceptSigned` aşamasına geçmediği regresyonla kilitlendi.
+- [x] Cache callback içinde iptal edilen çağrının ağ/throttle yoluna devam etmediği regresyonla kilitlendi.
+- [x] Verifier dönüşü anındaki iptalin `updated` sonucu döndürmemesi regresyonla kilitlendi.
+- [x] `scripts/test-core.sh` yeni offline cancellation testinin coroutines classpath bağımlılığını içeriyor.
+- [ ] Tam `scripts/test-core.sh` / `scripts/verify-v6.sh` sonucu hâlâ gerçek checkout ortamı gerektiriyor; GitHub Actions kotası kullanılmadı.
+- [ ] `.cs3` üretimi ve Mi Box cihaz doğrulaması bu geliştirme turunda yapılmadı.
