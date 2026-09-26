@@ -32,6 +32,10 @@ def stage(root=ROOT):
         raise ValueError("Invalid or empty .cs3 archive")
     with zipfile.ZipFile(binary) as archive:
         members = archive.namelist()
+        infos = archive.infolist()
+        if len(infos) > 512 or sum(info.file_size for info in infos) > 128 * 1024 * 1024 or any(
+                info.file_size > 64 * 1024 * 1024 or info.flag_bits & 1 for info in infos):
+            raise ValueError("Oversized or encrypted .cs3 archive")
         if len(members) != len(set(members)):
             raise ValueError("Duplicate .cs3 ZIP members")
         if any(name.startswith("/") or "\\" in name or
@@ -51,8 +55,12 @@ def stage(root=ROOT):
         if corrupt_member:
             raise ValueError(f"Corrupt .cs3 archive entry: {corrupt_member}")
     dist = root / "dist"
+    if dist.is_symlink():
+        raise ValueError("Refusing a symlinked dist directory")
     dist.mkdir(exist_ok=True)
     output = dist / "EA-FB.cs3"
+    if output.is_symlink() or (dist / "plugins.json").is_symlink() or (dist / "repo.json").is_symlink():
+        raise ValueError("Refusing symlinked release outputs")
     shutil.copyfile(binary, output)
     entry["name"] = "EA-FB"
     entry["iconUrl"] = ICON
