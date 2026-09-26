@@ -62,3 +62,10 @@ Homepage lower categories with empty cards or paging/navigation problem, simpler
 - TMDb'den gelen `null`, dizi veya primitive JSON 502; istenen film/dizi kimligi ile uyusmayan cevap 502. Upstream yanitta `ea_fb_ratings` alanini taklit etse bile silinir; gercek IMDb puanini yalniz dogrulanmis OMDb cevabi ekleyebilir. Alti adet noncanonical URL/cache alias reddedilir.
 - 2MB TMDb ve 50KB OMDb akislari byte sinirini asinca iptal fonksiyonunun asla cozulmesini beklemeden hata doner. Yalan Content-Length, bozuk UTF-8, stream cancel throw ve hang testleri yesil.
 - TV'de bos afisleri azaltmak icin poster yoksa TMDb backdrop kullanilir, ikisi de yoksa bos kart uretilmez. Resmi koleksiyon secili film parcasinin afisi eksikse ayni filmin detay afisi kullanilir; baska serideki filme yanlis afis verilmez. Pure Kotlin katalog 25/25, film serisi 15/15. Stok CloudStream ayri film-serisi rafi sunmadigindan seriler halen Onerilenler'in basinda; Mi Box Beta testi bekliyor.
+
+
+## 26.09.2026 — Sonraki offline parkur: katalog ag ve cache dayanimi
+- TMDb upstream header VE JSON streaming body icin tek 12 saniye deadline eklendi. TMDb body bir kac byte yollayip sonsuza kadar beklese bile katalog istegi 502 `timeout` ile sonlanir; gizli hata mesaji veya token disari cikmaz.
+- Timeout/byte-limit/UTF-8 hata turleri ayridir. Iptal edilmeyen stream icin bile Promise.race timeout; erken byte-limit veya bozuk body hatasinda alttaki fetch AbortController ile iptal edilir.
+- Edge cache match veya put istisnasi, gecersiz TMDb yaniti sayilmaz: metadata origin'den alinip servis edilir; cache yazimi best-effort.
+- Tam GitHub SHA-eslesmeli Node22 bounded-response 6/6, OMDb ratings policy 3/3 ve yeni deadline/bounded stream 8/8 yerel test gecti. Yeni tam catalog.test.mjs timeout/cache regresyonlari commit edildi fakat bu parkurda full exact Worker suite yeniden calistirilmadi. Canli Worker deploy edilmedi.
