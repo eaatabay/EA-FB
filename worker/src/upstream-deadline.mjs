@@ -23,6 +23,11 @@ export async function withUpstreamDeadline(task, timeoutMs = 12000) {
         }, timeoutMs);
       }),
     ]);
+  } catch (err) {
+    // A byte-budget or JSON error may arrive before the upstream finishes
+    // streaming. Abort the underlying fetch without hiding the real error.
+    try { controller.abort(); } catch { /* preserve original error */ }
+    throw err;
   } finally {
     if (timer !== undefined) clearTimeout(timer);
   }
