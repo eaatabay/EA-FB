@@ -293,3 +293,8 @@ MFA'li admin pilotu. Gercek v5/main ve canli Worker degismez.
 - [x] Güncel GitHub `admin-actions.mjs` SHA `2118c51c12afc0b97b2d18585af606733e7fb0dd` birebir yerel kopyayla doğrulandı; registry mutasyon importları test-only stub olduğundan gerçek D1/CAS testi sayılmaz.
 - [x] Aynı gerçek modül üzerinde 7 bağımsız Node senaryosu **7/7 geçti**: kanonik JSON, 413 byte limiti, bozuk JSON, eylem/revizyon, origin, asılı cancel ile gerçek 4 saniyelik 408 ve admin kimliği hash'i.
 - [ ] Gerçek `admin-actions.test.mjs` tam registry/Worker/SQLite bağımlılıklarıyla çalıştırılmalı.
+
+## 26.09.2026 — SHA eşleşmeli Android refresh iptal testi
+- [x] Güncel GitHub `WatchdogSnapshotRefresh.kt` SHA `a4575e6711a57b4a121486ac4293616b834ef0d9` yerelde birebir doğrulandı; gerçek kaynak Kotlin 1.9 + coroutines ile derlendi.
+- [x] Test-only snapshot/trust modeli ve sahte HTTPS transport ile **9/9 izole JVM kontrolü geçti**: normal güncelleme, throttle, clock rollback, cache/verifier/transport iptali, varsayılan kapalı yapı, bozuk cache+network ve eşzamanlı mutex.
+- [ ] GitHub'daki gerçek 25+ senaryolu `WatchdogSnapshotRefreshTest.kt` ve BouncyCastle/Android bağımlılıklarıyla tam test hâlâ açık.
