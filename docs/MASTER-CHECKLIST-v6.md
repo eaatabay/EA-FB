@@ -302,3 +302,7 @@ MFA'li admin pilotu. Gercek v5/main ve canli Worker degismez.
 ## 26.09.2026 — SHA eşleşmeli gerçek offline snapshot testi
 - [x] Güncel `SourceSnapshotTrust.kt` SHA `d20dcc8d3271b29dc79fdb9b7b7728b8036b5d4e`, `SourceSnapshotOfflinePolicy.kt` SHA `17a6a3be1c61d71e933ea18e9ed9c341802da762`, `SourceSnapshotOfflinePolicyTest.kt` SHA `32c4ff47df9f351862ff060de4efb5d0debc5984` birebir yerel kopyalarla doğrulandı.
 - [x] **Gerçek üç Kotlin dosyası**, BouncyCastle 1.80 ve coroutines ile JVM'de **15/15 geçti**; yeni iptal regresyonu, imza, replay, TTL ve adapter sürümü dahil.
+
+## 26.09.2026 — SHA eşleşmeli gerçek Kotlin refresh tam testi
+- [x] Güncel `WatchdogSnapshotRefreshTest.kt` SHA `67c7dc09ddb02c5b020068f6f0ffac3c78447b84` birebir yerel kopyayla doğrulandı. Güncel gerçek trust/offline/refresh Kotlin kaynakları ve BC 1.80/coroutines ile **25/25 JVM test geçti**. İki yeni iptal regresyonu da dahil.
+- [ ] Android gerçek SharedPreferences/HTTPS transport, Gradle .cs3 ve Mi Box testi hâlâ bekliyor.
