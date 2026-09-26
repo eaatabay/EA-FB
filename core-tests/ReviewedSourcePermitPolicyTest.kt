@@ -198,5 +198,11 @@ fun main() {
         evidenceReference="rights/2026/fixture-movie.md"),series,both))
         .any { it.id=="fixture-movie" },
         "canonical reviewed evidence path remains valid")
+    test(movieUrl("https://FILMS.example.org/public").none { it.id=="fixture-movie" },
+        "noncanonical uppercase signed authority rejected")
+    val duplicateSigned=defaultSnapshot.copy(usableSources=
+        defaultSnapshot.usableSources + defaultSnapshot.usableSources.first())
+    test(ReviewedSourcePermitPolicy.restrict(duplicateSigned,T,permits)==null,
+        "duplicate signed source IDs fail closed at rights boundary")
     println("PASS: $passed/$passed reviewed source permit policy cases")
 }
