@@ -18,7 +18,10 @@ export function dueSources(records, now, limit = 8) {
   return records
     .filter(record => {
       const config = record?.config, state = record?.state;
-      if (!config || !state || !config.enabled || config.integrationApproved !== true) return false;
+      if (!config || !state || config.enabled !== true ||
+          config.integrationApproved !== true ||
+          typeof record.id !== 'string' ||
+          !/^[a-z][a-z0-9-]{2,63}$/.test(record.id)) return false;
       // Unknown/corrupt statuses and timestamps must never become runnable.
       if (typeof state.status !== 'string' ||
           !Object.hasOwn(PRIORITY, state.status)) return false;
@@ -39,7 +42,9 @@ export function incidentEligible(record, now, minSpacingMs = 5 * 60 * 1000) {
   if (!record?.config || !record?.state || !Number.isSafeInteger(now) || now < 0 ||
       !Number.isSafeInteger(minSpacingMs) || minSpacingMs < 60000) return false;
   const { config, state } = record;
-  if (!config.enabled || config.integrationApproved !== true ||
+  if (config.enabled !== true || config.integrationApproved !== true ||
+      typeof record.id !== 'string' ||
+      !/^[a-z][a-z0-9-]{2,63}$/.test(record.id) ||
       typeof state.status !== 'string' ||
       !Object.hasOwn(PRIORITY, state.status)) return false;
   if (state.lastCheckedAt == null) return true;
