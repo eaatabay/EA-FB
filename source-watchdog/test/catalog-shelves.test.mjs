@@ -22,6 +22,8 @@ test("rejects unapproved playback fields, malformed filters, duplicate IDs",()=>
     [{...base,title:"<script>"}],
     [{...base,order:-1}],
     [{...base,enabled:"true"}],
+    [{...base,id:"netflix-movie"}],
+    [{...base,id:"trending"}],
     [{...base,language:"TR"}],
     [{...base,language:"tr-TR"}],
   ]) assert.throws(()=>validateCatalogShelves(bad));
