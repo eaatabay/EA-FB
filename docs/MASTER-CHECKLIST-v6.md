@@ -267,3 +267,8 @@ MFA'li admin pilotu. Gercek v5/main ve canli Worker degismez.
 - [x] Provider için Node kaynak-baglanti testi ve bridge için ek Node wiring testi eklendi; izole Kotlin stub'unda 3/3 iptal senaryosu geçti.
 - [x] Yerel Node 22.16.0 SQLite ve Ed25519 runtime smoke geçti; gerçek repo testleri için checkout gerekiyor.
 - [ ] Gerçek Android/CloudStream build, provider entegrasyonu, tam JVM ve Mi Box testi bekliyor.
+
+## 26.09.2026 — .cs3 gömülü sürüm uyuşmazlığı
+- [x] `stage-release.py` Gradle `plugins.json` v6 denetimine ek olarak, derlenmiş .cs3 içindeki `manifest.json` sürüm alanı varsa bunun da tam integer 6 olmasını şart koşuyor; olmayan alan eski uyum için kabul ediliyor.
+- [x] Gömülü v4/v5/v7, string, float, boolean ve null sürümler için yeni Python regresyon testi eklendi; izole fixture mantığı 9/9 geçti.
+- [ ] Gerçek Gradle tarafından üretilen .cs3 ile staging ve Android kurulum testi bekliyor.
