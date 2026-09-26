@@ -51,6 +51,8 @@
 - [x] 26.09.2026: Izin testi 23 onceki + 24 yeni + 6 ek regresyonla 53 senaryoya genisletildi; LIVE/unknown signed media icin fail-closed hata duzeltildi (ac906b56, 20fbbdd). Testler scripts/test-core.sh icinde; yeni 30 senaryo henuz JVM'de calistirilmadi.
 - [x] 26.09.2026: Bridge'in izin kisitlamasini adapter seciminden once uyguladigini ve production permit listesinin bos oldugunu koruyan Node kaynak-baglanti testi eklendi (5681ca14); henuz calistirilmadi.
 - [x] 26.09.2026: Kanit referansindaki bos ve nokta yol bilesenlerini reddeden fail-closed duzeltme ve 4 cevrimdisi regresyon eklendi (6bbe2a84, c59b7d87). Kotlin izin testi toplam 57 senaryo; yeni senaryolar henuz JVM'de calistirilmadi.
+- [x] 26.09.2026: Izole yerel ortamda, GitHub'dan okunan guncel izin politikasi mantiginin yeniden olusturulmus Kotlin kopyasiyla 38/38 bagimsiz cevrimdisi kontrol gecti. GitHub'in 57 test dosyasinin birebir JVM calismasi DEGIL.
+- [x] 26.09.2026: GitHub'dan dogrudan okunan bridge, permit policy ve test dosyalari uzerinde 6/6 kaynak-kod kontrolu gecti: izin kapisi secimden once, reviewed snapshot kullaniliyor, production permit listesi bos, bilinmeyen medya reddi, kanit yolu segment denetimi ve 57 test kaydi.
 - [ ] Genisletilmis 57/57 Kotlin izin testi ve 5/5 bridge testini gercek v6 checkout'unda yeniden calistirip dogrula.
 - [x] Kullanici acik kaynak-bazli onayi ve hak sahibi delili gerektiren docs/SOURCE-RIGHTS-REVIEW-v6.md olusturuldu.
 - [ ] Gercek kaynagin izin kapsami, kanit referansi, rate limit, bolge ve yenileme tarihini tek tek onaylat.
