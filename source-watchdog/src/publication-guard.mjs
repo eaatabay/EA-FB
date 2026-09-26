@@ -19,7 +19,7 @@ const PATH = /^\\/(?:[a-zA-Z0-9_.-]+(?:\\/[a-zA-Z0-9_.-]+)*)?$/;
 function reviewedGrant(grant, at) {
   if (!grant || !SOURCE_ID.test(grant.id) ||
       !validApprovalReference(grant.evidenceReference) ||
-      !new RegExp("^rights/[0-9]{4}/" + grant.id + "\\\\.md$").test(grant.evidenceReference) ||
+        !new RegExp("^rights/[0-9]{4}/" + grant.id + "\\.md$").test(grant.evidenceReference) ||
       !["movie","series","both"].includes(grant.mediaKind) ||
       !Number.isSafeInteger(grant.adapterVersion) ||
       grant.adapterVersion < 1 || grant.adapterVersion > 1_000_000 ||
