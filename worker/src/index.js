@@ -1,4 +1,5 @@
 import { readBoundedText } from "./bounded-response.mjs";
+import { parseOmdbRating, enrichmentCacheTtl } from "./ratings-enrichment.mjs";
 /**
  * EA-FB public metadata relay. Only TMDb's approved catalog routes are exposed.
  * The TMDB_READ_ACCESS_TOKEN exists exclusively as a Cloudflare Worker secret.
@@ -228,18 +229,10 @@ export default {
           const text = await readBoundedText(other, 50_000);
           if (text.length < 50_000) {
             const data = JSON.parse(text);
-            const value = Number(data.imdbRating);
-            // A genuine N/A is a settled result, not a transient outage.
-            // An HTTP failure, invalid JSON or mismatched identity is NOT.
-            omdbSettled = data.Response === "True" &&
-              String(data.imdbID) === imdbId &&
-              (data.imdbRating === "N/A" ||
-               (Number.isFinite(value) && value > 0 && value <= 10));
-            if (omdbSettled && Number.isFinite(value) &&
-                value > 0 && value <= 10) {
-              // Avoid returning a copied OMDb response. Retain only the rating
-              // and clearly identify its source on the client.
-              result.ea_fb_ratings = { imdb: value, source: "OMDb API" };
+            const parsed = parseOmdbRating(data, imdbId);
+            omdbSettled = parsed.settled;
+            if (parsed.rating !== null) {
+              result.ea_fb_ratings = { imdb: parsed.rating, source: "OMDb API" };
               outputBody = JSON.stringify(result);
             }
           }
@@ -251,7 +244,7 @@ export default {
     // Do not poison the OMDb-mode cache for hours with a TMDb-only result
     // caused by a temporary enrichment failure. Preserve TMDb availability,
     // retry enrichment after one minute, and retain normal TTL for real N/A.
-    const responseTtl = omdbAttempted && !omdbSettled ? 60 : catalog.ttl;
+    const responseTtl = enrichmentCacheTtl(omdbAttempted,omdbSettled,catalog.ttl);
     const response = new Response(outputBody, {
       status: 200,
       headers: {
