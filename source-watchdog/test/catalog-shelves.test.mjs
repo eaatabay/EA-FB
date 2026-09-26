@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {validateCatalogShelves,publicCatalogShelves} from "../src/catalog-shelves.mjs";
 const base={id:"new-turkish-tv",title:"Yeni Türk Dizileri",kind:"tv",
-  genres:"18",enabled:true,order:0};
+  genres:"18",language:"tr",enabled:true,order:0};
 test("validates catalog-only shelf and preserves order",()=>{
   const rows=validateCatalogShelves([{...base,order:2},
     {id:"apple-movie",title:"Apple TV Filmleri",kind:"movie",
@@ -22,5 +22,7 @@ test("rejects unapproved playback fields, malformed filters, duplicate IDs",()=>
     [{...base,title:"<script>"}],
     [{...base,order:-1}],
     [{...base,enabled:"true"}],
+    [{...base,language:"TR"}],
+    [{...base,language:"tr-TR"}],
   ]) assert.throws(()=>validateCatalogShelves(bad));
 });
