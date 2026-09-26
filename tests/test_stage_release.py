@@ -106,6 +106,45 @@ class StageReleaseTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "symlinked"):
             module.stage(self.root)
 
+    def test_reject_oversized_zip_member_before_decompression(self):
+        path = self.make_archive()
+        with zipfile.ZipFile(path, "a") as z:
+            z.writestr("oversized.bin", b"x" * (64 * 1024 * 1024 + 1),
+                       compress_type=zipfile.ZIP_DEFLATED)
+        with self.assertRaisesRegex(ValueError, "Oversized"):
+            module.stage(self.root)
+
+    def test_reject_symlinked_dist_directory(self):
+        self.make_archive()
+        external = self.root / "external-dist"
+        external.mkdir()
+        (self.root / "dist").symlink_to(external, target_is_directory=True)
+        with self.assertRaisesRegex(ValueError, "symlinked dist"):
+            module.stage(self.root)
+        self.assertEqual(list(external.iterdir()), [])
+
+    def test_reject_symlinked_release_output(self):
+        self.make_archive()
+        dist = self.root / "dist"
+        dist.mkdir()
+        outside = self.root / "outside.cs3"
+        outside.write_bytes(b"untouched")
+        (dist / "EA-FB.cs3").symlink_to(outside)
+        with self.assertRaisesRegex(ValueError, "symlinked release outputs"):
+            module.stage(self.root)
+        self.assertEqual(outside.read_bytes(), b"untouched")
+
+    def test_reject_symlinked_release_manifest(self):
+        self.make_archive()
+        dist = self.root / "dist"
+        dist.mkdir()
+        outside = self.root / "outside.json"
+        outside.write_text("untouched")
+        (dist / "plugins.json").symlink_to(outside)
+        with self.assertRaisesRegex(ValueError, "symlinked release outputs"):
+            module.stage(self.root)
+        self.assertEqual(outside.read_text(), "untouched")
+
     def test_reject_multiple_extensions(self):
         self.make_archive()
         (self.root / "build" / "plugins.json").write_text(json.dumps([
