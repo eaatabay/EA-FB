@@ -42,3 +42,18 @@ test("throwing stream cancellation never masks the size-limit error",async()=>{
   }));
   await assert.rejects(readBoundedText(response,100),/upstream_too_large/);
 });
+
+test("never-settling cancel cannot stall an oversized upstream response",async()=>{
+  let cancelCalled=false;
+  const response=new Response(new ReadableStream({
+    start(c){c.enqueue(new Uint8Array(101));},
+    cancel(){cancelCalled=true;return new Promise(()=>{});},
+  }));
+  const outcome=await Promise.race([
+    readBoundedText(response,100).then(()=> "unexpected_success",
+      e=>e.message),
+    new Promise(resolve=>setTimeout(()=>resolve("hung_cancel"),150)),
+  ]);
+  assert.equal(outcome,"upstream_too_large");
+  assert.equal(cancelCalled,true);
+});
