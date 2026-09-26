@@ -2,6 +2,8 @@ import {
   HEALTH, applyProbe, initialState, releaseForRetest, validateSource,
 } from "./policy.mjs";
 import { buildClientSnapshot } from "./snapshot.mjs";
+import { validApprovalReference } from "./publication-guard.mjs";
+export { validApprovalReference } from "./publication-guard.mjs";
 
 /**
  * Private D1 registry. NO public HTTP endpoints or live third-party probes.
@@ -41,11 +43,6 @@ function runIdText(runId) {
   return runId;
 }
 
-export function validApprovalReference(value) {
-  return typeof value === "string" && value.length >= 8 && value.length <= 160 &&
-    /^[A-Za-z0-9_-]+(?:\/[A-Za-z0-9_.-]+)*$/.test(value) &&
-    value.split("/").every(part => part !== "." && part !== "..");
-}
 
 function requireApprovedConfig(input) {
   const config = validateSource(input);
