@@ -23,5 +23,5 @@ object CatalogPagePolicy {
         totalPages: Int
     ): Boolean =
         !usedFallback && !scannedExtraPages &&
-            page >= 1 && page < totalPages && rawLength > 0
+            CatalogCardPolicy.hasNext(page,rawLength,totalPages)
 }
