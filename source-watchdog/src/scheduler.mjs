@@ -21,8 +21,7 @@ export function dueSources(records, now, limit = 8) {
       if (!config || !state || !config.enabled || config.integrationApproved !== true) return false;
       // Unknown/corrupt statuses and timestamps must never become runnable.
       if (typeof state.status !== 'string' ||
-          (typeof state.status !== 'string' ||
-       !Object.hasOwn(PRIORITY, state.status))) return false;
+          !Object.hasOwn(PRIORITY, state.status)) return false;
       return Number.isSafeInteger(state.nextCheckAt) &&
         state.nextCheckAt >= 0 && state.nextCheckAt <= now;
     })
@@ -41,6 +40,7 @@ export function incidentEligible(record, now, minSpacingMs = 5 * 60 * 1000) {
       !Number.isSafeInteger(minSpacingMs) || minSpacingMs < 60000) return false;
   const { config, state } = record;
   if (!config.enabled || config.integrationApproved !== true ||
+      typeof state.status !== 'string' ||
       !Object.hasOwn(PRIORITY, state.status)) return false;
   if (state.lastCheckedAt == null) return true;
   if (!Number.isSafeInteger(state.lastCheckedAt) ||
