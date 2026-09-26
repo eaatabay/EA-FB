@@ -55,9 +55,18 @@ async function boundedJSON(request) {
   const reader = request.body.getReader();
   const chunks = [];
   let size = 0;
+  let timer;
+  const deadline = new Promise((_, reject) => {
+    timer = setTimeout(() => {
+      reject(new AdminMutationError("admin_body_timeout", 408));
+      // A malicious body may ignore cancellation; never await it.
+      try { void Promise.resolve(reader.cancel()).catch(() => {}); }
+      catch { /* Preserve the timeout. */ }
+    }, 4000);
+  });
   try {
     while (true) {
-      const {done, value} = await reader.read();
+      const {done, value} = await Promise.race([reader.read(), deadline]);
       if (done) break;
       if (!(value instanceof Uint8Array)) {
         throw new AdminMutationError("invalid_admin_body");
@@ -72,6 +81,7 @@ async function boundedJSON(request) {
       chunks.push(value);
     }
   } finally {
+    if (timer) clearTimeout(timer);
     reader.releaseLock();
   }
   const merged = new Uint8Array(size);
