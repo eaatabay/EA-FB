@@ -1,6 +1,9 @@
 package com.eafb
 
 import android.content.Context
+import android.content.SharedPreferences
+import java.util.Collections
+import java.util.WeakHashMap
 import java.nio.charset.StandardCharsets
 import kotlinx.coroutines.CancellationException
 
@@ -20,13 +23,24 @@ class WatchdogClientStore(
     private val preferences = context.getSharedPreferences(
         "ea_fb_watchdog_trust_v1", Context.MODE_PRIVATE
     )
-    // Android may update its in-memory preferences even if the disk commit
-    // returns false. Never expose that non-durable replay state in this process.
-    private var persistenceFailed = false
+    // Android may update its in-memory preferences even if disk commit fails.
+    // Share the fail-closed marker with other store instances using the SAME
+    // SharedPreferences object; weak keys avoid retaining discarded contexts.
+    private companion object {
+        val failedPreferences = Collections.newSetFromMap(
+            WeakHashMap<SharedPreferences, Boolean>()
+        )
+    }
+    private fun persistenceFailed(): Boolean = synchronized(failedPreferences) {
+        preferences in failedPreferences
+    }
+    private fun markPersistenceFailed() = synchronized(failedPreferences) {
+        failedPreferences.add(preferences)
+    }
 
     @Synchronized
     fun acceptSignedJson(raw: String, now: Long): SnapshotCheck {
-        if (persistenceFailed) return SnapshotCheck.Rejected("cannot_persist_replay_guard")
+        if (persistenceFailed()) return SnapshotCheck.Rejected("cannot_persist_replay_guard")
         if (raw.length > 32_768 ||
             raw.toByteArray(StandardCharsets.UTF_8).size > 32_768) {
             return SnapshotCheck.Rejected("invalid_envelope")
@@ -48,7 +62,7 @@ class WatchdogClientStore(
             .putLong("last_generated_at", result.snapshot.generatedAt)
             .putString("last_signed_envelope", raw)
             .commit()
-        if (!durable) persistenceFailed = true
+        if (!durable) markPersistenceFailed()
         return if (durable) result
             else SnapshotCheck.Rejected("cannot_persist_replay_guard")
     }
@@ -74,7 +88,7 @@ class WatchdogClientStore(
      */
     @Synchronized
     fun restoreVerifiedOffline(now: Long): VerifiedSourceSnapshot? =
-        if (persistenceFailed) null else SourceSnapshotOfflinePolicy.restore(
+        if (persistenceFailed()) null else SourceSnapshotOfflinePolicy.restore(
             preferences.getString("last_signed_envelope", null), now,
             preferences.getLong("last_revision", -1L),
             preferences.getLong("last_generated_at", -1L),
