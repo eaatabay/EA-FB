@@ -33,7 +33,7 @@ export function normalizedHttpsUrl(value) {
         rawPath.includes("//") || rawPath.split("/").some(x=>x==="."||x==="..") ||
         url.protocol !== "https:" || url.username || url.password ||
         url.port || url.search || url.hash ||
-        !/^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)+$/.test(url.hostname) ||
+        !/^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)+$/.test(url.hostname) ||
         url.hostname.length > 253 || url.hostname.split(".").some(x=>x.length>63) ||
         url.hostname === "localhost" ||
         url.hostname.endsWith(".localhost") ||
