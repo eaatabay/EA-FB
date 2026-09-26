@@ -45,6 +45,19 @@ fun main() {
         "production series sources disabled")
     ok(bridge.forNewSearch(MediaKind.LIVE, now).isEmpty(),
         "Live TV remains separate and untouched")
+    ok(bridge.forNewSearch(MediaKind.MOVIE, -1L).isEmpty(),
+        "invalid negative time cannot activate movie source")
+    ok(bridge.forNewSearch(MediaKind.SERIES, -1L).isEmpty(),
+        "invalid negative time cannot activate series source")
+    ok(bridge.forNewSearch(MediaKind.LIVE, -1L).isEmpty(),
+        "LIVE with invalid time remains disabled")
+    val noAdapters = WatchdogApprovedAdapterBridge(store, emptyList())
+    ok(noAdapters.forNewSearch(MediaKind.MOVIE, now).isEmpty(),
+        "empty adapter bundle cannot activate movie source")
+    ok(noAdapters.forNewSearch(MediaKind.SERIES, now).isEmpty(),
+        "empty adapter bundle cannot activate series source")
+    ok(noAdapters.forNewSearch(MediaKind.LIVE, now).isEmpty(),
+        "empty adapter bundle cannot activate LIVE source")
     ok(bundled.configured == 0 && !context.lookedUp,
         "no unapproved adapter initialization or cached-source read")
     ok(WatchdogTrustConfig.pinnedPublicKeys.isEmpty() &&
