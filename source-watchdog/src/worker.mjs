@@ -4,7 +4,8 @@
  * are NO third-party network adapters or public registry/admin endpoints.
  * Fixture mode requires an entirely fixture-only D1 database.
  */
-import { getPrivateRegistry, buildUnpublishedSnapshot, RegistryConflict, validApprovalReference } from "./registry.mjs";
+import { getPrivateRegistry, buildUnpublishedSnapshot, RegistryConflict } from "./registry.mjs";
+import { assertReviewedPublication } from "./publication-guard.mjs";
 import {adminWritesConfigured,parseAdminMutationRequest,executeAdminMutation,AdminMutationError} from "./admin-actions.mjs";
 import { publishSignedSnapshot } from "./snapshot-publisher.mjs";
 import { adminAccessConfigured, verifyAdminAccess } from "./admin-auth.mjs";
@@ -175,28 +176,7 @@ export function createWatchdogWorker({
                 x.baseUrl?.includes(".example.org"))) {
             throw new Error("unsafe_production_snapshot");
           }
-          // Defense in depth: never sign a source that lost its reviewed
-          // rights evidence, was disabled, or disagrees with the D1 registry.
-          // This check is independent of the snapshot builder's filtering.
-          const byId = new Map();
-          for (const row of records) {
-            if (!row || typeof row.id !== "string" || byId.has(row.id)) {
-              throw new Error("unsafe_production_registry");
-            }
-            byId.set(row.id, row.config);
-          }
-          if (snapshot.sources.some(x => {
-            const config = byId.get(x?.id);
-            return !config || config.id !== x.id ||
-              config.enabled !== true ||
-              config.integrationApproved !== true ||
-              !validApprovalReference(config.approvalRef) ||
-              config.currentUrl !== x.baseUrl ||
-              config.mediaKind !== x.mediaKind ||
-              config.adapterVersion !== x.adapterVersion;
-          })) {
-            throw new Error("unreviewed_production_snapshot");
-          }
+          assertReviewedPublication(records, snapshot);
           return snapshot;
         });
         return response(signed);
