@@ -144,7 +144,7 @@ class EAProvider : MainAPI() {
         return date.take(4).toIntOrNull()?.takeIf { it in 1888..2100 }
     }
 
-    private fun newItem(item: JSONObject, fallback: MediaKind): SearchResponse? {
+    private fun newItem(item: JSONObject, fallback: MediaKind, fallbackArtwork: String? = null): SearchResponse? {
         // Mixed TMDb feeds also include people; never render actors as movie cards.
         val type = item.optString("media_type")
         if (type.isNotBlank() && type != "movie" && type != "tv") return null
@@ -154,7 +154,7 @@ class EAProvider : MainAPI() {
         val path = if (kind == MediaKind.SERIES) "tv" else "movie"
         val poster = CatalogCardPolicy.bestArtwork(
             item.optString("poster_path"), item.optString("backdrop_path")
-        ) ?: return null
+        ) ?: CatalogCardPolicy.bestArtwork(fallbackArtwork, null) ?: return null
         return newMovieSearchResponse(title, "$mainUrl/$path/$id", if (kind == MediaKind.SERIES) TvType.TvSeries else TvType.Movie) {
             posterUrl = poster?.let { "https://image.tmdb.org/t/p/w500$it" }
             year = mediaYear(item, kind)
@@ -330,7 +330,16 @@ class EAProvider : MainAPI() {
         if (ordered.size < 2 || ordered.none { it.optInt("id") == ownId }) {
             return Pair(null, emptyList())
         }
-        val cards = ordered.mapNotNull { newItem(it, MediaKind.MOVIE) }
+        // TMDb collection parts can omit the selected film's artwork even
+        // when its detail page has a valid poster. Reuse only that same film's
+        // detail artwork; never misattribute another installment's poster.
+        val selectedArtwork = CatalogCardPolicy.bestArtwork(
+            movie.optString("poster_path"), movie.optString("backdrop_path")
+        )
+        val cards = ordered.mapNotNull { part ->
+            newItem(part, MediaKind.MOVIE,
+                if (part.optInt("id") == ownId) selectedArtwork else null)
+        }
         if (cards.size < 2) return Pair(null, emptyList())
         val labels = ordered.take(12).joinToString(" • ") { part ->
             val title = part.optString("title")
