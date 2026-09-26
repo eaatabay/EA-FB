@@ -214,8 +214,10 @@ export default {
     const isDetail = /^\/(movie|tv)\/\d{1,9}$/.test(catalog.upstreamPath);
     const imdbId = result?.external_ids?.imdb_id;
     let outputBody = body;
-    if (isDetail && env.OMDB_API_KEY && typeof imdbId === "string" &&
-        /^tt\d{7,10}$/.test(imdbId)) {
+    const omdbAttempted = isDetail && Boolean(env.OMDB_API_KEY) &&
+      typeof imdbId === "string" && /^tt\d{7,10}$/.test(imdbId);
+    let omdbSettled = false;
+    if (omdbAttempted) {
       try {
         const omdbUrl = "https://www.omdbapi.com/?i=" +
           encodeURIComponent(imdbId) + "&apikey=" + encodeURIComponent(env.OMDB_API_KEY);
@@ -227,8 +229,14 @@ export default {
           if (text.length < 50_000) {
             const data = JSON.parse(text);
             const value = Number(data.imdbRating);
-            if (data.Response === "True" && Number.isFinite(value) &&
-                value > 0 && value <= 10 && String(data.imdbID) === imdbId) {
+            // A genuine N/A is a settled result, not a transient outage.
+            // An HTTP failure, invalid JSON or mismatched identity is NOT.
+            omdbSettled = data.Response === "True" &&
+              String(data.imdbID) === imdbId &&
+              (data.imdbRating === "N/A" ||
+               (Number.isFinite(value) && value > 0 && value <= 10));
+            if (omdbSettled && Number.isFinite(value) &&
+                value > 0 && value <= 10) {
               // Avoid returning a copied OMDb response. Retain only the rating
               // and clearly identify its source on the client.
               result.ea_fb_ratings = { imdb: value, source: "OMDb API" };
@@ -240,11 +248,15 @@ export default {
         // IMDb enrichment is best-effort. TMDb detail always remains usable.
       }
     }
+    // Do not poison the OMDb-mode cache for hours with a TMDb-only result
+    // caused by a temporary enrichment failure. Preserve TMDb availability,
+    // retry enrichment after one minute, and retain normal TTL for real N/A.
+    const responseTtl = omdbAttempted && !omdbSettled ? 60 : catalog.ttl;
     const response = new Response(outputBody, {
       status: 200,
       headers: {
         "content-type": "application/json; charset=utf-8",
-        "cache-control": "public, max-age=" + catalog.ttl,
+        "cache-control": "public, max-age=" + responseTtl,
         "x-content-type-options": "nosniff",
         "access-control-allow-origin": "*",
       },
