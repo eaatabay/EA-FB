@@ -28,6 +28,7 @@ object HomeCategories {
         CatalogCategory("apple-tv", "Apple TV Dizileri", MediaKind.SERIES, "/discover/tv?with_watch_providers=350&watch_region=TR&with_watch_monetization_types=flatrate"),
         CatalogCategory("max-movie", "HBO Max Filmleri", MediaKind.MOVIE, "/discover/movie?with_watch_providers=1899&watch_region=TR&with_watch_monetization_types=flatrate"),
         CatalogCategory("max-tv", "HBO Max Dizileri", MediaKind.SERIES, "/discover/tv?with_watch_providers=1899&watch_region=TR&with_watch_monetization_types=flatrate"),
+        CatalogCategory("paramount-movie", "Paramount+ Filmleri", MediaKind.MOVIE, "/discover/movie?with_watch_providers=531&watch_region=TR&with_watch_monetization_types=flatrate"),
         CatalogCategory("paramount-tv", "Paramount+ Dizileri", MediaKind.SERIES, "/discover/tv?with_watch_providers=531&watch_region=TR&with_watch_monetization_types=flatrate"),
         CatalogCategory("mubi-movie", "MUBI Filmleri", MediaKind.MOVIE, "/discover/movie?with_watch_providers=11&watch_region=TR&with_watch_monetization_types=flatrate"),
         CatalogCategory("action", "Aksiyon Filmleri", MediaKind.MOVIE, "/discover/movie?with_genres=28"),
