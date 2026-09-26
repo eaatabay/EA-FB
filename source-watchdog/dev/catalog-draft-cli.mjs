@@ -1,4 +1,5 @@
-import {readFile,writeFile,rename,unlink} from "node:fs/promises";
+import {readFile,writeFile,rename,unlink,open} from "node:fs/promises";
+import {fileURLToPath} from "node:url";
 import {resolve,dirname,basename,join} from "node:path";
 import {buildCatalogDraft,editCatalogDraft} from "../src/catalog-shelves.mjs";
 import {renderCatalogDraftPreview} from "../src/catalog-admin-preview.mjs";
@@ -7,19 +8,27 @@ import {renderCatalogDraftPreview} from "../src/catalog-admin-preview.mjs";
 export async function applyLocalCatalogEdit(file,command) {
   const absolute=resolve(file);
   if (!absolute.endsWith(".catalog-draft.json")) throw Error("draft_filename_required");
-  const draft=JSON.parse(await readFile(absolute,"utf8"));
-  const current=buildCatalogDraft(draft.shelves,draft.revision);
-  if (draft.status!==current.status || draft.version!==1) throw Error("not_an_unpublished_draft");
-  const updated=editCatalogDraft(current,command.expectedRevision,command.operation);
-  const target=join(dirname(absolute),"."+basename(absolute)+".tmp-"+process.pid);
+  const lock=absolute+".lock";
+  // Exclusive local lock closes the read/CAS/write race between two editors.
+  const handle=await open(lock,"wx",0o600);
   try {
-    await writeFile(target,JSON.stringify(updated,null,2)+"\n",{flag:"wx",mode:0o600});
-    await rename(target,absolute);
-  } catch(error) {
-    await unlink(target).catch(()=>{});
-    throw error;
+    const draft=JSON.parse(await readFile(absolute,"utf8"));
+    const current=buildCatalogDraft(draft.shelves,draft.revision);
+    if (draft.status!==current.status || draft.version!==1) throw Error("not_an_unpublished_draft");
+    const updated=editCatalogDraft(current,command.expectedRevision,command.operation);
+    const target=join(dirname(absolute),"."+basename(absolute)+".tmp-"+process.pid);
+    try {
+      await writeFile(target,JSON.stringify(updated,null,2)+"\\n",{flag:"wx",mode:0o600});
+      await rename(target,absolute);
+    } catch(error) {
+      await unlink(target).catch(()=>{});
+      throw error;
+    }
+    return updated;
+  } finally {
+    await handle.close();
+    await unlink(lock).catch(()=>{});
   }
-  return updated;
 }
 
 export async function previewLocalCatalogDraft(file) {
@@ -29,7 +38,7 @@ export async function previewLocalCatalogDraft(file) {
   return renderCatalogDraftPreview(draft.shelves,draft.revision);
 }
 
-if (process.argv[1] && resolve(process.argv[1])===resolve(new URL(import.meta.url).pathname)) {
+if (process.argv[1] && resolve(process.argv[1])===resolve(fileURLToPath(import.meta.url))) {
   const [action,file,arg]=process.argv.slice(2);
   try {
     if (action==="preview" && file && !arg) {
