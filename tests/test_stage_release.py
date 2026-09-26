@@ -81,6 +81,19 @@ class StageReleaseTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "Unexpected .cs3 manifest identity"):
             module.stage(self.root)
 
+    def test_compiled_manifest_version_must_not_conflict_with_v6(self):
+        path = self.make_archive()
+        for version in (4, 5, 7, "6", 6.0, True, None):
+            with zipfile.ZipFile(path, "w") as z:
+                z.writestr("classes.dex", b"dex-test-placeholder" * 20)
+                z.writestr("manifest.json", json.dumps({"name": "EA-FB", "version": version}))
+            with self.assertRaisesRegex(ValueError, "identity or version"):
+                module.stage(self.root)
+        with zipfile.ZipFile(path, "w") as z:
+            z.writestr("classes.dex", b"dex-test-placeholder" * 20)
+            z.writestr("manifest.json", json.dumps({"name": "EA-FB", "version": 6}))
+        self.assertTrue((module.stage(self.root) / "EA-FB.cs3").is_file())
+
     def test_reject_duplicate_critical_zip_members(self):
         path = self.make_archive()
         with zipfile.ZipFile(path, "a") as z:
