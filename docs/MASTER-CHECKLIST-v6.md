@@ -242,3 +242,9 @@ MFA'li admin pilotu. Gercek v5/main ve canli Worker degismez.
 - [x] Gerçek Kotlin refresh test dosyasına iki regresyon vakası eklendi: cache restore iptali ve imza doğrulama iptali.
 - [ ] Bu iki yeni test dahil tüm Kotlin/JVM paketini ve gerçek Android lifecycle iptalini çalıştır; GitHub dosya değişiklikleri doğrulandı ancak test yürütme sonucu henüz yok.
 - [ ] Tam Node/SQLite, Wrangler/D1, Gradle .cs3 ve Mi Box doğrulaması hâlâ bekliyor. Actions kotası doluyken workflow tetikleme yok; main/v5/canlı Worker/D1 değişmedi.
+
+## 26.09.2026 — Cancellation zinciri ek kontrol
+- [x] `SourceSnapshotOfflinePolicy.restore` parser iptalini artık yutmuyor; ayrı JVM regresyon vakası eklendi.
+- [x] `WatchdogClientStore.acceptSignedJson` parser iptalini artık yutmuyor; ayrı JVM regresyon vakası eklendi.
+- [x] Kotlin `try/catch` + Elvis sözdizimi yerel `kotlinc` ile bağımsız kontrol edildi; tam proje derlemesi yerine geçmez.
+- [ ] Dört yeni iptal regresyonunu gerçek Kotlin/JVM paketinde çalıştır; Android yaşam döngüsü ve tam Gradle derlemesi hâlâ bekliyor.
