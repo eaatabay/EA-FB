@@ -27,5 +27,12 @@ fun main() {
     checkCase(FilmCollectionPolicy.chronological(movies,2).first().title == "Spider-Man")
     checkCase(FilmCollectionPolicy.chronological(movies +
         FilmCollectionPart(7,"  Bonus  ","2001-01-01"),2).first().title == "Bonus")
-    println("PASS: $count/12 film collection chronology and identity cases")
+    val impossible = FilmCollectionPart(8,"Impossible February","2026-02-31")
+    val badLeap = FilmCollectionPart(9,"Not Leap Year","2025-02-29")
+    val leap = FilmCollectionPart(11,"Leap Year","2024-02-29")
+    checkCase(FilmCollectionPolicy.chronological(movies + impossible,2).last().id == 8)
+    checkCase(FilmCollectionPolicy.chronological(movies + badLeap,2).last().id == 9)
+    checkCase(FilmCollectionPolicy.chronological(movies + leap,2).map { it.id } ==
+        listOf(1,2,3,11))
+    println("PASS: $count/15 film collection chronology and identity cases")
 }
