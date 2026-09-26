@@ -76,3 +76,15 @@ test("getters, setters and symbol properties cannot cross the parser boundary",(
   const clean=sanitizeAdapterProbe(good(),config);
   assert.deepEqual(clean,good());
 });
+
+test("throwing Proxy traps become schema anomalies without leaking exceptions",()=>{
+  const traps=[
+    {getPrototypeOf(){throw Error("SECRET_PROXY_PROTOTYPE");}},
+    {ownKeys(){throw Error("SECRET_PROXY_OWNKEYS");}},
+    {getOwnPropertyDescriptor(){throw Error("SECRET_PROXY_DESCRIPTOR");}},
+  ];
+  for(const trap of traps){
+    assert.equal(sanitizeAdapterProbe(new Proxy(good(),trap),config),null);
+    assert.equal(sanitizeAdapterProbe({...good(),checks:new Proxy(good().checks,trap)},config),null);
+  }
+});
