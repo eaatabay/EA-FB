@@ -1,3 +1,4 @@
+import { readBoundedText } from "./bounded-response.mjs";
 /**
  * EA-FB public metadata relay. Only TMDb's approved catalog routes are exposed.
  * The TMDB_READ_ACCESS_TOKEN exists exclusively as a Cloudflare Worker secret.
@@ -22,33 +23,6 @@ function json(object, status = 200, ttl = 0) {
       "access-control-allow-origin": "*",
     },
   });
-}
-
-/** Bound actual upstream bytes even if Content-Length is absent or false. */
-async function readBoundedText(response, maxBytes) {
-  const advertised = response.headers.get("content-length");
-  if (advertised !== null && /^\d+$/.test(advertised) &&
-      Number(advertised) > maxBytes) throw new Error("upstream_too_large");
-  if (!response.body) throw new Error("upstream_empty");
-  const reader = response.body.getReader();
-  const decoder = new TextDecoder("utf-8", {fatal:true});
-  let bytes = 0, text = "";
-  try {
-    while (true) {
-      const {done, value} = await reader.read();
-      if (done) break;
-      if (!(value instanceof Uint8Array)) throw new Error("upstream_invalid_chunk");
-      bytes += value.byteLength;
-      if (bytes > maxBytes) {
-        try { await reader.cancel(); } catch { /* Still reject oversized data. */ }
-        throw new Error("upstream_too_large");
-      }
-      text += decoder.decode(value, {stream:true});
-    }
-    return text + decoder.decode();
-  } finally {
-    reader.releaseLock();
-  }
 }
 
 function catalogRequest(url) {
