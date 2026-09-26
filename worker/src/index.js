@@ -12,7 +12,8 @@ const MONETIZATION = new Set(["flatrate", "free", "ads", "rent", "buy"]);
 const SORTS = new Set(["popularity.desc", "vote_average.desc", "primary_release_date.desc", "first_air_date.desc"]);
 // Exact calendar date, not Date.parse's permissive rollover (e.g. February 31).
 function validIsoDate(value) {
-  if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(value)) return false;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value) || Number(value.slice(0,4)) < 1888 ||
+      Number(value.slice(0,4)) > 2100) return false;
   const timestamp = Date.parse(value + "T00:00:00.000Z");
   return Number.isFinite(timestamp) &&
     new Date(timestamp).toISOString().slice(0, 10) === value;
