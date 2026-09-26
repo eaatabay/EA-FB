@@ -141,3 +141,9 @@ java -cp "$TMP/watchdog-permits.jar:$BC_JAR" com.eafb.ReviewedSourcePermitPolicy
 # The bridge test uses fake SharedPreferences and never opens an HTTPS socket.
 kotlinc -cp "$BC_JAR:$COROUTINES" "$DOMAIN" "$ENGINE" "$TRUST" "$GATE" "$SELECTION" "$BRIDGE" "$PERMITS" "$OFFLINE" "$REFRESH" "$HTTPS" "$STORE" core-tests/stubs/android/content/Context.kt core-tests/stubs/com/eafb/WatchdogSnapshotJson.kt core-tests/WatchdogApprovedAdapterBridgeTest.kt -include-runtime -d "$TMP/watchdog-bridge.jar"
 java -cp "$TMP/watchdog-bridge.jar:$BC_JAR:$COROUTINES" com.eafb.WatchdogApprovedAdapterBridgeTestKt
+# Exact checked-in bridge wiring guard (offline; no network or Android device).
+if ! command -v node >/dev/null 2>&1; then
+  echo "Node.js required for bridge wiring regression" >&2
+  exit 2
+fi
+node --test source-watchdog/test/bridge-rights-wiring.test.mjs
