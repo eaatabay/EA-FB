@@ -66,6 +66,7 @@
 - [x] 26.09.2026: GitHub'daki guncel bridge ve 4 testlik Node wiring kodunun yerel yeniden olusturulmus kopyasi Node 22 uzerinde 4/4 gecti; birebir SHA eslesmesi veya tam checkout testi degildir.
 - [x] 26.09.2026: Bridge'e LIVE ve gecersiz saat icin cache okumadan erken donus eklendi (ec724267). Node wiring dosyasina besinci regresyon eklendi (47dea09f).
 - [x] 26.09.2026: GitHub SHA'si birebir eslesen bridge (85b666c5), izin politikasi (4834a92c) ve Node test dosyasi (c7abae59) yerel Node 22'de 5/5 gecti. Ayni birebir Kotlin politika dosyasi, snapshot veri sinifi stub'uyla bagimsiz 43/43 JVM kontrolunu gecti. GitHub'daki 62 test dosyasi ve tam bridge JVM paketi henuz calistirilmadi.
+- [x] 26.09.2026: SHA-eslesmeli gercek bridge ve izin politikasi kodu, test bagimlilik stublariyla JVM'de 18/18 runtime fail-closed kontrolunden gecti (MOVIE/SERIES/LIVE x 3 saat x 2 adapter durumu); 0 cache okumasi, 0 delivery-config girisi, 0 secim. Bu, gercek depodaki 5-case bridge entegrasyon testi degildir.
 - [ ] Genisletilmis 62/62 Kotlin izin testi ve 5/5 bridge JVM testini gercek v6 checkout'unda calistirip dogrula. Node wiring 5/5, birebir SHA eslesmeli yerel dosyalarda gecti.
 - [x] Kullanici acik kaynak-bazli onayi ve hak sahibi delili gerektiren docs/SOURCE-RIGHTS-REVIEW-v6.md olusturuldu.
 - [ ] Gercek kaynagin izin kapsami, kanit referansi, rate limit, bolge ve yenileme tarihini tek tek onaylat.
