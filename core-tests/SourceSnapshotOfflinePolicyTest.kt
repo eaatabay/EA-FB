@@ -1,6 +1,7 @@
 package com.eafb
 
 import org.bouncycastle.util.encoders.Base64
+import kotlinx.coroutines.CancellationException
 
 private const val PUBLIC_TEST_PIN = "3XThw1FOoxQye8ObEatzSwW1lRlo/g9iZSRuClkOjak="
 private const val PUBLIC_TEST_SIGNATURE = "pcw-_1oE7BZMdmSjTJgVuurK04lxCVpHrcCLEchUueMtiI3B7lrrCl1NbbWNELG-HgEbw12OA14c4nC9gtp1DA"
@@ -56,5 +57,9 @@ fun main() {
     checked(WatchdogTrustConfig.pinnedPublicKeys.isEmpty() &&
         WatchdogTrustConfig.installedAdapterVersions.isEmpty(),
         "tracked build has no live keys/adapters")
+    checked(runCatching { SourceSnapshotOfflinePolicy.restore("signed", FIXTURE_TIME,
+        42, FIXTURE_TIME, { throw CancellationException("cancelled") }, verifier)
+    }.exceptionOrNull() is CancellationException,
+        "cancelled offline parser propagates instead of returning empty cache")
     println("PASS: $passed/$passed signed offline snapshot policy checks")
 }
