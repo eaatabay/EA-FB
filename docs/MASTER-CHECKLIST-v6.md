@@ -288,3 +288,8 @@ MFA'li admin pilotu. Gercek v5/main ve canli Worker degismez.
 
 ## 26.09.2026 — SHA eşleşmeli yönetici paneli tam testi
 - [x] Güncel GitHub `admin-view.mjs` SHA `b645f11ce6480421bbc42ce452a48e89e6f2b365` ve `admin-view.test.mjs` SHA `83131b1e18adfed11db75536c34a568aa7d377ca` birebir yerel kopyalarla **6/6 Node testi geçti**. Güvenli tanı kodları, bilinmeyen durum alarmı, HTML escape ve ham hata gizleme dahil.
+
+## 26.09.2026 — SHA eşleşmeli yönetici POST sınır testi
+- [x] Güncel GitHub `admin-actions.mjs` SHA `2118c51c12afc0b97b2d18585af606733e7fb0dd` birebir yerel kopyayla doğrulandı; registry mutasyon importları test-only stub olduğundan gerçek D1/CAS testi sayılmaz.
+- [x] Aynı gerçek modül üzerinde 7 bağımsız Node senaryosu **7/7 geçti**: kanonik JSON, 413 byte limiti, bozuk JSON, eylem/revizyon, origin, asılı cancel ile gerçek 4 saniyelik 408 ve admin kimliği hash'i.
+- [ ] Gerçek `admin-actions.test.mjs` tam registry/Worker/SQLite bağımlılıklarıyla çalıştırılmalı.
