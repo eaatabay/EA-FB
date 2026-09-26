@@ -36,7 +36,7 @@ export async function initLocalCatalogDraft(file,shelves=[]) {
   const absolute=resolve(file);
   if (!absolute.endsWith(".catalog-draft.json")) throw Error("draft_filename_required");
   const draft=buildCatalogDraft(shelves,0);
-  await writeFile(absolute,JSON.stringify(draft,null,2)+"\\n",{flag:"wx",mode:0o600});
+  await writeFile(absolute,JSON.stringify(draft,null,2)+"\n",{flag:"wx",mode:0o600});
   return draft;
 }
 
@@ -52,7 +52,7 @@ if (process.argv[1] && resolve(process.argv[1])===resolve(fileURLToPath(import.m
   try {
     if (action==="init" && file && !arg) {
       const draft=await initLocalCatalogDraft(file);
-      process.stdout.write("Created unpublished catalog draft revision "+draft.revision+"\\n");
+      process.stdout.write("Created unpublished catalog draft revision "+draft.revision+"\n");
     } else if (action==="preview" && file && !arg) {
       process.stdout.write(await previewLocalCatalogDraft(file));
     } else if (action==="edit" && file && arg) {
