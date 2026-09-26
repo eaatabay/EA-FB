@@ -83,9 +83,11 @@ sqliteTest("one crashing adapter does not stop another source",async()=>{
     ]);
     const result=await runDueChecks({db,adapters,now:HOUR,concurrency:2});
     assert.equal(result.length,2);
-    assert.equal(result.find(x=>x.sourceId==="source-one").status,"runner_error");
+    assert.equal(result.find(x=>x.sourceId==="source-one").status,"probe_failed");
+    assert.equal(result.find(x=>x.sourceId==="source-one").error,"adapter_error");
     assert.equal(result.find(x=>x.sourceId==="source-two").status,"committed");
-    assert.equal((await getSource(db,"source-one")).state.revision,0);
+    assert.equal((await getSource(db,"source-one")).state.revision,1);
+    assert.equal((await getSource(db,"source-one")).state.lastFailure,"unreachable");
     assert.equal((await getSource(db,"source-two")).state.revision,1);
   }finally{db.close();}
 });
@@ -160,9 +162,52 @@ test("timeout wins even when abort listener immediately returns a fake healthy p
       db,adapters,sourceId:"fixture-timeout",now:0,
       runId:"probe-timeout-00001",timeoutMs:500,
     });
-    assert.equal(result.status,"runner_error");
+    assert.equal(result.status,"probe_failed");
     assert.equal(result.error,"probe_timeout");
     assert.equal(aborted,true);
-    assert.equal((await getSource(db,"fixture-timeout")).revision,0);
+    assert.equal((await getSource(db,"fixture-timeout")).revision,1);
+    assert.equal((await getSource(db,"fixture-timeout")).state.status,HEALTH.DEGRADED);
+  }finally{db.close();}
+});
+
+
+test("repeated adapter crashes are audited and quarantined instead of retrying every tick",
+  {skip: !DatabaseSync},async()=>{
+  const db=new SQLiteD1();
+  try{
+    await registerSource(db,source("fixture-crash"),"admin:alice",0);
+    const adapters=new Map([["fixture-crash",{
+      id:"fixture-crash",async probe(){throw Error("secret URL must not leak");},
+    }]]);
+    const first=await runDueChecks({db,adapters,now:0});
+    assert.equal(first[0].status,"probe_failed");
+    assert.equal(first[0].error,"adapter_error");
+    assert.equal((await getSource(db,"fixture-crash")).state.status,HEALTH.DEGRADED);
+    assert.equal((await runDueChecks({db,adapters,now:1})).length,0);
+    const second=await runDueChecks({db,adapters,now:HOUR});
+    assert.equal(second[0].status,"probe_failed");
+    const record=await getSource(db,"fixture-crash");
+    assert.equal(record.state.status,HEALTH.QUARANTINED);
+    assert.equal(record.state.consecutiveFailures,2);
+    assert.equal(record.state.revision,2);
+    assert.equal((await db.prepare(
+      "SELECT COUNT(*) AS n FROM source_probe_runs WHERE source_id=?")
+      .bind("fixture-crash").first()).n,2);
+    assert.equal((await db.prepare(
+      "SELECT COUNT(*) AS n FROM source_audit WHERE source_id=?")
+      .bind("fixture-crash").first()).n,3);
+  }finally{db.close();}
+});
+
+test("malformed adapter response counts as failed health check",
+  {skip: !DatabaseSync},async()=>{
+  const db=new SQLiteD1();
+  try{
+    await registerSource(db,source("fixture-null"),"admin:alice",0);
+    const adapters=new Map([["fixture-null",{id:"fixture-null",probe:async()=>null}]]);
+    const result=await runDueChecks({db,adapters,now:0});
+    assert.equal(result[0].status,"probe_failed");
+    assert.equal(result[0].error,"adapter_error");
+    assert.equal((await getSource(db,"fixture-null")).state.lastFailure,"unreachable");
   }finally{db.close();}
 });
