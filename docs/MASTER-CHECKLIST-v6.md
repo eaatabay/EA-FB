@@ -197,6 +197,16 @@
 - [ ] Yeni runner.test ve signed-endpoint.test dosyalarinin tamamini GERCEK SQLite registry ve tum Worker bagimliliklariyla tam checkout'ta calistir; bu parkurda exact Node policy/guard calisti, runner/Worker sadece izole testlerle dogrulandi.
 - [ ] Gercek Wrangler/workerd+D1, Android Gradle .cs3, Mi Box Beta; Cloudflare Actions kotasi nedeniyle workflow tetikleme YOK.
 
+## 26.09.2026 — 3. 30 dakikalik parkur (offline; Actions tetiklenmedi)
+- [x] Watchdog parser sozlesmesi `adapter-contract.mjs` olarak ayrildi. Eksik search/detail/episode, string "true", bilinmeyen alan, getter/prototype veya adaptorun sahte runnerFailure alani dogrudan AUDIT'li `admin_required` durumuna gecer. Yalnizca gercek adapter crash/null/timeout `adapter_error` veya `probe_timeout` olarak geri cekilir. D1 CAS/lease hata turleri ayridir.
+- [x] TOCTOU korumasi: adaptorun mutable nesnesi D1 commit'e verilmez; sadece izinli OWN primitive veri alanlari ve checks taze bir nesneye kopyalanir. Getter, sembol ve beklenmeyen gizli alan reddedilir. Kaynak URL veya hata metni loglanmaz.
+- [x] Production fixture bayragi `WATCHDOG_FIXTURE_ENABLED` hem snapshot hem admin Access hem admin writes icin acikca `"false"` olmali. Eksik, `"TRUE"` veya `"0"` fail-closed. Admin POST URL'sinde bos `?`/`#`, credential, path alias ve canonical olmayan URL reddedilir.
+- [x] IMDb/TMDb: OMDb gecici ariza verdiginde TMDb-only cevabi saatlerce dual-rating cache'inde tutmak yerine 60 sn TTL. Gecerli OMDb N/A normal TTL. Ayrica OMDb ag + body icin 3.5 sn hard deadline; TMDb detay sayfasi opsiyonel ikinci puan servisinin takilmasini beklemez.
+- [x] OMDb rating parser ayri pure module: yalniz gercek eslesen IMDb ID, 1.0-10.0 arasi kanonik ondalik; N/A ile gecici ariza ayrilir. API key istemciye verilmez.
+- [x] Yerel SHA-eslesmeli Node 22: exact adapter-contract source/test 6/6, exact runner source + yalniz test-only fake registry/lease/scheduler ile 8/8, exact OMDb policy source/test 3/3 = 17/17. Exact Kotlin FilmCollectionPolicy + test 12/12. Toplam bu parkurda 29/29 secilmis offline test. Bunlar tam repo Node suite/gercek D1/Worker/Gradle degildir.
+- [ ] Bu parkurda degisen gercek `runner.test.mjs`, `admin-actions.test.mjs`, `signed-endpoint.test.mjs`, `worker/test/catalog.test.mjs` tum bagimliliklarla full checkout'ta calistirilmali. Wrangler/workerd+D1, Gradle .cs3, Mi Box ve gercek kaynak haklari release kapisi kapali.
+- [ ] Iki puanin detay sayfasinda CloudStream stok tema nedeniyle native hero puani yerine kaynak etiketli tags oldugu Mi Box uzerinde kontrol edilmeli; franchise kartlari resmi TMDb collection verisiyle vizyon sirasinda, ayrik native seri seridi degil Onerilenler basinda.
+
 ## Sonraki en yakin is
 Actions kotasi sifirken hak/izin kayitlarini birer birer incele ve kullanicidan onay al;
 sonra EAProvider'a secure adapter bridge, tam Node 22 ve izole Wrangler D1,
