@@ -26,3 +26,36 @@ export function validAdapterProbe(probe, config) {
   return config.requiredChecks.every(check =>
     check === "reachability" || typeof probe.checks[check] === "boolean");
 }
+
+/**
+ * Copy only OWN primitive data properties into a fresh object. Never hand a
+ * third-party adapter's mutable object, prototype or getter to the D1 policy
+ * after validation (otherwise async commit opens a validation/use race).
+ * A null result is structural schema drift and must be held for admin.
+ */
+export function sanitizeAdapterProbe(raw, config) {
+  if (!plainObject(raw) || Reflect.ownKeys(raw).some(key => typeof key !== "string")) {
+    return null;
+  }
+  const fields = Object.getOwnPropertyDescriptors(raw);
+  if (Object.keys(fields).some(key => !PROBE_KEYS.has(key) ||
+      !Object.hasOwn(fields[key], "value")) ||
+      !Object.hasOwn(fields,"checks")) return null;
+  const rawChecks = fields.checks.value;
+  if (!plainObject(rawChecks) ||
+      Reflect.ownKeys(rawChecks).some(key => typeof key !== "string")) return null;
+  const checkFields = Object.getOwnPropertyDescriptors(rawChecks);
+  if (Object.keys(checkFields).some(key => !CHECK_KEYS.has(key) ||
+      !Object.hasOwn(checkFields[key], "value"))) return null;
+  const probe = {
+    reached:fields.reached?.value,
+    finalUrl:fields.finalUrl?.value,
+    identityVerified:fields.identityVerified?.value,
+    checks:Object.fromEntries(Object.entries(checkFields)
+      .map(([key,descriptor])=>[key,descriptor.value])),
+  };
+  if (Object.hasOwn(fields,"structuralChange")) {
+    probe.structuralChange=fields.structuralChange.value;
+  }
+  return validAdapterProbe(probe,config) ? probe : null;
+}
