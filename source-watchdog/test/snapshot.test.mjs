@@ -100,3 +100,38 @@ test("signed refresh rejects malformed payload, duplicate IDs and future or stal
   const expired=makeFresh();
   assert.equal(canReplaceSnapshot(current,expired,expired.expiresAt,true),false);
 });
+
+
+test("publisher rejects fractional, negative and overflowing snapshot clocks",()=>{
+  const a=source("source-one");
+  for(const clock of [-1,0.5,Infinity,Number.MAX_SAFE_INTEGER]){
+    assert.throws(()=>buildClientSnapshot([a],[healthy(a.id)],1,clock),
+      /invalid_snapshot_(input|lifetime)/,String(clock));
+  }
+  for(const options of [
+    {ttlMs:0.5},{ttlMs:Infinity},{ttlMs:3_600_001},
+    {maxHealthAgeMs:0.5},{maxHealthAgeMs:Infinity},
+    {maxHealthAgeMs:48*3_600_000+1},
+  ])assert.throws(()=>buildClientSnapshot([a],[healthy(a.id)],1,now,options),
+    /invalid_snapshot_lifetime/,JSON.stringify(options));
+});
+
+test("publisher never emits a healthy state whose URL differs from approved config",()=>{
+  const a=source("source-one");
+  const changed={...healthy(a.id),currentUrl:"https://new.example.org"};
+  assert.equal(buildClientSnapshot([a],[changed],1,now).sources.length,0);
+  const b={...a,verifiedDomains:[...a.verifiedDomains,"new.example.org"]};
+  assert.equal(buildClientSnapshot([b],[changed],1,now).sources.length,0);
+  const approved={...b,currentUrl:"https://new.example.org"};
+  assert.equal(buildClientSnapshot([approved],[changed],1,now).sources.length,1);
+});
+
+test("publisher rejects noninteger health times and unsupported adapter versions",()=>{
+  const a=source("source-one");
+  for(const bad of [-1,0.5,Infinity]){
+    const state={...healthy(a.id),lastCheckedAt:bad};
+    assert.equal(buildClientSnapshot([a],[state],1,now).sources.length,0);
+  }
+  assert.throws(()=>buildClientSnapshot([{...a,adapterVersion:1_000_001}],
+    [healthy(a.id)],1,now),/invalid_adapter_version/);
+});
