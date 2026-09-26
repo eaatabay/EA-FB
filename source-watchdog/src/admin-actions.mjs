@@ -17,7 +17,7 @@ export class AdminMutationError extends Error {
 }
 const SOURCE_ID = /^[a-z][a-z0-9-]{2,63}$/;
 const ALLOWED_ACTIONS = new Set(["disable", "enable", "retest", "rollback"]);
-const ORIGIN = /^https:\/\/[a-z0-9-]+(?:\.[a-z0-9-]+)+$/;
+const ORIGIN = /^https:\/\/[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)+$/;
 const MAX_BYTES = 1024;
 
 export function adminWritesConfigured(env) {
@@ -27,6 +27,8 @@ export function adminWritesConfigured(env) {
     env?.WATCHDOG_FIXTURE_ENABLED !== "true" &&
     typeof env?.WATCHDOG_ADMIN_ORIGIN === "string" &&
     ORIGIN.test(env.WATCHDOG_ADMIN_ORIGIN) &&
+    env.WATCHDOG_ADMIN_ORIGIN.length <= 261 &&
+    new URL(env.WATCHDOG_ADMIN_ORIGIN).hostname.split(".").every(x=>x.length<=63) &&
     !new URL(env.WATCHDOG_ADMIN_ORIGIN).hostname.endsWith(".localhost") &&
     !new URL(env.WATCHDOG_ADMIN_ORIGIN).hostname.endsWith(".local") &&
     !new URL(env.WATCHDOG_ADMIN_ORIGIN).hostname.endsWith(".internal") &&
