@@ -41,7 +41,7 @@ function runIdText(runId) {
   return runId;
 }
 
-function validApprovalReference(value) {
+export function validApprovalReference(value) {
   return typeof value === "string" && value.length >= 8 && value.length <= 160 &&
     /^[A-Za-z0-9_-]+(?:\/[A-Za-z0-9_.-]+)*$/.test(value) &&
     value.split("/").every(part => part !== "." && part !== "..");
