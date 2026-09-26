@@ -16,7 +16,7 @@ enum class CatalogSortMode(val key: String, val title: String) {
 
 object CatalogSortPolicy {
     fun route(path: String, kind: MediaKind, mode: CatalogSortMode): String {
-        if (!path.startsWith("/discover/")) return path
+        if (!path.startsWith("/discover/movie?") && !path.startsWith("/discover/tv?")) return path
         val sortBy = when (mode) {
             CatalogSortMode.POPULAR -> "popularity.desc"
             CatalogSortMode.NEWEST -> if (kind == MediaKind.SERIES)
