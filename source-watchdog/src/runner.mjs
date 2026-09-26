@@ -110,6 +110,9 @@ export async function runOneSourceCheck({
     try {
       probe = await withTimeout(
         signal => adapter.probe({source: current.config, now, signal}), timeoutMs);
+      if (!probe || typeof probe !== "object" || Array.isArray(probe)) {
+        throw new Error("invalid_adapter_result");
+      }
       if (!validAdapterProbe(probe, current.config)) {
         // Malformed parser output requires operator review; repeated retries
         // would otherwise quarantine a source without exposing schema drift.
