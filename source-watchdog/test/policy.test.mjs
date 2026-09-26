@@ -127,3 +127,16 @@ test("one broken source never suppresses independent healthy sources", () => {
   const admin = {...ok,status:HEALTH.ADMIN_REQUIRED,id:"three"};
   assert.deepEqual(searchableSourceIds([broken,ok,admin]),["one"]);
 });
+
+
+test("malformed allowlist objects and noninteger clocks fail closed",()=>{
+  assert.throws(()=>validateSource({...source,
+    verifiedDomains:[{toString:null}]}),/invalid_source_addresses/);
+  for(const now of [-1,0.5,Infinity,NaN]) {
+    assert.throws(()=>initialState(source,now),/invalid_clock/);
+    assert.throws(()=>applyProbe(source,initialState(source,0),good(),now),
+      /invalid_watchdog_state/);
+    const held={...initialState(source,0),status:HEALTH.ADMIN_REQUIRED};
+    assert.throws(()=>releaseForRetest(source,held,now),/invalid_admin_release/);
+  }
+});
