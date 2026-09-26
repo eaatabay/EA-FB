@@ -235,3 +235,23 @@ test("Worker write route checks Access identity first and returns sanitized conf
   }),{...env,SOURCES_DB:database});
   assert.equal(notFound.status,405);
 });
+
+
+test("valid admin POST with a stalled body is bounded to four seconds",async()=>{
+ let cancelled=false;
+ const stream=new ReadableStream({
+  start(c){c.enqueue(new TextEncoder().encode("{"));},
+  cancel(){cancelled=true;return new Promise(()=>{});},
+ });
+ const req=new Request(origin+"/admin/api/sources/licensed-demo",{
+  method:"POST",duplex:"half",body:stream,
+  headers:{origin,"content-type":"application/json",
+   "x-eafb-admin-action":"confirmed"},
+ });
+ const started=Date.now();
+ await assert.rejects(parseAdminMutationRequest(req,env),
+  e=>e instanceof AdminMutationError && e.status===408 &&
+   e.message==="admin_body_timeout");
+ assert.equal(cancelled,true);
+ assert.ok(Date.now()-started<6500);
+});
