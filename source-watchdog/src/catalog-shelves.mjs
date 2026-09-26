@@ -37,7 +37,7 @@ export function validateCatalogShelves(input) {
     const provider=item.providerId;
     const genres=item.genres;
     if ((provider===undefined)===(genres===undefined) ||
-      (provider!==undefined && (typeof provider!=="string" && !Number.isSafeInteger(provider) || !PROVIDER.test(String(provider)) || typeof item.region!=="string" || !REGION.test(item.region))) ||
+      (provider!==undefined && (typeof provider!=="string" && !Number.isSafeInteger(provider) || !PROVIDER.test(String(provider)) || Number(provider)<1 || typeof item.region!=="string" || !REGION.test(item.region))) ||
       (genres!==undefined && (typeof genres!=="string" || !GENRES.test(genres) || item.region!==undefined))) {
       throw Error("invalid_catalog_filter");
     }
