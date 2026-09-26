@@ -62,3 +62,15 @@ test("unknown health states and malformed clocks never enter scheduled or incide
   malformed.state.lastCheckedAt=-1;
   assert.equal(incidentEligible(malformed,1000),false);
 });
+
+
+test("corrupt IDs and truthy non-boolean enabled flags cannot schedule or trigger incidents",()=>{
+  const malformedId=record(null,HEALTH.DEGRADED,0);
+  const enabledString=record("string-enabled",HEALTH.DEGRADED,0);
+  enabledString.config.enabled="false";
+  const good=record("valid-source",HEALTH.HEALTHY,0);
+  assert.deepEqual(dueSources([malformedId,enabledString,good],1000)
+    .map(row=>row.id),["valid-source"]);
+  assert.equal(incidentEligible(malformedId,1000),false);
+  assert.equal(incidentEligible(enabledString,1000),false);
+});
