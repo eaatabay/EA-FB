@@ -33,8 +33,8 @@ descriptions of the hero score or test counts may be superseded.
 - Kotlin signed refresh: 5/5 smoke checks, including cancellation races.
 - Kotlin failed SharedPreferences commit and second-store guard: 7/7 smoke checks.
 - Kotlin metadata relay pin: 18/18 pure policy checks.
-- Kotlin live URL policy: 19/19 selected URL checks in isolated compile;
-  full domain/channel merger test remains a full-suite gate.
+- Kotlin live URL policy: 23/23 locally reconstructed full policy
+  assertions, including channel merging and private-address rejection.
 - Node relay wiring: 3/3 equivalent static checks.
 - Node scheduler: 6/6 locally reconstructed policy checks, including
   mismatched identity, missing incident timestamps and original priorities.
