@@ -310,3 +310,6 @@ MFA'li admin pilotu. Gercek v5/main ve canli Worker degismez.
 ## 26.09.2026 — SHA eşleşmeli Android store tam JVM testi
 - [x] Güncel gerçek `WatchdogClientStore.kt` SHA `fe1067887cd599660205d3c81bf656f9773bd5d0`, `WatchdogClientStoreJvmTest.kt` SHA `c6fee85df5708f076ef42d5f653e5cf5bc1899ef`, Android Context ve JSON test stubları SHA `2f3f2abb...`/`9b8ece46...`, gerçek HTTPS transport SHA `3ddfc395...` yerelde birebir doğrulandı.
 - [x] Gerçek trust/offline/refresh/store/HTTPS kaynakları + test-only Android Context/JSON stub ile **18/18 JVM testi geçti**; yeni iptal regresyonu, atomic cache, replay ve bozuk kayıt dahil. Bu gerçek cihaz SharedPreferences testi değildir.
+
+## 26.09.2026 — SHA eşleşmeli HTTPS transport tam JVM testi
+- [x] Güncel `WatchdogHttpsTransport.kt` SHA `3ddfc39500300ead3e685ef3b212e05296167c99` ve `WatchdogHttpsTransportTest.kt` SHA `020e69ef6f9e86ce144c0cf2a52e5f801ce6aba5` birebir yerel kopyalarla **9/9 JVM test geçti**. Gerçek HTTPS bağlantısı yok; sahte HttpsURLConnection kullanıldı.
