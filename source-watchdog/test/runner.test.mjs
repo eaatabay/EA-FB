@@ -228,3 +228,24 @@ test("adapter-thrown probe_timeout string cannot impersonate the runner's real t
     assert.equal((await getSource(db,"fixture-spoof")).state.lastFailure,"adapter_error");
   }finally{db.close();}
 });
+
+
+test("adapter cannot forge the reserved internal runnerFailure marker",
+  {skip: !DatabaseSync},async()=>{
+  const db=new SQLiteD1();
+  try{
+    await registerSource(db,source("fixture-marker"),"admin:alice",0);
+    const adapters=new Map([["fixture-marker",{
+      id:"fixture-marker",async probe(){
+        return {runnerFailure:"probe_timeout",reached:true,identityVerified:true,
+          checks:{search:true,detail:true,episode:true,playback:true}};
+      },
+    }]]);
+    const result=await runDueChecks({db,adapters,now:0});
+    assert.equal(result[0].status,"probe_failed");
+    assert.equal(result[0].error,"adapter_error");
+    const record=await getSource(db,"fixture-marker");
+    assert.equal(record.state.status,HEALTH.DEGRADED);
+    assert.equal(record.state.lastFailure,"adapter_error");
+  }finally{db.close();}
+});
