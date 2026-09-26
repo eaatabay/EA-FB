@@ -24,6 +24,33 @@ function json(object, status = 200, ttl = 0) {
   });
 }
 
+/** Bound actual upstream bytes even if Content-Length is absent or false. */
+async function readBoundedText(response, maxBytes) {
+  const advertised = response.headers.get("content-length");
+  if (advertised !== null && /^\\d+$/.test(advertised) &&
+      Number(advertised) > maxBytes) throw new Error("upstream_too_large");
+  if (!response.body) throw new Error("upstream_empty");
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder("utf-8", {fatal:true});
+  let bytes = 0, text = "";
+  try {
+    while (true) {
+      const {done, value} = await reader.read();
+      if (done) break;
+      if (!(value instanceof Uint8Array)) throw new Error("upstream_invalid_chunk");
+      bytes += value.byteLength;
+      if (bytes > maxBytes) {
+        await reader.cancel();
+        throw new Error("upstream_too_large");
+      }
+      text += decoder.decode(value, {stream:true});
+    }
+    return text + decoder.decode();
+  } finally {
+    reader.releaseLock();
+  }
+}
+
 function catalogRequest(url) {
   const p = url.pathname;
   let ttl = 3600;
@@ -196,8 +223,12 @@ export default {
     }
     const contentType = upstream.headers.get("content-type") || "";
     if (!contentType.includes("application/json")) return json({ error: "invalid_catalog_response" }, 502);
-    const body = await upstream.text();
-    if (body.length > 2_000_000) return json({ error: "catalog_response_too_large" }, 502);
+    let body;
+    try { body = await readBoundedText(upstream, 2_000_000); }
+    catch (err) {
+      return json({error: err?.message === "upstream_too_large" ?
+        "catalog_response_too_large" : "invalid_catalog_response"}, 502);
+    }
     let result;
     try { result = JSON.parse(body); } catch (_) {
       return json({ error: "invalid_catalog_response" }, 502);
@@ -218,7 +249,7 @@ export default {
           method: "GET", redirect: "manual", headers: { accept: "application/json" },
         });
         if (other.ok && (other.headers.get("content-type") || "").includes("application/json")) {
-          const text = await other.text();
+          const text = await readBoundedText(other, 50_000);
           if (text.length < 50_000) {
             const data = JSON.parse(text);
             const value = Number(data.imdbRating);
