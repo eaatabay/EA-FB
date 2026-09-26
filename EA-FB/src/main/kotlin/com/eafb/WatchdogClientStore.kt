@@ -57,11 +57,19 @@ class WatchdogClientStore(
         // Store the ORIGINAL signed JSON, never a reconstructed unsigned
         // payload. An unsuccessful commit may still update the in-memory
         // SharedPreferences map, so permanently fail closed in this instance.
-        val durable = preferences.edit()
-            .putLong("last_revision", result.snapshot.revision)
-            .putLong("last_generated_at", result.snapshot.generatedAt)
-            .putString("last_signed_envelope", raw)
-            .commit()
+        val durable = try {
+            preferences.edit()
+                .putLong("last_revision", result.snapshot.revision)
+                .putLong("last_generated_at", result.snapshot.generatedAt)
+                .putString("last_signed_envelope", raw)
+                .commit()
+        } catch (cancelled: CancellationException) {
+            // A cancelled/failed write may already have changed the in-memory map.
+            markPersistenceFailed()
+            throw cancelled
+        } catch (_: Exception) {
+            false
+        }
         if (!durable) markPersistenceFailed()
         return if (durable) result
             else SnapshotCheck.Rejected("cannot_persist_replay_guard")
