@@ -23,6 +23,8 @@ test("admin endpoint is absent in tracked-off and fixture modes",async()=>{
   {...env,WATCHDOG_ADMIN_ENABLED:"false"},
   {...env,WATCHDOG_MODE:"disabled"},
   {...env,WATCHDOG_FIXTURE_ENABLED:"true"},
+    {...env,WATCHDOG_FIXTURE_ENABLED:"TRUE"},
+    {...env,WATCHDOG_FIXTURE_ENABLED:undefined},
   {...env,WATCHDOG_ACCESS_TEAM_DOMAIN:"http://127.0.0.1"},
  ]) {
    const res=await worker.fetch(request(),e);
