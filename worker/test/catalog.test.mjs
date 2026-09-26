@@ -119,8 +119,8 @@ test("serves exact paths used by EA-FB 28-category catalog", async () => {
 test("discovery sort validates film, series, and rated-list safeguards", async () => {
   const { env, ctx, calls } = setup();
   for (const path of [
-    "/v1/discover/movie?with_genres=28&sort_by=primary_release_date.desc",
-    "/v1/discover/tv?with_watch_providers=8&sort_by=first_air_date.desc",
+    "/v1/discover/movie?with_genres=28&sort_by=primary_release_date.desc&primary_release_date.lte=2026-09-26",
+    "/v1/discover/tv?with_watch_providers=8&sort_by=first_air_date.desc&first_air_date.lte=2026-09-26",
     "/v1/discover/movie?with_genres=878&sort_by=vote_average.desc&vote_count.gte=100",
   ]) {
     const res = await gateway.fetch(new Request("https://example.workers.dev" + path), env, ctx);
@@ -133,6 +133,9 @@ test("discovery sort validates film, series, and rated-list safeguards", async (
     "/v1/discover/movie?vote_count.gte=0",
     "/v1/discover/movie?vote_count.gte=10001",
     "/v1/discover/movie?vote_count.gte=100&vote_count.gte=200",
+    "/v1/discover/tv?primary_release_date.lte=2026-09-26",
+    "/v1/discover/movie?first_air_date.lte=2026-09-26",
+    "/v1/discover/movie?primary_release_date.lte=not-a-date",
   ]) {
     const res = await gateway.fetch(new Request("https://example.workers.dev" + path), env, ctx);
     assert.equal(res.status, 400, path);
