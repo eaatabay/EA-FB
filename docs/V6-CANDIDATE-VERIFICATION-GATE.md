@@ -36,3 +36,9 @@ Automated test output, Gradle compilation, new cs3 package inspection, device va
 - Added a Node regression guard comparing all 29 built-in Android home IDs with the admin catalog's reserved-ID validator, preventing a future newly added built-in rail from being overridden by an admin draft.
 - Fixed the admin's zero-provider-ID acceptance, invalid filter coercion and forged draft-envelope rejection. Hardened Settings against recreating a finishing/destroyed Activity; selecting the already-active sort no longer triggers an unnecessary refresh.
 - **Release remains blocked** pending full Node/Gradle verification and a red Mi Box smoke test. No Actions run, deployment or production change was requested or performed.
+
+## 27 September — catalog activation boundary
+
+- The public metadata projection now rejects an **enabled** shelf with language/year filters unsupported by the deployed relay. It may retain such filters in a **disabled** unpublished draft. This prevents a broader catalog from being presented as though the requested language/year restriction had been honored.
+- The Android batch compiler now validates disabled shelf identity, title, provider, genre and year/language syntax before accepting the batch. Disabled shelves may retain valid, unsupported language/year constraints but cannot conceal malformed metadata until activation.
+- Regression cases added for public projection, zero provider IDs, and invalid disabled Android shelf definitions. These commits remain on the isolated feature branch; no remote catalog publication or streaming grant is implied.
