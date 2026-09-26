@@ -169,6 +169,9 @@ test("corrupt persisted state cannot be silently healed by a successful probe",(
     {consecutiveFailures:NaN},{consecutiveSuccesses:0.5},
     {lastCheckedAt:"old"},{lastCheckedAt:-1},
     {lastCheckedAt:Infinity},{currentUrl:"https://new.example.org"},
+    {lastKnownGoodUrl:"https://other.example.org"},
+    {consecutiveFailures:1_000_001},{consecutiveSuccesses:3},
+    {nextCheckAt:"tomorrow"},{nextCheckAt:-1},
   ])assert.throws(()=>applyProbe(source,{...baseline,...mutation},good(),HOUR),
     /invalid_watchdog_state/,JSON.stringify(mutation));
   assert.throws(()=>applyProbe(source,baseline,good(),
@@ -189,4 +192,16 @@ test("internal runner failure markers retain distinct audit reasons",()=>{
   }
   assert.throws(()=>evaluateProbe(source,{runnerFailure:"untrusted_marker"}),
     /invalid_probe/);
+});
+
+
+test("near-overflow clocks cannot create unsafe next-check timestamps",()=>{
+  assert.throws(()=>initialState(source,Number.MAX_SAFE_INTEGER),
+    /invalid_clock/);
+  const state=initialState(source,0);
+  assert.throws(()=>applyProbe(source,state,good(),Number.MAX_SAFE_INTEGER),
+    /invalid_watchdog_state/);
+  const held={...state,status:HEALTH.ADMIN_REQUIRED};
+  assert.throws(()=>releaseForRetest(source,held,Number.MAX_SAFE_INTEGER),
+    /invalid_admin_release/);
 });
