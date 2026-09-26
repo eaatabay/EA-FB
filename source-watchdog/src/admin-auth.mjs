@@ -11,7 +11,7 @@ const MAX_JWT=8192;
 export function adminAccessConfigured(env) {
   return env?.WATCHDOG_ADMIN_ENABLED==="true" &&
     env?.WATCHDOG_MODE==="production" &&
-    env?.WATCHDOG_FIXTURE_ENABLED!=="true" &&
+    env?.WATCHDOG_FIXTURE_ENABLED==="false" &&
     typeof env?.WATCHDOG_ACCESS_TEAM_DOMAIN==="string" &&
     TEAM.test(env.WATCHDOG_ACCESS_TEAM_DOMAIN) &&
     typeof env?.WATCHDOG_ACCESS_AUD==="string" &&
