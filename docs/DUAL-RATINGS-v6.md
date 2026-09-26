@@ -69,3 +69,5 @@ Homepage lower categories with empty cards or paging/navigation problem, simpler
 - Timeout/byte-limit/UTF-8 hata turleri ayridir. Iptal edilmeyen stream icin bile Promise.race timeout; erken byte-limit veya bozuk body hatasinda alttaki fetch AbortController ile iptal edilir.
 - Edge cache match veya put istisnasi, gecersiz TMDb yaniti sayilmaz: metadata origin'den alinip servis edilir; cache yazimi best-effort.
 - Tam GitHub SHA-eslesmeli Node22 bounded-response 6/6, OMDb ratings policy 3/3 ve yeni deadline/bounded stream 8/8 yerel test gecti. Yeni tam catalog.test.mjs timeout/cache regresyonlari commit edildi fakat bu parkurda full exact Worker suite yeniden calistirilmadi. Canli Worker deploy edilmedi.
+
+- Ek: Cloudflare edge cache match sonsuza kadar beklerse 1.5 saniye sonra TMDb origin'e duser; bu senaryo icin catalog.test.mjs entegrasyon regresyonu eklendi (tam suite henuz yeniden calistirilmadi).
