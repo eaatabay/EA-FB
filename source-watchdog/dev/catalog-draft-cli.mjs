@@ -1,0 +1,45 @@
+import {readFile,writeFile,rename,unlink} from "node:fs/promises";
+import {resolve,dirname,basename,join} from "node:path";
+import {buildCatalogDraft,editCatalogDraft} from "../src/catalog-shelves.mjs";
+import {renderCatalogDraftPreview} from "../src/catalog-admin-preview.mjs";
+
+/** Local-only editor; never touches production Worker, D1 or source grants. */
+export async function applyLocalCatalogEdit(file,command) {
+  const absolute=resolve(file);
+  if (!absolute.endsWith(".catalog-draft.json")) throw Error("draft_filename_required");
+  const draft=JSON.parse(await readFile(absolute,"utf8"));
+  const current=buildCatalogDraft(draft.shelves,draft.revision);
+  if (draft.status!==current.status || draft.version!==1) throw Error("not_an_unpublished_draft");
+  const updated=editCatalogDraft(current,command.expectedRevision,command.operation);
+  const target=join(dirname(absolute),"."+basename(absolute)+".tmp-"+process.pid);
+  try {
+    await writeFile(target,JSON.stringify(updated,null,2)+"\n",{flag:"wx",mode:0o600});
+    await rename(target,absolute);
+  } catch(error) {
+    await unlink(target).catch(()=>{});
+    throw error;
+  }
+  return updated;
+}
+
+export async function previewLocalCatalogDraft(file) {
+  const draft=JSON.parse(await readFile(resolve(file),"utf8"));
+  if (draft.version!==1 || draft.status!=="draft-v6-not-published")
+    throw Error("not_an_unpublished_draft");
+  return renderCatalogDraftPreview(draft.shelves,draft.revision);
+}
+
+if (process.argv[1] && resolve(process.argv[1])===resolve(new URL(import.meta.url).pathname)) {
+  const [action,file,arg]=process.argv.slice(2);
+  try {
+    if (action==="preview" && file && !arg) {
+      process.stdout.write(await previewLocalCatalogDraft(file));
+    } else if (action==="edit" && file && arg) {
+      const result=await applyLocalCatalogEdit(file,JSON.parse(await readFile(resolve(arg),"utf8")));
+      process.stdout.write("Updated local unpublished catalog draft to revision "+result.revision+"\n");
+    } else throw Error("usage: node dev/catalog-draft-cli.mjs preview FILE | edit FILE COMMAND.json");
+  } catch(error) {
+    process.stderr.write(String(error.message)+"\n");
+    process.exitCode=1;
+  }
+}
