@@ -83,12 +83,29 @@ export async function runOneSourceCheck({
       return {sourceId, status:"rate_limited_or_ineligible"};
     }
 
-    const probe = await withTimeout(
-      signal => adapter.probe({source: current.config, now, signal}), timeoutMs);
+    // Adapter crashes and timeouts are REAL source health failures, not
+    // invisible runner errors. Persist them through the same lease/CAS/audit
+    // path so repeated failures back off and eventually quarantine. Never
+    // allow an abort listener's late "healthy" response to override timeout.
+    let probe, probeError = null;
+    try {
+      probe = await withTimeout(
+        signal => adapter.probe({source: current.config, now, signal}), timeoutMs);
+      if (!probe || typeof probe !== "object" || Array.isArray(probe)) {
+        throw new Error("invalid_adapter_result");
+      }
+    } catch (err) {
+      probeError = err?.message === "probe_timeout" ?
+        "probe_timeout" : "adapter_error";
+      probe = {reached:false, finalUrl:current.config.currentUrl,
+        identityVerified:false, checks:{}};
+    }
     const committed = await commitProbe(db, sourceId, runId, probe, now,
       {token, checkedAtMs: leaseClock()});
     return {sourceId,
-      status: committed.skipped ? "skipped" : committed.duplicate ? "duplicate" : "committed",
+      status: committed.skipped ? "skipped" : committed.duplicate ? "duplicate" :
+        probeError ? "probe_failed" : "committed",
+      ...(probeError ? {error:probeError} : {}),
       detail: committed};
   } catch (err) {
     // Do not leak exception text, URLs, auth headers or site content into logs.
