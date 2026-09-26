@@ -335,3 +335,9 @@ MFA'li admin pilotu. Gercek v5/main ve canli Worker degismez.
 - [x] Yeni Kotlin `currentCoroutineContext` / `ensureActive` / yerel süre kontrolü sözdizimi, yerel `kotlinc` ile bağımsız derlendi.
 - [ ] Gerçek `WatchdogHttpsTransportTest.kt` ve bütün Kotlin test paketini çalıştır; bağımsız sözdizimi kontrolü tam entegrasyon testi değildir.
 - [ ] Gerçek cihazda yavaş/yarıda kesilen TLS akışında iptal gecikmesini ölç; bloklayan `InputStream.read` sırasında iptal 4 saniyelik soket okuma zaman aşımına kadar gecikebilir.
+
+## 26.09.2026 — HTTPS iptal ve yerel izole test
+- [x] `WatchdogHttpsTransport` için başlık alındıktan hemen sonra coroutine iptalinin gövde okunmadan bağlantıyı kapatmasını doğrulayan regresyon eklendi.
+- [x] `nanoClock` ilk, `open` son constructor parametresi yapılarak mevcut `WatchdogHttpsTransport { fakeConnection }` trailing-lambda test çağrıları korundu; süre testleri isimli parametreye geçirildi.
+- [x] Kaynaktaki HTTPS transport mantığı ve enjekte edilmiş test bağlantısı yerel JVM üzerinde izole derlendi; 8/8 seçili test geçti. Bu, gerçek GitHub checkout'taki tüm Kotlin testlerinin koştuğu anlamına gelmez.
+- [ ] Tam `scripts/test-core.sh` ve `scripts/verify-v6.sh` gerçek repo checkout'unda çalıştırılacak; mevcut ortamda özel repo klonlaması yapılamıyor. Canlı sistemler ve `main` değiştirilmedi.
