@@ -1,4 +1,5 @@
 import { readBoundedText } from "./bounded-response.mjs";
+import { withUpstreamDeadline } from "./upstream-deadline.mjs";
 import { parseOmdbRating, enrichmentCacheTtl } from "./ratings-enrichment.mjs";
 /**
  * EA-FB public metadata relay. Only TMDb's approved catalog routes are exposed.
@@ -159,34 +160,41 @@ export default {
     // Some dashboards copy an optional Bearer prefix. Never send Bearer Bearer.
     const token = String(env.TMDB_READ_ACCESS_TOKEN).trim().replace(/^Bearer\s+/i, "").trim();
     if (!token) return json({ error: "catalog_unconfigured" }, 503);
-    let upstream;
+    let upstream, body;
     try {
-      upstream = await fetch(upstreamUrl, {
-        method: "GET",
-        headers: {
-          authorization: "Bearer " + token,
-          accept: "application/json",
-        },
-        // Avoid AbortSignal.timeout: unsupported Worker runtime implementations
-        // may throw before the network request is made. Manual redirects
-        // ensure we never forward a private Bearer token to a redirected host.
-        redirect: "manual",
-      });
+      ({upstream,body} = await withUpstreamDeadline(async signal => {
+        const upstream = await fetch(upstreamUrl, {
+          method: "GET",
+          headers: {
+            authorization: "Bearer " + token,
+            accept: "application/json",
+          },
+          // No redirect may receive the private Bearer token. Abort also
+          // covers a publisher that sends headers then stalls its JSON body.
+          redirect: "manual", signal,
+        });
+        const type = upstream.headers.get("content-type") || "";
+        const body = upstream.ok && type.includes("application/json")
+          ? await readBoundedText(upstream,2_000_000) : null;
+        return {upstream,body};
+      },12000));
     } catch (err) {
-      // Categorize the runtime failure without leaking URLs, auth headers,
-      // tokens, exception messages or account details into public responses.
+      if (err?.message === "upstream_too_large") {
+        return json({error:"catalog_response_too_large"},502);
+      }
+      // Only sanitized reason codes leave the Worker; never URLs, tokens,
+      // account details, exception messages or upstream response bodies.
       const name = String(err?.name || "");
       const message = String(err?.message || "");
-      const reason = /abortsignal|unsupported.*signal|invalid.*signal/i.test(message)
+      const reason = name === "TimeoutError" || name === "AbortError" ? "timeout" :
+        /abortsignal|unsupported.*signal|invalid.*signal/i.test(message)
         ? "runtime_signal" : /redirect/i.test(message) ? "redirect_error"
         : /dns|resolve/i.test(message) ? "dns_failure"
         : /tls|ssl|certificate/i.test(message) ? "tls_failure"
         : /fetch|network|connect/i.test(message) ? "outbound_network"
-        : name === "TypeError" ? "runtime_type_error"
-        : name === "TimeoutError" || name === "AbortError" ? "timeout"
-        : "other";
-      console.warn("TMDB_FETCH_FAILURE", reason, name.replace(/[^a-zA-Z]/g, "").slice(0, 32));
-      return json({ error: "tmdb_connection_error", reason }, 502);
+        : name === "TypeError" ? "runtime_type_error" : "other";
+      console.warn("TMDB_FETCH_FAILURE",reason,name.replace(/[^a-zA-Z]/g,"").slice(0,32));
+      return json({error:"tmdb_connection_error",reason},502);
     }
     if (upstream.status >= 300 && upstream.status < 400) {
       // Do not forward Authorization to redirects.
@@ -202,12 +210,6 @@ export default {
     }
     const contentType = upstream.headers.get("content-type") || "";
     if (!contentType.includes("application/json")) return json({ error: "invalid_catalog_response" }, 502);
-    let body;
-    try { body = await readBoundedText(upstream, 2_000_000); }
-    catch (err) {
-      return json({error: err?.message === "upstream_too_large" ?
-        "catalog_response_too_large" : "invalid_catalog_response"}, 502);
-    }
     let result;
     try { result = JSON.parse(body); } catch (_) {
       return json({ error: "invalid_catalog_response" }, 502);
