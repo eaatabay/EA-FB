@@ -13,6 +13,23 @@ function checkAdapters(adapters) {
 
 const TIMEOUT = Symbol("probe_timeout");
 
+// A parser that returns an incomplete object is not evidence that the
+// publisher is down. Escalate schema drift for human review immediately.
+function validAdapterProbe(probe, config) {
+  if (!probe || typeof probe !== "object" || Array.isArray(probe) ||
+      "runnerFailure" in probe ||
+      typeof probe.reached !== "boolean" ||
+      typeof probe.finalUrl !== "string" ||
+      typeof probe.identityVerified !== "boolean" ||
+      (probe.structuralChange !== undefined &&
+       typeof probe.structuralChange !== "boolean") ||
+      !probe.checks || typeof probe.checks !== "object" ||
+      Array.isArray(probe.checks)) return false;
+  return config.requiredChecks.every(check => check === "reachability" ||
+    typeof probe.checks[check] === "boolean");
+}
+
+
 async function withTimeout(task, timeoutMs) {
   if (!Number.isSafeInteger(timeoutMs) || timeoutMs < 500 || timeoutMs > 60000) {
     throw new Error("invalid_probe_timeout");
@@ -89,13 +106,16 @@ export async function runOneSourceCheck({
     // invisible runner errors. Persist them through the same lease/CAS/audit
     // path so repeated failures back off and eventually quarantine. Never
     // allow an abort listener's late "healthy" response to override timeout.
-    let probe, probeError = null;
+    let probe, probeError = null, probeAnomaly = false;
     try {
       probe = await withTimeout(
         signal => adapter.probe({source: current.config, now, signal}), timeoutMs);
-      if (!probe || typeof probe !== "object" || Array.isArray(probe) ||
-          Object.hasOwn(probe, "runnerFailure")) {
-        throw new Error("invalid_adapter_result");
+      if (!validAdapterProbe(probe, current.config)) {
+        // Malformed parser output requires operator review; repeated retries
+        // would otherwise quarantine a source without exposing schema drift.
+        probeAnomaly = true;
+        probe = {reached:false, finalUrl:current.config.currentUrl,
+          identityVerified:false, structuralChange:true, checks:{}};
       }
     } catch (err) {
       probeError = err === TIMEOUT ?
@@ -107,7 +127,7 @@ export async function runOneSourceCheck({
       {token, checkedAtMs: leaseClock()});
     return {sourceId,
       status: committed.skipped ? "skipped" : committed.duplicate ? "duplicate" :
-        probeError ? "probe_failed" : "committed",
+        probeError ? "probe_failed" : probeAnomaly ? "anomaly_held" : "committed",
       ...(probeError ? {error:probeError} : {}),
       detail: committed};
   } catch (err) {
