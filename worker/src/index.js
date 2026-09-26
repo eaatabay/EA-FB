@@ -116,7 +116,8 @@ function catalogRequest(url) {
   // Do not quietly allow arbitrary upstream query parameters.
   const permitted = new Set([...accepted.keys(), "append_to_response",
     "with_watch_providers", "watch_region", "with_watch_monetization_types",
-    "with_genres", "sort_by", "vote_count.gte", "query"]);
+    "with_genres", "sort_by", "vote_count.gte", "first_air_date.lte",
+    "primary_release_date.lte", "query"]);
   for (const key of q.keys()) {
     if (!permitted.has(key) || !accepted.has(key) || q.getAll(key).length !== 1) return null;
   }
