@@ -95,12 +95,12 @@ export function editCatalogDraft(draft,expectedRevision,operation) {
     case "add":
       if (!exact(["action","id","shelf"]) || index>=0 ||
           operation.shelf?.id!==operation.id) throw Error("invalid_catalog_edit");
-      rows.push(operation.shelf);
+      rows.push({...operation.shelf,order:rows.length});
       break;
     case "replace":
       if (!exact(["action","id","shelf"]) || index<0 ||
           operation.shelf?.id!==operation.id) throw Error("invalid_catalog_edit");
-      rows[index]=operation.shelf;
+      rows[index]={...operation.shelf,order:rows[index].order};
       break;
     case "remove":
       if (!exact(["action","id"]) || index<0) throw Error("invalid_catalog_edit");
