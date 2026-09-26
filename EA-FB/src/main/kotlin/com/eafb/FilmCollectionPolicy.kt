@@ -30,6 +30,12 @@ object FilmCollectionPolicy {
         return parser.parse(value, position) != null && position.index == value.length
     }
 
+    /** Match franchise labels to the subset with real visible artwork cards. */
+    fun visibleChronology(parts: List<FilmCollectionPart>, visibleIds: Set<Int>,
+                          maxLabels: Int = 12): List<FilmCollectionPart> =
+        if (maxLabels !in 1..32) emptyList()
+        else parts.filter { it.id in visibleIds }.take(maxLabels)
+
     fun chronological(parts: List<FilmCollectionPart>, ownId: Int): List<FilmCollectionPart> {
         if (ownId <= 0) return emptyList()
         val unique = linkedMapOf<Int, FilmCollectionPart>()
