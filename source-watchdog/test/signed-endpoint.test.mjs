@@ -161,6 +161,23 @@ test("default production rights allowlist is empty even with valid signed key",a
   assert.equal((await res.json()).error,"source_snapshot_unavailable");
 });
 
+test("zero reviewed rights never imports key or signs even an empty snapshot",async()=>{
+  let reads=0,signs=0;
+  const worker=createWatchdogWorker({
+    readRegistry:async()=>{reads++;return [];},
+    readSnapshot:async()=>{reads++;return {...snapshot(),sources:[]};},
+    signSnapshot:async()=>{signs++;return {};},
+    nowMillis:()=>now,logger,
+  });
+  const res=await worker.fetch(request(),{
+    ...production,SNAPSHOT_SIGNING_KEY_ID:"eafb-2026",
+    SNAPSHOT_SIGNING_PKCS8_B64:"unused-test-key",
+  });
+  assert.equal(res.status,503);
+  assert.equal(reads,0);
+  assert.equal(signs,0);
+});
+
 test("wrong HTTP methods and unrelated routes expose no registry or admin actions",async()=>{
   const worker=createWatchdogWorker({nowMillis:()=>now,logger});
   const post=await worker.fetch(new Request("https://watchdog.example.org/v1/sources",{method:"POST"}),production);
