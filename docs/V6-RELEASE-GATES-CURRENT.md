@@ -19,16 +19,16 @@ descriptions of the hero score or test counts may be superseded.
   `ea-fb-catalog.eaatabay.workers.dev` origin with `status=ready`.
   A previously pinned origin can survive a config-fetch outage for 24h;
   an explicit disabled config cannot be bypassed with the cache.
-- Source Watchdog: no live signing pins, approved source grants or production
+- Source Watchdog scheduler: mismatched config/state IDs and incomplete\n  incident metadata fail closed; legitimate first incident remains eligible.\n- Source Watchdog: no live signing pins, approved source grants or production
   adapters are compiled into the public plugin. No live probing enabled.
 
 ## Verified locally in isolated reconstruction this parkur
 - Kotlin HTTPS transport: 6/6 smoke checks.
 - Kotlin signed refresh: 5/5 smoke checks, including cancellation races.
-- Kotlin failed SharedPreferences commit: 5/5 smoke checks.
+- Kotlin failed SharedPreferences commit and second-store guard: 7/7 smoke checks.
 - Kotlin metadata relay pin: 18/18 pure policy checks.
 - Node relay wiring: 3/3 equivalent static checks.
-- Node scheduler: 3/3 selected checks, including mismatched identity.
+- Node scheduler: 3/3 selected checks, including mismatched identity\n  and missing incident timestamps.
 These are **not** a claim that the exact complete GitHub checkout or Android
 Gradle build passed. Source changes and new regression test files were committed
 to the v6 branch and should be run together in a full checkout.
