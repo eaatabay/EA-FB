@@ -9,6 +9,7 @@ const knownStates=["healthy","degraded","quarantined","admin_required","disabled
 const knownErrors=new Set([
  "unreachable","unapproved_redirect","structural_change",
  "identity_unverified","functional_check_failed","unapproved_or_invalid_target",
+ "adapter_error","probe_timeout",
 ]);
 function utc(time) {
   if(!Number.isFinite(time)||time<0||time>8640000000000000) return "—";
