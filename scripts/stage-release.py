@@ -57,8 +57,11 @@ def stage(root=ROOT):
         except (UnicodeDecodeError, json.JSONDecodeError) as exc:
             raise ValueError("Invalid .cs3 manifest JSON") from exc
         if (not isinstance(package_manifest, dict) or
-                ("name" in package_manifest and package_manifest["name"] != "EA-FB")):
-            raise ValueError("Unexpected .cs3 manifest identity")
+                ("name" in package_manifest and package_manifest["name"] != "EA-FB") or
+                ("version" in package_manifest and
+                 (type(package_manifest["version"]) is not int or
+                  package_manifest["version"] != 6))):
+            raise ValueError("Unexpected .cs3 manifest identity or version")
         corrupt_member = archive.testzip()
         if corrupt_member:
             raise ValueError(f"Corrupt .cs3 archive entry: {corrupt_member}")
