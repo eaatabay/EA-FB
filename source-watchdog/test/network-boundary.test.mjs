@@ -31,6 +31,8 @@ test('only reviewed HTTPS hosts, never arbitrary redirect or userinfo', async ()
       'https://user:pass@licensed.example.com','https://licensed.example.com:8443',
       'https://[::1]','https://localhost','https://licensed.example.com/#x',
       'https://licensed.example.com/?token=secret',
+      'https://licensed.example.com/?',
+      'https://licensed.example.com/#',
       'https://-bad.example.com','https://bad-.example.com']) {
     assert.equal((await preflightTarget(source,target,resolve)).allowed,false,target);
   }
