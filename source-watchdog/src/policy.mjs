@@ -165,6 +165,8 @@ export function applyProbe(source, previous, probe, now) {
       previous.consecutiveSuccesses < 0 || previous.consecutiveSuccesses > 2 ||
       previous.currentUrl !== config.currentUrl ||
       previous.lastKnownGoodUrl !== config.lastKnownGoodUrl ||
+      (previous.nextCheckAt === null &&
+       ![HEALTH.ADMIN_REQUIRED,HEALTH.DISABLED].includes(previous.status)) ||
       (previous.nextCheckAt !== null &&
        (!Number.isSafeInteger(previous.nextCheckAt) || previous.nextCheckAt < 0)) ||
       (previous.lastCheckedAt !== null &&
