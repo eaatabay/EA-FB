@@ -65,6 +65,22 @@ class StageReleaseTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "missing required"):
             module.stage(self.root)
 
+    def test_reject_invalid_compiled_manifest(self):
+        path = self.make_archive()
+        with zipfile.ZipFile(path, "w") as z:
+            z.writestr("classes.dex", b"dex-test-placeholder" * 20)
+            z.writestr("manifest.json", "{not-json")
+        with self.assertRaisesRegex(ValueError, "Invalid .cs3 manifest JSON"):
+            module.stage(self.root)
+
+    def test_reject_other_plugin_manifest_identity(self):
+        path = self.make_archive()
+        with zipfile.ZipFile(path, "w") as z:
+            z.writestr("classes.dex", b"dex-test-placeholder" * 20)
+            z.writestr("manifest.json", '{"name":"OTHER"}')
+        with self.assertRaisesRegex(ValueError, "Unexpected .cs3 manifest identity"):
+            module.stage(self.root)
+
     def test_reject_duplicate_critical_zip_members(self):
         path = self.make_archive()
         with zipfile.ZipFile(path, "a") as z:
