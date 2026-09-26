@@ -63,3 +63,10 @@ Run `bash scripts/verify-v6.sh` on the **feature branch**, inspect Android UI on
 - A discover shelf whose first En Yeni page has no released artwork now scans at most two more pages before trying the clearly labeled popular fallback. Scanned first-page results are non-paginated to avoid duplicate page-2 cards. Native trending/top-rated feeds are never filtered by this discover-only rule.
 - Fixed a serious Worker bug in the new strict ISO date regex (it previously had over-escaped digits); added leap-day and invalid-year test cases. Production Worker is unchanged.
 - New Node regression tests cover offline draft CLI locking, create-only initialization, CAS mutations, preview escaping and Android source wiring. **No test execution or Android build has been confirmed for these commits.** Do not release a new cs3 until the complete v6 verification suite passes.
+
+## 27.09.2026 — catalog preview and film collection accuracy
+
+- Added a strict, **unpublished** `compile-preview` command for local admin catalog drafts. Only enabled shelves with filters supported by the existing metadata relay compile; enabling an unsupported language/year constraint fails explicitly rather than silently broadening the feed. Disabled draft shelves may retain future filters for later review.
+- `node source-watchdog/dev/catalog-draft-cli.mjs compile-preview ./my.catalog-draft.json` prints a local JSON preview. It neither deploys nor grants playback access. New offline tests cover the preview, strict envelope validation and local CLI behavior.
+- Official TMDb collection title/year notes now correspond only to collection installments whose cards have usable artwork. The selected film must belong to the collection, and chronology is tested independently. CloudStream still exposes **one native recommendations rail**; a truly separate franchise rail requires host UI support, not merely a metadata response.
+- Build and device verification remain release gates; no claim is made that these latest commits passed Android or Mi Box tests.
