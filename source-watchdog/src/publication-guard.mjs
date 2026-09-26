@@ -13,8 +13,8 @@ export const APPROVED_RIGHTS_REFS = Object.freeze([]);
 /** Independently reviewed, release-pinned host/path/version/date scopes. EMPTY in v6. */
 export const APPROVED_SOURCE_GRANTS = Object.freeze([]);
 const MAX_REVIEW_AGE_MS = 366 * 86_400_000;
-const HOST = /^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)+$/;
-const PATH = /^\\/(?:[a-zA-Z0-9_.-]+(?:\\/[a-zA-Z0-9_.-]+)*)?$/;
+const HOST = /^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)+$/;
+const PATH = new RegExp("^/(?:[a-zA-Z0-9_.-]+(?:/[a-zA-Z0-9_.-]+)*)?$");
 
 function reviewedGrant(grant, at) {
   if (!grant || !SOURCE_ID.test(grant.id) ||
@@ -33,8 +33,8 @@ function reviewedGrant(grant, at) {
       !grant.approvedHosts.every(host => typeof host === "string" &&
         host.length <= 253 && HOST.test(host) &&
         host.split(".").every(label => label.length <= 63) &&
-        !/\\.(?:local|localhost|internal|invalid)$/.test(host) &&
-        !/^\\d+(?:\\.\\d+){3}$/.test(host)) ||
+        ![".local",".localhost",".internal",".invalid"].some(t => host.endsWith(t)) &&
+        !(host.split(".").length === 4 && host.split(".").every(x => /^[0-9]+$/.test(x)))) ||
       typeof grant.approvedPathPrefix !== "string" ||
       !PATH.test(grant.approvedPathPrefix) ||
       grant.approvedPathPrefix.split("/").some(x => x === "." || x === "..")) {
