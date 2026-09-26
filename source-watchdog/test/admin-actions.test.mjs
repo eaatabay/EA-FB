@@ -122,11 +122,12 @@ test("noncanonical admin request URL aliases fail before parsing body",async()=>
       e=>e instanceof AdminMutationError&&[403,404].includes(e.status),
       suffix);
   }
-  const credential=new Request(
-    "https://user:pass@watchdog.example.org/admin/api/sources/licensed-demo",{
-      method:"POST",headers:{origin,"content-type":"application/json",
-        "x-eafb-admin-action":"confirmed"},body,
-    });
+  // Request() itself refuses credentialed URLs; a direct parser boundary
+  // test uses a request-like object to ensure the check is independent.
+  const credential={url:
+    "https://user:pass@watchdog.example.org/admin/api/sources/licensed-demo",
+    method:"POST",headers:new Headers({origin,"content-type":"application/json",
+      "x-eafb-admin-action":"confirmed"})};
   await assert.rejects(parseAdminMutationRequest(credential,env),
     e=>e instanceof AdminMutationError&&e.status===403);
 });
