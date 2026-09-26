@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {validateCatalogShelves,publicCatalogShelves,compileCatalogShelf,buildCatalogDraft,editCatalogDraft,compileCatalogDraftPreview} from "../src/catalog-shelves.mjs";
+import {validateCatalogShelves,publicCatalogShelves,compileCatalogShelf,buildCatalogDraft,editCatalogDraft,compileCatalogDraftPreview,diffCatalogDrafts} from "../src/catalog-shelves.mjs";
 const base={id:"new-turkish-tv",title:"Yeni Türk Dizileri",kind:"tv",
   genres:"18",language:"tr",yearFrom:2024,yearTo:2026,enabled:true,order:0};
 test("validates catalog-only shelf and preserves order",()=>{
@@ -150,4 +150,26 @@ test("CAS refuses forged draft envelopes before any edit",()=>{
   ]) assert.throws(()=>editCatalogDraft(forged,0,{
     action:"toggle",id:base.id,enabled:false
   }));
+});
+
+test("review-only diff records catalog add, rename, order, disable and removal",()=>{
+  const safe={...base,language:undefined,yearFrom:undefined,yearTo:undefined};
+  const first=buildCatalogDraft([safe],1);
+  const second=buildCatalogDraft([{...safe,title:"Türk Dizileri",enabled:false,order:1},{
+    id:"archive-movie",title:"Arşiv Filmleri",kind:"movie",genres:"18",
+    enabled:true,order:0
+  }],2);
+  const diff=diffCatalogDrafts(first,second);
+  assert.equal(diff.status,"review-only");
+  assert.deepEqual(diff.changes.filter(x=>x.action==="changed").map(x=>x.field),
+    ["title","enabled","order"]);
+  assert.deepEqual(diff.changes.filter(x=>x.action==="added").map(x=>x.id),
+    ["archive-movie"]);
+  assert.equal(Object.isFrozen(diff.changes),true);
+  const third=buildCatalogDraft([],3);
+  assert.deepEqual(diffCatalogDrafts(second,third).changes.filter(x=>x.action==="removed")
+    .map(x=>x.id),["archive-movie","new-turkish-tv"]);
+  assert.throws(()=>diffCatalogDrafts(second,first),/invalid_catalog_revision_order/);
+  assert.throws(()=>diffCatalogDrafts({...first,streamUrl:"https://bad.invalid"},second),
+    /invalid_draft_envelope/);
 });
