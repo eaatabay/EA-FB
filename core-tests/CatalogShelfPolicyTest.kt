@@ -28,5 +28,7 @@ fun main() {
     }) == null)
     check(CatalogShelfPolicy.categories(listOf(basic.copy(order=40))) == null)
     check(CatalogShelfPolicy.categories(emptyList())?.isEmpty() == true)
-    println("PASS: 15/15 catalog shelf route and batch assertions")
+    check(CatalogShelfPolicy.category(basic.copy(title="İki\nSatır")) == null)
+    check(CatalogShelfPolicy.category(platform.copy(providerId=0)) == null)
+    println("PASS: 17/17 catalog shelf route and batch assertions")
 }
