@@ -37,6 +37,10 @@ object CatalogShelfPolicy {
                 shelf.title.any { it == '<' || it == '>' || Character.isISOControl(it) } ||
                 shelf.kind == MediaKind.LIVE ||
                 ((shelf.providerId == null) == (shelf.genres == null)) ||
+                (shelf.providerId != null &&
+                    (shelf.providerId !in 1..999999 || !regions.matches(shelf.region.orEmpty()))) ||
+                (shelf.genres != null &&
+                    (!genreIds.matches(shelf.genres) || shelf.region != null)) ||
                 shelf.language?.let { !languages.matches(it) } == true ||
                 shelf.yearFrom?.let { it !in 1888..2100 } == true ||
                 shelf.yearTo?.let { it !in 1888..2100 } == true ||
