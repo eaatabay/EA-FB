@@ -9,11 +9,13 @@ import { validSnapshot } from "./snapshot-crypto.mjs";
 export function buildClientSnapshot(sources, states, revision, now, options={}) {
   if (!Array.isArray(sources) || !Array.isArray(states) ||
       !Number.isSafeInteger(revision) || revision < 0 ||
-      !Number.isFinite(now) || now < 0) throw new Error("invalid_snapshot_input");
+      !Number.isSafeInteger(now) || now < 0) throw new Error("invalid_snapshot_input");
   const maxAgeMs = options.maxHealthAgeMs ?? 12 * 3_600_000;
   const ttlMs = options.ttlMs ?? 15 * 60_000;
-  if (!(maxAgeMs > 0 && maxAgeMs <= 48 * 3_600_000) ||
-      !(ttlMs > 0 && ttlMs <= 60 * 60_000)) throw new Error("invalid_snapshot_lifetime");
+  if (!Number.isSafeInteger(maxAgeMs) || maxAgeMs <= 0 ||
+      maxAgeMs > 48 * 3_600_000 || !Number.isSafeInteger(ttlMs) ||
+      ttlMs <= 0 || ttlMs > 60 * 60_000 ||
+      !Number.isSafeInteger(now + ttlMs)) throw new Error("invalid_snapshot_lifetime");
   const stateById = new Map();
   for (const state of states) {
     if (!state || typeof state.id !== "string" || stateById.has(state.id)) {
@@ -30,11 +32,16 @@ export function buildClientSnapshot(sources, states, revision, now, options={}) 
     const state = stateById.get(source.id);
     if (!source.enabled || source.integrationApproved !== true ||
         !state || state.status !== HEALTH.HEALTHY ||
-        !Number.isFinite(state.lastCheckedAt) || state.lastCheckedAt > now ||
+        !Number.isSafeInteger(state.lastCheckedAt) || state.lastCheckedAt < 0 ||
+        state.lastCheckedAt > now ||
         now - state.lastCheckedAt > maxAgeMs) continue;
     const current = normalizedHttpsUrl(state.currentUrl);
-    if (!current || !source.verifiedDomains.includes(new URL(current).hostname)) continue;
-    if (!Number.isSafeInteger(source.adapterVersion) || source.adapterVersion < 1) {
+    // A state/config mismatch means an incomplete or conflicting CAS write.
+    // Never publish the state URL until the approved config agrees.
+    if (!current || current !== source.currentUrl ||
+        !source.verifiedDomains.includes(new URL(current).hostname)) continue;
+    if (!Number.isSafeInteger(source.adapterVersion) ||
+        source.adapterVersion < 1 || source.adapterVersion > 1_000_000) {
       throw new Error("invalid_adapter_version");
     }
     published.push({
