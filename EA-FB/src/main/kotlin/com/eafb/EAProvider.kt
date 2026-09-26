@@ -112,18 +112,17 @@ class EAProvider : MainAPI() {
     private suspend fun catalogRelay(): String {
         val now = System.currentTimeMillis()
         val cached = relayBase
-        if (!cached.isNullOrBlank() && now - relayCheckedAt < 3_600_000L) return cached
+        if (CatalogRelayPolicy.usableCached(cached, relayCheckedAt, now) != null &&
+            now - relayCheckedAt < 3_600_000L) return cached!!
         val config = try { JSONObject(app.get(catalogConfigUrl).text) }
             catch (cancelled: CancellationException) { throw cancelled }
             catch (_: Exception) {
-                if (!cached.isNullOrBlank()) return cached
+                CatalogRelayPolicy.usableCached(cached, relayCheckedAt, now)?.let { return it }
                 error("EA-FB katalog servisi ayarına ulaşılamıyor. İnternet bağlantısını kontrol et.")
             }
-        val url = config.optString("apiBaseUrl").trim().trimEnd('/')
-        if (!url.startsWith("https://") || url.length > 200 ||
-            url.contains("@") || url.contains("?") || url.contains("#") || url.contains(" ")) {
-            error("EA-FB katalog servisi henüz etkinleştirilmedi.")
-        }
+        val url = CatalogRelayPolicy.approved(
+            config.optString("apiBaseUrl"), config.optString("status")
+        ) ?: error("EA-FB katalog servisi henüz etkinleştirilmedi.")
         relayBase = url
         relayCheckedAt = now
         return url
