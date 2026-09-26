@@ -137,3 +137,7 @@ The exact repository bridge JVM test file now contains **11 assertions**: the or
 ## 26 Sep 2026: rights-record identity hardening
 
 The compiled rights gate now requires an exact canonical evidence reference `rights/YYYY/<permit-id>.md`. It rejects references to another source's record, nested aliases and non-numeric years. A prior-year record remains syntactically valid when the separately recorded permit expiry has not elapsed. Four committed Kotlin regressions increase the checked-in rights suite from 62 to **66** cases. The exact updated policy file (Git blob `bf544b12`) passed **47/47 independent offline JVM checks** with a test-only snapshot model. This is not the exact 66-case repository test run, nor verification of actual legal rights or document existence. The 11-case bridge JVM suite and real local Wrangler+D1 release gate remain pending.
+
+## 26 Sep 2026: review-lifetime boundary
+
+The compiled permit gate now explicitly requires a positive lifetime of at most 366 days. Two new committed regressions cover a far-future validity interval and the exact 366-day accepted boundary; the checked-in Kotlin rights suite contains **68** cases. These two cases have not yet run as part of the exact repository JVM suite. The SHA-matched independent **47/47** run predates this change and must not be presented as verification of the new guard. The production rights list remains empty.
