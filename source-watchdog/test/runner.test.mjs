@@ -87,7 +87,7 @@ sqliteTest("one crashing adapter does not stop another source",async()=>{
     assert.equal(result.find(x=>x.sourceId==="source-one").error,"adapter_error");
     assert.equal(result.find(x=>x.sourceId==="source-two").status,"committed");
     assert.equal((await getSource(db,"source-one")).state.revision,1);
-    assert.equal((await getSource(db,"source-one")).state.lastFailure,"unreachable");
+    assert.equal((await getSource(db,"source-one")).state.lastFailure,"adapter_error");
     assert.equal((await getSource(db,"source-two")).state.revision,1);
   }finally{db.close();}
 });
@@ -167,6 +167,7 @@ test("timeout wins even when abort listener immediately returns a fake healthy p
     assert.equal(aborted,true);
     assert.equal((await getSource(db,"fixture-timeout")).revision,1);
     assert.equal((await getSource(db,"fixture-timeout")).state.status,HEALTH.DEGRADED);
+    assert.equal((await getSource(db,"fixture-timeout")).state.lastFailure,"probe_timeout");
   }finally{db.close();}
 });
 
@@ -208,6 +209,6 @@ test("malformed adapter response counts as failed health check",
     const result=await runDueChecks({db,adapters,now:0});
     assert.equal(result[0].status,"probe_failed");
     assert.equal(result[0].error,"adapter_error");
-    assert.equal((await getSource(db,"fixture-null")).state.lastFailure,"unreachable");
+    assert.equal((await getSource(db,"fixture-null")).state.lastFailure,"adapter_error");
   }finally{db.close();}
 });
