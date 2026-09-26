@@ -129,6 +129,15 @@ test("one broken source never suppresses independent healthy sources", () => {
 });
 
 
+test("canonical HTTPS DNS host regression: real dots accepted, escaped separators rejected",()=>{
+  assert.equal(normalizedHttpsUrl("https://licensed.example.org"),
+    "https://licensed.example.org");
+  assert.equal(normalizedHttpsUrl("https://licensed.example.org/a/b"),
+    "https://licensed.example.org/a/b");
+  assert.equal(normalizedHttpsUrl("https://licensed\\\\xexample\\\\xorg"),null);
+  assert.equal(validateSource(source).currentUrl,"https://demo.example.org");
+});
+
 test("malformed allowlist objects and noninteger clocks fail closed",()=>{
   assert.throws(()=>validateSource({...source,
     verifiedDomains:[{toString:null}]}),/invalid_source_addresses/);
