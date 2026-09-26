@@ -122,11 +122,12 @@ test("discovery sort validates film, series, and rated-list safeguards", async (
     "/v1/discover/movie?with_genres=28&sort_by=primary_release_date.desc&primary_release_date.lte=2026-09-26",
     "/v1/discover/tv?with_watch_providers=8&sort_by=first_air_date.desc&first_air_date.lte=2026-09-26",
     "/v1/discover/movie?with_genres=878&sort_by=vote_average.desc&vote_count.gte=100",
+    "/v1/discover/movie?primary_release_date.lte=2024-02-29",
   ]) {
     const res = await gateway.fetch(new Request("https://example.workers.dev" + path), env, ctx);
     assert.equal(res.status, 200, path);
   }
-  assert.equal(calls.length, 3);
+  assert.equal(calls.length, 4);
   for (const path of [
     "/v1/discover/tv?sort_by=primary_release_date.desc",
     "/v1/discover/movie?sort_by=first_air_date.desc",
@@ -138,11 +139,15 @@ test("discovery sort validates film, series, and rated-list safeguards", async (
     "/v1/discover/movie?primary_release_date.lte=not-a-date",
     "/v1/discover/movie?primary_release_date.lte=2026-02-31",
     "/v1/discover/tv?first_air_date.lte=2026-13-01",
+    "/v1/discover/movie?primary_release_date.lte=2025-02-29",
+    "/v1/discover/movie?primary_release_date.lte=2026-04-31",
+    "/v1/discover/movie?primary_release_date.lte=0000-01-01",
+    "/v1/discover/movie?primary_release_date.lte=2200-01-01",
   ]) {
     const res = await gateway.fetch(new Request("https://example.workers.dev" + path), env, ctx);
     assert.equal(res.status, 400, path);
   }
-  assert.equal(calls.length, 3);
+  assert.equal(calls.length, 4);
 });
 
 test("rate limit rejects without TMDb fetch", async () => {
