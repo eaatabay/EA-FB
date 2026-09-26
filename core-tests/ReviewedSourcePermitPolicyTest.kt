@@ -46,6 +46,13 @@ fun main() {
         "an expired reviewed permit closes the whole registry")
     test(only(list=listOf(movie.copy(reviewedAt=T+1),series,both)).isEmpty(),
         "future-dated rights review never accepted")
+    test(only(now=Long.MAX_VALUE,list=listOf(
+        movie.copy(reviewedAt=0L,validUntil=Long.MAX_VALUE),series,both
+    )).isEmpty(), "overflowed rights lifetime fails closed")
+    test(only(now=Long.MAX_VALUE-1,list=listOf(
+        movie.copy(reviewedAt=Long.MAX_VALUE-2,
+            validUntil=Long.MAX_VALUE),series,both
+    )).isEmpty(), "other expired permits still close mixed registry")
     test(only(list=listOf(movie.copy(validUntil=T+367*DAY),series,both)).isEmpty(),
         "a rights permit must be reviewed at least annually")
     test(only(list=listOf(movie.copy(evidenceReference="approved"),series,both))
