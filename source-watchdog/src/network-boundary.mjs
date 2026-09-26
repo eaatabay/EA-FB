@@ -18,7 +18,7 @@ function normalizedTarget(value) {
     const rawPath = value.slice('https://'.length + authority.length).split(/[?#]/, 1)[0];
     // The URL parser silently removes dot segments and decodes aliases. The
     // transport must never probe a different path than the reviewed base URL.
-    if (rawPath.includes('%') || rawPath.includes('\\\\') ||
+    if (rawPath.includes('%') || rawPath.includes('\\') ||
         rawPath.includes('//') ||
         rawPath.split('/').some(segment => segment === '.' || segment === '..') ||
         authority !== url.hostname || url.protocol !== 'https:' || url.username || url.password ||
