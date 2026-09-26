@@ -64,12 +64,33 @@ export async function readLimitedJwks(res, maxBytes = 65_536) {
     return JSON.parse(text + decoder.decode());
   } finally { reader.releaseLock(); }
 }
-async function loadJwks(team) {
-  const signal=AbortSignal.timeout(4000);
-  const res=await fetch(team+"/cdn-cgi/access/certs",{
-    method:"GET",redirect:"error",signal,headers:{accept:"application/json"},
-  });
-  return readLimitedJwks(res);
+export async function loadJwks(team, deadlineMs = 4000) {
+  if (!Number.isSafeInteger(deadlineMs) || deadlineMs < 1 || deadlineMs > 4000) {
+    throw Error("invalid_access_deadline");
+  }
+  const controller = new AbortController();
+  let timer;
+  try {
+    // AbortSignal alone does not bound a JWKS body stream that ignores abort.
+    // Race the WHOLE fetch + bounded read, not only response headers.
+    return await Promise.race([
+      (async () => {
+        const res = await fetch(team+"/cdn-cgi/access/certs",{
+          method:"GET",redirect:"error",signal:controller.signal,
+          headers:{accept:"application/json"},
+        });
+        return readLimitedJwks(res);
+      })(),
+      new Promise((_, reject) => {
+        timer = setTimeout(() => {
+          reject(Error("access_certs_timeout"));
+          controller.abort();
+        }, deadlineMs);
+      }),
+    ]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
 }
 
 /**
