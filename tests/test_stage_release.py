@@ -98,6 +98,24 @@ class StageReleaseTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "Unsafe"):
             module.stage(self.root)
 
+    def test_reject_symlinked_gradle_manifest(self):
+        self.make_archive()
+        path = self.root / "build" / "plugins.json"
+        external = self.root / "outside-plugins.json"
+        path.rename(external)
+        path.symlink_to(external)
+        with self.assertRaisesRegex(ValueError, "symlinked build inputs"):
+            module.stage(self.root)
+
+    def test_reject_symlinked_gradle_build_directory(self):
+        self.make_archive()
+        build = self.root / "EA-FB" / "build"
+        external = self.root / "outside-build"
+        build.rename(external)
+        build.symlink_to(external, target_is_directory=True)
+        with self.assertRaisesRegex(ValueError, "symlinked build inputs"):
+            module.stage(self.root)
+
     def test_reject_symlinked_binary(self):
         path = self.make_archive()
         external = self.root / "external.cs3"
