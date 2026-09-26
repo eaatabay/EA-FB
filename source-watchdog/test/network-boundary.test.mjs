@@ -29,13 +29,18 @@ test('one private or IPv6 DNS answer fails entire destination', async () => {
 test('only reviewed HTTPS hosts, never arbitrary redirect or userinfo', async () => {
   for (const target of ['http://licensed.example.com','https://127.0.0.1',
       'https://user:pass@licensed.example.com','https://licensed.example.com:8443',
-      'https://[::1]','https://localhost','https://licensed.example.com/#x']) {
+      'https://[::1]','https://localhost','https://licensed.example.com/#x',
+      'https://licensed.example.com/?token=secret',
+      'https://-bad.example.com','https://bad-.example.com']) {
     assert.equal((await preflightTarget(source,target,resolve)).allowed,false,target);
   }
   const blocked=await preflightTarget(source,'https://evil.example.org',resolve);
   assert.equal(blocked.reason,'admin_domain_approval_required');
   assert.equal((await preflightTarget(source,'https://licensed.example.com',resolve)).allowed,true);
   assert.equal((await preflightTarget(source,'https://licensed.example.com',null)).reason,'resolver_required');
+  const oversized = 'a'.repeat(64) + '.example.com';
+  assert.equal((await preflightTarget({verifiedDomains:[oversized]},
+    'https://' + oversized,resolve)).allowed,false);
 });
 
 test('each approved redirect hop is revalidated and unknown domains request admin', async () => {
