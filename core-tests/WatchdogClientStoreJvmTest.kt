@@ -90,6 +90,11 @@ fun main(){
         "Android in-memory write with failed disk commit is rejected")
     ok(volatileCtx.prefs.values.size==3 && volatileStore.restoreVerifiedOffline(NOW)==null,
         "non-durable in-memory signed snapshot remains inaccessible")
+    val siblingStore=WatchdogClientStore(volatileCtx,trust,parse)
+    ok(siblingStore.restoreVerifiedOffline(NOW)==null,
+        "new store sharing failed SharedPreferences cannot expose volatile cache")
+    ok(siblingStore.acceptSignedJson("signed",NOW) is SnapshotCheck.Rejected,
+        "new store sharing failed preferences cannot bypass persistence guard")
     volatileCtx.prefs.allowCommit=true
     val stillRejected=volatileStore.acceptSignedJson("signed",NOW)
     ok(stillRejected is SnapshotCheck.Rejected &&
