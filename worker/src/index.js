@@ -154,7 +154,10 @@ export default {
     const cache = typeof caches === "undefined" ? null : caches.default;
     if (cache) {
       try {
-        const cached = await cache.match(cacheKey);
+        // An edge cache lookup that never settles is also optional. Give it
+        // 1.5s, then fetch origin under its separate 12s hard deadline.
+        const cached = await withUpstreamDeadline(
+          () => cache.match(cacheKey),1500);
         if (cached) return cached;
       } catch {
         // Edge cache failure is not a TMDb outage. Fetch metadata normally.
