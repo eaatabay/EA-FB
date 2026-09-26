@@ -219,26 +219,45 @@ export default {
       typeof imdbId === "string" && /^tt\d{7,10}$/.test(imdbId);
     let omdbSettled = false;
     if (omdbAttempted) {
+      // The optional second rating service must never hold the TMDb detail
+      // hostage. The timeout covers both HTTP and streamed JSON body reads.
+      const controller = new AbortController();
+      let timer;
       try {
-        const omdbUrl = "https://www.omdbapi.com/?i=" +
-          encodeURIComponent(imdbId) + "&apikey=" + encodeURIComponent(env.OMDB_API_KEY);
-        const other = await fetch(omdbUrl, {
-          method: "GET", redirect: "manual", headers: { accept: "application/json" },
-        });
-        if (other.ok && (other.headers.get("content-type") || "").includes("application/json")) {
-          const text = await readBoundedText(other, 50_000);
-          if (text.length < 50_000) {
-            const data = JSON.parse(text);
-            const parsed = parseOmdbRating(data, imdbId);
-            omdbSettled = parsed.settled;
-            if (parsed.rating !== null) {
-              result.ea_fb_ratings = { imdb: parsed.rating, source: "OMDb API" };
-              outputBody = JSON.stringify(result);
+        const enrich = async () => {
+          const omdbUrl = "https://www.omdbapi.com/?i=" +
+            encodeURIComponent(imdbId) + "&apikey=" + encodeURIComponent(env.OMDB_API_KEY);
+          const other = await fetch(omdbUrl, {
+            method: "GET", redirect: "manual", signal:controller.signal,
+            headers: { accept: "application/json" },
+          });
+          if (other.ok && (other.headers.get("content-type") || "").includes("application/json")) {
+            const text = await readBoundedText(other, 50_000);
+            if (text.length < 50_000) {
+              const parsed = parseOmdbRating(JSON.parse(text), imdbId);
+              omdbSettled = parsed.settled;
+              if (parsed.rating !== null) {
+                result.ea_fb_ratings = { imdb: parsed.rating, source: "OMDb API" };
+                outputBody = JSON.stringify(result);
+              }
             }
           }
-        }
+        };
+        await Promise.race([
+          enrich(),
+          new Promise((_,reject)=>{
+            timer=setTimeout(()=>{
+              // Reject first: a synchronous abort listener cannot turn an
+              // expired request into a late successful enrichment.
+              reject(new Error("optional_rating_timeout"));
+              controller.abort();
+            },3500);
+          }),
+        ]);
       } catch (_) {
-        // IMDb enrichment is best-effort. TMDb detail always remains usable.
+        // Best-effort only. TMDb stays available; retry after short cache TTL.
+      } finally {
+        if (timer) clearTimeout(timer);
       }
     }
     // Do not poison the OMDb-mode cache for hours with a TMDb-only result
