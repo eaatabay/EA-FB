@@ -51,6 +51,13 @@ fun main() {
     val mismatched = verifier(mapOf("licensed-demo" to 4)).verify(signed(), NOW)
     check(mismatched is SnapshotCheck.Accepted && mismatched.snapshot.usableSources.isEmpty())
     tested++
+    for (url in listOf("https://licensed.example.org/%20private",
+        "https://licensed.example.org//private")) {
+        rejected(verifier().verify(signed(source().copy(sources = listOf(
+            source().sources[0].copy(baseUrl = url)
+        ))), NOW), "invalid_envelope")
+        tested++
+    }
     for (host in listOf("-invalid.example.org", "invalid-.example.org",
         "a".repeat(64) + ".example.org")) {
         rejected(verifier().verify(signed(source().copy(sources = listOf(
