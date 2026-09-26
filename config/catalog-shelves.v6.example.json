@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "status": "draft-v6-not-published",
+  "shelves": [
+    {
+      "id": "new-turkish-tv",
+      "title": "Yeni Türk Dizileri",
+      "kind": "tv",
+      "genres": "18",
+      "enabled": false,
+      "order": 0
+    }
+  ]
+}
