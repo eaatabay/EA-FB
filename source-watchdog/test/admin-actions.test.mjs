@@ -109,6 +109,20 @@ test("origin, custom header, JSON type and actual streaming body size are enforc
   await assert.rejects(parseAdminMutationRequest(request(
     "licensed-demo","disable",0,{body:"not json"}),env),AdminMutationError);
 });
+test("admin body limit remains 413 when a malicious stream cancel throws",async()=>{
+  const stream=new ReadableStream({
+    start(controller){controller.enqueue(new Uint8Array(1100));},
+    cancel(){throw new Error("UNTRUSTED_CANCEL_ERROR");},
+  });
+  const req=new Request(origin+"/admin/api/sources/licensed-demo",{
+    method:"POST",duplex:"half",body:stream,
+    headers:{origin,"content-type":"application/json",
+      "x-eafb-admin-action":"confirmed"},
+  });
+  await assert.rejects(parseAdminMutationRequest(req,env),
+    e=>e instanceof AdminMutationError&&e.status===413);
+});
+
 sqliteTest("verified actor, disable, stale replay and enable use D1 CAS + audit",async()=>{
   const db=d1();try{
     await registerSource(db,source,"admin:fixture",0);
