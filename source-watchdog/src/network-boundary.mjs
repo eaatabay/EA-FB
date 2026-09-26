@@ -43,6 +43,8 @@ export function publicIPv4(ip) {
       (a === 192 && b === 168) ||
       (a === 192 && b === 0 && c === 0) ||
       (a === 192 && b === 0 && c === 2) ||
+      // Deprecated 6to4 relay anycast: not an approved direct origin target.
+      (a === 192 && b === 88 && c === 99) ||
       (a === 198 && (b === 18 || b === 19)) ||
       (a === 198 && b === 51 && c === 100) ||
       (a === 203 && b === 0 && c === 113)) return false;
