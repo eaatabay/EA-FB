@@ -175,6 +175,17 @@
 - [x] Mevcut secilmis yerel test tekrar calistirildi: Kotlin rights 68/68 (reconstructed repository-equivalent), bridge 11/11, selection 15/15, Node 48/48, staging Python 17/17, SQLite fixture 59 probe/89 audit/rev89; admin recovery 61 probe/92 audit/rev92. Yerel policy+network 18/18; yeni 12/12 sinir kontrolleri ve yeniden olusturulmus snapshot 20/20 gecti.
 - [ ] 4. parkurdaki yeni snapshot/policy/network regresyonlarini tam gercek checkout Node 22 test paketinde kosma; mevcut yerel snapshot ve bazi Node modulleri yeniden olusturulmus kopya.
 
+## 26.09.2026 — 1. 30 dakikalik parkur (tam SHA eslesmeli secilmis testler)
+- [x] Kod incelemesinde iki GERCEK hata bulundu ve duzeltildi: Watchdog policy DNS regex'indeki cift escape tum normal alan adlarini reddediyordu; metadata Worker Content-Length regex'indeki cift escape boyut on kontrolunu devre disi birakiyordu. Her ikisi icin regresyon testi var.
+- [x] Cloudflare Access JWKS gercek streaming byte siniri 65.536, yalan Content-Length/UTF-8/iptal hatasi fail-closed; Access JWT gercek Node 8/8.
+- [x] Imzali kaynak yayini yeni pure rights guard ile her kaynak icin exact registry kimligi, adapterVersion, mediaKind, URL, enabled/integrationApproved ve hak kaniti dogrular. DEPLOYED DEFAULT rights allowlist BOS. Sahte izin kayitlari varsayilan signer'da 503; yalniz offline testlerde fixture izin listesi enjekte ediliyor. Guard gercek Node 3/3; tam signed endpoint+D1 suite bekliyor.
+- [x] Metadata Worker TMDb/OMDb byte limit yardimcisi ayri modulle gercek Node 5/5, tam metadata Worker katalog/IMDb/cache testleri gercek Node 20/20; toplam metadata 25/25.
+- [x] Watchdog bozuk persisted state/NaN/clock ve URL uyusmazligini reddeder; gercek SHA-eslesmeli policy 16/16, network preflight 7/7, scheduler 5/5, snapshot 10/10, snapshot crypto 7/7, Access 8/8, publication guard 3/3: SECILMIS Watchdog Node 56/56.
+- [x] .cs3 staging Gradle build klasoru ve plugins.json symlinklerini de reddeder; gercek SHA-eslesmeli Python staging 19/19. Test fixture .cs3, gercek Android build DEGIL.
+- [x] Gercek SHA-eslesmeli Kotlin rights 68/68, Kotlin JS->Android Ed25519 trust 19/19, resmi TMDb film serisi siralama 12/12; toplam Kotlin 99/99, gercek BC 1.80 ile JVM'de.
+- [x] Secilmis gercek GitHub blob SHA eslesmeli testler: Node 81 + Python 19 + Kotlin 99 = TOPLAM 199/199. Bu TUM REPO suite veya gercek Wrangler/Gradle degildir.
+- [ ] Tum source-watchdog npm test ve gercek registry/runner/admin-write SQLite suite; yerel Wrangler/workerd D1; gercek Android Gradle .cs3; Mi Box beta. GitHub Actions kotasi bitik: workflow tetikleme YOK.
+
 ## Sonraki en yakin is
 Actions kotasi sifirken hak/izin kayitlarini birer birer incele ve kullanicidan onay al;
 sonra EAProvider'a secure adapter bridge, tam Node 22 ve izole Wrangler D1,
