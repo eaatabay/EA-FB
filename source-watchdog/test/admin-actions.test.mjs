@@ -72,6 +72,8 @@ test("writes gate is independent of read-only admin access",()=>{
     {WATCHDOG_ADMIN_ENABLED:"false"},
     {WATCHDOG_MODE:"fixture"},
     {WATCHDOG_FIXTURE_ENABLED:"true"},
+    {WATCHDOG_FIXTURE_ENABLED:"TRUE"},
+    {WATCHDOG_FIXTURE_ENABLED:undefined},
     {WATCHDOG_ADMIN_ORIGIN:"https://localhost"},
     {WATCHDOG_ADMIN_ORIGIN:"http://watchdog.example.org"},
     {WATCHDOG_ADMIN_ORIGIN:"https://-watchdog.example.org"},
