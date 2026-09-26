@@ -5,9 +5,9 @@ const base={id:"new-turkish-tv",title:"Yeni Türk Dizileri",kind:"tv",
   genres:"18",language:"tr",yearFrom:2024,yearTo:2026,enabled:true,order:0};
 test("validates catalog-only shelf and preserves order",()=>{
   const rows=validateCatalogShelves([{...base,order:2},
-    {id:"apple-movie",title:"Apple TV Filmleri",kind:"movie",
+    {id:"apple-archive",title:"Apple TV Filmleri",kind:"movie",
       providerId:"350",region:"TR",enabled:true,order:0}]);
-  assert.equal(rows[0].id,"apple-movie");
+  assert.equal(rows[0].id,"apple-archive");
   assert.equal(publicCatalogShelves([{...base,enabled:false}]).shelves.length,0);
   assert.equal(Object.isFrozen(rows[0]),true);
 });
