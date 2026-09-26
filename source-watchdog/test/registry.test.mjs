@@ -123,6 +123,24 @@ sqliteTest("admin disable and revocation immediately remove a healthy source",as
   }finally{db.close();}
 });
 
+sqliteTest("approval references reject URLs, traversal and aliases without DB writes",async()=>{
+  const db=new SQLiteD1();
+  try{
+    await registerSource(db,source(),"admin:alice",0);
+    const before=db.sql.prepare("SELECT COUNT(*) AS n FROM source_audit").get().n;
+    for(const ref of ["https://evil.example.org/permit", "../rights/2026/demo.md",
+      "rights/../fake.md", "rights//2026/demo.md", "/rights/2026/demo.md",
+      "rights/./demo.md"]) {
+      await assert.rejects(setIntegrationApproval(db,"licensed-demo",false,
+        ref,"admin:alice",HOUR),/invalid_approval_evidence/,ref);
+      await assert.rejects(registerSource(db,{...source("another-demo"),
+        approvalRef:ref},"admin:alice",HOUR),/invalid_approval_reference/,ref);
+    }
+    assert.equal(db.sql.prepare("SELECT COUNT(*) AS n FROM source_audit").get().n,before);
+    assert.equal((await getSource(db,"licensed-demo")).revision,0);
+  }finally{db.close();}
+});
+
 sqliteTest("admin review cannot be bypassed; explicit release requires retesting",async()=>{
   const db=new SQLiteD1();
   try{
