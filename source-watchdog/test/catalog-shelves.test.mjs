@@ -39,6 +39,18 @@ test("rejects unapproved playback fields, malformed filters, duplicate IDs",()=>
   ]) assert.throws(()=>validateCatalogShelves(bad));
 });
 
+test("public metadata projection fails closed on enabled unsupported filters",()=>{
+  const safe={...base,language:undefined,yearFrom:undefined,yearTo:undefined};
+  assert.throws(()=>publicCatalogShelves([base]),/unsupported_catalog_filter/);
+  const disabled=publicCatalogShelves([{...base,enabled:false},safe]);
+  assert.equal(disabled.shelves.length,1);
+  assert.equal(disabled.shelves[0].id,safe.id);
+  assert.equal(Object.isFrozen(disabled.shelves),true);
+  assert.equal(Object.isFrozen(disabled.shelves[0]),true);
+  assert.throws(()=>publicCatalogShelves([safe,{...base,id:"archive-tv"}]),
+    /unsupported_catalog_filter/);
+});
+
 test("compile only relay-compatible catalog filters, never silently drop constraints",()=>{
   const safe={...base,language:undefined,yearFrom:undefined,yearTo:undefined};
   assert.equal(compileCatalogShelf(safe).path,"/discover/tv?with_genres=18");
