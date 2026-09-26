@@ -64,7 +64,7 @@ async function boundedJSON(request) {
       }
       size += value.byteLength;
       if (size > MAX_BYTES) {
-        await reader.cancel();
+        try { await reader.cancel(); } catch { /* Size limit still applies. */ }
         throw new AdminMutationError("admin_body_too_large", 413);
       }
       chunks.push(value);
