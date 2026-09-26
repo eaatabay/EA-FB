@@ -4,6 +4,12 @@ package com.eafb
 object CatalogCardPolicy {
     fun hasPoster(path: String?): Boolean = path != null && path.length > 1 && path.startsWith('/')
 
+    /** Poster first, then TMDb backdrop; never show an empty TV card. */
+    fun bestArtwork(poster: String?, backdrop: String?): String? =
+        listOf(poster, backdrop).firstOrNull { path ->
+            hasPoster(path) && path != null && !path.startsWith("//")
+        }
+
     /** TMDb total_pages is authoritative; infer only if omitted. */
     fun hasNext(page: Int, rawResultCount: Int, totalPages: Int): Boolean {
         if (page !in 1..20 || rawResultCount <= 0) return false
