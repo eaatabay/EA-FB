@@ -143,5 +143,13 @@ fun main()=runBlocking {
     checked(concurrentNet.calls==1&&all.count{it.status=="updated"}==1&&
         all.count{it.status=="throttled"}==4,
         "concurrent callers coalesce under Mutex")
+    val cacheCancelled=WatchdogSnapshotRefresh(good,FakeTransport(),offline::accept,
+        { throw CancellationException("cancelled") })
+    checked(runCatching{cacheCancelled.refresh(T+1)}.exceptionOrNull() is CancellationException,
+        "cancelled cache restoration propagates")
+    val verifyCancelled=WatchdogSnapshotRefresh(good,FakeTransport(),
+        { _, _ -> throw CancellationException("cancelled") },offline::offline)
+    checked(runCatching{verifyCancelled.refresh(T+1)}.exceptionOrNull() is CancellationException,
+        "cancelled verification propagates")
     println("PASS: $count/$count offline and injected-transport refresh checks")
 }
