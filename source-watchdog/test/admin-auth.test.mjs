@@ -115,3 +115,17 @@ test("JWKS reader never leaks a failed stream cancellation",async()=>{
   }));
   await assert.rejects(readLimitedJwks(res),/oversized_access_certs/);
 });
+
+test("never-settling JWKS stream cancellation cannot block size rejection",async()=>{
+  let cancelled=false;
+  const res=new Response(new ReadableStream({
+    start(c){c.enqueue(new Uint8Array(65_537));},
+    cancel(){cancelled=true;return new Promise(()=>{});},
+  }));
+  const result=await Promise.race([
+    readLimitedJwks(res).then(()=>"unexpected_success",e=>e.message),
+    new Promise(resolve=>setTimeout(()=>resolve("hung_cancel"),150)),
+  ]);
+  assert.equal(result,"oversized_access_certs");
+  assert.equal(cancelled,true);
+});
