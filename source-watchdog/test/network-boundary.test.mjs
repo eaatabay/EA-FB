@@ -73,3 +73,36 @@ test('redirect depth and mixed-domain DNS rebinding fail closed', async () => {
   assert.equal(result.reason,'untrusted_dns_answer');
   assert.equal(result.hop,1);
 });
+
+
+test('canonical authority fuzz corpus rejects URL parser aliases before DNS',async()=>{
+  const invalid=[
+    'https://LICENSED.example.com',
+    'https://licensed.example.com:443',
+    'https://licensed%2eexample.com',
+    'https://licensed.example.com.',
+    'https://licensed.example.com?',
+    'https://licensed.example.com#',
+    'https://licensed.example.com/?',
+    'https://licensed.example.com/#',
+    'https://licensed.example.com/?token=x',
+    'https://user@licensed.example.com',
+    'https://licensed.example.com@evil.example.org',
+    'https://licensed.example.com.evil.example.org',
+    'https://-licensed.example.com',
+    'https://licensed-.example.com',
+    'https://licensed..example.com',
+    'https://'+'a'.repeat(64)+'.example.com',
+    'https://licensed.example.com\\\\@evil.example.org',
+    'https://licensed.example.com%2f.evil.org',
+  ];
+  let dnsCalls=0;
+  for(const url of invalid){
+    const result=await preflightTarget(source,url,async()=>{
+      dnsCalls++;return ['8.8.8.8'];
+    });
+    assert.equal(result.allowed,false,url);
+  }
+  // Reject malformed or unauthorized targets without querying their DNS.
+  assert.equal(dnsCalls,0);
+});
