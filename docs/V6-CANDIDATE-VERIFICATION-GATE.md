@@ -29,3 +29,10 @@ Automated test output, Gradle compilation, new cs3 package inspection, device va
 - Admin drafts now reject coercible genre/provider values and forged envelope fields, normalize contiguous order after edits, append new rails without moving existing ones, and preserve the edited rail's position on replace.
 - `node source-watchdog/dev/catalog-draft-cli.mjs diff BEFORE.catalog-draft.json AFTER.catalog-draft.json` produces a metadata-only review report (added/removed/changed title, order, platform, language, year, enabled). This remains an **offline review tool**, not a remote publication endpoint.
 - A standalone local copy of the new page-policy assertions passed 18/18. This does **not** establish that the full repository Node suite, Gradle build or device checks passed.
+
+## 27 September — isolated checks and safety follow-up
+
+- Locally compiled the pure Kotlin pagination policy against its actual 18-assertion test logic: **18/18 passed**. Independently compiled the catalog-shelf policy against minimal JVM stubs and checked six key behaviors: **6/6 passed**. These are isolated checks, not a complete Gradle build or repository test run.
+- Added a Node regression guard comparing all 29 built-in Android home IDs with the admin catalog's reserved-ID validator, preventing a future newly added built-in rail from being overridden by an admin draft.
+- Fixed the admin's zero-provider-ID acceptance, invalid filter coercion and forged draft-envelope rejection. Hardened Settings against recreating a finishing/destroyed Activity; selecting the already-active sort no longer triggers an unnecessary refresh.
+- **Release remains blocked** pending full Node/Gradle verification and a red Mi Box smoke test. No Actions run, deployment or production change was requested or performed.
