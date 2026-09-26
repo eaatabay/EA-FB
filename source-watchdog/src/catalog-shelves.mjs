@@ -127,7 +127,13 @@ export function editCatalogDraft(draft,expectedRevision,operation) {
       rows[index].title=operation.title;
       break;
   }
-  return buildCatalogDraft(rows,expectedRevision+1);
+  // Keep every edit's order canonical: no duplicate/sparse positions after
+  // add, remove or replace. The client may send an order, but never use it to
+  // silently reorder unrelated shelves outside an explicit move.
+  const canonical=validateCatalogShelves(rows).map((item,index)=>({
+    ...item,order:index
+  }));
+  return buildCatalogDraft(canonical,expectedRevision+1);
 }
 export function publicCatalogShelves(input) {
   return {version:1,shelves:validateCatalogShelves(input).filter(x=>x.enabled)};
