@@ -83,7 +83,7 @@ object EASettingsDialog {
         }
     }
 
-    private fun categoryRow(ctx: Context, category: CatalogCategory): View {
+    private fun categoryRow(ctx: Context, category: CatalogCategory, onChanged: () -> Unit): View {
         val row = horizontal(ctx).apply {
             background = shape(ctx, PANEL)
             setPadding(dp(ctx, 16), dp(ctx, 8), dp(ctx, 16), dp(ctx, 8))
@@ -105,6 +105,7 @@ object EASettingsDialog {
             )
             setOnCheckedChangeListener { _, state ->
                 EASettings.setCategoryEnabled(category.id, state)
+                onChanged()
             }
         }
         row.addView(enabled)
@@ -117,6 +118,8 @@ object EASettingsDialog {
 
     fun show(ctx: Context) {
         val dialog = Dialog(ctx)
+        var dirty = false
+        var manualRefresh = false
         val root = vertical(ctx).apply {
             setPadding(dp(ctx, 24), dp(ctx, 20), dp(ctx, 24), dp(ctx, 16))
             background = shape(ctx, NAVY, YELLOW, 20)
@@ -158,6 +161,7 @@ object EASettingsDialog {
         root.addView(footer, margin(ctx, 12, 0))
         val refresh = button(ctx, "KAYDET VE ANA SAYFAYI YENİLE") {
             // User-triggered Activity recreation; no silent host restart.
+            manualRefresh = true
             dialog.dismiss()
             var host: Context? = ctx
             while (host is ContextWrapper && host !is Activity) host = host.baseContext
@@ -183,6 +187,7 @@ object EASettingsDialog {
                 for (mode in CatalogSortMode.entries) {
                     val current = button(ctx, mode.title) {
                         EASettings.setSortMode(mode)
+                        dirty = true
                         sortButtons.forEach { (itemMode, b) ->
                             val selected = itemMode == mode
                             b.isSelected = selected
@@ -204,9 +209,9 @@ object EASettingsDialog {
 
                 val bulk = horizontal(ctx)
                 val commands = listOf(
-                    "Tümünü Aç" to { EASettings.setAllCategories(true); render() },
-                    "Tümünü Kapat" to { EASettings.setAllCategories(false); render() },
-                    "Varsayılan" to { EASettings.restoreDefaults(); render() }
+                    "Tümünü Aç" to { EASettings.setAllCategories(true); dirty = true; render() },
+                    "Tümünü Kapat" to { EASettings.setAllCategories(false); dirty = true; render() },
+                    "Varsayılan" to { EASettings.restoreDefaults(); dirty = true; render() }
                 )
                 for ((title, action) in commands) {
                     bulk.addView(button(ctx, title, action), LinearLayout.LayoutParams(0,
@@ -232,7 +237,7 @@ object EASettingsDialog {
                 for ((groupTitle, ids) in groups) {
                     section(ctx, content, groupTitle)
                     for (cat in HomeCategories.all.filter { it.id in ids && it.tmdbPath != null }) {
-                        content.addView(categoryRow(ctx, cat), margin(ctx, 0, 5))
+                        content.addView(categoryRow(ctx, cat) { dirty = true }, margin(ctx, 0, 5))
                     }
                 }
                 section(ctx, content, "BELGESELLER")
@@ -256,6 +261,16 @@ object EASettingsDialog {
                     "Doğrulanıp izin verilen kaynaklar eklendikçe bu sayfada ayrı " +
                         "açma/kapatma düğmeleri olacak. Canlı TV bu listenin dışında tutulur.",
                     14f, MUTED), margin(ctx, 0, 16))
+            }
+        }
+        // Host owns the home cache. On closing a changed dialog, recreate the
+        // Activity once to pick up dynamic mainPage getters. Focus restoration
+        // depends on the host and must be checked on a physical Mi Box.
+        dialog.setOnDismissListener {
+            if (dirty && !manualRefresh) {
+                var host: Context? = ctx
+                while (host is ContextWrapper && host !is Activity) host = host.baseContext
+                (host as? Activity)?.recreate()
             }
         }
         render()
