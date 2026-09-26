@@ -12,6 +12,8 @@ function normalizedTarget(value) {
   try {
     const url = new URL(value);
     if (url.protocol !== 'https:' || url.username || url.password ||
+        // URL.search/hash are empty for bare '?' and '#'; reject those too.
+        value.includes('?') || value.includes('#') ||
         url.port || url.search || url.hash || url.hostname.includes(':') ||
         (!HOST.test(url.hostname) ||
          url.hostname.split('.').some(label => label.length > 63)) ||
