@@ -138,7 +138,12 @@ export function editCatalogDraft(draft,expectedRevision,operation) {
   return buildCatalogDraft(canonical,expectedRevision+1);
 }
 export function publicCatalogShelves(input) {
-  return {version:1,shelves:validateCatalogShelves(input).filter(x=>x.enabled)};
+  const enabled=validateCatalogShelves(input).filter(x=>x.enabled);
+  // Never silently publish a wider, unfiltered rail if the deployed metadata
+  // relay cannot honor its language/year constraints.
+  for (const shelf of enabled) compileCatalogShelf(shelf);
+  return Object.freeze({version:1,
+    shelves:Object.freeze(enabled.map(x=>Object.freeze({...x})))});
 }
 
 /** Build a local, non-published preview of only relay-compatible enabled rails.
