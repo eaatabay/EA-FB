@@ -84,6 +84,19 @@ test("edge cache read/write outages never suppress valid TMDb metadata",async()=
   assert.equal(calls.length,2);
 });
 
+test("hung edge cache lookup falls back to TMDb within 1.5 seconds",async()=>{
+  const {env,ctx,calls}=setup();
+  globalThis.caches.default.match=()=>new Promise(()=>{});
+  const started=Date.now();
+  const res=await gateway.fetch(new Request(
+    "https://example.workers.dev/v1/movie/123"),env,ctx);
+  assert.equal(res.status,200);
+  assert.equal((await res.json()).ok,true);
+  assert.equal(calls.length,1);
+  assert.ok(Date.now()-started>=1400,"cache timeout must be exercised");
+  assert.ok(Date.now()-started<4500,"hung cache must not stall metadata");
+});
+
 test("serves exact paths used by EA-FB 28-category catalog", async () => {
   const { env, ctx, calls } = setup();
   for (const path of [
