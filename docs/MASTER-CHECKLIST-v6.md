@@ -351,3 +351,9 @@ MFA'li admin pilotu. Gercek v5/main ve canli Worker degismez.
 - [x] Saf Kotlin relay politikası ve 18 regresyon kontrolü eklendi; yerel izole derlemede 18/18 geçti. Kaynak kablolama için üç Node statik regresyonu eklendi; yerel yeniden kurulmuş eşdeğer kontrol 3/3 geçti.
 - [x] Yerel izole Kotlin smoke: HTTPS transport 6/6, refresh 5/5, başarısız SharedPreferences commit 5/5 geçti. Bu smoke testleri GitHub'daki tüm Kotlin/Android test paketinin yerine geçmez.
 - [ ] Tam repo `scripts/test-core.sh`, `scripts/verify-v6.sh`, Android Gradle `.cs3`, Wrangler/D1 ve Mi Box gerçek doğrulaması bekliyor; `main`, v5, canlı Worker/D1 ve izinler değişmedi.
+
+## 26.09.2026 — Son tur: iptal test dosyası ve test betiği onarımı
+- [x] `core-tests/WatchdogSnapshotRefreshTest.kt` içinde aynı isimle iki kez tanımlanmış `cancelledAfterResponse` testi ve yinelenen `Job`/`coroutineContext` importları kaldırıldı. Tek, daha önce eklenmiş iptal-sonrası-kayıt regresyonu korundu.
+- [x] `scripts/test-core.sh` offline politika JVM çalıştırma classpath'ine `$COROUTINES` eklendi; derleme classpath'i zaten önceki turda düzeltilmişti.
+- [x] `WatchdogSnapshotRefresh.refresh` iptal kontrolü ağ yanıtından sonra, doğrulama öncesi ve doğrulama sonrası yerinde kaldı; canlı ağ veya üretim izni açılmadı.
+- [ ] Gerçek repo checkout'u ile `scripts/test-core.sh` ve `scripts/verify-v6.sh` tam çalıştırılmadı; son turda GitHub dosyaları tekrar okunarak kaynak tutarlılığı incelendi. Başarısız/çalıştırılmamış testlere başarı atfedilmez.
