@@ -7,10 +7,19 @@ export function validApprovalReference(value) {
     value.split("/").every(part => part !== "." && part !== "..");
 }
 
-export function assertReviewedPublication(records, snapshot) {
+/** Empty in the tracked v6 build. Explicit human review is needed before any live rights approval. */
+export const APPROVED_RIGHTS_REFS = Object.freeze([]);
+
+export function assertReviewedPublication(records, snapshot,
+    approvedEvidenceRefs = APPROVED_RIGHTS_REFS) {
   if (!Array.isArray(records) || !snapshot || !Array.isArray(snapshot.sources)) {
     throw new Error("unsafe_production_snapshot");
   }
+  if (!Array.isArray(approvedEvidenceRefs) ||
+      approvedEvidenceRefs.some(ref => !validApprovalReference(ref))) {
+    throw new Error("invalid_production_rights_allowlist");
+  }
+  const approved = new Set(approvedEvidenceRefs);
   const byId = new Map();
   for (const row of records) {
     if (!row || typeof row.id !== "string" || !SOURCE_ID.test(row.id) ||
@@ -27,6 +36,7 @@ export function assertReviewedPublication(records, snapshot) {
     if (!config || config.id !== item.id ||
         config.enabled !== true || config.integrationApproved !== true ||
         !validApprovalReference(config.approvalRef) ||
+        !approved.has(config.approvalRef) ||
         config.currentUrl !== item.baseUrl ||
         config.mediaKind !== item.mediaKind ||
         config.adapterVersion !== item.adapterVersion) {
