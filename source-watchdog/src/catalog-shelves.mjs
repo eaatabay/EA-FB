@@ -77,6 +77,57 @@ export function buildCatalogDraft(input,revision) {
   return Object.freeze({version:1,revision,status:"draft-v6-not-published",
     shelves:shelves.map(x=>({...x}))});
 }
+/** Pure CAS editor for an authenticated, unpublished catalog draft.
+ * No HTTP handler, D1 writes, source grants, or automatic publication.
+ */
+export function editCatalogDraft(draft,expectedRevision,operation) {
+  if (!draft || draft.status!=="draft-v6-not-published" ||
+      !Number.isSafeInteger(expectedRevision) || draft.revision!==expectedRevision)
+    throw Error("catalog_revision_conflict");
+  if (!operation || typeof operation!=="object" || Array.isArray(operation) ||
+      !["add","replace","remove","move","toggle","rename"].includes(operation.action) ||
+      typeof operation.id!=="string") throw Error("invalid_catalog_edit");
+  const rows=validateCatalogShelves(draft.shelves).map(x=>({...x}));
+  const index=rows.findIndex(x=>x.id===operation.id);
+  const exact=(keys)=>Object.keys(operation).sort().join(",")===keys.sort().join(",");
+  switch(operation.action) {
+    case "add":
+      if (!exact(["action","id","shelf"]) || index>=0 ||
+          operation.shelf?.id!==operation.id) throw Error("invalid_catalog_edit");
+      rows.push(operation.shelf);
+      break;
+    case "replace":
+      if (!exact(["action","id","shelf"]) || index<0 ||
+          operation.shelf?.id!==operation.id) throw Error("invalid_catalog_edit");
+      rows[index]=operation.shelf;
+      break;
+    case "remove":
+      if (!exact(["action","id"]) || index<0) throw Error("invalid_catalog_edit");
+      rows.splice(index,1);
+      break;
+    case "move":
+      if (!exact(["action","id","order"]) || index<0 ||
+          !Number.isSafeInteger(operation.order) || operation.order<0 ||
+          operation.order>=rows.length) throw Error("invalid_catalog_edit");
+      {
+        const [moving]=rows.splice(index,1);
+        rows.splice(operation.order,0,moving);
+        rows.forEach((x,i)=>x.order=i);
+      }
+      break;
+    case "toggle":
+      if (!exact(["action","id","enabled"]) || index<0 ||
+          typeof operation.enabled!=="boolean") throw Error("invalid_catalog_edit");
+      rows[index].enabled=operation.enabled;
+      break;
+    case "rename":
+      if (!exact(["action","id","title"]) || index<0)
+        throw Error("invalid_catalog_edit");
+      rows[index].title=operation.title;
+      break;
+  }
+  return buildCatalogDraft(rows,expectedRevision+1);
+}
 export function publicCatalogShelves(input) {
   return {version:1,shelves:validateCatalogShelves(input).filter(x=>x.enabled)};
 }
