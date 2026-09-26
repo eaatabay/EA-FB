@@ -18,6 +18,7 @@ export function validateCatalogShelves(input) {
       typeof item.id!=="string" || !ID.test(item.id) || seen.has(item.id) || RESERVED.has(item.id) ||
       typeof item.title!=="string" || item.title.trim().length<2 ||
       item.title.length>64 || /[<>]/.test(item.title) ||
+      [...item.title].some(ch=>ch.charCodeAt(0)<32 || ch.charCodeAt(0)===127) ||
       !["movie","tv"].includes(item.kind) ||
       typeof item.enabled!=="boolean" ||
       !Number.isSafeInteger(item.order) || item.order<0 || item.order>=MAX) {
