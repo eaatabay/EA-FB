@@ -144,7 +144,18 @@ export function evaluateProbe(source, probe) {
 export function applyProbe(source, previous, probe, now) {
   const config = validateSource(source);
   if (previous?.id !== config.id || !Number.isSafeInteger(now) || now < 0 ||
-      (previous.lastCheckedAt !== null && now < previous.lastCheckedAt)) {
+      now > Number.MAX_SAFE_INTEGER - 24 * HOUR ||
+      !Object.values(HEALTH).includes(previous.status) ||
+      !Number.isSafeInteger(previous.revision) || previous.revision < 0 ||
+      previous.revision >= Number.MAX_SAFE_INTEGER ||
+      !Number.isSafeInteger(previous.consecutiveFailures) ||
+      previous.consecutiveFailures < 0 ||
+      !Number.isSafeInteger(previous.consecutiveSuccesses) ||
+      previous.consecutiveSuccesses < 0 ||
+      previous.currentUrl !== config.currentUrl ||
+      (previous.lastCheckedAt !== null &&
+       (!Number.isSafeInteger(previous.lastCheckedAt) ||
+        previous.lastCheckedAt < 0 || now < previous.lastCheckedAt))) {
     throw new Error("invalid_watchdog_state");
   }
   if (!config.enabled) {
