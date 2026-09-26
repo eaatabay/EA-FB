@@ -27,7 +27,7 @@ function json(object, status = 200, ttl = 0) {
 /** Bound actual upstream bytes even if Content-Length is absent or false. */
 async function readBoundedText(response, maxBytes) {
   const advertised = response.headers.get("content-length");
-  if (advertised !== null && /^\\d+$/.test(advertised) &&
+  if (advertised !== null && /^\d+$/.test(advertised) &&
       Number(advertised) > maxBytes) throw new Error("upstream_too_large");
   if (!response.body) throw new Error("upstream_empty");
   const reader = response.body.getReader();
