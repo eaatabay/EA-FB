@@ -309,3 +309,16 @@ test("oversized OMDb response never blocks valid TMDb metadata",async()=>{
   assert.equal(result.vote_average,7.9);
   assert.equal(result.ea_fb_ratings,undefined);
 });
+
+
+test("a broken stream cancel cannot turn oversized TMDb data into another error",async()=>{
+  const {env,ctx}=setup();
+  globalThis.fetch=async()=>new Response(new ReadableStream({
+    start(controller){controller.enqueue(new Uint8Array(2_000_001));},
+    cancel(){throw new Error("UNTRUSTED_CANCEL_ERROR");},
+  }),{headers:{"content-type":"application/json"}});
+  const res=await gateway.fetch(new Request(
+    "https://example.workers.dev/v1/movie/123"),env,ctx);
+  assert.equal(res.status,502);
+  assert.deepEqual(await res.json(),{error:"catalog_response_too_large"});
+});
