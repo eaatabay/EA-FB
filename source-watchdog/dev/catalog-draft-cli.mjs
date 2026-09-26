@@ -13,8 +13,10 @@ export async function applyLocalCatalogEdit(file,command) {
   const handle=await open(lock,"wx",0o600);
   try {
     const draft=JSON.parse(await readFile(absolute,"utf8"));
+    if (Object.keys(draft).sort().join(",")!=="revision,shelves,status,version" ||
+        draft.status!=="draft-v6-not-published" || draft.version!==1)
+      throw Error("invalid_draft_envelope");
     const current=buildCatalogDraft(draft.shelves,draft.revision);
-    if (draft.status!==current.status || draft.version!==1) throw Error("not_an_unpublished_draft");
     const updated=editCatalogDraft(current,command.expectedRevision,command.operation);
     const target=join(dirname(absolute),"."+basename(absolute)+".tmp-"+process.pid);
     try {
