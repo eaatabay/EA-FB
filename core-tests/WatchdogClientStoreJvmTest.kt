@@ -18,6 +18,7 @@ private val trust = SourceSnapshotTrust(
 private class FakePreferences: SharedPreferences {
     val values=mutableMapOf<String,Any>()
     var allowCommit=true
+    var updateMemoryOnFailure=false
     override fun getLong(key:String,default:Long):Long=(values[key] as? Long)?:default
     override fun getString(key:String,default:String?):String?=(values[key] as? String)?:default
     override fun edit():SharedPreferences.Editor=object:SharedPreferences.Editor {
@@ -29,7 +30,10 @@ private class FakePreferences: SharedPreferences {
             pending[key]=value;this
         }()
         override fun commit():Boolean {
-            if(!allowCommit)return false
+            if(!allowCommit){
+                if(updateMemoryOnFailure)values.putAll(pending)
+                return false
+            }
             values.putAll(pending)
             return true
         }
@@ -78,6 +82,19 @@ fun main(){
         "oversized signed payload rejected")
     ok(ctx.prefs.getLong("last_revision",-1L)==42L,
         "rejected response never overwrites durable replay guards")
+    val volatileCtx=FakeContext()
+    volatileCtx.prefs.allowCommit=false
+    volatileCtx.prefs.updateMemoryOnFailure=true
+    val volatileStore=WatchdogClientStore(volatileCtx,trust,parse)
+    ok(volatileStore.acceptSignedJson("signed",NOW) is SnapshotCheck.Rejected,
+        "Android in-memory write with failed disk commit is rejected")
+    ok(volatileCtx.prefs.values.size==3 && volatileStore.restoreVerifiedOffline(NOW)==null,
+        "non-durable in-memory signed snapshot remains inaccessible")
+    volatileCtx.prefs.allowCommit=true
+    val stillRejected=volatileStore.acceptSignedJson("signed",NOW)
+    ok(stillRejected is SnapshotCheck.Rejected &&
+        stillRejected.reason=="cannot_persist_replay_guard",
+        "failed persistence keeps this store fail-closed even after disk recovers")
     val cancelledStore=WatchdogClientStore(FakeContext(),trust,
         { throw CancellationException("cancelled") })
     ok(runCatching { cancelledStore.acceptSignedJson("signed",NOW) }
