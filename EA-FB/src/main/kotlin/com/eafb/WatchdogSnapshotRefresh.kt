@@ -79,6 +79,8 @@ class WatchdogSnapshotRefresh(
         }
         val cached = try {
             restoreOffline(now)?.takeIf { it.usableAt(now).isNotEmpty() }
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (_: Exception) {
             // Corrupt SharedPreferences cannot crash a refresh or be exposed.
             null
@@ -110,9 +112,9 @@ class WatchdogSnapshotRefresh(
         } catch (_: CharacterCodingException) {
             return@withLock failure(now, cached, "invalid_response")
         }
-        val verified = try { acceptSigned(json, now) } catch (_: Exception) {
-            SnapshotCheck.Rejected("invalid_envelope")
-        }
+        val verified = try { acceptSigned(json, now) }
+        catch (cancelled: CancellationException) { throw cancelled }
+        catch (_: Exception) { SnapshotCheck.Rejected("invalid_envelope") }
         if (verified !is SnapshotCheck.Accepted) {
             return@withLock failure(now, cached, "untrusted_snapshot")
         }
