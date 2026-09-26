@@ -15,5 +15,18 @@ fun main() {
     check(CatalogShelfPolicy.category(basic.copy(genres="18;evil")) == null)
     check(CatalogShelfPolicy.category(platform.copy(region="US", yearFrom=2025, yearTo=2024)) == null)
     check(CatalogShelfPolicy.category(platform.copy(region="tr")) == null)
-    println("PASS: 9/9 catalog shelf route assertions")
+    val ordered = CatalogShelfPolicy.categories(listOf(
+        platform.copy(order=2),basic.copy(order=0),
+        basic.copy(id="disabled-archive",enabled=false,order=1)
+    ))
+    check(ordered?.map { it.id } == listOf("new-turkish-tv","regional-apple-movies"))
+    check(CatalogShelfPolicy.categories(listOf(basic,basic)) == null)
+    check(CatalogShelfPolicy.categories(listOf(basic,basic.copy(
+        id="bad-filter",genres="18;evil"))) == null)
+    check(CatalogShelfPolicy.categories(List(41) { index ->
+        basic.copy(id="custom-rail-${index + 100}",order=index.coerceAtMost(39))
+    }) == null)
+    check(CatalogShelfPolicy.categories(listOf(basic.copy(order=40))) == null)
+    check(CatalogShelfPolicy.categories(emptyList())?.isEmpty() == true)
+    println("PASS: 15/15 catalog shelf route and batch assertions")
 }
