@@ -70,6 +70,11 @@ java -jar "$TMP/catalog-cards.jar"
 kotlinc "$DOMAIN" EA-FB/src/main/kotlin/com/eafb/CatalogSortPolicy.kt \
   core-tests/CatalogSortPolicyTest.kt -include-runtime -d "$TMP/catalog-sort.jar"
 java -jar "$TMP/catalog-sort.jar"
+# Bounded newest-page scanning and fallback pagination are pure JVM policies.
+kotlinc EA-FB/src/main/kotlin/com/eafb/CatalogCardPolicy.kt \
+  EA-FB/src/main/kotlin/com/eafb/CatalogPagePolicy.kt \
+  core-tests/CatalogPagePolicyTest.kt -include-runtime -d "$TMP/catalog-pages.jar"
+java -jar "$TMP/catalog-pages.jar"
 # En Yeni: reject future/invalid premieres, including popular fallback.
 kotlinc EA-FB/src/main/kotlin/com/eafb/CatalogReleasePolicy.kt \
   core-tests/CatalogReleasePolicyTest.kt -include-runtime -d "$TMP/catalog-release.jar"
