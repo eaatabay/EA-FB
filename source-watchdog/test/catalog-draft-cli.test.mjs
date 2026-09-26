@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import {mkdtemp,readFile,writeFile,rm} from "node:fs/promises";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
-import {applyLocalCatalogEdit,previewLocalCatalogDraft,initLocalCatalogDraft,compileLocalCatalogDraftPreview} from "../dev/catalog-draft-cli.mjs";
+import {applyLocalCatalogEdit,previewLocalCatalogDraft,initLocalCatalogDraft,compileLocalCatalogDraftPreview,diffLocalCatalogDrafts} from "../dev/catalog-draft-cli.mjs";
 test("local draft editor atomically applies CAS and renders safe preview",async()=>{
   const dir=await mkdtemp(join(tmpdir(),"eafb-catalog-"));
   try {
@@ -12,9 +12,14 @@ test("local draft editor atomically applies CAS and renders safe preview",async(
       shelves:[{id:"custom-tv",title:"Yeni Diziler",kind:"tv",genres:"18",
         enabled:true,order:0}]};
     await writeFile(file,JSON.stringify(draft));
+    const beforeFile=join(dir,"before.catalog-draft.json");
+    await writeFile(beforeFile,JSON.stringify(draft));
     const updated=await applyLocalCatalogEdit(file,{expectedRevision:0,
       operation:{action:"rename",id:"custom-tv",title:"Yeni Türk Dizileri"}});
     assert.equal(updated.revision,1);
+    const diff=await diffLocalCatalogDrafts(beforeFile,file);
+    assert.equal(diff.status,"review-only");
+    assert.equal(diff.changes[0].field,"title");
     assert.match(await previewLocalCatalogDraft(file),/Yeni Türk Dizileri/);
     const compiled=await compileLocalCatalogDraftPreview(file);
     assert.equal(compiled.status,"preview-v6-not-published");
