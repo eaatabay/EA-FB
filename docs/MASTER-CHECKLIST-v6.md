@@ -319,3 +319,6 @@ MFA'li admin pilotu. Gercek v5/main ve canli Worker degismez.
 
 ## 26.09.2026 — Birleşik seçilmiş yerel test tekrarı
 - [x] Aynı SHA eşleşmeli kaynaklarla Node seçilmiş 4 dosya **30/30**, Python staging **20/20**, Kotlin offline/refresh/store/HTTPS **67/67** tekrar geçti: toplam **117/117 seçilmiş kontrol**. Node 7 admin-body senaryosu test-only registry stub ile, Kotlin store Android Context/JSON stub ile çalıştı; tam checkout `npm test`/Wrangler/Gradle/Mi Box sonucu değildir.
+
+## 26.09.2026 — SHA eşleşmeli IMDb/OMDb puan kontratı
+- [x] Güncel `worker/src/ratings-enrichment.mjs` SHA `102ccc3594fef12a54c59084256554a9d1753a72` ve gerçek `worker/test/ratings-enrichment.test.mjs` SHA `d6e0587737ad5455db7169816c1e38eb99d57b8b` birebir yerel kopyalarla **3/3 Node testi geçti**. Canlı OMDb anahtarı veya upstream isteği yok.
