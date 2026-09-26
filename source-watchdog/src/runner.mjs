@@ -97,12 +97,15 @@ export async function runOneSourceCheck({
       if (!probe || typeof probe !== "object" || Array.isArray(probe)) {
         throw new Error("invalid_adapter_result");
       }
-      if (!validAdapterProbe(probe, current.config)) {
-        // Malformed parser output requires operator review; repeated retries
-        // would otherwise quarantine a source without exposing schema drift.
+      const safeProbe = sanitizeAdapterProbe(probe, current.config);
+      if (!safeProbe) {
+        // Schema drift, getter-bearing or malformed adapter output is an
+        // audited admin hold; never trust the original mutable probe object.
         probeAnomaly = true;
         probe = {reached:false, finalUrl:current.config.currentUrl,
           identityVerified:false, structuralChange:true, checks:{}};
+      } else {
+        probe = safeProbe;
       }
     } catch (err) {
       probeError = err === TIMEOUT ?
