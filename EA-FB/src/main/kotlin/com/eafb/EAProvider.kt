@@ -196,20 +196,35 @@ class EAProvider : MainAPI() {
             category.kind,
             EASettings.sortMode()
         )
+        fun cards(response: JSONObject?): List<SearchResponse> {
+            val rows = response?.optJSONArray("results") ?: return emptyList()
+            // No blank poster cards, regardless of the selected sort.
+            return (0 until rows.length()).mapNotNull { i ->
+                rows.optJSONObject(i)?.let { newItem(it, category.kind) }
+            }.distinctBy { it.url }
+        }
         val response = getJson(route, page)
-            ?: return newHomePageResponse(emptyList(), false)
-        val raw = response.optJSONArray("results")
-            ?: return newHomePageResponse(emptyList(), false)
-        // TMDb occasionally returns titles without poster art. On TV these
-        // appear as blank, hard-to-navigate cards, especially in lower rows.
-        val results = (0 until raw.length()).mapNotNull { i ->
-            raw.optJSONObject(i)?.let { newItem(it, category.kind) }
-        }.distinctBy { it.url }
-        // Never create a visible empty rail or request nonexistent pages.
+        var results = cards(response)
+        var usedFallback = false
+        // A sparse regional provider feed can be empty under date/vote sorting.
+        // Preserve the platform rail with clearly labeled popular results rather
+        // than silently presenting popular titles as "highest rated" or "newest".
+        if (page == 1 && results.isEmpty() && route != category.tmdbPath &&
+            category.tmdbPath.startsWith("/discover/")) {
+            val fallback = getJson(
+                CatalogSortPolicy.route(category.tmdbPath, category.kind, CatalogSortMode.POPULAR), page
+            )
+            results = cards(fallback)
+            usedFallback = results.isNotEmpty()
+        }
         if (results.isEmpty()) return newHomePageResponse(emptyList(), false)
+        val label = if (usedFallback) category.title + " (Popüler alternatif)" else category.title
+        val rawLength = response?.optJSONArray("results")?.length() ?: 0
         return newHomePageResponse(
-            listOf(HomePageList(category.title, results, false)),
-            CatalogCardPolicy.hasNext(page, raw.length(), response.optInt("total_pages", 0))
+            listOf(HomePageList(label, results, false)),
+            !usedFallback && CatalogCardPolicy.hasNext(
+                page, rawLength, response?.optInt("total_pages", 0) ?: 0
+            )
         )
     }
 
