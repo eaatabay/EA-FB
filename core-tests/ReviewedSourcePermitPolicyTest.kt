@@ -37,7 +37,8 @@ fun main() {
     test(only(snapshot=null).isEmpty(),"no signature-verified snapshot")
     test(only(now=T+900_000).isEmpty(),"snapshot expiration is binding")
     test(only(list=permits+movie).isEmpty(),"duplicate rights IDs block whole list")
-    test(only(list=permits+movie.copy(id="fixture-extras")).isEmpty().not(),
+    test(only(list=permits+movie.copy(id="fixture-extras",
+        evidenceReference="rights/2026/fixture-extras.md")).isEmpty().not(),
         "distinct reviewed permit does not corrupt valid sources")
     test(only(list=listOf(movie.copy(adapterVersion=4),series,both))
         .map { it.id } == listOf("fixture-series","fixture-both"),
