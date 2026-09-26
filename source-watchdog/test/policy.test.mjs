@@ -159,3 +159,18 @@ test("manual retest cannot rewind the previous probe clock",()=>{
     3*HOUR),/invalid_admin_release/);
   assert.equal(releaseForRetest(source,held,2*HOUR).nextCheckAt,2*HOUR);
 });
+
+
+test("corrupt persisted state cannot be silently healed by a successful probe",()=>{
+  const baseline=initialState(source,0);
+  for(const mutation of [
+    {status:"unknown"},{revision:NaN},{revision:-1},
+    {revision:Number.MAX_SAFE_INTEGER},{consecutiveFailures:-1},
+    {consecutiveFailures:NaN},{consecutiveSuccesses:0.5},
+    {lastCheckedAt:"old"},{lastCheckedAt:-1},
+    {lastCheckedAt:Infinity},{currentUrl:"https://new.example.org"},
+  ])assert.throws(()=>applyProbe(source,{...baseline,...mutation},good(),HOUR),
+    /invalid_watchdog_state/,JSON.stringify(mutation));
+  assert.throws(()=>applyProbe(source,baseline,good(),
+    Number.MAX_SAFE_INTEGER),/invalid_watchdog_state/);
+});
