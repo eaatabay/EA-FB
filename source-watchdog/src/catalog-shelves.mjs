@@ -132,3 +132,18 @@ export function editCatalogDraft(draft,expectedRevision,operation) {
 export function publicCatalogShelves(input) {
   return {version:1,shelves:validateCatalogShelves(input).filter(x=>x.enabled)};
 }
+
+/** Build a local, non-published preview of only relay-compatible enabled rails.
+ * Never silently discard a constraint on an enabled rail.
+ */
+export function compileCatalogDraftPreview(draft) {
+  if (!draft || draft.version!==1 || draft.status!=="draft-v6-not-published" ||
+      Object.keys(draft).sort().join(",")!=="revision,shelves,status,version")
+    throw Error("invalid_draft_envelope");
+  const validated=buildCatalogDraft(draft.shelves,draft.revision);
+  return Object.freeze({
+    version:1,revision:validated.revision,status:"preview-v6-not-published",
+    shelves:Object.freeze(validated.shelves.filter(x=>x.enabled)
+      .map(x=>Object.freeze(compileCatalogShelf(x))))
+  });
+}
