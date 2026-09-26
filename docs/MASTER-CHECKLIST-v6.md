@@ -62,7 +62,8 @@
 - [x] 26.09.2026: Izole yerel bridge wiring Node testi 2/2 gecti; dosyalarin GitHub SHA eslesmesi teyit edilmediginden tam repo dogrulamasi degildir.
 - [x] 26.09.2026: Yerel izole Kotlin kopyasi 43/43 ve Node bridge wiring 2/2 tekrar gecti. Bunlar GitHub'daki tam test dosyalarinin birebir calismasi degildir.
 - [x] 26.09.2026: Kanit referansi denetiminin yalnizca yol sozdizimi oldugu; gercek lisans/hak sahibi/playback yetkisinin insan incelemesi ve ayrica release onayi gerektirdigi SOURCE-RIGHTS-REVIEW'de aciklandi (a284a8ac).
-- [ ] Genisletilmis 62/62 Kotlin izin testi, 5/5 bridge JVM ve 2/2 Node wiring testini gercek v6 checkout'unda calistirip dogrula.
+- [x] 26.09.2026: Derlemeye gomulu izin listesi bosken bridge, offline cache okumadan erken donuyor (806c721f). Node wiring dosyasina erken-donus ve izin-once-secim sirasi icin iki yeni regresyon eklendi (b22c47fb). Node wiring toplam 4 test; yenileri henuz gercek checkout'ta calistirilmadi.
+- [ ] Genisletilmis 62/62 Kotlin izin testi, 5/5 bridge JVM ve 4/4 Node wiring testini gercek v6 checkout'unda calistirip dogrula.
 - [x] Kullanici acik kaynak-bazli onayi ve hak sahibi delili gerektiren docs/SOURCE-RIGHTS-REVIEW-v6.md olusturuldu.
 - [ ] Gercek kaynagin izin kapsami, kanit referansi, rate limit, bolge ve yenileme tarihini tek tek onaylat.
 - [ ] Ayrica onaylanmis, izinli gercek kaynak adapterlerini secip inceleme.
