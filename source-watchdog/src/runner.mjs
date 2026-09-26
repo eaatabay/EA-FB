@@ -98,7 +98,7 @@ export async function runOneSourceCheck({
       probeError = err?.message === "probe_timeout" ?
         "probe_timeout" : "adapter_error";
       probe = {reached:false, finalUrl:current.config.currentUrl,
-        identityVerified:false, checks:{}};
+        identityVerified:false, checks:{}, runnerFailure:probeError};
     }
     const committed = await commitProbe(db, sourceId, runId, probe, now,
       {token, checkedAtMs: leaseClock()});
