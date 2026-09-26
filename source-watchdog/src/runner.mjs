@@ -93,7 +93,8 @@ export async function runOneSourceCheck({
     try {
       probe = await withTimeout(
         signal => adapter.probe({source: current.config, now, signal}), timeoutMs);
-      if (!probe || typeof probe !== "object" || Array.isArray(probe)) {
+      if (!probe || typeof probe !== "object" || Array.isArray(probe) ||
+          Object.hasOwn(probe, "runnerFailure")) {
         throw new Error("invalid_adapter_result");
       }
     } catch (err) {
