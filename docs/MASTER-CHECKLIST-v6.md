@@ -328,3 +328,10 @@ MFA'li admin pilotu. Gercek v5/main ve canli Worker degismez.
 
 ## 26.09.2026 — SHA eşleşmeli Worker deadline testi
 - [x] Güncel `upstream-deadline.mjs` SHA `ee60afd6a329e4be1594b52afdcd9d1d5c912884` ve gerçek `upstream-deadline.test.mjs` SHA `59f6233238501be2995e5de033750f10ccfe99b5` birebir yerel kopyalarla **8/8**; Worker seçilmiş deadline+byte+IMDb toplam **17/17** geçti.
+
+## 26.09.2026 — Watchdog HTTPS toplam süre bütçesi
+- [x] Android Watchdog HTTPS taşımasına monotonic saatli 12 saniyelik toplam yanıt bütçesi ve akış döngüsünde coroutine iptal kontrolü eklendi. Önceki 4 saniyelik bağlantı/okuma zaman aşımları korunuyor; 32 KiB yanıt sınırı ve redirect yasağı değişmedi.
+- [x] Sahte HTTPS bağlantısı ve enjekte saatle iki regresyon eklendi: header sonrası toplam süre aşımı, küçük parçalarla akış sırasında süre aşımı.
+- [x] Yeni Kotlin `currentCoroutineContext` / `ensureActive` / yerel süre kontrolü sözdizimi, yerel `kotlinc` ile bağımsız derlendi.
+- [ ] Gerçek `WatchdogHttpsTransportTest.kt` ve bütün Kotlin test paketini çalıştır; bağımsız sözdizimi kontrolü tam entegrasyon testi değildir.
+- [ ] Gerçek cihazda yavaş/yarıda kesilen TLS akışında iptal gecikmesini ölç; bloklayan `InputStream.read` sırasında iptal 4 saniyelik soket okuma zaman aşımına kadar gecikebilir.
