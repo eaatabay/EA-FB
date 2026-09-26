@@ -12,6 +12,7 @@ const production = {
   WATCHDOG_SNAPSHOT_ENABLED: "true",
   SOURCES_DB: db,
 };
+const approvedEvidenceRefs=["rights/test/fixture-license.md"];
 const realRecords = [{id:"licensed-demo",config:{
   id:"licensed-demo",enabled:true,integrationApproved:true,
   approvalRef:"rights/test/fixture-license.md",
@@ -89,6 +90,7 @@ test("real Ed25519 private Worker secret signs and verifies public-only snapshot
   const pkcs8=Buffer.from(await crypto.subtle.exportKey("pkcs8",pair.privateKey)).toString("base64");
   const worker=createWatchdogWorker({
     readRegistry:async()=>realRecords,
+    approvedEvidenceRefs,
     readSnapshot:async()=>snapshot(),
     nowMillis:()=>now,logger,
   });
@@ -126,6 +128,7 @@ test("production signing fails closed on missing rights, disabled source and con
     let reachedSigner=false;
     const worker=createWatchdogWorker({
       readRegistry:async()=>[record],
+      approvedEvidenceRefs,
       readSnapshot:async()=>snapshot(),
       signSnapshot:async(db,env,at,build)=>{
         await build(db,at);
@@ -141,6 +144,21 @@ test("production signing fails closed on missing rights, disabled source and con
     assert.equal(res.status,503,reason);
     assert.equal(reachedSigner,false,reason);
   }
+});
+
+test("default production rights allowlist is empty even with valid signed key",async()=>{
+  const pair=await crypto.subtle.generateKey("Ed25519",true,["sign","verify"]);
+  const pkcs8=Buffer.from(await crypto.subtle.exportKey("pkcs8",pair.privateKey)).toString("base64");
+  const worker=createWatchdogWorker({
+    readRegistry:async()=>realRecords,readSnapshot:async()=>snapshot(),
+    nowMillis:()=>now,logger,
+  });
+  const res=await worker.fetch(request(),{
+    ...production,SNAPSHOT_SIGNING_KEY_ID:"eafb-2026",
+    SNAPSHOT_SIGNING_PKCS8_B64:pkcs8,
+  });
+  assert.equal(res.status,503);
+  assert.equal((await res.json()).error,"source_snapshot_unavailable");
 });
 
 test("wrong HTTP methods and unrelated routes expose no registry or admin actions",async()=>{
