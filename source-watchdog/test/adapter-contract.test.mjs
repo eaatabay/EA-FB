@@ -88,3 +88,14 @@ test("throwing Proxy traps become schema anomalies without leaking exceptions",(
     assert.equal(sanitizeAdapterProbe({...good(),checks:new Proxy(good().checks,trap)},config),null);
   }
 });
+
+test("optional adapter checks must still be primitive booleans",()=>{
+  const movie={requiredChecks:["reachability","search","detail"]};
+  const nested={...good(),checks:{search:true,detail:true,episode:{secret:"NO"}}};
+  assert.equal(validAdapterProbe(nested,movie),false);
+  assert.equal(sanitizeAdapterProbe(nested,movie),null);
+  const truthy={...good(),checks:{search:true,detail:true,reachability:"true"}};
+  assert.equal(sanitizeAdapterProbe(truthy,movie),null);
+  const valid={...good(),checks:{search:true,detail:true,episode:false}};
+  assert.deepEqual(sanitizeAdapterProbe(valid,movie),valid);
+});
