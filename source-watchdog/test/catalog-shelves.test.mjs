@@ -120,3 +120,16 @@ test("catalog CAS edits preserve canonical contiguous ordering",()=>{
   draft=editCatalogDraft(draft,2,{action:"remove",id:"archive-film"});
   assert.deepEqual(draft.shelves.map(x=>x.order),[0]);
 });
+
+test("add and replace cannot secretly reorder sparse catalog drafts",()=>{
+  const safe={...base,language:undefined,yearFrom:undefined,yearTo:undefined,order:9};
+  let draft=buildCatalogDraft([safe],0);
+  draft=editCatalogDraft(draft,0,{action:"add",id:"archive-film",
+    shelf:{id:"archive-film",title:"Arşiv Filmleri",kind:"movie",
+      genres:"18",enabled:true,order:0}});
+  assert.deepEqual(draft.shelves.map(x=>x.id),["new-turkish-tv","archive-film"]);
+  draft=editCatalogDraft(draft,1,{action:"replace",id:"archive-film",
+    shelf:{...draft.shelves[1],title:"Yeni Arşiv",order:0}});
+  assert.deepEqual(draft.shelves.map(x=>x.id),["new-turkish-tv","archive-film"]);
+  assert.deepEqual(draft.shelves.map(x=>x.order),[0,1]);
+});
