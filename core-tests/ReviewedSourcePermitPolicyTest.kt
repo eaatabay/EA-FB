@@ -204,5 +204,14 @@ fun main() {
         defaultSnapshot.usableSources + defaultSnapshot.usableSources.first())
     test(ReviewedSourcePermitPolicy.restrict(duplicateSigned,T,permits)==null,
         "duplicate signed source IDs fail closed at rights boundary")
+    test(movieUrl("https://films.example.org/public/./private")
+        .none { it.id=="fixture-movie" },
+        "dot segment in signed URL path is rejected")
+    test(only(list=listOf(movie.copy(approvedPathPrefix="/public/./private"),
+        series,both)).isEmpty(),
+        "dot segment in reviewed path scope invalidates the registry")
+    test(movieUrl("https://films.example.org/public/a..b")
+        .any { it.id=="fixture-movie" },
+        "safe filename containing two dots remains inside reviewed path")
     println("PASS: $passed/$passed reviewed source permit policy cases")
 }
