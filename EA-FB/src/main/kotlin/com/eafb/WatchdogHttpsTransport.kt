@@ -16,10 +16,10 @@ import kotlinx.coroutines.ensureActive
  * be reused for the server-side Source Watchdog probe network.
  */
 class WatchdogHttpsTransport(
+    private val nanoClock: () -> Long = System::nanoTime,
     private val open: (String) -> HttpsURLConnection = { endpoint ->
         URL(endpoint).openConnection() as HttpsURLConnection
-    },
-    private val nanoClock: () -> Long = System::nanoTime
+    }
 ) : WatchdogSnapshotTransport {
     override suspend fun get(endpoint: String): WatchdogHttpSnapshot = withContext(Dispatchers.IO) {
         val started = nanoClock()
