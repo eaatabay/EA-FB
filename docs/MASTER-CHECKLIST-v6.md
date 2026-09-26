@@ -167,6 +167,14 @@
 - [ ] Mi Box kirmizi Beta onayi; sonra v6 yayin karari.
 - [ ] Production v5 veya main'e gecis yalniz ayri onayla.
 
+## 26.09.2026 — 4. offline parkur (Actions kotasi kapaliyken)
+- [x] Watchdog yayin snapshot'inda clock ve TTL safe-integer/overflow siniri; kesirli/eski saglik saatleri reddi; adapterVersion ust siniri 1.000.000.
+- [x] Saglik state'indeki URL, onayli registry config URL'siyle birebir eslesmeden imzalanacak snapshot'a giremez. Domain allowlist tek basina yeterli degil; yarim CAS/durum uyusmazligi fail-closed.
+- [x] Admin manuel yeniden test, son probe saatinden eski zamanla baslatilamaz; yeni regression testi eklendi.
+- [x] Network preflight URL dot segment, encoded path, cift slash ve tek backslash aliaslarini DNS sorgusundan once reddeder; yeni regression testi eklendi.
+- [x] Mevcut secilmis yerel test tekrar calistirildi: Kotlin rights 68/68 (reconstructed repository-equivalent), bridge 11/11, selection 15/15, Node 48/48, staging Python 17/17, SQLite fixture 59 probe/89 audit/rev89; admin recovery 61 probe/92 audit/rev92. Yerel policy+network 18/18; yeni 12/12 sinir kontrolleri ve yeniden olusturulmus snapshot 20/20 gecti.
+- [ ] 4. parkurdaki yeni snapshot/policy/network regresyonlarini tam gercek checkout Node 22 test paketinde kosma; mevcut yerel snapshot ve bazi Node modulleri yeniden olusturulmus kopya.
+
 ## Sonraki en yakin is
 Actions kotasi sifirken hak/izin kayitlarini birer birer incele ve kullanicidan onay al;
 sonra EAProvider'a secure adapter bridge, tam Node 22 ve izole Wrangler D1,
