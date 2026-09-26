@@ -400,12 +400,11 @@ class EAProvider : MainAPI() {
         if (cards.size < 2) return Pair(null, emptyList())
         // Only label installments that actually have visible artwork cards.
         val visibleIds = cards.mapNotNull { it.url.substringAfterLast('/').toIntOrNull() }.toSet()
-        val labels = ordered.filter { it.optInt("id") in visibleIds }
-            .take(12).joinToString(" • ") { part ->
-            val title = part.optString("title")
-            val year = mediaYear(part, MediaKind.MOVIE)
-            if (year != null) "$title ($year)" else title
-        }
+        val labels = FilmCollectionPolicy.visibleChronology(sortedParts, visibleIds)
+            .joinToString(" • ") { part ->
+                val year = part.releaseDate?.take(4)?.toIntOrNull()
+                if (year != null) "${part.title} ($year)" else part.title
+            }
         return Pair("Serinin Filmleri (vizyon tarihine göre): $labels", cards)
     }
 
