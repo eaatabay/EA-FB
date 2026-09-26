@@ -11,7 +11,11 @@ function normalizedTarget(value) {
   if (typeof value !== 'string' || value.length > 2048) return null;
   try {
     const url = new URL(value);
-    if (url.protocol !== 'https:' || url.username || url.password ||
+    // Match the literal authority: URL() otherwise normalizes uppercase,
+    // percent-encoded hostnames and explicit default :443 ports.
+    const authority = value.startsWith('https://')
+      ? value.slice('https://'.length).split(/[/?#]/, 1)[0] : '';
+    if (authority !== url.hostname || url.protocol !== 'https:' || url.username || url.password ||
         // URL.search/hash are empty for bare '?' and '#'; reject those too.
         value.includes('?') || value.includes('#') ||
         url.port || url.search || url.hash || url.hostname.includes(':') ||
