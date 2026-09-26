@@ -24,7 +24,7 @@ export function adminWritesConfigured(env) {
   return env?.WATCHDOG_ADMIN_WRITES_ENABLED === "true" &&
     env?.WATCHDOG_ADMIN_ENABLED === "true" &&
     env?.WATCHDOG_MODE === "production" &&
-    env?.WATCHDOG_FIXTURE_ENABLED !== "true" &&
+    env?.WATCHDOG_FIXTURE_ENABLED === "false" &&
     typeof env?.WATCHDOG_ADMIN_ORIGIN === "string" &&
     ORIGIN.test(env.WATCHDOG_ADMIN_ORIGIN) &&
     env.WATCHDOG_ADMIN_ORIGIN.length <= 261 &&
