@@ -88,7 +88,7 @@ export function editCatalogDraft(draft,expectedRevision,operation) {
   if (!operation || typeof operation!=="object" || Array.isArray(operation) ||
       !["add","replace","remove","move","toggle","rename"].includes(operation.action) ||
       typeof operation.id!=="string") throw Error("invalid_catalog_edit");
-  const rows=validateCatalogShelves(draft.shelves).map(x=>({...x}));
+  const rows=validateCatalogShelves(draft.shelves).map((x,i)=>({...x,order:i}));
   const index=rows.findIndex(x=>x.id===operation.id);
   const exact=(keys)=>Object.keys(operation).sort().join(",")===keys.sort().join(",");
   switch(operation.action) {
