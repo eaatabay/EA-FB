@@ -214,6 +214,22 @@ class EAProvider : MainAPI() {
         val response = getJson(route, page)
         var results = cards(response)
         var usedFallback = false
+        var scannedExtraPages = false
+        // TMDb may place unreleased titles across several newest pages. Scan
+        // only when the first valid page yields no released artwork cards.
+        // A scanned rail is deliberately non-paginated to avoid duplicate
+        // cards on the host's subsequent page-2 request.
+        if (page == 1 && results.isEmpty() && sortMode == CatalogSortMode.NEWEST &&
+            category.tmdbPath.startsWith("/discover/") &&
+            response?.optJSONArray("results") != null) {
+            val total = response.optInt("total_pages", 0)
+            for (extraPage in 2..minOf(total, 3)) {
+                val extra = getJson(route, extraPage) ?: break
+                scannedExtraPages = true
+                results = (results + cards(extra)).distinctBy { it.url }
+                if (results.isNotEmpty()) break
+            }
+        }
         // A sparse regional provider feed can be empty under date/vote sorting.
         // Preserve the platform rail with clearly labeled popular results rather
         // than silently presenting popular titles as "highest rated" or "newest".
@@ -230,7 +246,7 @@ class EAProvider : MainAPI() {
         val rawLength = response?.optJSONArray("results")?.length() ?: 0
         return newHomePageResponse(
             listOf(HomePageList(label, results, false)),
-            !usedFallback && CatalogCardPolicy.hasNext(
+            !usedFallback && !scannedExtraPages && CatalogCardPolicy.hasNext(
                 page, rawLength, response?.optInt("total_pages", 0) ?: 0
             )
         )
