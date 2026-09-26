@@ -5,7 +5,7 @@
 const escapeHtml=value=>String(value??"").replace(/[&<>"']/g,x=>({
   "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;",
 }[x]));
-const knownStates=["healthy","degraded","quarantined","admin_required","disabled"];
+const knownStates=["healthy","degraded","quarantined","admin_required","disabled","invalid_state"];
 const knownErrors=new Set([
  "unreachable","unapproved_redirect","structural_change",
  "identity_unverified","functional_check_failed","unapproved_or_invalid_target",
@@ -27,7 +27,8 @@ export function summarizeSources(records,now) {
     if(!config||!state||record.id!==config.id||record.id!==state.id) {
       throw Error("corrupt_overview_record");
     }
-    const status=knownStates.includes(state.status)?state.status:"degraded";
+    // Corrupt/future states must not masquerade as an ordinary degraded source.
+    const status=knownStates.includes(state.status)?state.status:"invalid_state";
     counts[status]++;
     rows.push({
       id:String(config.id).slice(0,64),
