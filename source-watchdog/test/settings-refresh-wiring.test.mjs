@@ -8,7 +8,9 @@ test("v6 settings changes refresh host only on dismissal and never twice",()=>{
   assert.match(dialog,/if \(dirty && !manualRefresh\)/);
   assert.match(dialog,/manualRefresh = true\s*\n\s*dialog\.dismiss\(\)/);
   assert.match(dialog,/categoryRow\(ctx, cat\) \{ dirty = true \}/);
+  assert.match(dialog,/if \(EASettings\.sortMode\(\) != mode\) \{/);
   assert.match(dialog,/EASettings\.setSortMode\(mode\)\s*\n\s*dirty = true/);
+  assert.match(dialog,/takeUnless \{ it\.isFinishing \|\| it\.isDestroyed \}/);
 });
 test("newest date filtering never blanks native trending or top-rated rails",()=>{
   assert.match(provider,/sortMode == CatalogSortMode\.NEWEST &&\s*category\.tmdbPath\?\.startsWith\("\/discover\/"\) == true/);
