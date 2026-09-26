@@ -7,6 +7,7 @@ command -v kotlinc >/dev/null || { echo "kotlinc missing (use scripts/test-core.
 command -v java >/dev/null || { echo "Java missing" >&2; exit 2; }
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
+node --test worker/test/catalog.test.mjs
 node --test \
   source-watchdog/test/catalog-shelves.test.mjs \
   source-watchdog/test/catalog-admin-preview.test.mjs \
