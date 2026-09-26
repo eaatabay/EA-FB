@@ -81,7 +81,8 @@ export function validateSource(source) {
 
 export function initialState(source, now) {
   validateSource(source);
-  if (!Number.isSafeInteger(now) || now < 0) throw new Error("invalid_clock");
+  if (!Number.isSafeInteger(now) || now < 0 ||
+      now > Number.MAX_SAFE_INTEGER - 24 * HOUR) throw new Error("invalid_clock");
   return {
     id: source.id,
     status: source.enabled ? HEALTH.DEGRADED : HEALTH.DISABLED,
@@ -159,10 +160,13 @@ export function applyProbe(source, previous, probe, now) {
       !Number.isSafeInteger(previous.revision) || previous.revision < 0 ||
       previous.revision >= Number.MAX_SAFE_INTEGER ||
       !Number.isSafeInteger(previous.consecutiveFailures) ||
-      previous.consecutiveFailures < 0 ||
+      previous.consecutiveFailures < 0 || previous.consecutiveFailures > 1_000_000 ||
       !Number.isSafeInteger(previous.consecutiveSuccesses) ||
-      previous.consecutiveSuccesses < 0 ||
+      previous.consecutiveSuccesses < 0 || previous.consecutiveSuccesses > 2 ||
       previous.currentUrl !== config.currentUrl ||
+      previous.lastKnownGoodUrl !== config.lastKnownGoodUrl ||
+      (previous.nextCheckAt !== null &&
+       (!Number.isSafeInteger(previous.nextCheckAt) || previous.nextCheckAt < 0)) ||
       (previous.lastCheckedAt !== null &&
        (!Number.isSafeInteger(previous.lastCheckedAt) ||
         previous.lastCheckedAt < 0 || now < previous.lastCheckedAt))) {
@@ -208,6 +212,9 @@ export function releaseForRetest(source, previous, now) {
   validateSource(source);
   if (previous?.status !== HEALTH.ADMIN_REQUIRED || previous?.id !== source.id ||
       !Number.isSafeInteger(now) || now < 0 ||
+      now > Number.MAX_SAFE_INTEGER - 24 * HOUR ||
+      !Number.isSafeInteger(previous.revision) ||
+      previous.revision < 0 || previous.revision >= Number.MAX_SAFE_INTEGER ||
       (previous.lastCheckedAt !== null &&
        (!Number.isSafeInteger(previous.lastCheckedAt) || now < previous.lastCheckedAt))) {
     throw new Error("invalid_admin_release");
