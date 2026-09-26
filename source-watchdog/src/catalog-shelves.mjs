@@ -15,7 +15,7 @@ export function validateCatalogShelves(input) {
   return input.map((item,index)=>{
     if (!item || typeof item!=="object" || Array.isArray(item) ||
       Object.keys(item).some(k=>!["id","title","kind","providerId","region","genres","enabled","order","language","yearFrom","yearTo"].includes(k)) ||
-      !ID.test(item.id) || seen.has(item.id) || RESERVED.has(item.id) ||
+      typeof item.id!=="string" || !ID.test(item.id) || seen.has(item.id) || RESERVED.has(item.id) ||
       typeof item.title!=="string" || item.title.trim().length<2 ||
       item.title.length>64 || /[<>]/.test(item.title) ||
       !["movie","tv"].includes(item.kind) ||
@@ -75,7 +75,7 @@ export function buildCatalogDraft(input,revision) {
   if (!Number.isSafeInteger(revision) || revision<0) throw Error("invalid_catalog_revision");
   const shelves=validateCatalogShelves(input);
   return Object.freeze({version:1,revision,status:"draft-v6-not-published",
-    shelves:shelves.map(x=>({...x}))});
+    shelves:Object.freeze(shelves.map(x=>Object.freeze({...x})))});
 }
 /** Pure CAS editor for an authenticated, unpublished catalog draft.
  * No HTTP handler, D1 writes, source grants, or automatic publication.
