@@ -32,3 +32,14 @@ Last updated: 25.09.2026. Review observations came from the user's photos of **r
 ## Safe release gate
 
 Run `bash scripts/verify-v6.sh` on the **feature branch**, inspect Android UI on Mi Box, then deploy Worker changes, verify TV and movie discover sorts, configure/verify optional server-side OMDb if desired, and publish `dist` only after all checks. The blue/stable v5 must remain unaffected until a deliberate release.
+
+
+## 26.09.2026 — v6-only regression fixes (source changes; not released)
+
+- Added the Paramount+ **movie** shelf and its settings toggle; regional TMDb availability is not guaranteed. Apple TV+ movie/TV and Paramount+ TV IDs already existed. A regional TMDb empty response can still legitimately hide a shelf.
+- Newest now rejects future and invalid premiere dates in the Android client, including fallback cards. Client requests deliberately omit new date-bound query parameters until the updated Worker is separately approved and deployed; the existing production relay must remain untouched. Consequently a newest TMDb page full of future titles can produce a labeled popular alternative rather than exhaustive newest results.
+- A successful but empty regional discovery response can trigger a **clearly labeled** popular alternative on the first page. Network/relay failures are not silently relabeled as empty feeds.
+- Film detail now displays the official collection's chronological title/year list in its plot when a real TMDb collection exists. CloudStream's stock detail UI still exposes one native recommendations rail; a separately titled series carousel requires host UI support and is not claimed as implemented.
+- Real IMDb enrichment remains conditional on the **server-side** OMDb secret and Worker deployment. No synthetic IMDb values or credential changes were made.
+- Automatic home refresh on settings changes and admin-configurable dynamic shelves remain open: the plugin currently stores preferences immediately but stock CloudStream owns the home screen lifecycle. Do not promise automatic focus-preserving reload without a verified host API.
+- This section documents code changes, **not** a successful Kotlin/Android build, Mi Box visual test, Worker deployment, or new cs3 package.
