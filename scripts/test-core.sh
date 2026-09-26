@@ -74,6 +74,10 @@ java -jar "$TMP/catalog-sort.jar"
 kotlinc EA-FB/src/main/kotlin/com/eafb/CatalogReleasePolicy.kt \
   core-tests/CatalogReleasePolicyTest.kt -include-runtime -d "$TMP/catalog-release.jar"
 java -jar "$TMP/catalog-release.jar"
+# Admin-defined metadata shelf routing is isolated from streaming rights.
+kotlinc "$DOMAIN" EA-FB/src/main/kotlin/com/eafb/CatalogShelfPolicy.kt \
+  core-tests/CatalogShelfPolicyTest.kt -include-runtime -d "$TMP/catalog-shelves.jar"
+java -jar "$TMP/catalog-shelves.jar"
 # Pin the public metadata relay; reject remotely configured unreviewed origins.
 kotlinc EA-FB/src/main/kotlin/com/eafb/CatalogRelayPolicy.kt \
   core-tests/CatalogRelayPolicyTest.kt -include-runtime -d "$TMP/catalog-relay.jar"
