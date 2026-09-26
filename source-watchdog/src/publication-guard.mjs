@@ -55,6 +55,8 @@ export function assertReviewedPublication(records, snapshot,
     throw new Error("invalid_production_rights_allowlist");
   }
   if (!Number.isSafeInteger(snapshot.generatedAt) || snapshot.generatedAt < 0 ||
+      !Number.isSafeInteger(snapshot.expiresAt) ||
+      snapshot.expiresAt <= snapshot.generatedAt ||
       !Array.isArray(approvedSourceGrants)) {
     throw new Error("invalid_reviewed_source_grant");
   }
@@ -81,7 +83,8 @@ export function assertReviewedPublication(records, snapshot,
     const grant = grants.get(item.id);
     const normalized = normalizedHttpsUrl(item.baseUrl);
     const url = normalized ? new URL(normalized) : null;
-    if (!grant || !url || normalized !== item.baseUrl ||
+    if (!grant || grant.validUntil < snapshot.expiresAt ||
+        !url || normalized !== item.baseUrl ||
         grant.evidenceReference !== config?.approvalRef ||
         grant.adapterVersion !== item.adapterVersion ||
         grant.mediaKind !== item.mediaKind ||
