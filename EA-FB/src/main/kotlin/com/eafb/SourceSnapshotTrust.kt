@@ -118,7 +118,8 @@ class SourceSnapshotTrust(
             val host = uri.host?.lowercase(Locale.ROOT) ?: return false
             if (uri.scheme != "https" || uri.userInfo != null || uri.port != -1 ||
                 uri.rawQuery != null || uri.rawFragment != null ||
-                !host.matches(Regex("[a-z0-9-]+(\\.[a-z0-9-]+)+")) ||
+                !host.matches(Regex("[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)+")) ||
+                host.length > 253 || host.split('.').any { it.length > 63 } ||
                 host.endsWith(".local") || host.endsWith(".localhost") ||
                 host.endsWith(".internal") || host.endsWith(".invalid") ||
                 host.matches(Regex("[0-9]+(\\.[0-9]+){3}"))) return false
