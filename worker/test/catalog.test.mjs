@@ -265,3 +265,47 @@ test("activating OMDb does not reuse old TMDb-only detail cache", async () => {
   assert.equal((await cached.json()).ea_fb_ratings.imdb, 7.9);
   assert.equal(calls.length, 3);
 });
+
+
+test("TMDb oversized Content-Length is rejected before reading a response body",async()=>{
+  const {env,ctx}=setup();
+  globalThis.fetch=async()=>new Response("{}",{
+    headers:{"content-type":"application/json","content-length":"2000001"},
+  });
+  const res=await gateway.fetch(new Request(
+    "https://example.workers.dev/v1/movie/123"),env,ctx);
+  assert.equal(res.status,502);
+  assert.deepEqual(await res.json(),{error:"catalog_response_too_large"});
+});
+
+test("TMDb streaming body limit rejects a lying or missing Content-Length",async()=>{
+  const {env,ctx}=setup();
+  globalThis.fetch=async()=>new Response(new ReadableStream({
+    start(controller){
+      controller.enqueue(new Uint8Array(1_500_000));
+      controller.enqueue(new Uint8Array(600_000));
+      controller.close();
+    },
+  }),{headers:{"content-type":"application/json","content-length":"2"}});
+  const res=await gateway.fetch(new Request(
+    "https://example.workers.dev/v1/movie/123"),env,ctx);
+  assert.equal(res.status,502);
+  assert.deepEqual(await res.json(),{error:"catalog_response_too_large"});
+});
+
+test("oversized OMDb response never blocks valid TMDb metadata",async()=>{
+  const {env,ctx}=setup();
+  env.OMDB_API_KEY="SERVER_ONLY_TEST_KEY";
+  globalThis.fetch=async url=>url.startsWith("https://api.themoviedb.org/")
+    ?new Response(JSON.stringify({id:123,vote_average:7.9,
+      external_ids:{imdb_id:"tt14688458"}}),
+      {headers:{"content-type":"application/json"}})
+    :new Response("{}",{headers:{"content-type":"application/json",
+      "content-length":"50001"}});
+  const res=await gateway.fetch(new Request(
+    "https://example.workers.dev/v1/movie/123?append_to_response=external_ids"),env,ctx);
+  assert.equal(res.status,200);
+  const result=await res.json();
+  assert.equal(result.vote_average,7.9);
+  assert.equal(result.ea_fb_ratings,undefined);
+});
