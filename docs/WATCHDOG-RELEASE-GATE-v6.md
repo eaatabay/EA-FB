@@ -212,3 +212,9 @@ Production signed publication now binds evidence to the exact rights/YYYY/<sourc
 - Exact SHA-matched admin-actions module with explicitly **test-only** registry stub: 9/9 isolated HTTP boundary checks, including canonical URL, missing fixture flag, actual streamed 1 KiB limit, and hanging cancel. Full exact admin-actions/Worker+D1 suite remains pending. WHATWG Request normalizes literal `/../` before the handler sees it; the test now distinguishes raw parser inputs from normalized Requests.
 - Exact SHA-matched `0001_registry.sql`, `0002_source_leases.sql` and Python integration suite: **7/7 PASS** for migration replay, audit trigger, duplicate rollback, stale CAS and lease ownership. These tests use local SQLite, not a deployed Cloudflare D1 binding.
 - Production release gates unchanged: empty rights grants, empty Android signing pins/approved adapters, no enabled Android delivery, committed Wrangler disabled, no remote D1 binding. No GitHub Actions run or live source probe.
+
+
+## 26 Sep 2026 — next offline parkur: hostile adapter Proxy traps
+- `sanitizeAdapterProbe` now catches throwing Proxy getPrototypeOf, ownKeys and property-descriptor traps on both root probe and nested checks. A parser exception caused by a hostile object is a **schema anomaly** (audited admin hold), not evidence of a publisher outage. No exception text or raw URL enters the public result.
+- Exact GitHub SHA-matched adapter contract and regression tests: **7/7 PASS** on local Node22. New exact `runner.test.mjs` SQLite/D1-emulator integration case checks one probe, one audit and no subsequent scheduled retry after admin hold; full exact runner suite not executed in this parkur.
+- Production safety gates remain unchanged: no rights grants, signing pins, approved adapters, enabled delivery, remote D1, Actions runs, live source probes or deploys.
