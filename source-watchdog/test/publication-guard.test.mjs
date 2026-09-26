@@ -15,7 +15,7 @@ const row=()=>({id:"licensed-demo",config:{
 }});
 const item=()=>({id:"licensed-demo",baseUrl:"https://licensed.example.com",
   mediaKind:"movie",adapterVersion:3});
-const snapshot=()=>({generatedAt:now,sources:[item()]});
+const snapshot=()=>({generatedAt:now,expiresAt:now+900_000,sources:[item()]});
 
 test("only canonical internal rights evidence references are accepted",()=>{
   for(const ref of ["rights/2026/licensed-demo.md","rights_2026/demo.md"])
@@ -57,11 +57,11 @@ test("missing and duplicated registry/snapshot identities fail closed",()=>{
   assert.throws(()=>assertReviewedPublication([row(),row()],snapshot(),approved,grants),
     /unsafe_production_registry/);
   assert.throws(()=>assertReviewedPublication([row()],
-    {generatedAt:now,sources:[item(),item()]},approved,grants),/unsafe_production_snapshot/);
+    {generatedAt:now,expiresAt:now+900_000,sources:[item(),item()]},approved,grants),/unsafe_production_snapshot/);
   assert.throws(()=>assertReviewedPublication([row()],
-    {generatedAt:now,sources:[{...item(),id:"other-source"}]},approved,grants),
+    {generatedAt:now,expiresAt:now+900_000,sources:[{...item(),id:"other-source"}]},approved,grants),
     /unreviewed_production_snapshot/);
-  assert.equal(assertReviewedPublication([row()],{generatedAt:now,sources:[]},approved,grants),true);
+  assert.equal(assertReviewedPublication([row()],{generatedAt:now,expiresAt:now+900_000,sources:[]},approved,grants),true);
 });
 
 
@@ -102,4 +102,16 @@ test("reviewed URL path requires a full segment, not a string prefix",()=>{
     baseUrl:"https://licensed.example.com/publicity"}]};
   assert.throws(()=>assertReviewedPublication([sibling],wrong,approved,[candidate]),
     /unreviewed_production_snapshot/);
+});
+
+
+test("a signed snapshot cannot remain valid after its reviewed rights expire",()=>{
+  const expiresBeforeSnapshot={...grant(),validUntil:now+300_000};
+  assert.throws(()=>assertReviewedPublication([row()],snapshot(),approved,
+    [expiresBeforeSnapshot]),/unreviewed_production_snapshot/);
+  assert.equal(assertReviewedPublication([row()],snapshot(),approved,
+    [{...grant(),validUntil:now+900_000}]),true);
+  assert.throws(()=>assertReviewedPublication([row()],
+    {...snapshot(),expiresAt:now},approved,grants),
+    /invalid_reviewed_source_grant/);
 });
