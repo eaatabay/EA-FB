@@ -28,17 +28,12 @@ object CatalogSortPolicy {
             it.startsWith("sort_by=") || it.startsWith("vote_count.gte=") ||
                 it.startsWith("first_air_date.lte=") || it.startsWith("primary_release_date.lte=")
         }
-        // TMDb otherwise sorts future releases ahead of released titles.
-        val today = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US).apply {
-            timeZone = java.util.TimeZone.getTimeZone("UTC")
-        }.format(java.util.Date())
-        val releaseBound = if (mode == CatalogSortMode.NEWEST) {
-            if (kind == MediaKind.SERIES) "&first_air_date.lte=$today"
-            else "&primary_release_date.lte=$today"
-        } else ""
+        // Keep v6 compatible with the currently deployed v5 relay: it may
+        // reject new date-bound parameters. EAProvider filters future titles
+        // locally; a labeled popular fallback handles empty newest pages.
         // Sparse regional provider feeds should not vanish due to a 100-vote gate.
         val minimumVotes = if (mode == CatalogSortMode.HIGHEST_RATED)
             "&vote_count.gte=10" else ""
-        return parts.joinToString("&") + "&sort_by=" + sortBy + minimumVotes + releaseBound
+        return parts.joinToString("&") + "&sort_by=" + sortBy + minimumVotes
     }
 }
