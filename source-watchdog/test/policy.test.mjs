@@ -23,13 +23,22 @@ test("normalizes HTTPS; rejects private/local URLs and URL credentials", () => {
   for (const url of ["http://demo.example.org", "https://localhost",
     "https://192.168.1.1", "https://demo.example.org:8443",
     "https://user:pass@demo.example.org", "https://demo.example.org?a=1",
-    "https://demo.example.org#x", "https://host.internal"]) {
+    "https://demo.example.org#x", "https://host.internal",
+    "https://demo.example.org:443", "https://demo%2eexample.org",
+    "https://demo.example.org?", "https://demo.example.org#",
+    "https://demo.example.org/%2e%2e/private",
+    "https://demo.example.org//private",
+    "https://demo.example.org/../private",
+    "https://-bad.example.org", "https://bad-.example.org",
+    "https://"+"a".repeat(64)+".example.org"]) {
     assert.equal(normalizedHttpsUrl(url), null, url);
   }
 });
 test("configuration requires approved hosts and real search/detail checks", () => {
   assert.equal(validateSource(source).id, source.id);
   assert.throws(() => validateSource({...source, currentUrl:"https://other.example.org"}));
+  assert.throws(() => validateSource({...source, verifiedDomains:["demo.example.org","demo.example.org"]}));
+  assert.throws(() => validateSource({...source, verifiedDomains:["demo.example.org","Bad.example.org"]}));
   assert.throws(() => validateSource({...source, requiredChecks:["reachability"]}));
   assert.throws(() => validateSource({...source, requiredChecks:["search","detail"]}));
 });
