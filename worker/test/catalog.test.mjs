@@ -153,7 +153,8 @@ test("never forwards the token to redirects and avoids runtime-dependent timeout
   assert.equal(result.status, 200);
   assert.equal(calls.length, 1);
   assert.equal(calls[0].opts.redirect, "manual");
-  assert.ok(!Object.hasOwn(calls[0].opts, "signal"));
+  assert.ok(calls[0].opts.signal instanceof AbortSignal);
+  assert.equal(calls[0].opts.signal.aborted,false);
 });
 
 test("rejects redirects without forwarding the original Authorization header", async () => {
@@ -337,6 +338,43 @@ test("activating OMDb does not reuse old TMDb-only detail cache", async () => {
   assert.equal(calls.length, 3);
 });
 
+
+test("TMDb stalled response headers time out with sanitized 502",async()=>{
+  const {env,ctx}=setup();
+  let aborted=false;
+  globalThis.fetch=async (_url,opts)=>new Promise((_,reject)=>{
+    opts.signal.addEventListener("abort",()=>{
+      aborted=true;reject(new Error("SECRET_TIMEOUT_DETAIL"));
+    },{once:true});
+  });
+  const started=Date.now();
+  const res=await gateway.fetch(new Request(
+    "https://example.workers.dev/v1/movie/123"),env,ctx);
+  assert.equal(res.status,502);
+  assert.deepEqual(await res.json(),{error:"tmdb_connection_error",reason:"timeout"});
+  assert.equal(aborted,true);
+  assert.ok(Date.now()-started<16000);
+});
+
+test("TMDb stalled streaming JSON body shares the same hard deadline",async()=>{
+  const {env,ctx}=setup();
+  let aborted=false;
+  globalThis.fetch=async (_url,opts)=>{
+    opts.signal.addEventListener("abort",()=>{aborted=true;},{once:true});
+    return new Response(new ReadableStream({
+      start(controller){controller.enqueue(new TextEncoder().encode("{"));}
+      // Never closes, and intentionally ignores abort. Promise.race must
+      // still release the caller at the shared deadline.
+    }),{headers:{"content-type":"application/json"}});
+  };
+  const started=Date.now();
+  const res=await gateway.fetch(new Request(
+    "https://example.workers.dev/v1/movie/123"),env,ctx);
+  assert.equal(res.status,502);
+  assert.deepEqual(await res.json(),{error:"tmdb_connection_error",reason:"timeout"});
+  assert.equal(aborted,true);
+  assert.ok(Date.now()-started<16000);
+});
 
 test("TMDb oversized Content-Length is rejected before reading a response body",async()=>{
   const {env,ctx}=setup();
