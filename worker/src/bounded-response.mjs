@@ -17,7 +17,10 @@ export async function readBoundedText(response, maxBytes) {
       if (!(value instanceof Uint8Array)) throw new Error("upstream_invalid_chunk");
       bytes += value.byteLength;
       if (bytes > maxBytes) {
-        try { await reader.cancel(); } catch { /* Still reject oversized data. */ }
+        // Cancellation may itself hang on a hostile stream. Reject the byte
+        // budget immediately and observe cancellation errors asynchronously.
+        try { void Promise.resolve(reader.cancel()).catch(() => {}); }
+        catch { /* Still reject oversized data. */ }
         throw new Error("upstream_too_large");
       }
       text += decoder.decode(value, {stream:true});
