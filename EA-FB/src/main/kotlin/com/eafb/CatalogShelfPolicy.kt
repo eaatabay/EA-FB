@@ -23,7 +23,7 @@ object CatalogShelfPolicy {
 
     fun category(shelf: CatalogShelfDefinition): CatalogCategory? {
         if (!shelf.enabled || !ids.matches(shelf.id) || HomeCategories.all.any { it.id == shelf.id } || shelf.title.length !in 2..64 || shelf.title.trim().length < 2 ||
-            shelf.kind == MediaKind.LIVE || shelf.title.any { it == '<' || it == '>' || it.isISOControl() } ||
+            shelf.kind == MediaKind.LIVE || shelf.title.any { it == '<' || it == '>' || Character.isISOControl(it) } ||
             (shelf.providerId == null) == (shelf.genres == null) ||
             shelf.language?.let { !languages.matches(it) } == true ||
             shelf.yearFrom?.let { it !in 1888..2100 } == true ||
