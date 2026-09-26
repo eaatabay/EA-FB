@@ -115,3 +115,15 @@ test("a signed snapshot cannot remain valid after its reviewed rights expire",()
     {...snapshot(),expiresAt:now},approved,grants),
     /invalid_reviewed_source_grant/);
 });
+
+
+test("release grants reject unexpected secret-bearing fields and duplicate refs",()=>{
+  assert.throws(()=>assertReviewedPublication([row()],snapshot(),approved,
+    [{...grant(),privateToken:"never-commit-secrets"}]),
+    /invalid_reviewed_source_grant/);
+  assert.throws(()=>assertReviewedPublication([row()],snapshot(),
+    [...approved,...approved],grants),/invalid_production_rights_allowlist/);
+  assert.throws(()=>assertReviewedPublication([row()],snapshot(),approved,
+    Array.from({length:33},()=>grant())),
+    /invalid_reviewed_source_grant/);
+});
