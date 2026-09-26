@@ -55,6 +55,14 @@ kanit kaydinin release incelemesinde karsilastirilmasini gerektirir.
 Yalnizca gecen bir Kotlin fixture testi, lisans kaniti degildir.
 Production `ReviewedSourcePermits.bundled` halen bostur.
 
+**Kayit kimligi baglayicidir:** Derlenmis izin kaydindaki `id` ile
+`rights/YYYY/<id>.md` dosya adi ayni olmak zorundadir; yil dort
+rakamli olmalidir. Baska kaynagin hak belgesine atif, ara klasor ve
+kanonik olmayan yol reddedilir. Onceki yilin belgesi, kayitli
+`validUntil` suresi henuz dolmamissa teknik olarak gecerliligini
+koruyabilir. Bu denetim dosyanin gercekten var oldugunu veya hukuki
+yetkiyi kanitlamaz; insan incelemesi halen zorunludur.
+
 ## Aktivasyon kontrol kapısı
 
 - Yazılı hak doğrulaması ve kullanıcı onayı **yoksa** gerçek adaptör yok.
