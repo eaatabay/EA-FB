@@ -58,9 +58,9 @@ export function validateSource(source) {
       verifiedDomains.length < 1 || verifiedDomains.length > 12 ||
       new Set(verifiedDomains).size !== verifiedDomains.length ||
       !verifiedDomains.every(host => {
+        if (typeof host !== "string" || host !== host.toLowerCase()) return false;
         const normalized = normalizedHttpsUrl("https://" + host);
-        return typeof host === "string" && host === host.toLowerCase() &&
-          normalized && new URL(normalized).hostname === host;
+        return normalized && new URL(normalized).hostname === host;
       })) throw new Error("invalid_source_addresses");
   if (!verifiedDomains.includes(new URL(currentUrl).hostname) ||
       !verifiedDomains.includes(new URL(lastKnownGoodUrl).hostname)) {
@@ -81,7 +81,7 @@ export function validateSource(source) {
 
 export function initialState(source, now) {
   validateSource(source);
-  if (!Number.isFinite(now) || now < 0) throw new Error("invalid_clock");
+  if (!Number.isSafeInteger(now) || now < 0) throw new Error("invalid_clock");
   return {
     id: source.id,
     status: source.enabled ? HEALTH.DEGRADED : HEALTH.DISABLED,
@@ -143,7 +143,7 @@ export function evaluateProbe(source, probe) {
  */
 export function applyProbe(source, previous, probe, now) {
   const config = validateSource(source);
-  if (previous?.id !== config.id || !Number.isFinite(now) ||
+  if (previous?.id !== config.id || !Number.isSafeInteger(now) || now < 0 ||
       (previous.lastCheckedAt !== null && now < previous.lastCheckedAt)) {
     throw new Error("invalid_watchdog_state");
   }
@@ -186,7 +186,7 @@ export function applyProbe(source, previous, probe, now) {
 export function releaseForRetest(source, previous, now) {
   validateSource(source);
   if (previous?.status !== HEALTH.ADMIN_REQUIRED || previous?.id !== source.id ||
-      !Number.isFinite(now)) throw new Error("invalid_admin_release");
+      !Number.isSafeInteger(now) || now < 0) throw new Error("invalid_admin_release");
   return { ...previous, status: HEALTH.DEGRADED, candidateUrl: null,
     consecutiveFailures: 0, consecutiveSuccesses: 0, lastFailure: null,
     nextCheckAt: now, revision: previous.revision + 1 };
