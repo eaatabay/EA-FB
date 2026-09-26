@@ -52,6 +52,8 @@ export function createWatchdogWorker({
   performAdminMutation = executeAdminMutation,
   parseAdminRequest = parseAdminMutationRequest,
   nowMillis = Date.now,
+  // Test-only injection; the deployed default has ZERO approved rights refs.
+  approvedEvidenceRefs = [],
 } = {}) {
   async function runScheduledFixture(controller, env) {
     // An accidental Worker deployment must remain read-only and inert.
@@ -176,7 +178,7 @@ export function createWatchdogWorker({
                 x.baseUrl?.includes(".example.org"))) {
             throw new Error("unsafe_production_snapshot");
           }
-          assertReviewedPublication(records, snapshot);
+          assertReviewedPublication(records, snapshot, approvedEvidenceRefs);
           return snapshot;
         });
         return response(signed);
