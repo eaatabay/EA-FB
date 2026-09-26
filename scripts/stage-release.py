@@ -14,6 +14,9 @@ ICON = "https://raw.githubusercontent.com/eaatabay/EA-FB/main/assets/ea-fb-logo.
 
 def stage(root=ROOT):
     manifest_file = root / "build" / "plugins.json"
+    if (root / "build").is_symlink() or manifest_file.is_symlink() or \
+            (root / "EA-FB").is_symlink() or (root / "EA-FB" / "build").is_symlink():
+        raise ValueError("Refusing symlinked build inputs")
     if not manifest_file.is_file():
         raise ValueError("Missing build/plugins.json; run Gradle makePluginsJson first")
     entries = json.loads(manifest_file.read_text(encoding="utf-8"))
