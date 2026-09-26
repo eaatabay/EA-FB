@@ -52,3 +52,15 @@ test("dashboard shows only sanctioned runner timeout/error codes",()=>{
  assert.ok(html.includes("probe_timeout") && html.includes("adapter_error"));
  assert.ok(!html.includes("SECRET_ADAPTER_EXCEPTION"));
 });
+
+
+test("future or corrupted health states are explicit anomalies, not degraded",()=>{
+ const stats=summarizeSources([row("unknown","future_unreviewed_status"),
+  row("ordinary","degraded")],1800000000000);
+ assert.equal(stats.counts.invalid_state,1);
+ assert.equal(stats.counts.degraded,1);
+ assert.equal(stats.rows.find(x=>x.id==="unknown").status,"invalid_state");
+ const html=renderAdminDashboard(stats);
+ assert.ok(html.includes("invalid_state"));
+ assert.ok(!html.includes("future_unreviewed_status"));
+});
