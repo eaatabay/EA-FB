@@ -254,6 +254,31 @@ test("transient OMDb failure caches TMDb detail only 60 seconds then retries",as
   assert.equal(calls.length,4);
 });
 
+test("hanging optional OMDb fetch aborts after deadline without blocking TMDb",async()=>{
+  const {env,ctx}=setup();env.OMDB_API_KEY="SERVER_ONLY_TEST_KEY";
+  let aborted=false;
+  globalThis.fetch=async (url,opts)=>{
+    if(url.startsWith("https://api.themoviedb.org/")) {
+      return new Response(JSON.stringify({id:123,vote_average:8.2,vote_count:30,
+        external_ids:{imdb_id:"tt14688458"}}),
+        {headers:{"content-type":"application/json"}});
+    }
+    return new Promise((_,reject)=>{
+      opts.signal.addEventListener("abort",()=>{
+        aborted=true;reject(Error("SECRET_TIMEOUT_ERROR"));
+      },{once:true});
+    });
+  };
+  const start=Date.now();
+  const res=await gateway.fetch(new Request(
+    "https://example.workers.dev/v1/movie/123?append_to_response=external_ids"),env,ctx);
+  assert.equal(res.status,200);
+  assert.equal((await res.json()).vote_average,8.2);
+  assert.equal(res.headers.get("cache-control"),"public, max-age=60");
+  assert.equal(aborted,true);
+  assert.ok(Date.now()-start < 7000,"OMDb cannot stall the title detail");
+});
+
 test("a genuine OMDb N/A rating keeps the normal detail TTL",async()=>{
   const {env,ctx}=setup();env.OMDB_API_KEY="SERVER_ONLY_TEST_KEY";
   globalThis.fetch=async url=>url.startsWith("https://api.themoviedb.org/")
