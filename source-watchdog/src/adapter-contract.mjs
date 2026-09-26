@@ -34,6 +34,7 @@ export function validAdapterProbe(probe, config) {
  * A null result is structural schema drift and must be held for admin.
  */
 export function sanitizeAdapterProbe(raw, config) {
+  try {
   if (!plainObject(raw) || Reflect.ownKeys(raw).some(key => typeof key !== "string")) {
     return null;
   }
@@ -58,4 +59,9 @@ export function sanitizeAdapterProbe(raw, config) {
     probe.structuralChange=fields.structuralChange.value;
   }
   return validAdapterProbe(probe,config) ? probe : null;
+  } catch {
+    // Proxy traps and hostile property descriptors are schema anomalies,
+    // not evidence that the publisher itself is unreachable.
+    return null;
+  }
 }
