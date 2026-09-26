@@ -44,3 +44,19 @@ test("incident check can bypass six-hour cadence without spamming",()=>{
   row.state.lastCheckedAt=0;
   assert.equal(incidentEligible(row,now),false);
 });
+
+
+test("unknown health states and malformed clocks never enter scheduled or incident checks",()=>{
+  const unknown=record("unknown","future_unreviewed_status",0);
+  const fractional=record("fractional",HEALTH.DEGRADED,0.5);
+  const negative=record("negative",HEALTH.HEALTHY,-1);
+  const infinite=record("infinite",HEALTH.HEALTHY,Infinity);
+  assert.deepEqual(dueSources([unknown,fractional,negative,infinite],1000),[]);
+  for(const row of [unknown,fractional,negative,infinite]){
+    if(row===unknown) assert.equal(incidentEligible(row,1000),false);
+  }
+  const malformed=record("bad-clock",HEALTH.DEGRADED,0,1.5);
+  assert.equal(incidentEligible(malformed,1000),false);
+  malformed.state.lastCheckedAt=-1;
+  assert.equal(incidentEligible(malformed,1000),false);
+});
