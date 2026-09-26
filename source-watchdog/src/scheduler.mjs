@@ -21,7 +21,8 @@ export function dueSources(records, now, limit = 8) {
       if (!config || !state || config.enabled !== true ||
           config.integrationApproved !== true ||
           typeof record.id !== 'string' ||
-          !/^[a-z][a-z0-9-]{2,63}$/.test(record.id)) return false;
+          !/^[a-z][a-z0-9-]{2,63}$/.test(record.id) ||
+          config.id !== record.id || state.id !== record.id) return false;
       // Unknown/corrupt statuses and timestamps must never become runnable.
       if (typeof state.status !== 'string' ||
           !Object.hasOwn(PRIORITY, state.status)) return false;
@@ -45,9 +46,12 @@ export function incidentEligible(record, now, minSpacingMs = 5 * 60 * 1000) {
   if (config.enabled !== true || config.integrationApproved !== true ||
       typeof record.id !== 'string' ||
       !/^[a-z][a-z0-9-]{2,63}$/.test(record.id) ||
+      config.id !== record.id || state.id !== record.id ||
+      !Number.isSafeInteger(state.nextCheckAt) || state.nextCheckAt < 0 ||
       typeof state.status !== 'string' ||
       !Object.hasOwn(PRIORITY, state.status)) return false;
-  if (state.lastCheckedAt == null) return true;
+  // Missing/undefined replay metadata is corruption, not a fresh source.
+  if (state.lastCheckedAt === null) return true;
   if (!Number.isSafeInteger(state.lastCheckedAt) ||
       state.lastCheckedAt < 0) return false;
   return now - state.lastCheckedAt >= minSpacingMs;
