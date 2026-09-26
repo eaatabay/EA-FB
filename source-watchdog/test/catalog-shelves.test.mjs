@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {validateCatalogShelves,publicCatalogShelves,compileCatalogShelf,buildCatalogDraft} from "../src/catalog-shelves.mjs";
+import {validateCatalogShelves,publicCatalogShelves,compileCatalogShelf,buildCatalogDraft,editCatalogDraft} from "../src/catalog-shelves.mjs";
 const base={id:"new-turkish-tv",title:"Yeni Türk Dizileri",kind:"tv",
   genres:"18",language:"tr",yearFrom:2024,yearTo:2026,enabled:true,order:0};
 test("validates catalog-only shelf and preserves order",()=>{
@@ -50,4 +50,39 @@ test("revisioned catalog draft is deterministic and never self-publishes",()=>{
   assert.equal(Object.isFrozen(draft),true);
   assert.throws(()=>buildCatalogDraft([base],-1));
   assert.throws(()=>buildCatalogDraft([base],1.5));
+});
+
+test("CAS catalog editor covers add, rename, toggle, move, replace and remove",()=>{
+  const safe={...base,language:undefined,yearFrom:undefined,yearTo:undefined};
+  let draft=buildCatalogDraft([safe],0);
+  draft=editCatalogDraft(draft,0,{action:"add",id:"apple-archive",
+    shelf:{id:"apple-archive",title:"Apple Arşivi",kind:"movie",
+      providerId:"350",region:"TR",enabled:true,order:1}});
+  assert.equal(draft.revision,1);
+  assert.equal(draft.shelves.length,2);
+  draft=editCatalogDraft(draft,1,{action:"rename",id:"apple-archive",title:"Apple Filmleri"});
+  draft=editCatalogDraft(draft,2,{action:"toggle",id:"apple-archive",enabled:false});
+  draft=editCatalogDraft(draft,3,{action:"move",id:"apple-archive",order:0});
+  assert.equal(draft.shelves[0].id,"apple-archive");
+  assert.equal(draft.shelves[0].enabled,false);
+  draft=editCatalogDraft(draft,4,{action:"replace",id:"apple-archive",
+    shelf:{...draft.shelves[0],title:"Apple TV+"}});
+  assert.equal(draft.shelves[0].title,"Apple TV+");
+  draft=editCatalogDraft(draft,5,{action:"remove",id:"apple-archive"});
+  assert.equal(draft.shelves.length,1);
+  assert.equal(draft.status,"draft-v6-not-published");
+});
+test("CAS catalog editor rejects stale revisions and unauthorized mutations",()=>{
+  const draft=buildCatalogDraft([base],2);
+  for(const operation of [
+    {action:"remove",id:"not-present"},
+    {action:"rename",id:base.id,title:"<script>"},
+    {action:"toggle",id:base.id,enabled:"true"},
+    {action:"move",id:base.id,order:9},
+    {action:"add",id:"custom-tv",shelf:{...base,id:"custom-tv",streamUrl:"https://evil.invalid"}},
+    {action:"remove",id:base.id,secret:"not-allowed"}
+  ]) assert.throws(()=>editCatalogDraft(draft,2,operation));
+  assert.throws(()=>editCatalogDraft(draft,1,{action:"remove",id:base.id}),
+    /catalog_revision_conflict/);
+  assert.equal(draft.shelves.length,1);
 });
