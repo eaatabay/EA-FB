@@ -106,3 +106,26 @@ test('canonical authority fuzz corpus rejects URL parser aliases before DNS',asy
   // Reject malformed or unauthorized targets without querying their DNS.
   assert.equal(dnsCalls,0);
 });
+
+
+test('preflight rejects path aliases before any DNS lookup',async()=>{
+  const invalid=[
+    'https://licensed.example.com/../private',
+    'https://licensed.example.com/a/./b',
+    'https://licensed.example.com/a//b',
+    'https://licensed.example.com/%2e%2e/private',
+    'https://licensed.example.com/a%2fb',
+    'https://licensed.example.com/a\\\\b',
+  ];
+  let dnsCalls=0;
+  for(const target of invalid){
+    const result=await preflightTarget(source,target,async()=>{
+      dnsCalls++;return ['8.8.8.8'];
+    });
+    assert.equal(result.allowed,false,target);
+    assert.equal(result.reason,'invalid_https_target',target);
+  }
+  assert.equal(dnsCalls,0);
+  assert.equal((await preflightTarget(source,
+    'https://licensed.example.com/a/b',resolve)).allowed,true);
+});
