@@ -160,7 +160,7 @@ export default {
     // Some dashboards copy an optional Bearer prefix. Never send Bearer Bearer.
     const token = String(env.TMDB_READ_ACCESS_TOKEN).trim().replace(/^Bearer\s+/i, "").trim();
     if (!token) return json({ error: "catalog_unconfigured" }, 503);
-    let upstream, body;
+    let upstream, body, upstreamPhase = "fetch";
     try {
       ({upstream,body} = await withUpstreamDeadline(async signal => {
         const upstream = await fetch(upstreamUrl, {
@@ -174,6 +174,7 @@ export default {
           redirect: "manual", signal,
         });
         const type = upstream.headers.get("content-type") || "";
+        upstreamPhase = "body";
         const body = upstream.ok && type.includes("application/json")
           ? await readBoundedText(upstream,2_000_000) : null;
         return {upstream,body};
@@ -181,6 +182,10 @@ export default {
     } catch (err) {
       if (err?.message === "upstream_too_large") {
         return json({error:"catalog_response_too_large"},502);
+      }
+      if (upstreamPhase === "body" && err?.name !== "TimeoutError" &&
+          err?.name !== "AbortError") {
+        return json({error:"invalid_catalog_response"},502);
       }
       // Only sanitized reason codes leave the Worker; never URLs, tokens,
       // account details, exception messages or upstream response bodies.
