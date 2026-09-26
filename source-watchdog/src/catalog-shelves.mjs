@@ -8,13 +8,14 @@ const LANGUAGE=/^[a-z]{2}$/;
 const GENRES=/^\d{1,4}(,\d{1,4}){0,4}$/;
 const PROVIDER=/^\d{1,6}$/;
 const MAX=40;
+const RESERVED=new Set(["continue","trending","now-playing","popular-movie","popular-tv","top-movie","top-tv","netflix-movie","netflix-tv","disney-movie","disney-tv","amazon-movie","amazon-tv","apple-movie","apple-tv","max-movie","max-tv","paramount-movie","paramount-tv","mubi-movie","action","sci-fi","horror","comedy","animation-movie","animation-tv","documentary-top","documentary-trend","community"]);
 export function validateCatalogShelves(input) {
   if (!Array.isArray(input) || input.length>MAX) throw Error("invalid_shelf_count");
   const seen=new Set();
   return input.map((item,index)=>{
     if (!item || typeof item!=="object" || Array.isArray(item) ||
       Object.keys(item).some(k=>!["id","title","kind","providerId","region","genres","enabled","order","language"].includes(k)) ||
-      !ID.test(item.id) || seen.has(item.id) ||
+      !ID.test(item.id) || seen.has(item.id) || RESERVED.has(item.id) ||
       typeof item.title!=="string" || item.title.trim().length<2 ||
       item.title.length>64 || /[<>]/.test(item.title) ||
       !["movie","tv"].includes(item.kind) ||
