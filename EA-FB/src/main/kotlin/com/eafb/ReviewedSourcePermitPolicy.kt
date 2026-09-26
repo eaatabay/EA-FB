@@ -84,7 +84,8 @@ object ReviewedSourcePermitPolicy {
             permit.reviewedAt in 0..now &&
             permit.validUntil > now &&
             permit.validUntil > permit.reviewedAt &&
-            // A positive bounded difference also rejects Long overflow.\n            (permit.validUntil - permit.reviewedAt) in 1..MAX_REVIEW_AGE_MS
+            // A positive bounded difference also rejects Long overflow.
+            (permit.validUntil - permit.reviewedAt) in 1..MAX_REVIEW_AGE_MS
 
     private fun permittedKind(permit: String, signed: String): String? =
         when {
