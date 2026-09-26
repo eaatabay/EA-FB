@@ -40,6 +40,8 @@ test("admin Access configuration must be explicit and never enabled by fixture m
   {...ENV,WATCHDOG_ADMIN_ENABLED:"false"},
   {...ENV,WATCHDOG_MODE:"fixture"},
   {...ENV,WATCHDOG_FIXTURE_ENABLED:"true"},
+    {...ENV,WATCHDOG_FIXTURE_ENABLED:"TRUE"},
+    {...ENV,WATCHDOG_FIXTURE_ENABLED:undefined},
   {...ENV,WATCHDOG_ACCESS_TEAM_DOMAIN:"https://169.254.169.254"},
   {...ENV,WATCHDOG_ACCESS_TEAM_DOMAIN:"https://-team.cloudflareaccess.com"},
   {...ENV,WATCHDOG_ACCESS_TEAM_DOMAIN:"https://team-.cloudflareaccess.com"},
