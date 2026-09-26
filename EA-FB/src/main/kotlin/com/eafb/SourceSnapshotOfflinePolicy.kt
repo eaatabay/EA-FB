@@ -1,6 +1,7 @@
 package com.eafb
 
 import java.nio.charset.StandardCharsets
+import kotlinx.coroutines.CancellationException
 
 /**
  * Recheck a saved signed envelope before EVERY offline use. A cached source is
@@ -23,7 +24,9 @@ object SourceSnapshotOfflinePolicy {
             signedJson.toByteArray(StandardCharsets.UTF_8).size > MAX_ENVELOPE_BYTES) {
             return null
         }
-        val envelope = runCatching { parseEnvelope(signedJson) }.getOrNull()
+        val envelope = try { parseEnvelope(signedJson) }
+            catch (cancelled: CancellationException) { throw cancelled }
+            catch (_: Exception) { null }
             ?: return null
         // Cache bytes and anti-replay high-water marks must be from ONE
         // successful, atomic SharedPreferences.Editor.commit() transaction.
