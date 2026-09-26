@@ -63,6 +63,8 @@ test('rejects duplicate IDs, credentials, local IP, HTTP, and unexpected fields'
     snap=>snap.sources[0].baseUrl='https://host.internal',
     snap=>snap.sources[0].baseUrl='https://-invalid.example.org',
     snap=>snap.sources[0].baseUrl='https://invalid-.example.org',
+    snap=>snap.sources[0].baseUrl='https://licensed.example.org/%20private',
+    snap=>snap.sources[0].baseUrl='https://licensed.example.org//private',
     snap=>snap.sources[0].baseUrl='https://'+'a'.repeat(64)+'.example.org',
     snap=>snap.sources[0].baseUrl='http://licensed.example.org',
     snap=>snap.sources[0].cookie='private-token',
