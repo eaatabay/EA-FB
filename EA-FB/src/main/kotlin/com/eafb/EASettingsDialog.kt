@@ -213,7 +213,7 @@ object EASettingsDialog {
                     "DİJİTAL PLATFORMLAR" to setOf(
                         "netflix-movie", "netflix-tv", "disney-movie", "disney-tv",
                         "amazon-movie", "amazon-tv", "apple-movie", "apple-tv",
-                        "max-movie", "max-tv", "paramount-tv", "mubi-movie"
+                        "max-movie", "max-tv", "paramount-movie", "paramount-tv", "mubi-movie"
                     ),
                     "TÜRLER" to setOf(
                         "action", "sci-fi", "horror", "comedy", "animation-movie", "animation-tv"
