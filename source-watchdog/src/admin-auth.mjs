@@ -35,17 +35,39 @@ function decodeJSON(part) {
   if(bytes.length>8192) throw Error("token_too_large");
   return JSON.parse(new TextDecoder("utf-8",{fatal:true}).decode(bytes));
 }
+/** Read a small JWKS with an actual byte budget, not just Content-Length. */
+export async function readLimitedJwks(res, maxBytes = 65_536) {
+  if (!res?.ok || !Number.isSafeInteger(maxBytes) || maxBytes < 1 ||
+      maxBytes > 65_536) throw Error("invalid_access_certs");
+  const length = res.headers.get("content-length");
+  if (length !== null && /^\d+$/.test(length) && Number(length) > maxBytes) {
+    throw Error("oversized_access_certs");
+  }
+  if (!res.body) throw Error("invalid_access_certs");
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder("utf-8", {fatal:true});
+  let bytes = 0, text = "";
+  try {
+    while (true) {
+      const {done, value} = await reader.read();
+      if (done) break;
+      if (!(value instanceof Uint8Array)) throw Error("invalid_access_certs");
+      bytes += value.byteLength;
+      if (bytes > maxBytes) {
+        try { await reader.cancel(); } catch { /* Keep the size rejection. */ }
+        throw Error("oversized_access_certs");
+      }
+      text += decoder.decode(value, {stream:true});
+    }
+    return JSON.parse(text + decoder.decode());
+  } finally { reader.releaseLock(); }
+}
 async function loadJwks(team) {
   const signal=AbortSignal.timeout(4000);
   const res=await fetch(team+"/cdn-cgi/access/certs",{
     method:"GET",redirect:"error",signal,headers:{accept:"application/json"},
   });
-  if(!res.ok || Number(res.headers.get("content-length")||0)>65536) {
-    throw Error("invalid_access_certs");
-  }
-  const body=await res.text();
-  if(body.length>65536) throw Error("oversized_access_certs");
-  return JSON.parse(body);
+  return readLimitedJwks(res);
 }
 
 /**
