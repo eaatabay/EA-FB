@@ -12,6 +12,10 @@ class WatchdogApprovedAdapterBridge(
 ) {
     /** Resolve only on a NEW search, not during an already-started stream. */
     fun forNewSearch(kind: MediaKind, now: Long): List<MediaSourceAdapter> {
+        // An empty release-compiled rights registry is a hard stop, even if
+        // a future build enables delivery or accidentally bundles adapters.
+        // Never read private cached snapshot data for an unlicensed release.
+        if (ReviewedSourcePermits.bundled.isEmpty()) return emptyList()
         val options = WatchdogDeliveryConfig.productionOptions()
         if (!WatchdogSnapshotRefresh.isApprovedConfiguration(options) ||
             bundledAdapters.isEmpty() || bundledAdapters.size > 32) {
