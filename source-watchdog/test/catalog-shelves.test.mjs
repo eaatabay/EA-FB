@@ -71,6 +71,7 @@ test("CAS catalog editor covers add, rename, toggle, move, replace and remove",(
   assert.equal(draft.shelves[0].title,"Apple TV+");
   draft=editCatalogDraft(draft,5,{action:"remove",id:"apple-archive"});
   assert.equal(draft.shelves.length,1);
+  assert.deepEqual(draft.shelves.map(x=>x.order),[0]);
   assert.equal(draft.status,"draft-v6-not-published");
 });
 test("CAS catalog editor rejects stale revisions and unauthorized mutations",()=>{
@@ -104,4 +105,18 @@ test("unpublished compiled preview includes only enabled relay-compatible rails"
     /unsupported_catalog_filter/);
   assert.throws(()=>compileCatalogDraftPreview({...draft,authorized:true}),
     /invalid_draft_envelope/);
+});
+
+test("catalog CAS edits preserve canonical contiguous ordering",()=>{
+  const safe={...base,language:undefined,yearFrom:undefined,yearTo:undefined};
+  let draft=buildCatalogDraft([safe],0);
+  draft=editCatalogDraft(draft,0,{action:"add",id:"archive-film",
+    shelf:{id:"archive-film",title:"Arşiv Filmleri",kind:"movie",
+      genres:"18",enabled:true,order:15}});
+  assert.deepEqual(draft.shelves.map(x=>x.order),[0,1]);
+  draft=editCatalogDraft(draft,1,{action:"move",id:"archive-film",order:0});
+  assert.deepEqual(draft.shelves.map(x=>x.id),["archive-film","new-turkish-tv"]);
+  assert.deepEqual(draft.shelves.map(x=>x.order),[0,1]);
+  draft=editCatalogDraft(draft,2,{action:"remove",id:"archive-film"});
+  assert.deepEqual(draft.shelves.map(x=>x.order),[0]);
 });
