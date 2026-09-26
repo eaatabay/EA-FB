@@ -223,3 +223,12 @@
 Actions kotasi sifirken hak/izin kayitlarini birer birer incele ve kullanicidan onay al;
 sonra EAProvider'a secure adapter bridge, tam Node 22 ve izole Wrangler D1,
 MFA'li admin pilotu. Gercek v5/main ve canli Worker degismez.
+
+
+## 26.09.2026 — Yeni 30 dakikalik parkur: TMDb hard deadline + cache fallback
+- [x] TMDb metadata relay: header gelmeyen veya header'dan sonra JSON stream'i asili kalan istegin tamaminda tek **12 saniyelik** AbortController/Promise.race son tarihi. HTTP yonlendirmesi hala elle reddediliyor; Bearer token baska host'a iletilmiyor.
+- [x] Deadline asiminda yalniz `tmdb_connection_error:timeout` gibi sanitize hata kodu; 2 MB body siniri asimi `catalog_response_too_large`, bozuk JSON/UTF-8 `invalid_catalog_response`. Erken body hatasinda halen acik upstream fetch abort edilir.
+- [x] Cloudflare edge cache okuma veya yazma arizasi metadata yanitini 500'e ceviremez: cache match/put best-effort. Secret exception mesajlari response'a verilmez.
+- [x] Watchdog adaptor Proxy trap/getter kaynakli parser istisnalari `adapter_error` olarak yanlis karantinaya gitmek yerine tek denemede `anomaly_held` / audited `admin_required` yapilir. Yeni SQLite runner regresyon testi eklendi; tam D1 suite bekliyor.
+- [x] Tam GitHub blob SHA-eslesmeli yerel secilmis testler: Worker bounded response **6/6**, ratings policy **3/3**, yeni deadline + gercek bounded stream **8/8**, Watchdog adaptor contract **7/7**, Kotlin film series **15/15**, Kotlin katalog kart **25/25** = **64/64**. Yeni tam `worker/test/catalog.test.mjs` entegrasyon testleri eklendi ancak tum Worker checkout ile bu parkurda yeniden calistirilmadi.
+- [ ] Sonraki: tam exact Node 22 Worker + Watchdog suite; Wrangler/workerd+D1; Android Gradle .cs3; Mi Box afis, iki puan, bolum ve seri gorsel testi. GitHub Actions kotasi ve gercek kaynak haklari izinleri bekliyor; main/v5/canli Worker degismedi.
