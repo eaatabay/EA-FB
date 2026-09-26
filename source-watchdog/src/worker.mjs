@@ -159,7 +159,10 @@ export function createWatchdogWorker({
       // This route is read-only, opt-in, and requires a separate private D1
       // plus a configured signing key. The tracked Wrangler config disables it.
       if (!env.SOURCES_DB?.prepare || typeof env.SNAPSHOT_SIGNING_KEY_ID !== "string" ||
-          typeof env.SNAPSHOT_SIGNING_PKCS8_B64 !== "string") {
+          typeof env.SNAPSHOT_SIGNING_PKCS8_B64 !== "string" ||
+          // The checked-in production allowlist is empty. Do not even import
+          // a signing key or publish an empty snapshot before rights review.
+          !Array.isArray(approvedEvidenceRefs) || approvedEvidenceRefs.length === 0) {
         return response({error:"source_snapshot_unavailable"},503);
       }
       try {
