@@ -69,6 +69,16 @@ test("expired token, future nbf, wrong issuer, audience and email are rejected",
  ]) assert.equal(await verify(await sign({...claims,...changed})),null,
    JSON.stringify(changed));
 });
+test("signed but stale, impossible or overlong Access sessions fail closed",async()=>{
+ const {sign,verify,claims}=await fixture();
+ for(const changed of [
+  {iat:NOW-25*3600,exp:NOW+3600},
+  {iat:NOW-100,exp:NOW+25*3600},
+  {iat:NOW-100,exp:NOW-101},
+  {iat:-1,exp:NOW+3600},
+ ])assert.equal(await verify(await sign({...claims,...changed})),null,
+   JSON.stringify(changed));
+});
 test("wrong signing key, forged JWT alg, unknown kid and no JWKS all fail closed",async()=>{
  const {sign,verify,claims}=await fixture();
  assert.equal(await verify(await sign(claims,{...header,alg:"none"})),null);
