@@ -72,6 +72,10 @@ object ReviewedSourcePermitPolicy {
             permit.approvedHosts.all(::validHost) &&
             validPath(permit.approvedPathPrefix) &&
             evidence.matches(permit.evidenceReference) &&
+            // Never let one source silently cite another source's review record.
+            // Only rights/YYYY/<this-source-id>.md is a canonical reference.
+            Regex("rights/[0-9]{4}/" + Regex.escape(permit.id) + "\\.md")
+                .matches(permit.evidenceReference) &&
             // Evidence is a repository-local review record, never a URL or
             // a path that can normalize to a different reviewed document.
             permit.evidenceReference.removePrefix("rights/")
