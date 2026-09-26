@@ -44,7 +44,8 @@ object ReviewedSourcePermitPolicy {
             !value.matches(Regex("[0-9]+(?:\\.[0-9]+){3}"))
 
     private fun validPath(value: String): Boolean =
-        path.matches(value) && !value.contains("..") &&
+        path.matches(value) &&
+            value.split('/').drop(1).all { it != "." && it != ".." } &&
             !value.contains("//") && !value.contains("\\") &&
             !value.contains('%')
 
