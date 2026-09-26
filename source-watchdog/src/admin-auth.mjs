@@ -88,6 +88,10 @@ export async function loadJwks(team, deadlineMs = 4000) {
         }, deadlineMs);
       }),
     ]);
+  } catch (err) {
+    // A malformed or oversized cert body should also stop its fetch.
+    try { controller.abort(); } catch { /* Preserve the original error. */ }
+    throw err;
   } finally {
     if (timer) clearTimeout(timer);
   }
