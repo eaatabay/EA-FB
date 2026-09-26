@@ -20,9 +20,13 @@ class WatchdogClientStore(
     private val preferences = context.getSharedPreferences(
         "ea_fb_watchdog_trust_v1", Context.MODE_PRIVATE
     )
+    // Android may update its in-memory preferences even if the disk commit
+    // returns false. Never expose that non-durable replay state in this process.
+    private var persistenceFailed = false
 
     @Synchronized
     fun acceptSignedJson(raw: String, now: Long): SnapshotCheck {
+        if (persistenceFailed) return SnapshotCheck.Rejected("cannot_persist_replay_guard")
         if (raw.length > 32_768 ||
             raw.toByteArray(StandardCharsets.UTF_8).size > 32_768) {
             return SnapshotCheck.Rejected("invalid_envelope")
@@ -37,13 +41,14 @@ class WatchdogClientStore(
         if (result !is SnapshotCheck.Accepted) return result
 
         // Store the ORIGINAL signed JSON, never a reconstructed unsigned
-        // payload. Android SharedPreferences Editor commits all 3 entries
-        // together or exposes none of them to this instance.
+        // payload. An unsuccessful commit may still update the in-memory
+        // SharedPreferences map, so permanently fail closed in this instance.
         val durable = preferences.edit()
             .putLong("last_revision", result.snapshot.revision)
             .putLong("last_generated_at", result.snapshot.generatedAt)
             .putString("last_signed_envelope", raw)
             .commit()
+        if (!durable) persistenceFailed = true
         return if (durable) result
             else SnapshotCheck.Rejected("cannot_persist_replay_guard")
     }
@@ -69,7 +74,7 @@ class WatchdogClientStore(
      */
     @Synchronized
     fun restoreVerifiedOffline(now: Long): VerifiedSourceSnapshot? =
-        SourceSnapshotOfflinePolicy.restore(
+        if (persistenceFailed) null else SourceSnapshotOfflinePolicy.restore(
             preferences.getString("last_signed_envelope", null), now,
             preferences.getLong("last_revision", -1L),
             preferences.getLong("last_generated_at", -1L),
