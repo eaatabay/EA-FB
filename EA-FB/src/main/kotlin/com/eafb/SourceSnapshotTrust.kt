@@ -126,7 +126,8 @@ class SourceSnapshotTrust(
             val path = uri.rawPath.orEmpty()
             val normalizedPath = if (path == "/") "" else path.trimEnd('/')
             val reconstructed = "https://$host$normalizedPath"
-            reconstructed == value && !path.split('/').any { it == "." || it == ".." }
+            reconstructed == value && !path.contains('%') && !path.contains("//") &&
+                !path.split('/').any { it == "." || it == ".." }
         } catch (_: Exception) { false }
     }
 
