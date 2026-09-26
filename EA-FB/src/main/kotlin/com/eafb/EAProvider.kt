@@ -152,7 +152,9 @@ class EAProvider : MainAPI() {
         val kind = mediaKind(item, fallback)
         val title = item.optString(if (kind == MediaKind.SERIES) "name" else "title").ifBlank { return null }
         val path = if (kind == MediaKind.SERIES) "tv" else "movie"
-        val poster = item.optString("poster_path").takeIf { it.startsWith("/") }
+        val poster = CatalogCardPolicy.bestArtwork(
+            item.optString("poster_path"), item.optString("backdrop_path")
+        ) ?: return null
         return newMovieSearchResponse(title, "$mainUrl/$path/$id", if (kind == MediaKind.SERIES) TvType.TvSeries else TvType.Movie) {
             posterUrl = poster?.let { "https://image.tmdb.org/t/p/w500$it" }
             year = mediaYear(item, kind)
@@ -193,9 +195,7 @@ class EAProvider : MainAPI() {
         // TMDb occasionally returns titles without poster art. On TV these
         // appear as blank, hard-to-navigate cards, especially in lower rows.
         val results = (0 until raw.length()).mapNotNull { i ->
-            raw.optJSONObject(i)?.takeIf {
-                CatalogCardPolicy.hasPoster(it.optString("poster_path"))
-            }?.let { newItem(it, category.kind) }
+            raw.optJSONObject(i)?.let { newItem(it, category.kind) }
         }.distinctBy { it.url }
         // Never create a visible empty rail or request nonexistent pages.
         if (results.isEmpty()) return newHomePageResponse(emptyList(), false)
