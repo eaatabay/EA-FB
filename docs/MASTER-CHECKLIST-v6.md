@@ -85,6 +85,7 @@
 - [x] 26.09.2026: Network preflight'a 18 URL authority varyantini DNS'e dokunmadan reddeden altinci regresyon eklendi (87c44283); yerel adversarial 23 URL + 21 IP + 2 gecerli URL kontrolu gecti. Yerel secilmis Node paketi 33/33 gecti; tum repo Node paketi hala acik.
 - [x] 26.09.2026: Staging artik sadece internalName EA-FB ve tam integer version=6 kabul ediyor; v4/v5/v7/null/float/string/bool alias reddediliyor (09a88f2f, ab6008df). Yeni testle 6/6 yerel yeniden olusturulmus Python staging testi gecti. Gercek Gradle/.cs3 paketi henuz derlenmedi.
 - [x] 26.09.2026: Network preflight 18 URL parser alias'i icin ek fail-closed regresyonla 6 teste ulasti (87c44283). Yerel secilmis Node suite 33/33; ayrica 23 kotu URL, 21 kotu IP ve 2 gecerli URL ile adversarial kontrol gecti.
+- [x] 26.09.2026: Scheduler'da bozuk JSON status objesi diger saglam kaynaklarin planlamasini bozamiyor; status tipi hem scheduled hem incident yolunda acikca denetleniyor (d8124bd4, f1558b5f). Yerel 4/4 scheduler ve secilmis 33/33 Node suite yeniden gecti.
 - [ ] Genisletilmis 68/68 Kotlin izin testi ve 11/11 bridge JVM testini gercek v6 checkout'unda calistirip dogrula. Node wiring 5/5, onceki SHA-eslesmeli yerel dosyalarda gecti.
 - [x] Kullanici acik kaynak-bazli onayi ve hak sahibi delili gerektiren docs/SOURCE-RIGHTS-REVIEW-v6.md olusturuldu.
 - [ ] Gercek kaynagin izin kapsami, kanit referansi, rate limit, bolge ve yenileme tarihini tek tek onaylat.
