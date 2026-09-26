@@ -11,6 +11,8 @@ function checkAdapters(adapters) {
   }
 }
 
+const TIMEOUT = Symbol("probe_timeout");
+
 async function withTimeout(task, timeoutMs) {
   if (!Number.isSafeInteger(timeoutMs) || timeoutMs < 500 || timeoutMs > 60000) {
     throw new Error("invalid_probe_timeout");
@@ -24,7 +26,7 @@ async function withTimeout(task, timeoutMs) {
         timer = setTimeout(() => {
           // Reject BEFORE aborting: a synchronous abort listener may resolve
           // the adapter promise. Timeout must never count as healthy.
-          reject(new Error("probe_timeout"));
+          reject(TIMEOUT);
           controller.abort();
         }, timeoutMs);
       }),
@@ -95,7 +97,7 @@ export async function runOneSourceCheck({
         throw new Error("invalid_adapter_result");
       }
     } catch (err) {
-      probeError = err?.message === "probe_timeout" ?
+      probeError = err === TIMEOUT ?
         "probe_timeout" : "adapter_error";
       probe = {reached:false, finalUrl:current.config.currentUrl,
         identityVerified:false, checks:{}, runnerFailure:probeError};
@@ -110,7 +112,7 @@ export async function runOneSourceCheck({
   } catch (err) {
     // Do not leak exception text, URLs, auth headers or site content into logs.
     const error = err instanceof RegistryConflict ? "stale_revision_or_lease" :
-      err?.message === "probe_timeout" ? "probe_timeout" : "internal_failure";
+      err === TIMEOUT ? "probe_timeout" : "internal_failure";
     return {sourceId, status:"runner_error", error};
   } finally {
     try { await releaseProbeLease(db, sourceId, token); }
