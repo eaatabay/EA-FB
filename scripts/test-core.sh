@@ -119,7 +119,7 @@ STORE="EA-FB/src/main/kotlin/com/eafb/WatchdogClientStore.kt"
 REFRESH="EA-FB/src/main/kotlin/com/eafb/WatchdogSnapshotRefresh.kt"
 HTTPS="EA-FB/src/main/kotlin/com/eafb/WatchdogHttpsTransport.kt"
 kotlinc -cp "$BC_JAR:$COROUTINES" "$TRUST" "$OFFLINE" core-tests/SourceSnapshotOfflinePolicyTest.kt -include-runtime -d "$TMP/watchdog-offline.jar"
-java -cp "$TMP/watchdog-offline.jar:$BC_JAR" com.eafb.SourceSnapshotOfflinePolicyTestKt
+java -cp "$TMP/watchdog-offline.jar:$BC_JAR:$COROUTINES" com.eafb.SourceSnapshotOfflinePolicyTestKt
 # JVM-only Context/JSON stubs; NOT compiled into the Android production app.
 kotlinc -cp "$BC_JAR:$COROUTINES" "$TRUST" "$OFFLINE" "$STORE" "$REFRESH" "$HTTPS" core-tests/stubs/android/content/Context.kt core-tests/stubs/com/eafb/WatchdogSnapshotJson.kt core-tests/WatchdogClientStoreJvmTest.kt -include-runtime -d "$TMP/watchdog-store.jar"
 java -cp "$TMP/watchdog-store.jar:$BC_JAR:$COROUTINES" com.eafb.WatchdogClientStoreJvmTestKt
