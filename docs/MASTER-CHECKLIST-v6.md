@@ -298,3 +298,7 @@ MFA'li admin pilotu. Gercek v5/main ve canli Worker degismez.
 - [x] Güncel GitHub `WatchdogSnapshotRefresh.kt` SHA `a4575e6711a57b4a121486ac4293616b834ef0d9` yerelde birebir doğrulandı; gerçek kaynak Kotlin 1.9 + coroutines ile derlendi.
 - [x] Test-only snapshot/trust modeli ve sahte HTTPS transport ile **9/9 izole JVM kontrolü geçti**: normal güncelleme, throttle, clock rollback, cache/verifier/transport iptali, varsayılan kapalı yapı, bozuk cache+network ve eşzamanlı mutex.
 - [ ] GitHub'daki gerçek 25+ senaryolu `WatchdogSnapshotRefreshTest.kt` ve BouncyCastle/Android bağımlılıklarıyla tam test hâlâ açık.
+
+## 26.09.2026 — SHA eşleşmeli gerçek offline snapshot testi
+- [x] Güncel `SourceSnapshotTrust.kt` SHA `d20dcc8d3271b29dc79fdb9b7b7728b8036b5d4e`, `SourceSnapshotOfflinePolicy.kt` SHA `17a6a3be1c61d71e933ea18e9ed9c341802da762`, `SourceSnapshotOfflinePolicyTest.kt` SHA `32c4ff47df9f351862ff060de4efb5d0debc5984` birebir yerel kopyalarla doğrulandı.
+- [x] **Gerçek üç Kotlin dosyası**, BouncyCastle 1.80 ve coroutines ile JVM'de **15/15 geçti**; yeni iptal regresyonu, imza, replay, TTL ve adapter sürümü dahil.
