@@ -87,3 +87,9 @@ yol öneki dışına çıkış, kodlanmış yol geçişi ve IP literalini engell
 Ayrı olarak imzalı `WatchdogApprovedAdapterBridge` bu izin denetiminden
 geçmeden hiçbir adaptörü kullanıma vermez. İzin dizininin mevcut olması
 veya buraya bir dosya eklenmesi **tek başına aktivasyon yapmaz**.
+
+## 26.09.2026 — Sunucu imza oncesi ikinci hak kapisi
+
+Yalnizca D1 `integrationApproved=true` veya `approvalRef` degeri, imzali kaynak yayini icin yeterli degildir. Ayrica **release'e gomulu, kaynak ID'sine ozel, tarihli ve sinirli** `APPROVED_SOURCE_GRANTS` kaydi gereklidir. Bu kayit tam host listesi, URL yol oneki, film/dizi kapsami, adaptor surumu, kanonik `rights/YYYY/<id>.md` belge kimligi, inceleme tarihi ve bitis tarihini icerir. Kayit en fazla 366 gun gecerli olabilir; imzali snapshot'in bitis saati izin bitisini asamaz. Beklenmeyen alan, yinelenen izin, baska kaynagin belgesi veya onaylanmamis host/yol yayina cikamaz.
+
+**Guncel production durum:** `APPROVED_RIGHTS_REFS=[]`, `APPROVED_SOURCE_GRANTS=[]`, Android `ReviewedSourcePermits.bundled=[]`. Bu uc listeye kullanici ve hak sahibi onayi olmadan kayit eklenmez. Kayit bicimini test eden `licensed-demo` verileri gercek izin, lisans veya gercek ag erisimi degildir. Gercek uzak-IP pinning transport, izole Wrangler/D1 ve Mi Box dogrulamasi tamamlanmadan kaynak taramasi aktif edilmez.
