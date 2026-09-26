@@ -127,3 +127,38 @@ test("release grants reject unexpected secret-bearing fields and duplicate refs"
     Array.from({length:33},()=>grant())),
     /invalid_reviewed_source_grant/);
 });
+
+
+test("adversarial signed URL aliases never escape the reviewed HTTPS path",()=>{
+  const scoped={...grant(),approvedPathPrefix:"/public"};
+  const unsafe=[
+    "http://licensed.example.com/public",
+    "https://LICENSED.example.com/public",
+    "https://licensed.example.com:443/public",
+    "https://user@licensed.example.com/public",
+    "https://licensed.example.com.evil.org/public",
+    "https://licensed.example.com/publicity",
+    "https://licensed.example.com/private",
+    "https://licensed.example.com/public/../private",
+    "https://licensed.example.com/public/./child",
+    "https://licensed.example.com/public/%2e%2e/private",
+    "https://licensed.example.com/public/%2Fprivate",
+    "https://licensed.example.com/public//private",
+    "https://licensed.example.com/public?redirect=evil",
+    "https://licensed.example.com/public#fragment",
+    "https://licensed.example.com/public?",
+    "https://licensed.example.com/public#",
+    "https://licensed.example.com/public\\\\evil",
+  ];
+  for(const target of unsafe){
+    const record={...row(),config:{...row().config,currentUrl:target}};
+    const payload={...snapshot(),sources:[{...item(),baseUrl:target}]};
+    assert.throws(()=>assertReviewedPublication([record],payload,approved,[scoped]),
+      /unreviewed_production_snapshot/,target);
+  }
+  const safe="https://licensed.example.com/public/a..b";
+  assert.equal(assertReviewedPublication([
+    {...row(),config:{...row().config,currentUrl:safe}}],
+    {...snapshot(),sources:[{...item(),baseUrl:safe}]},
+    approved,[scoped]),true);
+});
