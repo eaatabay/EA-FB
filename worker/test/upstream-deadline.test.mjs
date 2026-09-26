@@ -42,3 +42,12 @@ test("invalid timeouts and callbacks are rejected",async()=>{
   await assert.rejects(withUpstreamDeadline(null,100),
     /invalid_upstream_deadline/);
 });
+
+test("byte-budget rejection aborts the still-open upstream fetch",async()=>{
+  let aborted=false;
+  await assert.rejects(withUpstreamDeadline(signal=>{
+    signal.addEventListener("abort",()=>{aborted=true;},{once:true});
+    throw new Error("upstream_too_large");
+  },100),/upstream_too_large/);
+  assert.equal(aborted,true);
+});
