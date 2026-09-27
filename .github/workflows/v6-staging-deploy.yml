@@ -1,0 +1,62 @@
+# Manual staging-only deployment. Never deploy production, never expose TMDb secrets.
+name: EA-FB V6 staging deploy
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ea-fb-v6-staging-deploy
+  cancel-in-progress: false
+jobs:
+  deploy-staging:
+    if: github.ref == 'refs/heads/feature/detail-dual-ratings-v6'
+    runs-on: ubuntu-latest
+    environment: v6-staging
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Check staging-only configuration and Cloudflare credentials
+        env:
+          CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN_V6_STAGING }}
+          CF_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID_V6_STAGING }}
+        run: |
+          test -n "$CF_TOKEN" && test -n "$CF_ACCOUNT" || {
+            echo "::error::Missing V6 staging-only Cloudflare GitHub secrets"; exit 2;
+          }
+          node --input-type=module - <<'JS'
+          import {readFileSync} from 'node:fs';
+          const prod=JSON.parse(readFileSync('worker/wrangler.jsonc'));
+          const stage=JSON.parse(readFileSync('worker/wrangler.staging.jsonc'));
+          if (stage.name !== 'ea-fb-catalog-v6-staging' ||
+              prod.name === stage.name || 'routes' in stage ||
+              'd1_databases' in stage || 'zone_id' in stage) {
+            throw Error('Refusing non-isolated staging configuration');
+          }
+          console.log('PASS: staging-only Worker name, no production routes or D1');
+          JS
+      - name: Test V6 Worker
+        working-directory: worker
+        run: |
+          npm install --no-audit --no-fund
+          npm test
+      - name: Deploy V6 staging Worker only
+        working-directory: worker
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN_V6_STAGING }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID_V6_STAGING }}
+          WRANGLER_SEND_METRICS: "false"
+        run: npx wrangler deploy --config wrangler.staging.jsonc
+      - name: Verify staging health (no secrets in logs)
+        env:
+          STAGING_URL: ${{ vars.EA_FB_V6_STAGING_URL }}
+        run: |
+          if [[ -z "$STAGING_URL" ]]; then
+            echo "Staging deployed. Configure environment variable EA_FB_V6_STAGING_URL to enable health smoke test."
+            exit 0
+          fi
+          EA_FB_V6_STAGING_URL="$STAGING_URL" bash scripts/smoke-v6-staging.sh
