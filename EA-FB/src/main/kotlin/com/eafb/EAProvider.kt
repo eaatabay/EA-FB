@@ -543,8 +543,13 @@ class EAProvider : MainAPI() {
         val seriesNote = if (collectionCards.size >= 2)
             collectionLabel + "\n" + "İlk " + collectionCards.size + " kart Önerilenler bölümünde vizyon sırasıyla."
         else null
+        // Some TV layouts hide detail tags below the fold. Put the clearly
+        // sourced ratings at the top of the visible description as well.
+        // Never substitute TMDb's vote_average for an unavailable IMDb score.
+        val ratingSummary = ratingBadges.takeIf { it.isNotEmpty() }
+            ?.joinToString("  •  ")
         val combinedPlot = listOfNotNull(
-            upcomingLabel, overview, director, seriesNote
+            ratingSummary, upcomingLabel, overview, director, seriesNote
         ).joinToString("\n\n")
         val recs = recommendations(item, media, tmdbId)
         // The stock CloudStream LoadResponse exposes one recommendation rail,
