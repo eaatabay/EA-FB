@@ -14,7 +14,8 @@ node --test \
   source-watchdog/test/catalog-draft-cli.test.mjs \
   source-watchdog/test/catalog-reserved-ids.test.mjs \
   source-watchdog/test/settings-refresh-wiring.test.mjs \
-  source-watchdog/test/detail-ratings-collection-wiring.test.mjs
+  source-watchdog/test/detail-ratings-collection-wiring.test.mjs \
+  source-watchdog/test/android-worker-catalog-contract.test.mjs
 kotlinc EA-FB/src/main/kotlin/com/eafb/Domain.kt \
   EA-FB/src/main/kotlin/com/eafb/CatalogShelfPolicy.kt \
   core-tests/CatalogShelfPolicyTest.kt -include-runtime -d "$TMP/shelves.jar"
