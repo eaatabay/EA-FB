@@ -13,6 +13,17 @@ cd "$(dirname "$0")/.."
   exit 0
 }
 command -v python3 >/dev/null || { echo "Python 3 required" >&2; exit 2; }
+command -v curl >/dev/null || { echo "curl required" >&2; exit 2; }
+# Refuse to build a test plugin when its dedicated relay is unconfigured.
+health="$(curl --fail --silent --show-error --max-time 20 \
+  https://ea-fb-catalog-v6-staging.eaatabay.workers.dev/health)"
+HEALTH_JSON="$health" python3 - <<'PY'
+import json,os
+data=json.loads(os.environ["HEALTH_JSON"])
+assert data.get("status")=="ready" and data.get("service")=="EA-FB catalog", \
+    "Staging Worker not ready; refusing Android build"
+print("PASS: live V6 staging Worker ready")
+PY
 readonly tmp="$(mktemp -d)"
 readonly policy="EA-FB/src/main/kotlin/com/eafb/CatalogRelayPolicy.kt"
 readonly provider="EA-FB/src/main/kotlin/com/eafb/EAProvider.kt"
