@@ -12,6 +12,9 @@ on:
       - "scripts/test-v6-catalog-local.sh"
       - "scripts/deploy-v6-staging.sh"
       - "scripts/smoke-v6-staging.sh"
+      - "scripts/build-v6-staging-codespace.sh"
+      - "scripts/prepare-v6-staging-overlay.py"
+      - "config/backend.v6-staging.json"
   workflow_dispatch:
 permissions:
   contents: read
@@ -39,6 +42,8 @@ jobs:
         run: |
           java -version
           kotlinc -version
+      - name: V6 staging Android build isolation tests
+        run: node --test source-watchdog/test/v6-staging-android-build.test.mjs
       - name: Android catalog policies (offline JVM)
         run: bash scripts/test-v6-catalog-local.sh
       - name: Install local-only watchdog test tools
