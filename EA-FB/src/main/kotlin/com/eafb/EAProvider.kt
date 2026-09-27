@@ -231,6 +231,22 @@ class EAProvider : MainAPI() {
                 results = (results + cards(extra)).distinctBy { it.url }
                 if (results.isNotEmpty()) break
         }
+        // Platform/genre feeds may contain only posterless entries on page 1.
+        // Preserve the requested provider/genre and scan two further pages
+        // before treating the rail as empty. Never invent a different catalog.
+        if (results.isEmpty() && extraPages.isEmpty()) {
+            val sparsePages = CatalogPagePolicy.extraSparseDiscoverPages(
+                page, response?.optInt("total_pages", 0) ?: 0,
+                true, category.tmdbPath.startsWith("/discover/"),
+                response?.optJSONArray("results") != null
+            )
+            for (extraPage in sparsePages) {
+                val extra = getJson(route, extraPage) ?: break
+                scannedExtraPages = true
+                results = (results + cards(extra)).distinctBy { it.url }
+                if (results.isNotEmpty()) break
+            }
+        }
         // A sparse regional provider feed can be empty under date/vote sorting.
         // Preserve the platform rail with clearly labeled popular results rather
         // than silently presenting popular titles as "highest rated" or "newest".
