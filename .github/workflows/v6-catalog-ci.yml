@@ -28,6 +28,12 @@ jobs:
       - name: Worker catalog and ratings tests
         working-directory: worker
         run: npm test
+      - name: Verify Kotlin and Java for Android catalog policy tests
+        run: |
+          java -version
+          kotlinc -version
+      - name: Android catalog policies (offline JVM)
+        run: bash scripts/test-v6-catalog-local.sh
       - name: Install local-only watchdog test tools
         working-directory: source-watchdog
         run: npm install --no-audit --no-fund
