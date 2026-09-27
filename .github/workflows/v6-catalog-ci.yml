@@ -43,7 +43,10 @@ jobs:
           java -version
           kotlinc -version
       - name: V6 staging Android build isolation tests
-        run: node --test source-watchdog/test/v6-staging-android-build.test.mjs
+        run: |
+          bash -n scripts/build-v6-staging-codespace.sh
+          python -m py_compile scripts/prepare-v6-staging-overlay.py
+          node --test source-watchdog/test/v6-staging-android-build.test.mjs
       - name: Android catalog policies (offline JVM)
         run: bash scripts/test-v6-catalog-local.sh
       - name: Install local-only watchdog test tools
