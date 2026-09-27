@@ -5,6 +5,11 @@ on:
     branches: [feature/detail-dual-ratings-v6]
     paths:
       - ".github/workflows/v6-catalog-ci.yml"
+      - "EA-FB/src/main/kotlin/com/eafb/**"
+      - "core-tests/**"
+      - "worker/**"
+      - "source-watchdog/**"
+      - "scripts/test-v6-catalog-local.sh"
   workflow_dispatch:
 permissions:
   contents: read
