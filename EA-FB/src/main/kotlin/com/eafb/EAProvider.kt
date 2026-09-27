@@ -565,7 +565,7 @@ class EAProvider : MainAPI() {
         val ratingSummary = ratingBadges.takeIf { it.isNotEmpty() }
             ?.joinToString("  •  ")
         val combinedPlot = listOfNotNull(
-            ratingSummary, upcomingLabel, overview, director, seriesNote
+            ratingSummary, seriesNote, upcomingLabel, overview, director
         ).joinToString("\n\n")
         val recs = recommendations(item, media, tmdbId)
         // The stock CloudStream LoadResponse exposes one recommendation rail,
