@@ -234,7 +234,7 @@ class EAProvider : MainAPI() {
         // A sparse regional provider feed can be empty under date/vote sorting.
         // Preserve the platform rail with clearly labeled popular results rather
         // than silently presenting popular titles as "highest rated" or "newest".
-        if (page == 1 && results.isEmpty() && response?.optJSONArray("results") != null &&
+        if (page == 1 && results.isEmpty() &&
             route != category.tmdbPath && category.tmdbPath.startsWith("/discover/")) {
             val fallback = getJson(
                 CatalogSortPolicy.route(category.tmdbPath, category.kind, CatalogSortMode.POPULAR), page
