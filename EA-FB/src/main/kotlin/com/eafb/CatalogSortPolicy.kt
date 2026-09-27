@@ -17,6 +17,9 @@ enum class CatalogSortMode(val key: String, val title: String) {
 object CatalogSortPolicy {
     fun route(path: String, kind: MediaKind, mode: CatalogSortMode): String {
         if (!path.startsWith("/discover/movie?") && !path.startsWith("/discover/tv?")) return path
+        // POPULAR must use the exact previously working v5 route. Do not
+        // add a redundant sort parameter to every platform/genre request.
+        if (mode == CatalogSortMode.POPULAR) return path
         val sortBy = when (mode) {
             CatalogSortMode.POPULAR -> "popularity.desc"
             CatalogSortMode.NEWEST -> if (kind == MediaKind.SERIES)
@@ -32,8 +35,7 @@ object CatalogSortPolicy {
         // reject new date-bound parameters. EAProvider filters future titles
         // locally; a labeled popular fallback handles empty newest pages.
         // Sparse regional provider feeds should not vanish due to a 100-vote gate.
-        val minimumVotes = if (mode == CatalogSortMode.HIGHEST_RATED)
-            "&vote_count.gte=10" else ""
-        return parts.joinToString("&") + "&sort_by=" + sortBy + minimumVotes
+        // Deployed v5 relay rejects vote_count.gte; do not require a v6 deploy.
+        return parts.joinToString("&") + "&sort_by=" + sortBy
     }
 }
