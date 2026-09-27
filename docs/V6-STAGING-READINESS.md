@@ -19,7 +19,7 @@ The V6 Android client still reads `main/config/backend.json`, which points to th
 
 1. Keep `main`, the blue V5 plugin, production Worker, production D1 and existing public URLs unchanged.
 2. Provision a **separate staging Worker name and URL** with staging-only secrets; never commit keys. Do not change production `wrangler.jsonc` or production bindings.
-3. Configure a V6-only staging backend URL; verify it does not point to production for V6-only API validation.
+3. The client pins `CatalogRelayPolicy.approvedOrigin` to the production V5 Worker and reads `main/config/backend.json`. A separate V6 test build must deliberately pin the staging origin **in its own reviewed source/config**, not through an untrusted remote URL override. Verify the red test build cannot silently redirect the blue V5 client.
 4. Run V6 Worker tests, Android offline catalog policy tests, Watchdog local acceptance and a complete Android plugin build.
 5. Verify staging `/health`, provider and genre `/v1/discover`, sorted movie/TV routes, `/v1/collection/{id}` and OMDb enrichment with a legitimate IMDb ID. Test absent/invalid OMDb key: IMDb badge must be absent, not copied from TMDb.
 6. Install V6 as a separate red test plugin on Mi Box; verify Netflix, Amazon, genre shelves, TMDb/IMDb labels and franchise order. Keep the blue V5 plugin installed.
