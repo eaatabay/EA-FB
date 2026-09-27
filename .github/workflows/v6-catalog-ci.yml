@@ -10,6 +10,8 @@ on:
       - "worker/**"
       - "source-watchdog/**"
       - "scripts/test-v6-catalog-local.sh"
+      - "scripts/deploy-v6-staging.sh"
+      - "scripts/smoke-v6-staging.sh"
   workflow_dispatch:
 permissions:
   contents: read
