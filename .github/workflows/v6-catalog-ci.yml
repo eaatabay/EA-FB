@@ -1,0 +1,40 @@
+# Isolated public CI for EA-FB v6. No deploy, secrets, or D1 writes.
+name: EA-FB v6 catalog and watchdog CI
+on:
+  push:
+    branches: [feature/detail-dual-ratings-v6]
+    paths:
+      - ".github/workflows/v6-catalog-ci.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: eafb-v6-catalog-ci-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  catalog-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Worker catalog and ratings tests
+        working-directory: worker
+        run: npm test
+      - name: Install local-only watchdog test tools
+        working-directory: source-watchdog
+        run: npm install --no-audit --no-fund
+      - name: Watchdog local release acceptance
+        working-directory: source-watchdog
+        env:
+          CI: "true"
+          NO_D1_WARNING: "true"
+          WRANGLER_SEND_METRICS: "false"
+        run: npm run test:release-local
