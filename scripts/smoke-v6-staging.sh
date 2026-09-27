@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+# V6 staging smoke test: read-only GETs, no credentials printed, no deployment.
+set -euo pipefail
+: "${EA_FB_V6_STAGING_URL:?Set EA_FB_V6_STAGING_URL to the confirmed staging Worker origin}"
+url="${EA_FB_V6_STAGING_URL%/}"
+case "$url" in
+  https://ea-fb-catalog.eaatabay.workers.dev|https://ea-fb-catalog.eaatabay.workers.dev/*)
+    echo "BLOCKED: production Worker must never be used as staging" >&2; exit 2 ;;
+  https://ea-fb-catalog-v6-staging.*.workers.dev) ;;
+  *) echo "BLOCKED: expected a dedicated ea-fb-catalog-v6-staging workers.dev origin" >&2; exit 2 ;;
+esac
+command -v curl >/dev/null || { echo "curl required" >&2; exit 2; }
+check() {
+  local path="$1" file code
+  file="$(mktemp)"
+  code="$(curl --silent --show-error --location-trusted=false --max-redirs 0 --max-time 20 \
+    --output "$file" --write-out '%{http_code}' "$url$path")" || { rm -f "$file"; return 1; }
+  if [[ "$code" != 200 ]]; then
+    echo "FAIL: staging $path returned HTTP $code" >&2; rm -f "$file"; return 1
+  fi
+  if ! python3 - "$file" "$path" <<'PY'
+import json,sys
+with open(sys.argv[1],encoding="utf-8") as f: data=json.load(f)
+path=sys.argv[2]
+if path=="/health":
+    assert data.get("status")=="ready" and data.get("service")=="EA-FB catalog"
+elif path.startswith("/v1/discover/"):
+    assert isinstance(data.get("results"),list) and isinstance(data.get("page"),int)
+elif path.startswith("/v1/collection/"):
+    assert isinstance(data.get("parts"),list)
+else:
+    assert isinstance(data,dict) and data.get("id")
+PY
+  then
+    echo "FAIL: staging $path returned invalid catalog shape" >&2
+    rm -f "$file"; return 1
+  fi
+  rm -f "$file"
+  echo "PASS: $path"
+}
+check "/health"
+check "/v1/discover/movie?with_watch_providers=8&watch_region=TR&with_watch_monetization_types=flatrate&language=tr-TR"
+check "/v1/discover/tv?with_watch_providers=119&watch_region=TR&with_watch_monetization_types=flatrate&language=tr-TR"
+check "/v1/discover/movie?with_genres=878&sort_by=vote_average.desc&vote_count.gte=100&language=tr-TR"
+check "/v1/discover/tv?sort_by=first_air_date.desc&first_air_date.lte=2026-09-27&language=tr-TR"
+# The official Spider-Man (2002) trilogy's TMDb collection ID is 556.
+check "/v1/collection/556?language=tr-TR"
+echo "PASS: dedicated V6 staging catalog smoke checks"
