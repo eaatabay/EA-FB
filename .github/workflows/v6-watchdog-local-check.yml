@@ -1,14 +1,10 @@
 # Opt-in validation for the isolated v6 Source Watchdog. This workflow
 # NEVER deploys, provisions a D1 database or accesses Cloudflare secrets.
-# One-time branch push trigger to verify public Actions availability.
-# No schedule or production deploy.
+# Opt-in only: PR or explicitly requested manual run.
+# No push/schedule triggers or production deploy.
 name: EA-FB v6 Watchdog local gate
 
 on:
-  push:
-    branches: [feature/detail-dual-ratings-v6]
-    paths:
-      - ".github/workflows/v6-watchdog-local-check.yml"
   pull_request:
     branches: [main]
     paths:
@@ -31,8 +27,6 @@ jobs:
       (github.event_name == 'pull_request' &&
        github.event.pull_request.head.repo.full_name == github.repository &&
        github.head_ref == 'feature/detail-dual-ratings-v6') ||
-      (github.event_name == 'push' &&
-       github.ref_name == 'feature/detail-dual-ratings-v6') ||
       (github.event_name == 'workflow_dispatch' &&
        github.ref_name == 'feature/detail-dual-ratings-v6')
     runs-on: ubuntu-latest
