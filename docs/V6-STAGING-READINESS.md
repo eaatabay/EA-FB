@@ -28,3 +28,11 @@ The V6 Android client still reads `main/config/backend.json`, which points to th
 ## Current automated verification
 
 `scripts/test-v6-catalog-local.sh` and `.github/workflows/v6-catalog-ci.yml` cover Worker, Android catalog policy and Watchdog tests. They do **not** prove Android plugin compilation, actual Cloudflare deployment revision, OMDb configuration or Mi Box UI behavior.
+
+## Staging configuration prepared (not deployed)
+
+- `worker/wrangler.staging.jsonc` uses a separate `ea-fb-catalog-v6-staging` Worker name and separate rate-limit namespaces. No production D1 bindings or secrets are copied.
+- To deploy after reviewing the Cloudflare account, run from `worker/`: `npx wrangler deploy --config wrangler.staging.jsonc`. **Do not run this against the production config.** Cloudflare credentials and `TMDB_READ_ACCESS_TOKEN` must be configured for staging separately; `OMDB_API_KEY` is optional for authentic IMDb ratings.
+- The actual workers.dev subdomain must be confirmed from Cloudflare; do not assume the URL exists before deployment.
+- Once deployed, run `EA_FB_V6_STAGING_URL=https://ea-fb-catalog-v6-staging.<confirmed-subdomain>.workers.dev bash scripts/smoke-v6-staging.sh` from the repo root. This script refuses the production origin and makes GET requests only.
+- **No red Mi Box APK is ready yet.** The red V6 test build must pin the confirmed staging origin and staging-only config in reviewed code. The production V5 plugin and `main/config/backend.json` stay unchanged.
