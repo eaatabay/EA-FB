@@ -16,3 +16,10 @@ test("franchise detail labels only reference visible official collection artwork
   assert.match(provider,/if \(ownId !in visibleIds\) return Pair\(null, emptyList\(\)\)/);
   assert.match(provider,/val movieRelated = \(collectionCards \+ recs\)\.distinctBy/);
 });
+
+test("source-labeled ratings remain visible at the top of detail description",()=>{
+  assert.match(provider,/val ratingSummary = ratingBadges\.takeIf \{ it\.isNotEmpty\(\) \}/);
+  assert.match(provider,/val combinedPlot = listOfNotNull\(\s*ratingSummary, upcomingLabel, overview, director, seriesNote/);
+  assert.match(provider,/imdbRating\?\.let \{ "IMDb " \+ scoreText\(it\)/);
+  assert.match(provider,/tmdbRating\?\.let \{ "TMDb " \+ scoreText\(it\)/);
+});
