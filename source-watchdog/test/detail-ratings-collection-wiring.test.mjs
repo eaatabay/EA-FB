@@ -23,3 +23,9 @@ test("source-labeled ratings remain visible at the top of detail description",()
   assert.match(provider,/imdbRating\?\.let \{ "IMDb " \+ scoreText\(it\)/);
   assert.match(provider,/tmdbRating\?\.let \{ "TMDb " \+ scoreText\(it\)/);
 });
+
+test("posterless first-page platform and genre rails use bounded same-route recovery",()=>{
+  assert.match(provider,/CatalogPagePolicy\.extraSparseDiscoverPages\(/);
+  assert.match(provider,/val extra = getJson\(route, extraPage\)/);
+  assert.match(provider,/if \(results\.isNotEmpty\(\)\) break/);
+});
