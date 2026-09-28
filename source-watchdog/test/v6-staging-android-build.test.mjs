@@ -31,11 +31,11 @@ test("V6 keeps disabled shelves registered so later re-enabling can restore them
   const provider = read("EA-FB/src/main/kotlin/com/eafb/EAProvider.kt");
   const settings = read("EA-FB/src/main/kotlin/com/eafb/EASettings.kt");
   const dialog = read("EA-FB/src/main/kotlin/com/eafb/EASettingsDialog.kt");
-  assert.match(provider, /\*categories\.map \{ it\.id to it\.title \}\.toTypedArray\(\)/);
+  assert.match(provider, /\*categories\.map \{ "\$\{it\.id\}\|cfg=\$\{EASettings\.homeRevision\(\)\}" to it\.title \}\.toTypedArray\(\)/);
   assert.doesNotMatch(provider, /categories\.filter \{ EASettings\.categoryEnabled\(it\.id\) \}/);
   assert.match(provider, /if \(!EASettings\.categoryEnabled\(category\.id\)\)/);
   assert.match(settings, /fun setAllCategories\(enabled: Boolean\)/);
-  assert.match(settings, /fun setCategoryEnabled\(id: String, enabled: Boolean\)/);
+  assert.match(settings, /fun setCategoryEnabled\(id: String, enabled: Boolean\)/);\n  assert.match(settings, /fun homeRevision\(\): String/);\n  assert.match(provider, /request\.data\.substringBefore\("\\|cfg="\)/);
   assert.match(dialog, /EASettings\.setCategoryEnabled\(category\.id, state\)/);
 });
 
