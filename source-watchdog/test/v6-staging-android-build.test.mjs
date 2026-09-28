@@ -18,6 +18,9 @@ test("red V6 staging build overlays only the two Android relay references", () =
   assert.match(overlay,/policy\.count\(old_pin\) != 1/);
   assert.match(overlay,/provider\.count\(old_config\) != 1/);
   assert.match(overlay,/config\/backend\.v6-staging\.json/);
+  assert.match(overlay,/BUILD\.write_text/);
+  assert.match(overlay,/version = 7/);
+  assert.match(script,/cp "\$tmp\/build\.gradle\.kts" "\$buildfile"/);
   assert.doesNotMatch(script,/wrangler deploy|git push|gh release/);
 });
 test("normal plugin retains production relay pin until explicit staging build",()=>{
@@ -63,4 +66,11 @@ test("official collection cards use a separate CloudStream recommendation group"
   assert.match(provider, /card\.copy\(apiName = it\)/);
   assert.match(provider, /newItem\(part, MediaKind\.MOVIE, artwork, "Film Serisi"\)/);
   assert.match(provider, /collectionCards \+ recs\.filterNot/);
+});
+
+test("empty Turkish Apple and Paramount feeds use an explicitly labeled foreign catalog", () => {
+  const provider = read("EA-FB/src/main/kotlin/com/eafb/EAProvider.kt");
+  assert.match(provider, /category\.id in setOf\("apple-movie", "apple-tv", "paramount-movie", "paramount-tv"\)/);
+  assert.match(provider, /replace\("watch_region=TR", "watch_region=GB"\)/);
+  assert.match(provider, /GB kataloğu; Türkiye erişimi doğrulanmadı/);
 });
