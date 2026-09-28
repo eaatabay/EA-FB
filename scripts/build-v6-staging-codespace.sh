@@ -28,9 +28,11 @@ readonly tmp="$(mktemp -d)"
 readonly policy="EA-FB/src/main/kotlin/com/eafb/CatalogRelayPolicy.kt"
 readonly provider="EA-FB/src/main/kotlin/com/eafb/EAProvider.kt"
 readonly settings="EA-FB/src/main/kotlin/com/eafb/EASettings.kt"
+readonly buildfile="EA-FB/build.gradle.kts"
 cp "$policy" "$tmp/policy.kt"
 cp "$provider" "$tmp/provider.kt"
 cp "$settings" "$tmp/settings.kt"
+cp "$buildfile" "$tmp/build.gradle.kts"
 for f in dist/EA-FB.cs3 dist/plugins.json dist/repo.json; do
   if [[ -f "$f" ]]; then
     mkdir -p "$tmp/$(dirname "$f")"
@@ -41,6 +43,7 @@ restore() {
   cp "$tmp/policy.kt" "$policy"
   cp "$tmp/provider.kt" "$provider"
   cp "$tmp/settings.kt" "$settings"
+  cp "$tmp/build.gradle.kts" "$buildfile"
   for f in dist/EA-FB.cs3 dist/plugins.json dist/repo.json; do
     if [[ -f "$tmp/$f" ]]; then cp "$tmp/$f" "$f"; else rm -f "$f"; fi
   done
