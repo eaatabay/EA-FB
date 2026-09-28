@@ -72,8 +72,11 @@ test("official collection cards use an independent detail row", () => {
   assert.match(rail, /"result_recommendations_holder"/);
   assert.match(rail, /args\.getString\("apiName"\) != PROVIDER/);
   assert.match(rail, /activity\.loadResult\(card\.url, PROVIDER, card\.title\)/);
-  assert.match(rail, /card\.releaseDate/);
-  assert.match(provider, /collection\.releaseDates/);
+  assert.match(rail, /card\\.releaseDate\\?\\.take\\(4\\)\\?\\.toIntOrNull\\(\\)/);
+  assert.match(rail, /posterFrame\\.addView\\(TextView/);
+  assert.match(rail, /setTextColor\\(Color\\.YELLOW\\)/);
+  assert.doesNotMatch(rail, /text = releaseDate/);
+  assert.match(provider, /collection\\.releaseDates/);
   assert.doesNotMatch(provider, /card\.copy\(apiName = it\)/);
   assert.match(provider, /Film Serisi: \$\{cards\.size\} film • vizyon sırası/);
   assert.doesNotMatch(provider, /Serinin Filmleri \(vizyon tarihine göre\):/);
