@@ -13,7 +13,10 @@ on:
       - "scripts/deploy-v6-staging.sh"
       - "scripts/smoke-v6-staging.sh"
       - "scripts/build-v6-staging-codespace.sh"
+      - "scripts/build-codespace.sh"
+      - "scripts/stage-release.py"
       - "scripts/prepare-v6-staging-overlay.py"
+      - "tests/test_stage_release.py"
       - "source-watchdog/test/v6-staging-android-build.test.mjs"
       - "config/backend.v6-staging.json"
   workflow_dispatch:
@@ -47,6 +50,7 @@ jobs:
         run: |
           bash -n scripts/build-v6-staging-codespace.sh
           python -m py_compile scripts/prepare-v6-staging-overlay.py
+          python -m unittest tests.test_stage_release -q
           node --test source-watchdog/test/v6-staging-android-build.test.mjs
       - name: Android catalog policies (offline JVM)
         run: bash scripts/test-v6-catalog-local.sh
