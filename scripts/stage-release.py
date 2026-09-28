@@ -12,7 +12,8 @@ RAW = "https://raw.githubusercontent.com/eaatabay/EA-FB/main/dist"
 ICON = "https://raw.githubusercontent.com/eaatabay/EA-FB/main/assets/ea-fb-logo.png"
 
 
-def stage(root=ROOT):
+def stage(root=ROOT, staging=False):
+    expected_version = 7 if staging else 6
     manifest_file = root / "build" / "plugins.json"
     if (root / "build").is_symlink() or manifest_file.is_symlink() or \
             (root / "EA-FB").is_symlink() or (root / "EA-FB" / "build").is_symlink():
@@ -24,8 +25,8 @@ def stage(root=ROOT):
         raise ValueError("EA-FB must contain exactly one CloudStream plugin")
     entry = entries[0]
     if (not isinstance(entry, dict) or entry.get("internalName") != "EA-FB" or
-            type(entry.get("version")) is not int or entry["version"] != 6):
-        raise ValueError("Expected EA-FB v6 Gradle plugin metadata")
+            type(entry.get("version")) is not int or entry["version"] != expected_version):
+        raise ValueError(f"Expected EA-FB v{expected_version} Gradle plugin metadata")
     binaries = list((root / "EA-FB" / "build").glob("*.cs3"))
     if len(binaries) != 1:
         raise ValueError(f"Expected exactly one compiled .cs3, found {len(binaries)}")
@@ -60,7 +61,7 @@ def stage(root=ROOT):
                 ("name" in package_manifest and package_manifest["name"] != "EA-FB") or
                 ("version" in package_manifest and
                  (type(package_manifest["version"]) is not int or
-                  package_manifest["version"] != 6))):
+                  package_manifest["version"] != expected_version))):
             raise ValueError("Unexpected .cs3 manifest identity or version")
         corrupt_member = archive.testzip()
         if corrupt_member:
@@ -92,7 +93,9 @@ def stage(root=ROOT):
 
 if __name__ == "__main__":
     try:
-        stage()
+        if sys.argv[1:] not in ([], ["--v6-staging"]):
+            raise ValueError("Usage: stage-release.py [--v6-staging]")
+        stage(staging=sys.argv[1:] == ["--v6-staging"])
     except (OSError, ValueError, zipfile.BadZipFile, json.JSONDecodeError) as exc:
         print(f"Release blocked: {exc}", file=sys.stderr)
         sys.exit(1)
