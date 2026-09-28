@@ -13,6 +13,7 @@ import android.os.Looper
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
+import android.widget.FrameLayout
 import android.widget.HorizontalScrollView
 import android.widget.ImageView
 import android.widget.LinearLayout
@@ -138,11 +139,40 @@ internal object FilmSeriesRail {
                     background = if (focused) outline(Color.YELLOW) else null
                 }
             }
+            val posterFrame = FrameLayout(activity)
             val poster = ImageView(activity).apply {
                 scaleType = ImageView.ScaleType.CENTER_CROP
                 background = outline(Color.DKGRAY)
             }
-            tile.addView(poster, LinearLayout.LayoutParams(dp(activity, 116), dp(activity, 174)))
+            posterFrame.addView(
+                poster,
+                FrameLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.MATCH_PARENT
+                )
+            )
+            card.releaseDate?.take(4)?.toIntOrNull()?.let { year ->
+                posterFrame.addView(TextView(activity).apply {
+                    text = year.toString()
+                    setTextColor(Color.YELLOW)
+                    textSize = 12f
+                    setTypeface(null, Typeface.BOLD)
+                    gravity = Gravity.CENTER
+                    setPadding(dp(activity, 6), dp(activity, 2), dp(activity, 6), dp(activity, 2))
+                    background = GradientDrawable().apply {
+                        setColor(Color.rgb(11, 22, 47))
+                        setStroke(1, Color.YELLOW)
+                        cornerRadius = dp(activity, 5).toFloat()
+                    }
+                }, FrameLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                    dp(activity, 25),
+                    Gravity.TOP or Gravity.START
+                ).apply {
+                    setMargins(dp(activity, 6), dp(activity, 6), 0, 0)
+                })
+            }
+            tile.addView(posterFrame, LinearLayout.LayoutParams(dp(activity, 116), dp(activity, 174)))
             loadPoster(card.poster, poster)
             tile.addView(TextView(activity).apply {
                 text = card.title
@@ -152,15 +182,6 @@ internal object FilmSeriesRail {
                 textSize = 13f
                 gravity = Gravity.CENTER
             }, LinearLayout.LayoutParams(dp(activity, 116), dp(activity, 42)))
-            card.releaseDate?.let { releaseDate ->
-                tile.addView(TextView(activity).apply {
-                    text = releaseDate
-                    setTextColor(Color.LTGRAY)
-                    textSize = 12f
-                    gravity = Gravity.CENTER
-                    maxLines = 1
-                }, LinearLayout.LayoutParams(dp(activity, 116), dp(activity, 22)))
-            }
             row.addView(tile, LinearLayout.LayoutParams(dp(activity, 124), ViewGroup.LayoutParams.WRAP_CONTENT))
         }
         column.addView(HorizontalScrollView(activity).apply {
