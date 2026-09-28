@@ -53,11 +53,30 @@ python3 scripts/prepare-v6-staging-overlay.py --verify
 bash scripts/build-codespace.sh
 mkdir -p build/v6-staging-artifacts
 cp dist/EA-FB.cs3 build/v6-staging-artifacts/EA-FB-V6-STAGING.cs3
+cp dist/plugins.json build/v6-staging-artifacts/plugins.json
 python3 - <<'PY'
 from pathlib import Path
 import zipfile
 p=Path('build/v6-staging-artifacts/EA-FB-V6-STAGING.cs3')
 assert p.is_file() and zipfile.is_zipfile(p)
 print(f'PASS: isolated red V6 staging test package: {p} ({p.stat().st_size} bytes)')
+PY
+python3 - <<'PY'
+import json
+from pathlib import Path
+p=Path("build/v6-staging-artifacts/plugins.json")
+entries=json.loads(p.read_text(encoding="utf-8"))
+assert isinstance(entries,list) and len(entries)==1
+e=entries[0]
+e["name"]="EA-FB V6 STAGING"
+e["url"]="https://github.com/eaatabay/EA-FB/releases/download/v6-staging-latest/EA-FB-V6-STAGING.cs3"
+p.write_text(json.dumps(entries,ensure_ascii=False,indent=2)+"\\n",encoding="utf-8")
+Path("build/v6-staging-artifacts/repo.json").write_text(json.dumps({
+  "name":"EA-FB STREAM",
+  "description":"EA-FB V6 staging test repository",
+  "manifestVersion":1,
+  "pluginLists":["https://raw.githubusercontent.com/eaatabay/EA-FB/feature/detail-dual-ratings-v6/dist-v6-staging/plugins.json"]
+},ensure_ascii=False,indent=2)+"\\n",encoding="utf-8")
+print("PASS: V6 web repository manifests prepared")
 PY
 echo "NOT published. V5 dist/ files and production relay pin restored on exit."
