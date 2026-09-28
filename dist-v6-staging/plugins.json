@@ -1,0 +1,17 @@
+[
+  {
+    "fileHash": "",
+    "apiVersion": 1,
+    "repositoryUrl": "https://github.com/eaatabay/EA-FB",
+    "fileSize": 0,
+    "status": 3,
+    "language": "tr",
+    "authors": ["EA-FB"],
+    "tvTypes": ["Movie", "TvSeries", "Live"],
+    "version": 6,
+    "internalName": "EA-FB",
+    "description": "EA-FB V6 staging test build",
+    "url": "https://github.com/eaatabay/EA-FB/releases/download/v6-staging-latest/EA-FB-V6-STAGING.cs3",
+    "name": "EA-FB V6 STAGING"
+  }
+]
