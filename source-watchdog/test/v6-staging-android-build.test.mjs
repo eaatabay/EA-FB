@@ -19,7 +19,7 @@ test("red V6 staging build overlays only the two Android relay references", () =
   assert.match(overlay,/provider\.count\(old_config\) != 1/);
   assert.match(overlay,/config\/backend\.v6-staging\.json/);
   assert.match(overlay,/BUILD\.write_text/);
-  assert.match(overlay,/version = 8/);
+  assert.match(overlay,/version = 9/);
   assert.match(script,/cp "\$tmp\/build\.gradle\.kts" "\$buildfile"/);
   assert.doesNotMatch(script,/wrangler deploy|git push|gh release/);
 });
@@ -61,11 +61,16 @@ test("Apple and Paramount switches retain separate movie/series routes and do no
   assert.match(provider, /route != category\.tmdbPath && category\.tmdbPath\.startsWith\("\/discover\/"\)/);
 });
 
-test("official collection cards use a separate CloudStream recommendation group", () => {
+test("official collection cards use an independent detail row", () => {
   const provider = read("EA-FB/src/main/kotlin/com/eafb/EAProvider.kt");
-  assert.match(provider, /card\.copy\(apiName = it\)/);
-  assert.match(provider, /newItem\(part, MediaKind\.MOVIE, artwork, "Film Serisi"\)/);
-  assert.match(provider, /collectionCards \+ recs\.filterNot/);
+  const rail = read("EA-FB/src/main/kotlin/com/eafb/FilmSeriesRail.kt");
+  const plugin = read("EA-FB/src/main/kotlin/com/eafb/EAPlugin.kt");
+  assert.match(plugin, /FilmSeriesRail\.install\(context\)/);
+  assert.match(provider, /FilmSeriesRail\.publish\(url, collectionCards\.map/);
+  assert.match(provider, /val movieRelated = recs\.filterNot/);
+  assert.match(rail, /parent\.addView\(rail, parent\.indexOfChild\(anchor\)\)/);
+  assert.match(rail, /activity\.loadResult\(card\.url, PROVIDER, card\.title\)/);
+  assert.doesNotMatch(provider, /card\.copy\(apiName = it\)/);
   assert.match(provider, /Film Serisi: \$\{cards\.size\} film • vizyon sırası/);
   assert.doesNotMatch(provider, /Serinin Filmleri \(vizyon tarihine göre\):/);
 });
