@@ -157,8 +157,7 @@ class EAProvider : MainAPI() {
     private fun newItem(
         item: JSONObject,
         fallback: MediaKind,
-        fallbackArtwork: String? = null,
-        recommendationGroup: String? = null
+        fallbackArtwork: String? = null
     ): SearchResponse? {
         // Mixed TMDb feeds also include people; never render actors as movie cards.
         val type = item.optString("media_type")
@@ -172,11 +171,6 @@ class EAProvider : MainAPI() {
         ) ?: CatalogCardPolicy.bestArtwork(fallbackArtwork, null) ?: return null
         return newMovieSearchResponse(title, "$mainUrl/$path/$id", if (kind == MediaKind.SERIES) TvType.TvSeries else TvType.Movie) {
             posterUrl = poster?.let { "https://image.tmdb.org/t/p/w500$it" }
-            // CloudStream TV groups recommendations by SearchResponse.apiName.
-            // Keep ordinary cards under EA-FB, but give official collection
-            // cards a dedicated group so the host renders a selectable
-            // "Film Serisi" recommendation section instead of one mixed rail.
-            recommendationGroup?.let { apiName = it }
             year = mediaYear(item, kind)
             // CloudStream renders one score badge per small poster when the
             // viewer has enabled "Show ratings" in their app preferences.
@@ -426,7 +420,7 @@ class EAProvider : MainAPI() {
                 part.optString("poster_path"), part.optString("backdrop_path"),
                 selectedArtwork
             )
-            newItem(part, MediaKind.MOVIE, artwork, "Film Serisi")
+            newItem(part, MediaKind.MOVIE, artwork)
         }
         if (cards.size < 2) return Pair(null, emptyList())
         // Only label installments that actually have visible artwork cards.
@@ -570,7 +564,7 @@ class EAProvider : MainAPI() {
         // beneath long descriptions; native nextAiring handles near-term dates.
         // Film collection text is a short cue, never a long duplicate title list.
         val seriesNote = if (collectionCards.size >= 2)
-            "Film Serisi • vizyon sırasına göre"
+            collectionLabel + "\n" + "Film serisi kartları aşağıda vizyon sırasıyla gösterilir."
         else null
         // Some TV layouts hide detail tags below the fold. Put the clearly
         // sourced ratings at the top of the visible description as well.
