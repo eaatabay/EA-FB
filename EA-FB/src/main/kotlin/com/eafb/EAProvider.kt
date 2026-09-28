@@ -399,7 +399,8 @@ class EAProvider : MainAPI() {
     private data class FilmCollectionResult(
         val label: String?,
         val cards: List<SearchResponse>,
-        val releaseDates: Map<Int, String>
+        val releaseDates: Map<Int, String>,
+        val ratings: Map<Int, Double>
     )
 
     private suspend fun collectionMovies(
@@ -407,11 +408,11 @@ class EAProvider : MainAPI() {
         ownId: Int
     ): FilmCollectionResult {
         val collectionId = movie.optJSONObject("belongs_to_collection")
-            ?.optInt("id")?.takeIf { it > 0 } ?: return FilmCollectionResult(null, emptyList(), emptyMap())
+            ?.optInt("id")?.takeIf { it > 0 } ?: return FilmCollectionResult(null, emptyList(), emptyMap(), emptyMap())
         val collection = getJson("/collection/$collectionId")
-            ?: return FilmCollectionResult(null, emptyList(), emptyMap())
+            ?: return FilmCollectionResult(null, emptyList(), emptyMap(), emptyMap())
         val parts = collection.optJSONArray("parts")
-            ?: return FilmCollectionResult(null, emptyList(), emptyMap())
+            ?: return FilmCollectionResult(null, emptyList(), emptyMap(), emptyMap())
         val byId = linkedMapOf<Int, JSONObject>()
         for (index in 0 until parts.length()) {
             val part = parts.optJSONObject(index) ?: continue
@@ -432,7 +433,7 @@ class EAProvider : MainAPI() {
         val ordered = sortedParts.mapNotNull { byId[it.id] }
         // One-item "collections" do not make a franchise strip.
         if (ordered.size < 2 || ordered.none { it.optInt("id") == ownId }) {
-            return FilmCollectionResult(null, emptyList(), emptyMap())
+            return FilmCollectionResult(null, emptyList(), emptyMap(), emptyMap())
         }
         // TMDb collection parts can omit the selected film's artwork even
         // when its detail page has a valid poster. Reuse only that same film's
@@ -448,17 +449,21 @@ class EAProvider : MainAPI() {
             )
             newItem(part, MediaKind.MOVIE, artwork)
         }
-        if (cards.size < 2) return FilmCollectionResult(null, emptyList(), emptyMap())
+        if (cards.size < 2) return FilmCollectionResult(null, emptyList(), emptyMap(), emptyMap())
         // Only label installments that actually have visible artwork cards.
         val visibleIds = cards.mapNotNull { it.url.substringAfterLast('/').toIntOrNull() }.toSet()
-        if (ownId !in visibleIds) return FilmCollectionResult(null, emptyList(), emptyMap())
+        if (ownId !in visibleIds) return FilmCollectionResult(null, emptyList(), emptyMap(), emptyMap())
         val releaseDates = sortedParts.mapNotNull { part ->
             FilmCollectionPolicy.displayDate(part.releaseDate)?.let { part.id to it }
+        }.toMap()
+        val ratings = ordered.mapNotNull { part ->
+            ratingValue(part)?.let { part.optInt("id") to it }
         }.toMap()
         return FilmCollectionResult(
             "Film Serisi: ${cards.size} film • vizyon sırası",
             cards,
-            releaseDates
+            releaseDates,
+            ratings
         )
     }
 
@@ -576,7 +581,7 @@ class EAProvider : MainAPI() {
         // chips, so details deliberately show the chips only (no native score).
         val collection = if (!isSeries) {
             collectionMovies(item, tmdbId)
-        } else FilmCollectionResult(null, emptyList(), emptyMap())
+        } else FilmCollectionResult(null, emptyList(), emptyMap(), emptyMap())
         val collectionLabel = collection.label
         val collectionCards = collection.cards
         FilmSeriesRail.publish(url, collectionCards.map { card ->
@@ -585,7 +590,8 @@ class EAProvider : MainAPI() {
                 card.name,
                 card.url,
                 card.posterUrl,
-                id?.let(collection.releaseDates::get)
+                id?.let(collection.releaseDates::get),
+                id?.let(collection.ratings::get)
             )
         })
         val nextAir = if (isSeries) upcomingEpisode(item) else null
