@@ -15,7 +15,7 @@ test("franchise detail cards only reference visible official collection artwork"
   assert.match(provider,/Film Serisi: \$\{cards\.size\} film • vizyon sırası/);
   assert.match(provider,/if \(ownId !in visibleIds\) return Pair\(null, emptyList\(\)\)/);
   assert.match(provider,/val collectionUrls = collectionCards\.map \{ it\.url \}\.toSet\(\)/);
-  assert.match(provider,/val movieRelated = \(collectionCards \+ recs\.filterNot/);
+  assert.match(provider,/val movieRelated = recs\.filterNot/);
   assert.doesNotMatch(provider,/movieRelated.*take\(32\)/);
 });
 
