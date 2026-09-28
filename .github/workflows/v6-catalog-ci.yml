@@ -102,6 +102,19 @@ jobs:
           retention-days: 7
       - name: Publish isolated V6 staging web repository
         run: |
+          python3 - <<'PY'
+          import hashlib, json
+          from pathlib import Path
+          base = Path('build/v6-staging-artifacts')
+          repo = json.loads((base / 'repo.json').read_text())
+          plugin = json.loads((base / 'plugins.json').read_text())[0]
+          package = base / 'EA-FB-V6-STAGING.cs3'
+          assert repo['name'] == 'EA-FB STREAM'
+          assert plugin['name'] == 'EA-FB V6 STAGING'
+          assert plugin['fileSize'] == package.stat().st_size
+          assert plugin['fileHash'] == 'sha256-' + hashlib.sha256(package.read_bytes()).hexdigest()
+          print('Validated V6 staging manifests and package hash')
+          PY
           mkdir -p dist-v6-staging
           cp build/v6-staging-artifacts/EA-FB-V6-STAGING.cs3 dist-v6-staging/EA-FB-V6-STAGING.cs3
           cp build/v6-staging-artifacts/plugins.json dist-v6-staging/plugins.json
