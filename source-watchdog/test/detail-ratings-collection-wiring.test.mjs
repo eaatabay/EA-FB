@@ -9,10 +9,10 @@ test("IMDb title badge requires independently sourced OMDb score",()=>{
   assert.match(worker,/result\.ea_fb_ratings = \{ imdb: parsed\.rating, source: "OMDb API" \}/);
   assert.match(worker,/const hadUntrustedRating = Object\.hasOwn\(result, "ea_fb_ratings"\)/);
 });
-test("franchise detail labels only reference visible official collection artwork",()=>{
+test("franchise detail cards only reference visible official collection artwork",()=>{
   assert.match(provider,/belongs_to_collection/);
   assert.match(provider,/FilmCollectionPolicy\.chronological/);
-  assert.match(provider,/FilmCollectionPolicy\.visibleChronology/);
+  assert.match(provider,/Film Serisi: \$\{cards\.size\} film • vizyon sırası/);
   assert.match(provider,/if \(ownId !in visibleIds\) return Pair\(null, emptyList\(\)\)/);
   assert.match(provider,/val collectionUrls = collectionCards\.map \{ it\.url \}\.toSet\(\)/);
   assert.match(provider,/val movieRelated = \(collectionCards \+ recs\.filterNot/);
@@ -33,7 +33,7 @@ test("posterless first-page platform and genre rails use bounded same-route reco
 });
 
 test("chronological film series cue precedes long synopsis in details",()=>{
-  assert.match(provider,/val seriesNote = if \(collectionCards\.size >= 2\)/);
+  assert.match(provider,/val seriesNote = collectionLabel/);
   assert.match(provider,/ratingSummary, seriesNote, upcomingLabel, overview, director/);
   assert.match(provider,/recommendations = movieRelated/);
 });
