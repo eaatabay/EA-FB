@@ -157,7 +157,8 @@ class EAProvider : MainAPI() {
     private fun newItem(
         item: JSONObject,
         fallback: MediaKind,
-        fallbackArtwork: String? = null
+        fallbackArtwork: String? = null,
+        recommendationGroup: String? = null
     ): SearchResponse? {
         // Mixed TMDb feeds also include people; never render actors as movie cards.
         val type = item.optString("media_type")
@@ -169,7 +170,7 @@ class EAProvider : MainAPI() {
         val poster = CatalogCardPolicy.bestArtwork(
             item.optString("poster_path"), item.optString("backdrop_path")
         ) ?: CatalogCardPolicy.bestArtwork(fallbackArtwork, null) ?: return null
-        return newMovieSearchResponse(title, "$mainUrl/$path/$id", if (kind == MediaKind.SERIES) TvType.TvSeries else TvType.Movie) {
+        val card = newMovieSearchResponse(title, "$mainUrl/$path/$id", if (kind == MediaKind.SERIES) TvType.TvSeries else TvType.Movie) {
             posterUrl = poster?.let { "https://image.tmdb.org/t/p/w500$it" }
             year = mediaYear(item, kind)
             // CloudStream renders one score badge per small poster when the
@@ -177,6 +178,9 @@ class EAProvider : MainAPI() {
             // TMDb list results contain TMDb scores; no IMDb score is invented.
             score = ratingValue(item)?.let { Score.from10(it) }
         }
+        // apiName is immutable on SearchResponse. MovieSearchResponse is a data
+        // class, so copy the finished card into the host's collection group.
+        return recommendationGroup?.let { card.copy(apiName = it) } ?: card
     }
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
@@ -420,7 +424,7 @@ class EAProvider : MainAPI() {
                 part.optString("poster_path"), part.optString("backdrop_path"),
                 selectedArtwork
             )
-            newItem(part, MediaKind.MOVIE, artwork)
+            newItem(part, MediaKind.MOVIE, artwork, "Film Serisi")
         }
         if (cards.size < 2) return Pair(null, emptyList())
         // Only label installments that actually have visible artwork cards.
