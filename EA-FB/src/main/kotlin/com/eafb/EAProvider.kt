@@ -449,12 +449,7 @@ class EAProvider : MainAPI() {
         // Only label installments that actually have visible artwork cards.
         val visibleIds = cards.mapNotNull { it.url.substringAfterLast('/').toIntOrNull() }.toSet()
         if (ownId !in visibleIds) return Pair(null, emptyList())
-        val labels = FilmCollectionPolicy.visibleChronology(sortedParts, visibleIds)
-            .joinToString(" • ") { part ->
-                val year = part.releaseDate?.take(4)?.toIntOrNull()
-                if (year != null) "${part.title} ($year)" else part.title
-            }
-        return Pair("Serinin Filmleri (vizyon tarihine göre): $labels", cards)
+        return Pair("Film Serisi: ${cards.size} film • vizyon sırası", cards)
     }
 
     private fun upcomingEpisode(item: JSONObject): EpisodeAirPolicy.Airing? =
@@ -586,9 +581,7 @@ class EAProvider : MainAPI() {
         // Put a distant premiere date before the plot where it cannot be lost
         // beneath long descriptions; native nextAiring handles near-term dates.
         // Film collection text is a short cue, never a long duplicate title list.
-        val seriesNote = if (collectionCards.size >= 2)
-            collectionLabel + "\n" + "Film serisi kartları aşağıda vizyon sırasıyla gösterilir."
-        else null
+        val seriesNote = collectionLabel
         // Some TV layouts hide detail tags below the fold. Put the clearly
         // sourced ratings at the top of the visible description as well.
         // Never substitute TMDb's vote_average for an unavailable IMDb score.
