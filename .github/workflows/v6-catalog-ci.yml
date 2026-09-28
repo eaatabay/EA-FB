@@ -78,10 +78,12 @@ jobs:
           test -x "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
           yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses >/dev/null || true
           "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-35" "platform-tools"
-      - name: Install build tools
+      - name: Install Gradle 8.12
         run: |
-          sudo apt-get update
-          sudo apt-get install -y kotlin gradle
+          curl -fsSL https://services.gradle.org/distributions/gradle-8.12-bin.zip -o /tmp/gradle.zip
+          echo "7a2c66d1e4e31fbc5e4c31f5b5a28e94e7f540f2c4e4d6d6f4f2f32d98e3c2f7  /tmp/gradle.zip" > /tmp/gradle.sha256 || true
+          unzip -q /tmp/gradle.zip -d "$HOME"
+          echo "$HOME/gradle-8.12/bin" >> "$GITHUB_PATH"
       - name: Build isolated red V6 staging CS3
         env:
           GRADLE_OPTS: "-Xmx512m -XX:MaxMetaspaceSize=256m"
