@@ -15,6 +15,7 @@ on:
       - "scripts/build-v6-staging-codespace.sh"
       - "scripts/prepare-v6-staging-overlay.py"
       - "config/backend.v6-staging.json"
+      - "dist-v6-staging/**"
   workflow_dispatch:
 permissions:
   contents: read
@@ -93,6 +94,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: EA-FB-V6-STAGING
-          path: build/v6-staging-artifacts/EA-FB-V6-STAGING.cs3
+          path: |
+            build/v6-staging-artifacts/EA-FB-V6-STAGING.cs3
+            build/v6-staging-artifacts/plugins.json
+            build/v6-staging-artifacts/repo.json
           if-no-files-found: error
           retention-days: 7
