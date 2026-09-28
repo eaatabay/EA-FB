@@ -157,8 +157,7 @@ class EAProvider : MainAPI() {
     private fun newItem(
         item: JSONObject,
         fallback: MediaKind,
-        fallbackArtwork: String? = null,
-        recommendationGroup: String? = null
+        fallbackArtwork: String? = null
     ): SearchResponse? {
         // Mixed TMDb feeds also include people; never render actors as movie cards.
         val type = item.optString("media_type")
@@ -178,9 +177,7 @@ class EAProvider : MainAPI() {
             // TMDb list results contain TMDb scores; no IMDb score is invented.
             score = ratingValue(item)?.let { Score.from10(it) }
         }
-        // apiName is immutable on SearchResponse. MovieSearchResponse is a data
-        // class, so copy the finished card into the host's collection group.
-        return recommendationGroup?.let { card.copy(apiName = it) } ?: card
+        return card
     }
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
@@ -443,7 +440,7 @@ class EAProvider : MainAPI() {
                 part.optString("poster_path"), part.optString("backdrop_path"),
                 selectedArtwork
             )
-            newItem(part, MediaKind.MOVIE, artwork, "Film Serisi")
+            newItem(part, MediaKind.MOVIE, artwork)
         }
         if (cards.size < 2) return Pair(null, emptyList())
         // Only label installments that actually have visible artwork cards.
@@ -567,6 +564,10 @@ class EAProvider : MainAPI() {
         val (collectionLabel, collectionCards) = if (!isSeries) {
             collectionMovies(item, tmdbId)
         } else Pair<String?, List<SearchResponse>>(null, emptyList())
+        FilmSeriesRail.publish(url, collectionCards.map { card ->
+            FilmSeriesRail.Card(card.name, card.url, card.posterUrl,
+                (card as? com.lagradost.cloudstream3.MovieSearchResponse)?.year)
+        })
         val nextAir = if (isSeries) upcomingEpisode(item) else null
         val upcomingLabel = if (nextAir != null && !nextAir.showNativeCountdown) {
             val next = item.optJSONObject("next_episode_to_air")
@@ -591,12 +592,10 @@ class EAProvider : MainAPI() {
             ratingSummary, seriesNote, upcomingLabel, overview, director
         ).joinToString("\n\n")
         val recs = recommendations(item, media, tmdbId)
-        // Keep the official TMDb collection contiguous and chronological.
-        // Recommendations follow only after every visible collection card, with
-        // duplicate franchise titles removed. This preserves a real series block
-        // even on the stock single-rail CloudStream detail layout.
+        // The film series has its own row. The host's recommendations contain
+        // only unrelated suggestions, never a second copy of the series.
         val collectionUrls = collectionCards.map { it.url }.toSet()
-        val movieRelated = (collectionCards + recs.filterNot { it.url in collectionUrls })
+        val movieRelated = recs.filterNot { it.url in collectionUrls }
             .distinctBy { it.url }
         return if (isSeries) {
             val episodes = tvEpisodes(tmdbId, item.optJSONArray("seasons"))
