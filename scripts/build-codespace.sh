@@ -35,7 +35,12 @@ else
   echo "Full build output: $logfile" >&2
   exit 1
 fi
-python3 scripts/stage-release.py
+if [[ "${EA_FB_V6_STAGING_BUILD:-}" == "1" ]]; then
+  python3 scripts/prepare-v6-staging-overlay.py --verify
+  python3 scripts/stage-release.py --v6-staging
+else
+  python3 scripts/stage-release.py
+fi
 
 python3 - <<'PY'
 import os, zipfile
