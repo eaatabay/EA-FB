@@ -69,7 +69,7 @@ entries=json.loads(p.read_text(encoding="utf-8"))
 assert isinstance(entries,list) and len(entries)==1
 e=entries[0]
 e["name"]="EA-FB V6 STAGING"
-e["url"]="https://github.com/eaatabay/EA-FB/releases/download/v6-staging-latest/EA-FB-V6-STAGING.cs3"
+e["url"]="https://raw.githubusercontent.com/eaatabay/EA-FB/feature/detail-dual-ratings-v6/dist-v6-staging/EA-FB-V6-STAGING.cs3"
 p.write_text(json.dumps(entries,ensure_ascii=False,indent=2)+"\\n",encoding="utf-8")
 Path("build/v6-staging-artifacts/repo.json").write_text(json.dumps({
   "name":"EA-FB STREAM",
