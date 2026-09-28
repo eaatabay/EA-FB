@@ -66,7 +66,7 @@ class EAProvider : MainAPI() {
     override val mainPage
         get() = mainPageOf(
             "ea-fb-live" to "Canlı TV",
-            *categories.map { it.id to it.title }.toTypedArray()
+            *categories.map { "${it.id}|cfg=${EASettings.homeRevision()}" to it.title }.toTypedArray()
         )
 
     private fun demoMovie(): SearchResponse = newMovieSearchResponse(
@@ -188,7 +188,8 @@ class EAProvider : MainAPI() {
                 false
             )
         }
-        val category = categories.firstOrNull { it.id == request.data }
+        val requestCategoryId = request.data.substringBefore("|cfg=")
+        val category = categories.firstOrNull { it.id == requestCategoryId }
             ?: return newHomePageResponse(emptyList(), false)
         if (!EASettings.categoryEnabled(category.id)) {
             return newHomePageResponse(emptyList(), false)
