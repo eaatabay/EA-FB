@@ -19,7 +19,7 @@ test("red V6 staging build overlays only the two Android relay references", () =
   assert.match(overlay,/provider\.count\(old_config\) != 1/);
   assert.match(overlay,/config\/backend\.v6-staging\.json/);
   assert.match(overlay,/BUILD\.write_text/);
-  assert.match(overlay,/version = 10/);
+  assert.match(overlay,/version = 11/);
   assert.match(script,/cp "\$tmp\/build\.gradle\.kts" "\$buildfile"/);
   assert.doesNotMatch(script,/wrangler deploy|git push|gh release/);
 });
@@ -72,6 +72,8 @@ test("official collection cards use an independent detail row", () => {
   assert.match(rail, /"result_recommendations_holder"/);
   assert.match(rail, /args\.getString\("apiName"\) != PROVIDER/);
   assert.match(rail, /activity\.loadResult\(card\.url, PROVIDER, card\.title\)/);
+  assert.match(rail, /card\.releaseDate/);
+  assert.match(provider, /collection\.releaseDates/);
   assert.doesNotMatch(provider, /card\.copy\(apiName = it\)/);
   assert.match(provider, /Film Serisi: \$\{cards\.size\} film • vizyon sırası/);
   assert.doesNotMatch(provider, /Serinin Filmleri \(vizyon tarihine göre\):/);
