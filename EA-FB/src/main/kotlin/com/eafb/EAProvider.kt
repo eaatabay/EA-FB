@@ -59,12 +59,14 @@ class EAProvider : MainAPI() {
     private val livePrefix = "$mainUrl/ea-fb-live/"
     private val channelsUrl = "https://raw.githubusercontent.com/eaatabay/EA-FB/main/config/channels.json"
     private val categories = HomeCategories.all.filter { it.tmdbPath != null }
-    // Reflect locally stored category switches when CloudStream reopens EA-FB.
+    // Keep every category registered with CloudStream. The host may cache mainPage
+    // requests at provider initialization, so removing a disabled category here
+    // prevents it from reappearing when the viewer enables it later.
+    // getMainPage applies the persisted switch on every request instead.
     override val mainPage
         get() = mainPageOf(
             "ea-fb-live" to "Canlı TV",
-            *categories.filter { EASettings.categoryEnabled(it.id) }
-                .map { it.id to it.title }.toTypedArray()
+            *categories.map { it.id to it.title }.toTypedArray()
         )
 
     private fun demoMovie(): SearchResponse = newMovieSearchResponse(
