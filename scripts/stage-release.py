@@ -13,7 +13,7 @@ ICON = "https://raw.githubusercontent.com/eaatabay/EA-FB/main/assets/ea-fb-logo.
 
 
 def stage(root=ROOT, staging=False):
-    expected_version = 9 if staging else 6
+    expected_version = 10 if staging else 6
     manifest_file = root / "build" / "plugins.json"
     if (root / "build").is_symlink() or manifest_file.is_symlink() or \
             (root / "EA-FB").is_symlink() or (root / "EA-FB" / "build").is_symlink():
