@@ -1,0 +1,65 @@
+# Manual isolated build for the red EA-FB V6 staging plugin.
+# Never deploys Worker/D1 and never publishes to production dist/release.
+name: EA-FB V6 staging CS3 build
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: eafb-v6-staging-cs3
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/detail-dual-ratings-v6
+          persist-credentials: false
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Install Kotlin compiler and Gradle
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y kotlin gradle
+
+      - name: Install Android SDK API 35
+        uses: android-actions/setup-android@v3
+
+      - name: Accept SDK licenses and install platform
+        run: |
+          yes | sdkmanager --licenses >/dev/null || true
+          sdkmanager "platforms;android-35" "platform-tools"
+
+      - name: Build isolated red V6 package
+        env:
+          GRADLE_OPTS: "-Xmx512m -XX:MaxMetaspaceSize=256m"
+          JAVA_TOOL_OPTIONS: "-XX:ActiveProcessorCount=2"
+        run: bash scripts/build-v6-staging-codespace.sh --build
+
+      - name: Verify artifact is a CS3 ZIP
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import zipfile
+          p=Path("build/v6-staging-artifacts/EA-FB-V6-STAGING.cs3")
+          assert p.is_file() and zipfile.is_zipfile(p)
+          print("PASS", p, p.stat().st_size)
+          PY
+
+      - name: Upload red V6 CS3
+        uses: actions/upload-artifact@v4
+        with:
+          name: EA-FB-V6-STAGING
+          path: build/v6-staging-artifacts/EA-FB-V6-STAGING.cs3
+          if-no-files-found: error
+          retention-days: 7
