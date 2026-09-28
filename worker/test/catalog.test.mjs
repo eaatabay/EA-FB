@@ -104,6 +104,10 @@ test("serves exact paths used by EA-FB 28-category catalog", async () => {
     "/v1/trending/tv/week", "/v1/movie/top_rated", "/v1/tv/top_rated",
     "/v1/discover/movie?with_watch_providers=8&watch_region=TR&with_watch_monetization_types=flatrate",
     "/v1/discover/tv?with_watch_providers=119&watch_region=TR&with_watch_monetization_types=flatrate",
+    "/v1/discover/movie?with_watch_providers=350&watch_region=TR&with_watch_monetization_types=flatrate",
+    "/v1/discover/tv?with_watch_providers=350&watch_region=TR&with_watch_monetization_types=flatrate",
+    "/v1/discover/movie?with_watch_providers=531&watch_region=TR&with_watch_monetization_types=flatrate",
+    "/v1/discover/tv?with_watch_providers=531&watch_region=TR&with_watch_monetization_types=flatrate",
     "/v1/discover/movie?with_genres=27,53",
     "/v1/search/multi?query=Silo",
     "/v1/movie/123?append_to_response=credits,recommendations,external_ids",
@@ -113,7 +117,7 @@ test("serves exact paths used by EA-FB 28-category catalog", async () => {
     const res = await gateway.fetch(new Request("https://example.workers.dev"+path), env, ctx);
     assert.equal(res.status, 200, path);
   }
-  assert.equal(calls.length, 13);
+  assert.equal(calls.length, 17);
 });
 
 test("discovery sort validates film, series, and rated-list safeguards", async () => {
