@@ -38,3 +38,20 @@ test("V6 keeps disabled shelves registered so later re-enabling can restore them
   assert.match(settings, /fun setCategoryEnabled\(id: String, enabled: Boolean\)/);
   assert.match(dialog, /EASettings\.setCategoryEnabled\(category\.id, state\)/);
 });
+
+test("Apple and Paramount switches retain separate movie/series routes and do not borrow other platforms", () => {
+  const domain = read("EA-FB/src/main/kotlin/com/eafb/Domain.kt");
+  const provider = read("EA-FB/src/main/kotlin/com/eafb/EAProvider.kt");
+  for (const [id, media, providerId] of [
+    ["apple-movie", "movie", "350"],
+    ["apple-tv", "tv", "350"],
+    ["paramount-movie", "movie", "531"],
+    ["paramount-tv", "tv", "531"],
+  ]) {
+    assert.ok(domain.includes('CatalogCategory("' + id + '"'), id + " is missing");
+    const line = domain.split("\\n").find(line => line.includes('CatalogCategory("' + id + '"'));
+    assert.ok(line?.includes("/discover/" + media + "?with_watch_providers=" + providerId + "&watch_region=TR"), id + " route mismatch");
+  }
+  assert.match(provider, /if \(results\.isEmpty\(\)\) return newHomePageResponse\(emptyList\(\), false\)/);
+  assert.match(provider, /route != category\.tmdbPath && category\.tmdbPath\.startsWith\("\/discover\/"\)/);
+});
