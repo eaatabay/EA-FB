@@ -14,6 +14,7 @@ on:
       - "scripts/smoke-v6-staging.sh"
       - "scripts/build-v6-staging-codespace.sh"
       - "scripts/prepare-v6-staging-overlay.py"
+      - "source-watchdog/test/v6-staging-android-build.test.mjs"
       - "config/backend.v6-staging.json"
   workflow_dispatch:
 permissions:
