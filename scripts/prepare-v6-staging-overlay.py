@@ -29,7 +29,7 @@ def verify():
     assert 'main/config/backend.json' not in provider
     assert 'override var name = "EA-FB V6 STAGING"' in provider
     assert 'ea_fb_catalog_settings_v6_staging' in settings
-    assert re.search(r'^version = 10$', build, re.MULTILINE)
+    assert re.search(r'^version = 11$', build, re.MULTILINE)
     print("PASS: red V6 client pinned exclusively to staging Worker and branch config")
 
 def apply():
@@ -55,7 +55,7 @@ def apply():
         old_config, f'private val catalogConfigUrl = "{CONFIG_URL}"'))
     SETTINGS.write_text(settings.replace(
         old_store, 'private const val STORE = "ea_fb_catalog_settings_v6_staging"'))
-    BUILD.write_text(re.sub(r'^version = 6$', 'version = 10', build, count=1, flags=re.MULTILINE))
+    BUILD.write_text(re.sub(r'^version = 6$', 'version = 11', build, count=1, flags=re.MULTILINE))
     verify()
 
 if __name__ == "__main__":
