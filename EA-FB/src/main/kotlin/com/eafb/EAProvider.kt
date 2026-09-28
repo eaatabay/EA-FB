@@ -396,16 +396,22 @@ class EAProvider : MainAPI() {
      * A collection includes connected installments only; it must not silently
      * mix unrelated Spider-Man reboot timelines or similarly named movies.
      */
+    private data class FilmCollectionResult(
+        val label: String?,
+        val cards: List<SearchResponse>,
+        val releaseDates: Map<Int, String>
+    )
+
     private suspend fun collectionMovies(
         movie: JSONObject,
         ownId: Int
-    ): Pair<String?, List<SearchResponse>> {
+    ): FilmCollectionResult {
         val collectionId = movie.optJSONObject("belongs_to_collection")
-            ?.optInt("id")?.takeIf { it > 0 } ?: return Pair(null, emptyList())
+            ?.optInt("id")?.takeIf { it > 0 } ?: return FilmCollectionResult(null, emptyList(), emptyMap())
         val collection = getJson("/collection/$collectionId")
-            ?: return Pair(null, emptyList())
+            ?: return FilmCollectionResult(null, emptyList(), emptyMap())
         val parts = collection.optJSONArray("parts")
-            ?: return Pair(null, emptyList())
+            ?: return FilmCollectionResult(null, emptyList(), emptyMap())
         val byId = linkedMapOf<Int, JSONObject>()
         for (index in 0 until parts.length()) {
             val part = parts.optJSONObject(index) ?: continue
@@ -426,7 +432,7 @@ class EAProvider : MainAPI() {
         val ordered = sortedParts.mapNotNull { byId[it.id] }
         // One-item "collections" do not make a franchise strip.
         if (ordered.size < 2 || ordered.none { it.optInt("id") == ownId }) {
-            return Pair(null, emptyList())
+            return FilmCollectionResult(null, emptyList(), emptyMap())
         }
         // TMDb collection parts can omit the selected film's artwork even
         // when its detail page has a valid poster. Reuse only that same film's
@@ -442,11 +448,18 @@ class EAProvider : MainAPI() {
             )
             newItem(part, MediaKind.MOVIE, artwork)
         }
-        if (cards.size < 2) return Pair(null, emptyList())
+        if (cards.size < 2) return FilmCollectionResult(null, emptyList(), emptyMap())
         // Only label installments that actually have visible artwork cards.
         val visibleIds = cards.mapNotNull { it.url.substringAfterLast('/').toIntOrNull() }.toSet()
-        if (ownId !in visibleIds) return Pair(null, emptyList())
-        return Pair("Film Serisi: ${cards.size} film • vizyon sırası", cards)
+        if (ownId !in visibleIds) return FilmCollectionResult(null, emptyList(), emptyMap())
+        val releaseDates = sortedParts.mapNotNull { part ->
+            FilmCollectionPolicy.displayDate(part.releaseDate)?.let { part.id to it }
+        }.toMap()
+        return FilmCollectionResult(
+            "Film Serisi: ${cards.size} film • vizyon sırası",
+            cards,
+            releaseDates
+        )
     }
 
     private fun upcomingEpisode(item: JSONObject): EpisodeAirPolicy.Airing? =
@@ -561,12 +574,19 @@ class EAProvider : MainAPI() {
         )
         // CloudStream's unlabeled native hero score duplicates these source-labeled
         // chips, so details deliberately show the chips only (no native score).
-        val (collectionLabel, collectionCards) = if (!isSeries) {
+        val collection = if (!isSeries) {
             collectionMovies(item, tmdbId)
-        } else Pair<String?, List<SearchResponse>>(null, emptyList())
+        } else FilmCollectionResult(null, emptyList(), emptyMap())
+        val collectionLabel = collection.label
+        val collectionCards = collection.cards
         FilmSeriesRail.publish(url, collectionCards.map { card ->
-            FilmSeriesRail.Card(card.name, card.url, card.posterUrl,
-                (card as? com.lagradost.cloudstream3.MovieSearchResponse)?.year)
+            val id = card.url.substringAfterLast('/').toIntOrNull()
+            FilmSeriesRail.Card(
+                card.name,
+                card.url,
+                card.posterUrl,
+                id?.let(collection.releaseDates::get)
+            )
         })
         val nextAir = if (isSeries) upcomingEpisode(item) else null
         val upcomingLabel = if (nextAir != null && !nextAir.showNativeCountdown) {
