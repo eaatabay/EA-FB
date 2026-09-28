@@ -559,7 +559,7 @@ class EAProvider : MainAPI() {
         // beneath long descriptions; native nextAiring handles near-term dates.
         // Film collection text is a short cue, never a long duplicate title list.
         val seriesNote = if (collectionCards.size >= 2)
-            collectionLabel + "\n" + "İlk " + collectionCards.size + " kart Önerilenler bölümünde vizyon sırasıyla."
+            collectionLabel + "\n" + "Film serisi kartları aşağıda vizyon sırasıyla gösterilir."
         else null
         // Some TV layouts hide detail tags below the fold. Put the clearly
         // sourced ratings at the top of the visible description as well.
@@ -570,10 +570,13 @@ class EAProvider : MainAPI() {
             ratingSummary, seriesNote, upcomingLabel, overview, director
         ).joinToString("\n\n")
         val recs = recommendations(item, media, tmdbId)
-        // The stock CloudStream LoadResponse exposes one recommendation rail,
-        // not a separate branded "Serinin Filmleri" section. Put official
-        // collection titles first, avoid duplicates, keep normal recs after.
-        val movieRelated = (collectionCards + recs).distinctBy { it.url }.take(32)
+        // Keep the official TMDb collection contiguous and chronological.
+        // Recommendations follow only after every visible collection card, with
+        // duplicate franchise titles removed. This preserves a real series block
+        // even on the stock single-rail CloudStream detail layout.
+        val collectionUrls = collectionCards.map { it.url }.toSet()
+        val movieRelated = (collectionCards + recs.filterNot { it.url in collectionUrls })
+            .distinctBy { it.url }
         return if (isSeries) {
             val episodes = tvEpisodes(tmdbId, item.optJSONArray("seasons"))
             newTvSeriesLoadResponse(title, url, kind, episodes) {
