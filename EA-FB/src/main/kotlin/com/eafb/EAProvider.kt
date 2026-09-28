@@ -225,6 +225,7 @@ class EAProvider : MainAPI() {
         val response = getJson(route, page)
         var results = cards(response)
         var usedFallback = false
+        var usedForeignCatalog = false
         var scannedExtraPages = false
         // TMDb may place unreleased titles across several newest pages. Scan
         // only when the first valid page yields no released artwork cards.
@@ -269,13 +270,31 @@ class EAProvider : MainAPI() {
             results = cards(fallback)
             usedFallback = results.isNotEmpty()
         }
+        // TMDb currently reports no TR subscription results for these four
+        // provider rails. Show a clearly marked GB catalog when TR is empty;
+        // never imply that these titles are available to stream in Türkiye.
+        if (page == 1 && results.isEmpty() &&
+            category.id in setOf("apple-movie", "apple-tv", "paramount-movie", "paramount-tv")) {
+            val foreignPath = category.tmdbPath.replace("watch_region=TR", "watch_region=GB")
+            val foreignRoute = CatalogSortPolicy.route(foreignPath, category.kind, sortMode)
+            results = cards(getJson(foreignRoute, page))
+            if (results.isEmpty() && foreignRoute != foreignPath) {
+                results = cards(getJson(CatalogSortPolicy.route(
+                    foreignPath, category.kind, CatalogSortMode.POPULAR), page))
+            }
+            usedForeignCatalog = results.isNotEmpty()
+        }
         if (results.isEmpty()) return newHomePageResponse(emptyList(), false)
-        val label = if (usedFallback) category.title + " (Popüler alternatif)" else category.title
+        val label = category.title + when {
+            usedForeignCatalog -> " (GB kataloğu; Türkiye erişimi doğrulanmadı)"
+            usedFallback -> " (Popüler alternatif)"
+            else -> ""
+        }
         val rawLength = response?.optJSONArray("results")?.length() ?: 0
         return newHomePageResponse(
             listOf(HomePageList(label, results, false)),
             CatalogPagePolicy.allowNextPage(
-                usedFallback, scannedExtraPages,
+                usedFallback || usedForeignCatalog, scannedExtraPages,
                 page, rawLength, response?.optInt("total_pages", 0) ?: 0
             )
         )
