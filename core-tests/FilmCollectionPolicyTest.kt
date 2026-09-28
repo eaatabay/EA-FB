@@ -41,5 +41,9 @@ fun main() {
         listOf(1,2))
     checkCase(FilmCollectionPolicy.visibleChronology(chronology,setOf(99)).isEmpty())
     checkCase(FilmCollectionPolicy.visibleChronology(chronology,setOf(1),0).isEmpty())
-    println("PASS: $count/19 film collection chronology, identity and visibility cases")
+    checkCase(FilmCollectionPolicy.displayDate("2002-05-03") == "03.05.2002")
+    checkCase(FilmCollectionPolicy.displayDate("2024-02-29") == "29.02.2024")
+    checkCase(FilmCollectionPolicy.displayDate("2025-02-29") == null)
+    checkCase(FilmCollectionPolicy.displayDate(null) == null)
+    println("PASS: $count/23 film collection chronology, identity, visibility and date cases")
 }
