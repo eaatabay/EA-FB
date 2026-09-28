@@ -49,7 +49,7 @@ test("Apple and Paramount switches retain separate movie/series routes and do no
     ["paramount-tv", "tv", "531"],
   ]) {
     assert.ok(domain.includes('CatalogCategory("' + id + '"'), id + " is missing");
-    const line = domain.split("\\n").find(line => line.includes('CatalogCategory("' + id + '"'));
+    const line = domain.split("\n").find(line => line.includes('CatalogCategory("' + id + '"'));
     assert.ok(line?.includes("/discover/" + media + "?with_watch_providers=" + providerId + "&watch_region=TR"), id + " route mismatch");
   }
   assert.match(provider, /if \(results\.isEmpty\(\)\) return newHomePageResponse\(emptyList\(\), false\)/);
