@@ -57,3 +57,12 @@ test("Apple and Paramount switches retain separate movie/series routes and do no
   assert.match(provider, /if \(results\.isEmpty\(\)\) return newHomePageResponse\(emptyList\(\), false\)/);
   assert.match(provider, /route != category\.tmdbPath && category\.tmdbPath\.startsWith\("\/discover\/"\)/);
 });
+
+
+test("official movie collections use a distinct Film Serisi recommendation group", () => {
+  const provider = read("EA-FB/src/main/kotlin/com/eafb/EAProvider.kt");
+  assert.match(provider, /recommendationGroup: String\? = null/);
+  assert.match(provider, /recommendationGroup\?\.let \{ apiName = it \}/);
+  assert.match(provider, /newItem\(part, MediaKind\.MOVIE, artwork, "Film Serisi"\)/);
+  assert.match(provider, /collectionCards \+ recs\.filterNot/);
+});
