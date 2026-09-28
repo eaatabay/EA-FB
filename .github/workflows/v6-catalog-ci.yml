@@ -107,7 +107,8 @@ jobs:
           cp build/v6-staging-artifacts/repo.json dist-v6-staging/repo.json
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add dist-v6-staging
+          git add dist-v6-staging/repo.json dist-v6-staging/plugins.json
+          git add -f dist-v6-staging/EA-FB-V6-STAGING.cs3
           if git diff --cached --quiet; then
             echo "Staging web repository already current"
           else
