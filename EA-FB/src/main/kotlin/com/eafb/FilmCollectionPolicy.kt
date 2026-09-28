@@ -36,6 +36,12 @@ object FilmCollectionPolicy {
         if (maxLabels !in 1..32) emptyList()
         else parts.filter { it.id in visibleIds }.take(maxLabels)
 
+    /** Full TMDb release date for the poster caption; invalid/unknown dates stay hidden. */
+    fun displayDate(value: String?): String? {
+        val raw = value?.takeIf(::validDate) ?: return null
+        return raw.substring(8, 10) + "." + raw.substring(5, 7) + "." + raw.substring(0, 4)
+    }
+
     fun chronological(parts: List<FilmCollectionPart>, ownId: Int): List<FilmCollectionPart> {
         if (ownId <= 0) return emptyList()
         val unique = linkedMapOf<Int, FilmCollectionPart>()
