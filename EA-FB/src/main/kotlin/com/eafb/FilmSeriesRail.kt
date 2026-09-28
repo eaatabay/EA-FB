@@ -29,7 +29,12 @@ import java.util.concurrent.Executors
 
 /** A separate, focusable film-series row on CloudStream's TV detail screen. */
 internal object FilmSeriesRail {
-    internal data class Card(val title: String, val url: String, val poster: String?, val year: Int?)
+    internal data class Card(
+        val title: String,
+        val url: String,
+        val poster: String?,
+        val releaseDate: String?
+    )
 
     private const val MARKER = "ea-fb-film-series-row"
     private const val PROVIDER = "EA-FB V6 STAGING"
@@ -126,7 +131,7 @@ internal object FilmSeriesRail {
                 orientation = LinearLayout.VERTICAL
                 isFocusable = true
                 isClickable = true
-                contentDescription = "${index + 1}. ${card.title}${card.year?.let { " ($it)" } ?: ""}"
+                contentDescription = "${index + 1}. ${card.title}${card.releaseDate?.let { " • $it" } ?: ""}"
                 setPadding(dp(activity, 4), dp(activity, 8), dp(activity, 4), dp(activity, 5))
                 setOnClickListener { activity.loadResult(card.url, PROVIDER, card.title) }
                 setOnFocusChangeListener { _, focused ->
@@ -147,6 +152,15 @@ internal object FilmSeriesRail {
                 textSize = 13f
                 gravity = Gravity.CENTER
             }, LinearLayout.LayoutParams(dp(activity, 116), dp(activity, 42)))
+            card.releaseDate?.let { releaseDate ->
+                tile.addView(TextView(activity).apply {
+                    text = releaseDate
+                    setTextColor(Color.LTGRAY)
+                    textSize = 12f
+                    gravity = Gravity.CENTER
+                    maxLines = 1
+                }, LinearLayout.LayoutParams(dp(activity, 116), dp(activity, 22)))
+            }
             row.addView(tile, LinearLayout.LayoutParams(dp(activity, 124), ViewGroup.LayoutParams.WRAP_CONTENT))
         }
         column.addView(HorizontalScrollView(activity).apply {
