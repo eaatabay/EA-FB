@@ -5,6 +5,7 @@ on:
     branches: [feature/detail-dual-ratings-v6]
     paths:
       - ".github/workflows/v6-catalog-ci.yml"
+      - "build.gradle.kts"
       - "EA-FB/src/main/kotlin/com/eafb/**"
       - "core-tests/**"
       - "worker/**"
