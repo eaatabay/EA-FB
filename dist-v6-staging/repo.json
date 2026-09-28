@@ -1,0 +1,8 @@
+{
+  "name": "EA-FB STREAM",
+  "description": "EA-FB V6 staging test repository",
+  "manifestVersion": 1,
+  "pluginLists": [
+    "https://raw.githubusercontent.com/eaatabay/EA-FB/feature/detail-dual-ratings-v6/dist-v6-staging/plugins.json"
+  ]
+}
