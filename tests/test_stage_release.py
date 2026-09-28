@@ -40,6 +40,16 @@ class StageReleaseTests(unittest.TestCase):
         self.assertEqual(metadata[0]["iconUrl"], module.ICON)
         self.assertEqual(repo_meta["iconUrl"], module.ICON)
 
+    def test_v6_staging_version_increments_without_changing_default_release(self):
+        self.make_archive()
+        (self.root / "build" / "plugins.json").write_text(json.dumps([
+            {"internalName": "EA-FB", "version": 7}
+        ]))
+        with self.assertRaisesRegex(ValueError, "Expected EA-FB v6"):
+            module.stage(self.root)
+        dist = module.stage(self.root, staging=True)
+        self.assertEqual(json.loads((dist / "plugins.json").read_text())[0]["version"], 7)
+
     def test_reject_stale_plugin_version(self):
         self.make_archive()
         for version in (4, 5, 7, None, 6.0, "6", True):
