@@ -58,3 +58,9 @@ test("Apple and Paramount switches retain separate movie/series routes and do no
   assert.match(provider, /route != category\.tmdbPath && category\.tmdbPath\.startsWith\("\/discover\/"\)/);
 });
 
+test("official collection cards use a separate CloudStream recommendation group", () => {
+  const provider = read("EA-FB/src/main/kotlin/com/eafb/EAProvider.kt");
+  assert.match(provider, /card\.copy\(apiName = it\)/);
+  assert.match(provider, /newItem\(part, MediaKind\.MOVIE, artwork, "Film Serisi"\)/);
+  assert.match(provider, /collectionCards \+ recs\.filterNot/);
+});
