@@ -69,6 +69,8 @@ test("official collection cards use an independent detail row", () => {
   assert.match(provider, /FilmSeriesRail\.publish\(url, collectionCards\.map/);
   assert.match(provider, /val movieRelated = recs\.filterNot/);
   assert.match(rail, /parent\.addView\(rail, parent\.indexOfChild\(anchor\)\)/);
+  assert.match(rail, /"result_recommendations_holder"/);
+  assert.match(rail, /args\.getString\("apiName"\) != PROVIDER/);
   assert.match(rail, /activity\.loadResult\(card\.url, PROVIDER, card\.title\)/);
   assert.doesNotMatch(provider, /card\.copy\(apiName = it\)/);
   assert.match(provider, /Film Serisi: \$\{cards\.size\} film • vizyon sırası/);
