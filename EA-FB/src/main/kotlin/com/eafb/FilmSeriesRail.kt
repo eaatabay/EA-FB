@@ -34,7 +34,8 @@ internal object FilmSeriesRail {
         val title: String,
         val url: String,
         val poster: String?,
-        val releaseDate: String?
+        val releaseDate: String?,
+        val rating: Double?
     )
 
     private const val MARKER = "ea-fb-film-series-row"
@@ -151,6 +152,27 @@ internal object FilmSeriesRail {
                     ViewGroup.LayoutParams.MATCH_PARENT
                 )
             )
+            card.rating?.takeIf { it > 0.0 && it <= 10.0 }?.let { rating ->
+                posterFrame.addView(TextView(activity).apply {
+                    text = String.format(java.util.Locale.ROOT, "★ %.1f", rating)
+                    setTextColor(Color.WHITE)
+                    textSize = 12f
+                    setTypeface(null, Typeface.BOLD)
+                    gravity = Gravity.CENTER
+                    setPadding(dp(activity, 6), dp(activity, 2), dp(activity, 6), dp(activity, 2))
+                    background = GradientDrawable().apply {
+                        setColor(Color.rgb(11, 22, 47))
+                        setStroke(1, Color.YELLOW)
+                        cornerRadius = dp(activity, 5).toFloat()
+                    }
+                }, FrameLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                    dp(activity, 25),
+                    Gravity.TOP or Gravity.END
+                ).apply {
+                    setMargins(0, dp(activity, 6), dp(activity, 6), 0)
+                })
+            }
             card.releaseDate?.take(4)?.toIntOrNull()?.let { year ->
                 posterFrame.addView(TextView(activity).apply {
                     text = year.toString()
