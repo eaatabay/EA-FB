@@ -82,7 +82,14 @@ internal object FilmSeriesRail {
         main.post { host.supportFragmentManager.fragments.forEach(::renderTree) }
     }
 
-    // Detail fragments live inside the navigation fragment. Visit existing child views\n    // when the collection response arrives, as well as newly created views.\n    private fun renderTree(fragment: Fragment) {\n        renderFragment(fragment)\n        fragment.childFragmentManager.fragments.forEach(::renderTree)\n    }\n\n    private fun renderFragment(fragment: Fragment) {
+    // Detail fragments live inside the navigation fragment. Visit existing child views
+    // when the collection response arrives, as well as newly created views.
+    private fun renderTree(fragment: Fragment) {
+        renderFragment(fragment)
+        fragment.childFragmentManager.fragments.forEach(::renderTree)
+    }
+
+    private fun renderFragment(fragment: Fragment) {
         val root = fragment.view ?: return
         val args = fragment.arguments ?: return
         if (args.getString("apiName") != PROVIDER) return
