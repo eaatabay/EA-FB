@@ -53,7 +53,7 @@ trap restore EXIT
 python3 scripts/prepare-v6-staging-overlay.py
 # Validate only the red staging pin before invoking the existing Android build.
 python3 scripts/prepare-v6-staging-overlay.py --verify
-bash scripts/build-codespace.sh
+EA_FB_V6_STAGING_BUILD=1 bash scripts/build-codespace.sh
 mkdir -p build/v6-staging-artifacts
 cp dist/EA-FB.cs3 build/v6-staging-artifacts/EA-FB-V6-STAGING.cs3
 cp dist/plugins.json build/v6-staging-artifacts/plugins.json
