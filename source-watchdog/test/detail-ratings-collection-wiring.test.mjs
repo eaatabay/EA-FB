@@ -13,9 +13,11 @@ test("franchise detail cards only reference visible official collection artwork"
   assert.match(provider,/belongs_to_collection/);
   assert.match(provider,/FilmCollectionPolicy\.chronological/);
   assert.match(provider,/Film Serisi: \$\{cards\.size\} film • vizyon sırası/);
-  assert.match(provider,/if \(ownId !in visibleIds\) return Pair\(null, emptyList\(\)\)/);
+  assert.match(provider,/if \(ownId !in visibleIds\) return FilmCollectionResult\(null, emptyList\(\), emptyMap\(\)\)/);
   assert.match(provider,/val collectionUrls = collectionCards\.map \{ it\.url \}\.toSet\(\)/);
   assert.match(provider,/val movieRelated = recs\.filterNot/);
+  assert.match(provider,/val releaseDates = sortedParts\.mapNotNull/);
+  assert.match(provider,/FilmCollectionPolicy\.displayDate\(part\.releaseDate\)/);
   assert.doesNotMatch(provider,/movieRelated.*take\(32\)/);
 });
 
