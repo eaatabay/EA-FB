@@ -9,6 +9,7 @@ import com.lagradost.cloudstream3.plugins.Plugin
 class EAPlugin : Plugin() {
     override fun load(context: Context) {
         EASettings.initialize(context)
+        FilmSeriesRail.install(context)
         registerMainAPI(EAProvider())
         openSettings = { uiContext -> EASettingsDialog.show(uiContext) }
     }
