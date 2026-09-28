@@ -15,10 +15,9 @@ on:
       - "scripts/build-v6-staging-codespace.sh"
       - "scripts/prepare-v6-staging-overlay.py"
       - "config/backend.v6-staging.json"
-      - "dist-v6-staging/**"
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: write
 concurrency:
   group: eafb-v6-catalog-ci-${{ github.ref }}
   cancel-in-progress: true
@@ -100,3 +99,18 @@ jobs:
             build/v6-staging-artifacts/repo.json
           if-no-files-found: error
           retention-days: 7
+      - name: Publish isolated V6 staging web repository
+        run: |
+          mkdir -p dist-v6-staging
+          cp build/v6-staging-artifacts/EA-FB-V6-STAGING.cs3 dist-v6-staging/EA-FB-V6-STAGING.cs3
+          cp build/v6-staging-artifacts/plugins.json dist-v6-staging/plugins.json
+          cp build/v6-staging-artifacts/repo.json dist-v6-staging/repo.json
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add dist-v6-staging
+          if git diff --cached --quiet; then
+            echo "Staging web repository already current"
+          else
+            git commit -m "build(v6): publish staging web repository [skip ci]"
+            git push origin HEAD:feature/detail-dual-ratings-v6
+          fi
