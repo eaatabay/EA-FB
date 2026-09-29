@@ -132,5 +132,7 @@ jobs:
             echo "Staging web repository already current"
           else
             git commit -m "build(v6): publish staging web repository [skip ci]"
+            git fetch origin feature/detail-dual-ratings-v6
+            git rebase origin/feature/detail-dual-ratings-v6
             git push origin HEAD:feature/detail-dual-ratings-v6
           fi
