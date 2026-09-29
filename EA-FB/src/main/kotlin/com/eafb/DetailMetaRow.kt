@@ -27,7 +27,8 @@ internal object DetailMetaRow {
     internal data class Meta(
         val imdb: Double?,
         val tmdb: Double?,
-        val genres: List<String>
+        val genres: List<String>,
+        val nextEpisode: String? = null
     )
 
     private const val PROVIDER = "EA-FB V6 STAGING"
@@ -52,8 +53,8 @@ internal object DetailMetaRow {
         attach(context as? Activity)
     }
 
-    fun publish(url: String, imdb: Double?, tmdb: Double?, genres: List<String>) {
-        entries[url] = Meta(imdb, tmdb, genres)
+    fun publish(url: String, imdb: Double?, tmdb: Double?, genres: List<String>, nextEpisode: String? = null) {
+        entries[url] = Meta(imdb, tmdb, genres, nextEpisode)
         main.post {
             synchronized(registered) {
                 registered.toList().forEach { activity ->
@@ -103,6 +104,18 @@ internal object DetailMetaRow {
         // These are CloudStream's generic empty-state placeholders, not EA-FB
         // collection/recommendation headings. They can be surfaced by the host
         // after our async detail response, so hide both variants on EA-FB details.
+        meta.nextEpisode?.let { label ->
+            val episodesId = activity.resources.getIdentifier("result_episodes_text", "id", activity.packageName)
+            val holderId = activity.resources.getIdentifier("result_next_airing_holder", "id", activity.packageName)
+            val nextId = activity.resources.getIdentifier("result_next_airing", "id", activity.packageName)
+            val timeId = activity.resources.getIdentifier("result_next_airing_time", "id", activity.packageName)
+            if (holderId != 0 && nextId != 0 && timeId != 0) {
+                root.findViewById<View>(holderId)?.visibility = View.VISIBLE
+                root.findViewById<TextView>(nextId)?.apply { text = label; visibility = View.VISIBLE }
+                root.findViewById<TextView>(timeId)?.apply { text = ""; visibility = View.GONE }
+            }
+        }
+
         listOf("result_coming_soon", "result_tv_coming_soon").forEach { name ->
             val id = activity.resources.getIdentifier(name, "id", activity.packageName)
             if (id != 0) root.findViewById<View>(id)?.visibility = View.GONE
