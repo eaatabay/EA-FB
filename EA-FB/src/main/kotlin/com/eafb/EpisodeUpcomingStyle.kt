@@ -131,7 +131,7 @@ internal object EpisodeUpcomingStyle {
             val parsed = future.date
             if (parsed <= System.currentTimeMillis()) return@forEach
             future.name?.takeIf { it.isNotBlank() }?.let { actualName ->
-                holder.findViewById<TextView>(textId)?.text = "$episodeNo. $actualName"
+                holder.findViewById<TextView>(textId)?.apply { text = "$episodeNo. $actualName"; visibility = View.VISIBLE }
             }
             val dateLabel = longTurkishDate(parsed)
             if (dateView != null) {
