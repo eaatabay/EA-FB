@@ -611,7 +611,7 @@ class EAProvider : MainAPI() {
                 season?.let { "S$it" }, episode?.let { "B$it" }
             ).joinToString(" ")
             "Sonraki bölüm" + (if (number.isNotEmpty()) " ($number)" else "") +
-                ": " + nextAir.dateLabel
+                ": " + nextAir!!.dateLabel
         } else null
         // Put a distant premiere date before the plot where it cannot be lost
         // beneath long descriptions; native nextAiring handles near-term dates.
