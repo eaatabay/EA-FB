@@ -583,7 +583,16 @@ class EAProvider : MainAPI() {
         // TV detail enhancement: ratings + genres move beside duration when the
         // host exposes its stable result_meta_duration row. Native tags remain
         // populated as a compatibility fallback and are hidden only on success.
-        DetailMetaRow.publish(url, imdbRating, tmdbRating, genreLabels)
+        val nextAirDateLabel = if (isSeries) item.optJSONObject("next_episode_to_air")?.let { next ->
+            val date = next.optString("air_date").takeIf { it.isNotBlank() }?.let(::longTurkishDate)
+            val season = next.optInt("season_number").takeIf { it > 0 }
+            val episode = next.optInt("episode_number").takeIf { it > 0 }
+            date?.let { d ->
+                val number = listOfNotNull(season?.let { "S$it" }, episode?.let { "B$it" }).joinToString(" ")
+                "Sonraki bölüm" + (if (number.isNotEmpty()) " ($number)" else "") + ": $d"
+            }
+        } else null
+        DetailMetaRow.publish(url, imdbRating, tmdbRating, genreLabels, nextAirDateLabel)
         // CloudStream's unlabeled native hero score duplicates these source-labeled
         // chips, so details deliberately show the chips only (no native score).
         val collection = if (!isSeries) {
@@ -602,18 +611,6 @@ class EAProvider : MainAPI() {
             )
         })
         val nextAir = if (isSeries) upcomingEpisode(item) else null
-        val upcomingLabel = if (nextAir != null) {
-            val next = item.optJSONObject("next_episode_to_air")
-            val season = next?.optInt("season_number")?.takeIf { it > 0 }
-            val episode = next?.optInt("episode_number")?.takeIf { it > 0 }
-            val number = listOfNotNull(
-                season?.let { "S$it" }, episode?.let { "B$it" }
-            ).joinToString(" ")
-            "Sonraki bölüm" + (if (number.isNotEmpty()) " ($number)" else "") +
-                ": " + item.optJSONObject("next_episode_to_air")?.optString("air_date")
-                    ?.takeIf { it.isNotBlank() }
-                    ?.let(::longTurkishDate).orEmpty()
-        } else null
         // Put a distant premiere date before the plot where it cannot be lost
         // beneath long descriptions; native nextAiring handles near-term dates.
         // Film collection text is a short cue, never a long duplicate title list.
@@ -622,7 +619,7 @@ class EAProvider : MainAPI() {
         // sourced ratings at the top of the visible description as well.
         // Never substitute TMDb's vote_average for an unavailable IMDb score.
         val combinedPlot = listOfNotNull(
-            seriesNote, upcomingLabel, overview, director
+            seriesNote, overview, director
         ).joinToString("\\n\\n")
         val recs = recommendations(item, media, tmdbId)
         // The film series has its own row. The host's recommendations contain
