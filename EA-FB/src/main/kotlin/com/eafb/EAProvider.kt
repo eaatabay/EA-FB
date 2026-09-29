@@ -481,7 +481,7 @@ class EAProvider : MainAPI() {
     private fun nextEpisode(item: JSONObject, airing: EpisodeAirPolicy.Airing?): NextAiring? = null
 
     /** Only metadata: actual episode sources will be resolved by adapters later. */
-    private suspend fun tvEpisodes(id: Int, seasonList: JSONArray?): List<Episode> {
+    private suspend fun tvEpisodes(id: Int, seasonList: JSONArray?, fallbackBackdrop: String?): List<Episode> {
         if (seasonList == null) return emptyList()
         val seasons = (0 until seasonList.length()).mapNotNull { i ->
             seasonList.optJSONObject(i)?.optInt("season_number", -1)?.takeIf { it >= 0 }
@@ -494,23 +494,35 @@ class EAProvider : MainAPI() {
                             ?: return@async emptyList<Episode>()
                         val episodeRows = season.optJSONArray("episodes")
                             ?: return@async emptyList<Episode>()
+                        // TMDb localizes episode metadata. Turkish can legitimately be blank,
+                        // so fetch English only as a field-level fallback for the same episode.
+                        val englishRows = getJson("/tv/$id/season/$number", language = "en-US")
+                            ?.optJSONArray("episodes")
+                        val englishByEpisode = (0 until (englishRows?.length() ?: 0)).mapNotNull { idx ->
+                            englishRows?.optJSONObject(idx)?.let { row ->
+                                row.optInt("episode_number").takeIf { it > 0 }?.let { it to row }
+                            }
+                        }.toMap()
                         (0 until episodeRows.length()).mapNotNull { i ->
                             val entry = episodeRows.optJSONObject(i)
                                 ?: return@mapNotNull null
                             val episodeNo = entry.optInt("episode_number")
                                 .takeIf { it > 0 } ?: return@mapNotNull null
-                            val date = entry.optString("air_date")
+                            val english = englishByEpisode[episodeNo]
+                            val date = entry.optString("air_date").ifBlank { english?.optString("air_date").orEmpty() }
                             val rating = entry.optDouble("vote_average", 0.0)
                                 .takeIf { it > 0.1 && it <= 10.0 &&
                                     entry.optInt("vote_count") > 0 }
-                            val text = entry.optString("overview")
+                            val text = entry.optString("overview").ifBlank { english?.optString("overview").orEmpty() }
+                            val episodeName = entry.optString("name").ifBlank { english?.optString("name").orEmpty() }
+                            val still = entry.optString("still_path").ifBlank { english?.optString("still_path").orEmpty() }
                             newEpisode(
                                 "$mainUrl/tv/$id/season/$number/episode/$episodeNo",
                                 initializer = {
-                                name = entry.optString("name").ifBlank { "Bölüm $episodeNo" }
+                                name = episodeName.ifBlank { "Bölüm $episodeNo" }
                                 this.season = number
                                 this.episode = episodeNo
-                                posterUrl = image(entry.optString("still_path"), "w500")
+                                posterUrl = image(still, "w500") ?: fallbackBackdrop
                                 val future = date.isNotBlank() && try {
                                     SimpleDateFormat("yyyy-MM-dd", Locale.ROOT).parse(date)?.time?.let { it > System.currentTimeMillis() } == true
                                 } catch (_: Exception) { false }
@@ -628,7 +640,7 @@ class EAProvider : MainAPI() {
         val movieRelated = recs.filterNot { it.url in collectionUrls }
             .distinctBy { it.url }
         return if (isSeries) {
-            val episodes = tvEpisodes(tmdbId, item.optJSONArray("seasons"))
+            val episodes = tvEpisodes(tmdbId, item.optJSONArray("seasons"), backdrop)
             EpisodeUpcomingStyle.publish(url, episodes.mapNotNull { ep ->
                 ep.date?.takeIf { it > System.currentTimeMillis() }?.let { date ->
                     val season = ep.season
