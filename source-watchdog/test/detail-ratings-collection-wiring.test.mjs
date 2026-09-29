@@ -95,8 +95,8 @@ test("V23 targets poster and compact episode holder variants",()=>{
 });
 
 test("V24 moves next-air label out of plot into native TV airing row",()=>{
-  assert.ok(metaRow.includes('"result_next_airing_holder"'));
-  assert.ok(metaRow.includes('"result_next_airing_time"'));
+  assert.ok(detailMeta.includes('"result_next_airing_holder"'));
+  assert.ok(detailMeta.includes('"result_next_airing_time"'));
   assert.ok(provider.includes("DetailMetaRow.publish(url, imdbRating, tmdbRating, genreLabels, nextAirDateLabel)"));
   assert.ok(!provider.includes("seriesNote, upcomingLabel, overview, director"));
 });
