@@ -104,3 +104,10 @@ test("V24 compact future rows receive exact Turkish long date",()=>{
   assert.ok(upcomingStyle.includes('DATE_TAG'));
   assert.ok(upcomingStyle.includes('parent.addView(TextView(activity)'));
 });
+
+test("V25 reapplies future episode decoration after host RecyclerView binds",()=>{
+  assert.ok(upcomingStyle.includes("addOnGlobalLayoutListener"));
+  assert.ok(upcomingStyle.includes("renderFragment(fragment)"));
+  assert.ok(upcomingStyle.includes("YAKINDA"));
+  assert.ok(upcomingStyle.includes("longTurkishDate(parsed)"));
+});
