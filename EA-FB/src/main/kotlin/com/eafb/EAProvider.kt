@@ -473,6 +473,9 @@ class EAProvider : MainAPI() {
             ?.let { EpisodeAirPolicy.parse(it, System.currentTimeMillis()) }
 
     private fun nextEpisode(item: JSONObject, airing: EpisodeAirPolicy.Airing?): NextAiring? {
+        // EA-FB presents the exact Turkish air date instead of CloudStream's countdown.
+        return null
+        @Suppress("UNREACHABLE_CODE")
         if (airing?.showNativeCountdown != true) return null
         val upcoming = item.optJSONObject("next_episode_to_air") ?: return null
         val episode = upcoming.optInt("episode_number").takeIf { it > 0 } ?: return null
@@ -600,7 +603,7 @@ class EAProvider : MainAPI() {
             )
         })
         val nextAir = if (isSeries) upcomingEpisode(item) else null
-        val upcomingLabel = if (nextAir != null && !nextAir.showNativeCountdown) {
+        val upcomingLabel = if (nextAir != null) {
             val next = item.optJSONObject("next_episode_to_air")
             val season = next?.optInt("season_number")?.takeIf { it > 0 }
             val episode = next?.optInt("episode_number")?.takeIf { it > 0 }
@@ -628,7 +631,11 @@ class EAProvider : MainAPI() {
             .distinctBy { it.url }
         return if (isSeries) {
             val episodes = tvEpisodes(tmdbId, item.optJSONArray("seasons"))
-            EpisodeUpcomingStyle.publish(url, episodes.mapNotNull { it.date }.filter { it > System.currentTimeMillis() })
+            EpisodeUpcomingStyle.publish(url, episodes.mapNotNull { ep ->
+                ep.date?.takeIf { it > System.currentTimeMillis() }?.let { date ->
+                    ep.episode?.let { EpisodeUpcomingStyle.FutureEpisode(it, date) }
+                }
+            })
             newTvSeriesLoadResponse(title, url, kind, episodes) {
                 plot = combinedPlot
                 year = yearValue
