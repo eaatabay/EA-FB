@@ -29,8 +29,8 @@ internal object EpisodeUpcomingStyle {
     private const val BADGE_TAG = "ea-fb-upcoming-badge"
     private const val DATE_TAG = "ea-fb-upcoming-date"
     private val main = Handler(Looper.getMainLooper())
-    internal data class FutureEpisode(val season: Int, val episode: Int, val date: Long)
-    private val dates = ConcurrentHashMap<String, Map<Pair<Int, Int>, Long>>()
+    internal data class FutureEpisode(val season: Int, val episode: Int, val date: Long, val name: String? = null)
+    private val dates = ConcurrentHashMap<String, Map<Pair<Int, Int>, FutureEpisode>>()
     private val observedRoots = java.util.Collections.newSetFromMap(java.util.WeakHashMap<View, Boolean>())
     private val registered = java.util.Collections.newSetFromMap(
         java.util.WeakHashMap<FragmentActivity, Boolean>()
@@ -51,7 +51,7 @@ internal object EpisodeUpcomingStyle {
     }
 
     fun publish(seriesUrl: String, futureEpisodes: Collection<FutureEpisode>) {
-        dates[seriesUrl] = futureEpisodes.associate { (it.season to it.episode) to it.date }
+        dates[seriesUrl] = futureEpisodes.associate { (it.season to it.episode) to it }
         main.post { renderRegistered() }
         main.postDelayed({ renderRegistered() }, 250)
         main.postDelayed({ renderRegistered() }, 900)
@@ -94,7 +94,7 @@ internal object EpisodeUpcomingStyle {
         val args = fragment.arguments ?: return
         if (args.getString("apiName") != PROVIDER) return
         val url = args.getString("url") ?: return
-        val futureDates = dates[url] ?: return
+        val futureEpisodes = dates[url] ?: return
         if (!url.contains("/tv/")) return
         val root = fragment.view ?: return
         val activity = fragment.activity as? FragmentActivity ?: return
@@ -126,9 +126,13 @@ internal object EpisodeUpcomingStyle {
             val episodeText = holder.findViewById<TextView>(textId)?.text?.toString().orEmpty()
             val episodeNo = Regex("""^\s*(\d+)\.""").find(episodeText)
                 ?.groupValues?.getOrNull(1)?.toIntOrNull() ?: return@forEach
-            val candidates = futureDates.filterKeys { key -> key.second == episodeNo }
-            val parsed = candidates.values.minOrNull() ?: return@forEach
+            val candidates = futureEpisodes.filterKeys { key -> key.second == episodeNo }.values
+            val future = candidates.minByOrNull { it.date } ?: return@forEach
+            val parsed = future.date
             if (parsed <= System.currentTimeMillis()) return@forEach
+            future.name?.takeIf { it.isNotBlank() }?.let { actualName ->
+                holder.findViewById<TextView>(textId)?.text = "$episodeNo. $actualName"
+            }
             val dateLabel = longTurkishDate(parsed)
             if (dateView != null) {
                 dateView.text = dateLabel
