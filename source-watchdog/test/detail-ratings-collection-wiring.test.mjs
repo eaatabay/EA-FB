@@ -21,9 +21,9 @@ test("franchise detail cards only reference visible official collection artwork"
   assert.doesNotMatch(provider,/movieRelated.*take\(32\)/);
 });
 
-test("source-labeled ratings remain visible at the top of detail description",()=>{
-  assert.match(provider,/val ratingSummary = ratingBadges\.takeIf \{ it\.isNotEmpty\(\) \}/);
-  assert.match(provider,/val combinedPlot = listOfNotNull\(\s*ratingSummary, seriesNote, upcomingLabel, overview, director/);
+test("source-labeled ratings stay in detail tags and out of description",()=>{
+  assert.doesNotMatch(provider,/val ratingSummary =/);
+  assert.match(provider,/val combinedPlot = listOfNotNull\(\s*seriesNote, upcomingLabel, overview, director/);
   assert.match(provider,/imdbRating\?\.let \{ "IMDb " \+ scoreText\(it\)/);
   assert.match(provider,/tmdbRating\?\.let \{ "TMDb " \+ scoreText\(it\)/);
   assert.ok(provider.indexOf('imdbRating?.let { "IMDb "') < provider.indexOf('tmdbRating?.let { "TMDb "'));
@@ -38,6 +38,6 @@ test("posterless first-page platform and genre rails use bounded same-route reco
 
 test("chronological film series cue precedes long synopsis in details",()=>{
   assert.match(provider,/val seriesNote = collectionLabel/);
-  assert.match(provider,/ratingSummary, seriesNote, upcomingLabel, overview, director/);
+  assert.match(provider,/listOfNotNull\(\s*seriesNote, upcomingLabel, overview, director/);
   assert.match(provider,/recommendations = movieRelated/);
 });
