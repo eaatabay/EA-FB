@@ -93,3 +93,14 @@ test("V23 persists load score for all CloudStream watch-status bookmark rails",(
 test("V23 targets poster and compact episode holder variants",()=>{
   assert.ok(upcomingStyle.includes('listOf("episode_holder_large", "episode_holder")'));
 });
+
+test("V24 moves next-air label out of plot into native TV airing row",()=>{
+  assert.ok(metaRow.includes('"result_next_airing_holder"'));
+  assert.ok(metaRow.includes('"result_next_airing_time"'));
+  assert.ok(provider.includes("DetailMetaRow.publish(url, imdbRating, tmdbRating, genreLabels, nextAirDateLabel)"));
+  assert.ok(!provider.includes("seriesNote, upcomingLabel, overview, director"));
+});
+test("V24 compact future rows receive injected exact date",()=>{
+  assert.ok(upcomingStyle.includes('DATE_TAG'));
+  assert.ok(upcomingStyle.includes('parent.addView(TextView(activity)'));
+});
