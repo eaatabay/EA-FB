@@ -156,17 +156,17 @@ internal object FilmSeriesRail {
                 posterFrame.addView(TextView(activity).apply {
                     text = String.format(java.util.Locale.ROOT, "%.1f ★", rating)
                     setTextColor(Color.WHITE)
-                    textSize = 12f
+                    textSize = 11f
                     setTypeface(null, Typeface.BOLD)
                     gravity = Gravity.CENTER
-                    setPadding(dp(activity, 6), dp(activity, 2), dp(activity, 6), dp(activity, 2))
+                    setPadding(dp(activity, 5), dp(activity, 1), dp(activity, 5), dp(activity, 1))
                     background = GradientDrawable().apply {
                         setColor(Color.rgb(11, 22, 47))
-                        cornerRadius = dp(activity, 12).toFloat()
+                        cornerRadius = dp(activity, 10).toFloat()
                     }
                 }, FrameLayout.LayoutParams(
                     ViewGroup.LayoutParams.WRAP_CONTENT,
-                    dp(activity, 25),
+                    dp(activity, 21),
                     Gravity.TOP or Gravity.END
                 ).apply {
                     setMargins(0, dp(activity, 6), dp(activity, 6), 0)
@@ -176,17 +176,17 @@ internal object FilmSeriesRail {
                 posterFrame.addView(TextView(activity).apply {
                     text = year.toString()
                     setTextColor(Color.WHITE)
-                    textSize = 12f
+                    textSize = 11f
                     setTypeface(null, Typeface.BOLD)
                     gravity = Gravity.CENTER
-                    setPadding(dp(activity, 6), dp(activity, 2), dp(activity, 6), dp(activity, 2))
+                    setPadding(dp(activity, 5), dp(activity, 1), dp(activity, 5), dp(activity, 1))
                     background = GradientDrawable().apply {
                         setColor(Color.rgb(11, 22, 47))
-                        cornerRadius = dp(activity, 12).toFloat()
+                        cornerRadius = dp(activity, 10).toFloat()
                     }
                 }, FrameLayout.LayoutParams(
                     ViewGroup.LayoutParams.WRAP_CONTENT,
-                    dp(activity, 25),
+                    dp(activity, 21),
                     Gravity.TOP or Gravity.START
                 ).apply {
                     setMargins(dp(activity, 6), dp(activity, 6), 0, 0)
