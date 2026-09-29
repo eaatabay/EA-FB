@@ -77,7 +77,7 @@ test("detail metadata font inherits host TextView without unsafe resource lookup
 test("V21 exact upcoming UI suppresses native countdown and both host placeholders",()=>{
   assert.ok(provider.includes("private fun nextEpisode") && provider.includes("NextAiring? = null"));
   assert.ok(upcomingStyle.includes("episodeNo = Regex("));
-  assert.ok(upcomingStyle.includes("it.second == episodeNo"));
+  assert.ok(upcomingStyle.includes("key.second == episodeNo"));
   assert.ok(detailMeta.includes('listOf("result_coming_soon", "result_tv_coming_soon")'));
 });
 
