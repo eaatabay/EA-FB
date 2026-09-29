@@ -113,12 +113,22 @@ internal object EpisodeUpcomingStyle {
         val textId = activity.resources.getIdentifier("episode_text", "id", activity.packageName)
         if (holderIds.isEmpty() || textId == 0) return
         holderIds.flatMap { findViews(root, it) }.forEach { holder ->
+            // RecyclerView recycles episode rows. Always clear our decoration first;
+            // otherwise a future row's badge can leak onto an already-aired episode.
+            if (posterId != 0) {
+                holder.findViewById<View>(posterId)?.let { poster ->
+                    (poster.parent as? FrameLayout)?.findViewWithTag<View>(BADGE_TAG)?.let { badge ->
+                        (badge.parent as? ViewGroup)?.removeView(badge)
+                    }
+                }
+            }
             val dateView = if (dateId != 0) holder.findViewById<TextView>(dateId) else null
             val episodeText = holder.findViewById<TextView>(textId)?.text?.toString().orEmpty()
             val episodeNo = Regex("""^\s*(\d+)\.""").find(episodeText)
                 ?.groupValues?.getOrNull(1)?.toIntOrNull() ?: return@forEach
             val candidates = futureDates.filterKeys { key -> key.second == episodeNo }
             val parsed = candidates.values.minOrNull() ?: return@forEach
+            if (parsed <= System.currentTimeMillis()) return@forEach
             val dateLabel = longTurkishDate(parsed)
             if (dateView != null) {
                 dateView.text = dateLabel
