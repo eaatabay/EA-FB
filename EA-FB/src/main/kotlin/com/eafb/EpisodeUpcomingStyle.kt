@@ -96,14 +96,15 @@ internal object EpisodeUpcomingStyle {
         val holderId = activity.resources.getIdentifier("episode_holder_large", "id", activity.packageName)
         val dateId = activity.resources.getIdentifier("episode_date", "id", activity.packageName)
         val posterId = activity.resources.getIdentifier("episode_poster", "id", activity.packageName)
-        val textId = activity.resources.getIdentifier("episode_text", "id", activity.packageName)\n        val seasonId = activity.resources.getIdentifier("episode_season", "id", activity.packageName)
+        val textId = activity.resources.getIdentifier("episode_text", "id", activity.packageName)
         if (holderId == 0 || dateId == 0 || posterId == 0 || textId == 0) return
         findViews(root, holderId).forEach { holder ->
             val dateView = holder.findViewById<TextView>(dateId) ?: return@forEach
             val episodeText = holder.findViewById<TextView>(textId)?.text?.toString().orEmpty()
-            val episodeNo = Regex("^\\\\s*(\\\\d+)\\\\.").find(episodeText)
+            val episodeNo = Regex("""^\s*(\d+)\.""").find(episodeText)
                 ?.groupValues?.getOrNull(1)?.toIntOrNull() ?: return@forEach
-            val parsed = futureDates[episodeNo] ?: return@forEach
+            val candidates = futureDates.filterKeys { key -> key.second == episodeNo }
+            val parsed = candidates.values.minOrNull() ?: return@forEach
             dateView.text = longTurkishDate(parsed)
             dateView.visibility = View.VISIBLE
 
