@@ -628,7 +628,7 @@ class EAProvider : MainAPI() {
             .distinctBy { it.url }
         return if (isSeries) {
             val episodes = tvEpisodes(tmdbId, item.optJSONArray("seasons"))
-            EpisodeUpcomingStyle.publish(url, episodes.mapNotNull { it.airDate }.filter { it > System.currentTimeMillis() })
+            EpisodeUpcomingStyle.publish(url, episodes.mapNotNull { it.date }.filter { it > System.currentTimeMillis() })
             newTvSeriesLoadResponse(title, url, kind, episodes) {
                 plot = combinedPlot
                 year = yearValue
