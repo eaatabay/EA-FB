@@ -577,6 +577,11 @@ class EAProvider : MainAPI() {
             imdbRating?.let { "IMDb " + scoreText(it) + "/10" },
             tmdbRating?.let { "TMDb " + scoreText(it) + "/10" }
         )
+        val genreLabels = genres(item)
+        // TV detail enhancement: ratings + genres move beside duration when the
+        // host exposes its stable result_meta_duration row. Native tags remain
+        // populated as a compatibility fallback and are hidden only on success.
+        DetailMetaRow.publish(url, imdbRating, tmdbRating, genreLabels)
         // CloudStream's unlabeled native hero score duplicates these source-labeled
         // chips, so details deliberately show the chips only (no native score).
         val collection = if (!isSeries) {
@@ -630,7 +635,7 @@ class EAProvider : MainAPI() {
                 posterUrl = poster
                 backgroundPosterUrl = backdrop
                 actors = people
-                tags = ratingBadges + genres(item)
+                tags = ratingBadges + genreLabels
                 recommendations = recs
                 nextAiring = nextEpisode(item, nextAir)
                 showStatus = when (item.optString("status")) {
@@ -649,7 +654,7 @@ class EAProvider : MainAPI() {
                 posterUrl = poster
                 backgroundPosterUrl = backdrop
                 actors = people
-                tags = ratingBadges + genres(item)
+                tags = ratingBadges + genreLabels
                 recommendations = movieRelated
                 duration = item.optInt("runtime").takeIf { it > 0 }
             }
