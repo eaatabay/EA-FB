@@ -51,7 +51,9 @@ internal object EpisodeUpcomingStyle {
         dates[seriesUrl] = futureEpisodes.associate { (it.season to it.episode) to it.date }
         main.post { renderRegistered() }
         main.postDelayed({ renderRegistered() }, 250)
-        main.postDelayed({ renderRegistered() }, 900)\n        main.postDelayed({ renderRegistered() }, 1800)\n        main.postDelayed({ renderRegistered() }, 3000)
+        main.postDelayed({ renderRegistered() }, 900)
+        main.postDelayed({ renderRegistered() }, 1800)
+        main.postDelayed({ renderRegistered() }, 3000)
     }
 
     private fun renderRegistered() {
