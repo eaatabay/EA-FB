@@ -124,3 +124,5 @@ test("V27 fills blank Turkish episode metadata from English and uses series back
   assert.ok(provider.includes('english?.optString("still_path")'));
   assert.ok(provider.includes('posterUrl = image(still, "w500") ?: fallbackBackdrop'));
 });
+
+// V27 CI trigger after staging-version regression alignment.
