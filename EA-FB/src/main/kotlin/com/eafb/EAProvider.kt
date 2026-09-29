@@ -513,9 +513,7 @@ class EAProvider : MainAPI() {
                                 posterUrl = image(entry.optString("still_path"), "w500")
                                 score = rating?.let { Score.from10(it) }
                                 description = if (rating != null) {
-                                    text + (if (text.isBlank()) "" else "
-
-") +
+                                    text + (if (text.isBlank()) "" else "\\n\\n") +
                                         "Bölüm puanı: TMDb " +
                                         String.format(Locale.ROOT, "%.1f", rating) + "/10"
                                 } else text
@@ -620,9 +618,7 @@ class EAProvider : MainAPI() {
         // Never substitute TMDb's vote_average for an unavailable IMDb score.
         val combinedPlot = listOfNotNull(
             seriesNote, upcomingLabel, overview, director
-        ).joinToString("
-
-")
+        ).joinToString("\\n\\n")
         val recs = recommendations(item, media, tmdbId)
         // The film series has its own row. The host's recommendations contain
         // only unrelated suggestions, never a second copy of the series.
