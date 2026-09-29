@@ -95,21 +95,26 @@ internal object EpisodeUpcomingStyle {
         if (!url.contains("/tv/")) return
         val root = fragment.view ?: return
         val activity = fragment.activity as? FragmentActivity ?: return
-        val holderId = activity.resources.getIdentifier("episode_holder_large", "id", activity.packageName)
+        val holderIds = listOf("episode_holder_large", "episode_holder").mapNotNull { name ->
+            activity.resources.getIdentifier(name, "id", activity.packageName).takeIf { it != 0 }
+        }
         val dateId = activity.resources.getIdentifier("episode_date", "id", activity.packageName)
         val posterId = activity.resources.getIdentifier("episode_poster", "id", activity.packageName)
         val textId = activity.resources.getIdentifier("episode_text", "id", activity.packageName)
-        if (holderId == 0 || dateId == 0 || posterId == 0 || textId == 0) return
-        findViews(root, holderId).forEach { holder ->
-            val dateView = holder.findViewById<TextView>(dateId) ?: return@forEach
+        if (holderIds.isEmpty() || textId == 0) return
+        holderIds.flatMap { findViews(root, it) }.forEach { holder ->
+            val dateView = if (dateId != 0) holder.findViewById<TextView>(dateId) else null
             val episodeText = holder.findViewById<TextView>(textId)?.text?.toString().orEmpty()
             val episodeNo = Regex("""^\s*(\d+)\.""").find(episodeText)
                 ?.groupValues?.getOrNull(1)?.toIntOrNull() ?: return@forEach
             val candidates = futureDates.filterKeys { key -> key.second == episodeNo }
             val parsed = candidates.values.minOrNull() ?: return@forEach
-            dateView.text = longTurkishDate(parsed)
-            dateView.visibility = View.VISIBLE
+            dateView?.let {
+                it.text = longTurkishDate(parsed)
+                it.visibility = View.VISIBLE
+            }
 
+            if (posterId == 0) return@forEach
             val poster = holder.findViewById<View>(posterId) ?: return@forEach
             val frame = poster.parent as? FrameLayout ?: return@forEach
             if (frame.findViewWithTag<View>(BADGE_TAG) == null) {
