@@ -27,7 +27,8 @@ internal object EpisodeUpcomingStyle {
     private const val PROVIDER = "EA-FB V6 STAGING"
     private const val BADGE_TAG = "ea-fb-upcoming-badge"
     private val main = Handler(Looper.getMainLooper())
-    private val dates = ConcurrentHashMap<String, Set<Long>>()
+    internal data class FutureEpisode(val episode: Int, val date: Long)
+    private val dates = ConcurrentHashMap<String, Map<Int, Long>>()
     private val registered = java.util.Collections.newSetFromMap(
         java.util.WeakHashMap<FragmentActivity, Boolean>()
     )
@@ -46,8 +47,8 @@ internal object EpisodeUpcomingStyle {
         attach(context as? Activity)
     }
 
-    fun publish(seriesUrl: String, futureDates: Collection<Long>) {
-        dates[seriesUrl] = futureDates.toSet()
+    fun publish(seriesUrl: String, futureEpisodes: Collection<FutureEpisode>) {
+        dates[seriesUrl] = futureEpisodes.associate { it.episode to it.date }
         main.post { renderRegistered() }
         main.postDelayed({ renderRegistered() }, 250)
         main.postDelayed({ renderRegistered() }, 900)
@@ -95,15 +96,14 @@ internal object EpisodeUpcomingStyle {
         val holderId = activity.resources.getIdentifier("episode_holder_large", "id", activity.packageName)
         val dateId = activity.resources.getIdentifier("episode_date", "id", activity.packageName)
         val posterId = activity.resources.getIdentifier("episode_poster", "id", activity.packageName)
-        if (holderId == 0 || dateId == 0 || posterId == 0) return
+        val textId = activity.resources.getIdentifier("episode_text", "id", activity.packageName)
+        if (holderId == 0 || dateId == 0 || posterId == 0 || textId == 0) return
         findViews(root, holderId).forEach { holder ->
             val dateView = holder.findViewById<TextView>(dateId) ?: return@forEach
-            val parsed = futureDates.firstOrNull { millis ->
-                // The host countdown has no stable date payload in the View; match
-                // future cards by their adapter order after their date TextView exists.
-                val text = dateView.text?.toString().orEmpty()
-                text.contains("sonra", true) || text.contains("in ", true)
-            } ?: return@forEach
+            val episodeText = holder.findViewById<TextView>(textId)?.text?.toString().orEmpty()
+            val episodeNo = Regex("^\\\\s*(\\\\d+)\\\\.").find(episodeText)
+                ?.groupValues?.getOrNull(1)?.toIntOrNull() ?: return@forEach
+            val parsed = futureDates[episodeNo] ?: return@forEach
             dateView.text = longTurkishDate(parsed)
             dateView.visibility = View.VISIBLE
 
