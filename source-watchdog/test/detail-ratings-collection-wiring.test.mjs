@@ -130,5 +130,5 @@ test("V27 fills blank Turkish episode metadata from English and uses series back
 test("V28 carries resolved episode names into the generic future-row decorator",()=>{
   assert.ok(upcomingStyle.includes("val name: String? = null"));
   assert.ok(upcomingStyle.includes('text = "$episodeNo. $actualName"'));
-  assert.ok(provider.includes("episodeName.ifBlank { null }"));
+  assert.ok(provider.includes("date, ep.name"));
 });
