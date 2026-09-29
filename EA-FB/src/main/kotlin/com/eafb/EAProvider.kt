@@ -645,7 +645,7 @@ class EAProvider : MainAPI() {
                 ep.date?.takeIf { it > System.currentTimeMillis() }?.let { date ->
                     val season = ep.season
                     val episode = ep.episode
-                    if (season != null && episode != null) EpisodeUpcomingStyle.FutureEpisode(season, episode, date) else null
+                    if (season != null && episode != null) EpisodeUpcomingStyle.FutureEpisode(season, episode, date, ep.name) else null
                 }
             })
             newTvSeriesLoadResponse(title, url, kind, episodes) {
