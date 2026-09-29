@@ -25,7 +25,9 @@ test("source-labeled ratings remain visible at the top of detail description",()
   assert.match(provider,/val ratingSummary = ratingBadges\.takeIf \{ it\.isNotEmpty\(\) \}/);
   assert.match(provider,/val combinedPlot = listOfNotNull\(\s*ratingSummary, seriesNote, upcomingLabel, overview, director/);
   assert.match(provider,/imdbRating\?\.let \{ "IMDb " \+ scoreText\(it\)/);
-  assert.match(provider,/tmdbRating\?\.let \{ "TMDb " \+ scoreText\(it\)/);
+  assert.match(provider,/tmdbRating\\?\\.let \\{ "TMDb " \\+ scoreText\\(it\\)/);
+  assert.match(provider,/val ratingBadges = listOfNotNull\\(\\s*imdbRating\\?\\.let[\\s\\S]*tmdbRating\\?\\.let/);
+  assert.match(provider,/tags = ratingBadges \\+ genres\\(item\\)/);
 });
 
 test("posterless first-page platform and genre rails use bounded same-route recovery",()=>{
