@@ -114,7 +114,7 @@ internal object DetailMetaRow {
             row.addView(TextView(activity).apply {
                 tag = MARKER_PREFIX + index
                 text = label.text
-                textSize = 15f
+                textSize = duration.resources.getDimension(duration.resources.getIdentifier("result_meta_text_size", "dimen", activity.packageName)).takeIf { it > 0f }?.let { it / activity.resources.displayMetrics.scaledDensity } ?: (duration as? TextView)?.textSize?.let { it / activity.resources.displayMetrics.scaledDensity } ?: 14f
                 setTypeface(null, Typeface.BOLD)
                 setTextColor(label.color)
                 setPadding(dp(activity, 4), 0, dp(activity, 4), 0)
