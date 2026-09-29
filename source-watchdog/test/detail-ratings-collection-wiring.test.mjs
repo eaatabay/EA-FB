@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
 const provider=readFileSync(new URL("../../EA-FB/src/main/kotlin/com/eafb/EAProvider.kt",import.meta.url),"utf8");
 const worker=readFileSync(new URL("../../worker/src/index.js",import.meta.url),"utf8");
+const detailMeta=readFileSync(new URL("../../EA-FB/src/main/kotlin/com/eafb/DetailMetaRow.kt",import.meta.url),"utf8");
 test("IMDb title badge requires independently sourced OMDb score",()=>{
   assert.match(provider,/optString\("source"\) == "OMDb API"/);
   assert.match(provider,/optJSONObject\("external_ids"\)\?\.optString\("imdb_id"\)/);
@@ -28,6 +29,16 @@ test("source-labeled ratings stay in detail tags and out of description",()=>{
   assert.match(provider,/tmdbRating\?\.let \{ "TMDb " \+ scoreText\(it\)/);
   assert.ok(provider.indexOf('imdbRating?.let { "IMDb "') < provider.indexOf('tmdbRating?.let { "TMDb "'));
   assert.match(provider,/tags = ratingBadges \+ genres\(item\)/);
+});
+
+test("TV detail metadata moves ratings and genres beside duration with native fallback",()=>{
+  assert.match(provider,/DetailMetaRow\.publish\(url, imdbRating, tmdbRating, genreLabels\)/);
+  assert.ok(detailMeta.includes('"result_meta_duration"'));
+  assert.ok(detailMeta.includes('"result_tag"'));
+  assert.ok(detailMeta.includes("Color.YELLOW"));
+  assert.ok(detailMeta.includes("Color.rgb(57, 255, 20)"));
+  assert.match(detailMeta,/visibility = View\.GONE/);
+  assert.match(provider,/tags = ratingBadges \+ genreLabels/);
 });
 
 test("posterless first-page platform and genre rails use bounded same-route recovery",()=>{
