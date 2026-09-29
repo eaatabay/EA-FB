@@ -16,6 +16,7 @@ import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.Switch
 import android.widget.TextView
+import com.lagradost.cloudstream3.MainActivity
 
 /**
  * EA-FB-owned settings window, not a change to CloudStream's global interface.
@@ -119,7 +120,7 @@ object EASettingsDialog {
     fun show(ctx: Context) {
         val dialog = Dialog(ctx)
         var dirty = false
-        var manualRefresh = false
+        var refreshRequested = false
         val root = vertical(ctx).apply {
             setPadding(dp(ctx, 24), dp(ctx, 20), dp(ctx, 24), dp(ctx, 16))
             background = shape(ctx, NAVY, YELLOW, 20)
@@ -160,12 +161,12 @@ object EASettingsDialog {
         val footer = text(ctx, "Seçimler kaydedilir; pencereyi kapatınca ana sayfa yenilenir. Dilersen hemen yenile.", 12f, MUTED)
         root.addView(footer, margin(ctx, 12, 0))
         val refresh = button(ctx, "KAYDET VE ANA SAYFAYI YENİLE") {
-            // User-triggered Activity recreation; no silent host restart.
-            manualRefresh = true
+            // Ask CloudStream's HomeViewModel for the same forced reload used by
+            // its own refresh/account flow. Activity.recreate() did not invalidate
+            // the host home cache reliably on Mi Box.
+            refreshRequested = true
             dialog.dismiss()
-            var host: Context? = ctx
-            while (host is ContextWrapper && host !is Activity) host = host.baseContext
-            (host as? Activity)?.takeUnless { it.isFinishing || it.isDestroyed }?.recreate()
+            MainActivity.reloadHomeEvent(true)
         }
         root.addView(refresh, margin(ctx, 12, 8))
 
@@ -265,15 +266,10 @@ object EASettingsDialog {
                     14f, MUTED), margin(ctx, 0, 16))
             }
         }
-        // Host owns the home cache. On closing a changed dialog, recreate the
-        // Activity once to pick up dynamic mainPage getters. Focus restoration
-        // depends on the host and must be checked on a physical Mi Box.
+        // CloudStream exposes a first-party force-home-reload event. Use it on
+        // ordinary close after a change; the explicit button already fires it.
         dialog.setOnDismissListener {
-            if (dirty && !manualRefresh) {
-                var host: Context? = ctx
-                while (host is ContextWrapper && host !is Activity) host = host.baseContext
-                (host as? Activity)?.takeUnless { it.isFinishing || it.isDestroyed }?.recreate()
-            }
+            if (dirty && !refreshRequested) MainActivity.reloadHomeEvent(true)
         }
         render()
         dialog.setContentView(root)
