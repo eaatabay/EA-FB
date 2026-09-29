@@ -100,7 +100,7 @@ test("V24 moves next-air label out of plot into native TV airing row",()=>{
   assert.ok(provider.includes("DetailMetaRow.publish(url, imdbRating, tmdbRating, genreLabels, nextAirDateLabel)"));
   assert.ok(!provider.includes("seriesNote, upcomingLabel, overview, director"));
 });
-test("V24 compact future rows receive injected exact long date",()=>{
+test("V24 compact future rows receive exact long date",()=>{
   assert.ok(upcomingStyle.includes('DATE_TAG'));
   assert.ok(upcomingStyle.includes('parent.addView(TextView(activity)'));
 });
