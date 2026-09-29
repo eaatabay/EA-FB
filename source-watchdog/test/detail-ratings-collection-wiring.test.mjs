@@ -55,7 +55,7 @@ test("chronological film series cue precedes long synopsis in details",()=>{
 });
 
 test("future TV episodes use long Turkish date and EA-FB yellow upcoming badge",()=>{
-  assert.ok(provider.includes('EpisodeUpcomingStyle.publish(url, episodes.mapNotNull { it.date }'));
+  assert.ok(provider.includes('EpisodeUpcomingStyle.publish(url, episodes.mapNotNull { ep ->'));
   assert.ok(upcomingStyle.includes('if (!url.contains("/tv/")) return'));
   assert.ok(upcomingStyle.includes('SimpleDateFormat("d MMMM yyyy EEEE"'));
   assert.ok(upcomingStyle.includes('text = "YAKINDA"'));
@@ -73,4 +73,10 @@ test("movie stock coming-soon placeholder is hidden without touching TV",()=>{
 test("detail metadata font inherits host TextView without unsafe resource lookup",()=>{
   assert.ok(detailMeta.includes("(duration as? TextView)?.textSize"));
   assert.ok(!detailMeta.includes('getDimension(duration.resources.getIdentifier'));
+});
+
+test("V21 exact upcoming UI suppresses native countdown and both host placeholders",()=>{
+  assert.ok(provider.includes("EA-FB presents the exact Turkish air date"));
+  assert.ok(upcomingStyle.includes('Regex("^\\\\s*(\\\\d+)\\\\.")'));
+  assert.ok(detailMeta.includes('listOf("result_coming_soon", "result_tv_coming_soon")'));
 });
