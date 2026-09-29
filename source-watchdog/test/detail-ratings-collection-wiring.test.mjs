@@ -132,3 +132,8 @@ test("V28 carries resolved episode names into the generic future-row decorator",
   assert.ok(upcomingStyle.includes('text = "$episodeNo. $actualName"'));
   assert.ok(provider.includes("date, ep.name"));
 });
+
+test("V29 forces resolved future episode title into visible host title view",()=>{
+  assert.ok(upcomingStyle.includes('text = "$episodeNo. $actualName"'));
+  assert.ok(upcomingStyle.includes("visibility = View.VISIBLE"));
+});
