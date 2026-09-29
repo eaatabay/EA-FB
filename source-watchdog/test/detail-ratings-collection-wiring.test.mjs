@@ -126,3 +126,9 @@ test("V27 fills blank Turkish episode metadata from English and uses series back
 });
 
 // V27 CI trigger after staging-version regression alignment.
+
+test("V28 carries resolved episode names into the generic future-row decorator",()=>{
+  assert.ok(upcomingStyle.includes("val name: String? = null"));
+  assert.ok(upcomingStyle.includes('text = "$episodeNo. $actualName"'));
+  assert.ok(provider.includes("parsed, episodeName.ifBlank { null }"));
+});
