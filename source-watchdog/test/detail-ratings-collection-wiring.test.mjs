@@ -33,7 +33,7 @@ test("source-labeled ratings stay in detail tags and out of description",()=>{
 });
 
 test("TV detail metadata moves ratings and genres beside duration with native fallback",()=>{
-  assert.match(provider,/DetailMetaRow\.publish\(url, imdbRating, tmdbRating, genreLabels\)/);
+  assert.ok(provider.includes("DetailMetaRow.publish(url, imdbRating, tmdbRating, genreLabels, nextAirDateLabel)"));
   assert.ok(detailMeta.includes('"result_meta_duration"'));
   assert.ok(detailMeta.includes('"result_tag"'));
   assert.ok(detailMeta.includes("Color.YELLOW"));
