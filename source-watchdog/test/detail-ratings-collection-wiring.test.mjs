@@ -116,3 +116,11 @@ test("V26 clears recycled YAKINDA badges before future-only decoration",()=>{
   assert.ok(upcomingStyle.includes("removeView(badge)"));
   assert.ok(upcomingStyle.includes("parsed <= System.currentTimeMillis()"));
 });
+
+test("V27 fills blank Turkish episode metadata from English and uses series backdrop for missing stills",()=>{
+  assert.ok(provider.includes('getJson("/tv/$id/season/$number", language = "en-US")'));
+  assert.ok(provider.includes('english?.optString("overview")'));
+  assert.ok(provider.includes('english?.optString("name")'));
+  assert.ok(provider.includes('english?.optString("still_path")'));
+  assert.ok(provider.includes('posterUrl = image(still, "w500") ?: fallbackBackdrop'));
+});
