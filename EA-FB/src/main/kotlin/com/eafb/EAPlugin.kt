@@ -11,6 +11,7 @@ class EAPlugin : Plugin() {
         EASettings.initialize(context)
         FilmSeriesRail.install(context)
         DetailMetaRow.install(context)
+        EpisodeUpcomingStyle.install(context)
         registerMainAPI(EAProvider())
         openSettings = { uiContext -> EASettingsDialog.show(uiContext) }
     }
