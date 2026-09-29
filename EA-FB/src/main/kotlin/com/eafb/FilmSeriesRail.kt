@@ -154,7 +154,7 @@ internal object FilmSeriesRail {
             )
             card.rating?.takeIf { it > 0.0 && it <= 10.0 }?.let { rating ->
                 posterFrame.addView(TextView(activity).apply {
-                    text = String.format(java.util.Locale.ROOT, "★ %.1f", rating)
+                    text = String.format(java.util.Locale.ROOT, "%.1f ★", rating)
                     setTextColor(Color.WHITE)
                     textSize = 12f
                     setTypeface(null, Typeface.BOLD)
@@ -162,8 +162,7 @@ internal object FilmSeriesRail {
                     setPadding(dp(activity, 6), dp(activity, 2), dp(activity, 6), dp(activity, 2))
                     background = GradientDrawable().apply {
                         setColor(Color.rgb(11, 22, 47))
-                        setStroke(1, Color.YELLOW)
-                        cornerRadius = dp(activity, 5).toFloat()
+                        cornerRadius = dp(activity, 12).toFloat()
                     }
                 }, FrameLayout.LayoutParams(
                     ViewGroup.LayoutParams.WRAP_CONTENT,
@@ -173,18 +172,17 @@ internal object FilmSeriesRail {
                     setMargins(0, dp(activity, 6), dp(activity, 6), 0)
                 })
             }
-            card.releaseDate?.take(4)?.toIntOrNull()?.let { year ->
+            card.releaseDate?.takeLast(4)?.toIntOrNull()?.let { year ->
                 posterFrame.addView(TextView(activity).apply {
                     text = year.toString()
-                    setTextColor(Color.YELLOW)
+                    setTextColor(Color.WHITE)
                     textSize = 12f
                     setTypeface(null, Typeface.BOLD)
                     gravity = Gravity.CENTER
                     setPadding(dp(activity, 6), dp(activity, 2), dp(activity, 6), dp(activity, 2))
                     background = GradientDrawable().apply {
                         setColor(Color.rgb(11, 22, 47))
-                        setStroke(1, Color.YELLOW)
-                        cornerRadius = dp(activity, 5).toFloat()
+                        cornerRadius = dp(activity, 12).toFloat()
                     }
                 }, FrameLayout.LayoutParams(
                     ViewGroup.LayoutParams.WRAP_CONTENT,
