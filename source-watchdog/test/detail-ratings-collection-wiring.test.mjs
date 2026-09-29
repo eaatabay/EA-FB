@@ -4,6 +4,7 @@ import {readFileSync} from "node:fs";
 const provider=readFileSync(new URL("../../EA-FB/src/main/kotlin/com/eafb/EAProvider.kt",import.meta.url),"utf8");
 const worker=readFileSync(new URL("../../worker/src/index.js",import.meta.url),"utf8");
 const detailMeta=readFileSync(new URL("../../EA-FB/src/main/kotlin/com/eafb/DetailMetaRow.kt",import.meta.url),"utf8");
+const upcomingStyle=readFileSync(new URL("../../EA-FB/src/main/kotlin/com/eafb/EpisodeUpcomingStyle.kt",import.meta.url),"utf8");
 test("IMDb title badge requires independently sourced OMDb score",()=>{
   assert.match(provider,/optString\("source"\) == "OMDb API"/);
   assert.match(provider,/optJSONObject\("external_ids"\)\?\.optString\("imdb_id"\)/);
@@ -51,4 +52,14 @@ test("chronological film series cue precedes long synopsis in details",()=>{
   assert.match(provider,/val seriesNote = collectionLabel/);
   assert.match(provider,/listOfNotNull\(\s*seriesNote, upcomingLabel, overview, director/);
   assert.match(provider,/recommendations = movieRelated/);
+});
+
+test("future TV episodes use long Turkish date and EA-FB yellow upcoming badge",()=>{
+  assert.match(provider,/EpisodeUpcomingStyle\.publish\(url, episodes\.mapNotNull \{ it\.airDate \}/);
+  assert.ok(upcomingStyle.includes('if (!url.contains("/tv/")) return'));
+  assert.ok(upcomingStyle.includes('SimpleDateFormat("d MMMM yyyy EEEE"'));
+  assert.ok(upcomingStyle.includes('text = "YAKINDA"'));
+  assert.ok(upcomingStyle.includes("Color.rgb(255, 208, 0)"));
+  assert.ok(upcomingStyle.includes("Color.rgb(7, 22, 45)"));
+  assert.ok(!upcomingStyle.includes("Color.RED"));
 });
