@@ -86,3 +86,10 @@ test("V22 uses literal episode regex and exact long Turkish TMDb date",()=>{
   assert.ok(provider.includes('SimpleDateFormat("d MMMM yyyy EEEE", Locale("tr", "TR"))'));
   assert.ok(provider.includes('FutureEpisode(season, episode, date)'));
 });
+
+test("V23 persists load score for all CloudStream watch-status bookmark rails",()=>{
+  assert.ok(provider.includes("score = tmdbRating?.let { Score.from10(it) }"));
+});
+test("V23 targets poster and compact episode holder variants",()=>{
+  assert.ok(upcomingStyle.includes('listOf("episode_holder_large", "episode_holder")'));
+});
