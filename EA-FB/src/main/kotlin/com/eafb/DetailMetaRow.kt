@@ -74,7 +74,11 @@ internal object DetailMetaRow {
             object : FragmentManager.FragmentLifecycleCallbacks() {
                 override fun onFragmentViewCreated(
                     fm: FragmentManager, fragment: Fragment, view: View, state: Bundle?
-                ) { main.post { renderFragment(fragment) } }
+                ) {
+                    main.post { renderFragment(fragment) }
+                    main.postDelayed({ renderFragment(fragment) }, 500)
+                    main.postDelayed({ renderFragment(fragment) }, 1200)
+                }
             }, true
         )
         main.post { host.supportFragmentManager.fragments.forEach(::renderTree) }
@@ -96,11 +100,12 @@ internal object DetailMetaRow {
         // CloudStream's movie layout may expose its generic "coming soon"
         // placeholder even when EA-FB has a normal movie detail response.
         // Hide only that stock movie placeholder; TV upcoming UI is separate.
-        if (url.contains("/movie/")) {
-            val comingSoonId = activity.resources.getIdentifier(
-                "result_coming_soon", "id", activity.packageName
-            )
-            if (comingSoonId != 0) root.findViewById<View>(comingSoonId)?.visibility = View.GONE
+        // These are CloudStream's generic empty-state placeholders, not EA-FB
+        // collection/recommendation headings. They can be surfaced by the host
+        // after our async detail response, so hide both variants on EA-FB details.
+        listOf("result_coming_soon", "result_tv_coming_soon").forEach { name ->
+            val id = activity.resources.getIdentifier(name, "id", activity.packageName)
+            if (id != 0) root.findViewById<View>(id)?.visibility = View.GONE
         }
 
         val durationId = activity.resources.getIdentifier(
