@@ -63,3 +63,9 @@ test("future TV episodes use long Turkish date and EA-FB yellow upcoming badge",
   assert.ok(upcomingStyle.includes("Color.rgb(7, 22, 45)"));
   assert.ok(!upcomingStyle.includes("Color.RED"));
 });
+
+test("movie stock coming-soon placeholder is hidden without touching TV",()=>{
+  assert.ok(detailMeta.includes('if (url.contains("/movie/"))'));
+  assert.ok(detailMeta.includes('"result_coming_soon"'));
+  assert.ok(!detailMeta.includes('"result_tv_coming_soon"'));
+});
