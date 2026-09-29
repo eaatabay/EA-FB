@@ -472,19 +472,7 @@ class EAProvider : MainAPI() {
             ?.optString("air_date")
             ?.let { EpisodeAirPolicy.parse(it, System.currentTimeMillis()) }
 
-    private fun nextEpisode(item: JSONObject, airing: EpisodeAirPolicy.Airing?): NextAiring? {
-        // EA-FB presents the exact Turkish air date instead of CloudStream's countdown.
-        return null
-        @Suppress("UNREACHABLE_CODE")
-        if (airing?.showNativeCountdown != true) return null
-        val upcoming = item.optJSONObject("next_episode_to_air") ?: return null
-        val episode = upcoming.optInt("episode_number").takeIf { it > 0 } ?: return null
-        return NextAiring(
-            episode = episode,
-            unixTime = airing.unixSeconds,
-            season = upcoming.optInt("season_number").takeIf { it > 0 }
-        )
-    }
+    private fun nextEpisode(item: JSONObject, airing: EpisodeAirPolicy.Airing?): NextAiring? = null
 
     /** Only metadata: actual episode sources will be resolved by adapters later. */
     private suspend fun tvEpisodes(id: Int, seasonList: JSONArray?): List<Episode> {
