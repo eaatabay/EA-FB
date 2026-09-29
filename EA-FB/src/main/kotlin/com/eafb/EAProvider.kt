@@ -467,6 +467,11 @@ class EAProvider : MainAPI() {
         )
     }
 
+    private fun longTurkishDate(iso: String): String? = try {
+        val parsed = SimpleDateFormat("yyyy-MM-dd", Locale.ROOT).parse(iso) ?: return null
+        SimpleDateFormat("d MMMM yyyy EEEE", Locale("tr", "TR")).format(parsed)
+    } catch (_: Exception) { null }
+
     private fun upcomingEpisode(item: JSONObject): EpisodeAirPolicy.Airing? =
         item.optJSONObject("next_episode_to_air")
             ?.optString("air_date")
@@ -599,7 +604,9 @@ class EAProvider : MainAPI() {
                 season?.let { "S$it" }, episode?.let { "B$it" }
             ).joinToString(" ")
             "Sonraki bölüm" + (if (number.isNotEmpty()) " ($number)" else "") +
-                ": " + nextAir!!.dateLabel
+                ": " + item.optJSONObject("next_episode_to_air")?.optString("air_date")
+                    ?.takeIf { it.isNotBlank() }
+                    ?.let(::longTurkishDate).orEmpty()
         } else null
         // Put a distant premiere date before the plot where it cannot be lost
         // beneath long descriptions; native nextAiring handles near-term dates.
@@ -621,7 +628,7 @@ class EAProvider : MainAPI() {
             val episodes = tvEpisodes(tmdbId, item.optJSONArray("seasons"))
             EpisodeUpcomingStyle.publish(url, episodes.mapNotNull { ep ->
                 ep.date?.takeIf { it > System.currentTimeMillis() }?.let { date ->
-                    ep.episode?.let { EpisodeUpcomingStyle.FutureEpisode(it, date) }
+                    val season = ep.season\n                    val episode = ep.episode\n                    if (season != null && episode != null) EpisodeUpcomingStyle.FutureEpisode(season, episode, date) else null
                 }
             })
             newTvSeriesLoadResponse(title, url, kind, episodes) {
