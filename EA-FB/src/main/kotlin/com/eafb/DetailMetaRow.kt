@@ -93,6 +93,16 @@ internal object DetailMetaRow {
         val meta = entries[url] ?: return
         val activity = fragment.activity as? FragmentActivity ?: return
 
+        // CloudStream's movie layout may expose its generic "coming soon"
+        // placeholder even when EA-FB has a normal movie detail response.
+        // Hide only that stock movie placeholder; TV upcoming UI is separate.
+        if (url.contains("/movie/")) {
+            val comingSoonId = activity.resources.getIdentifier(
+                "result_coming_soon", "id", activity.packageName
+            )
+            if (comingSoonId != 0) root.findViewById<View>(comingSoonId)?.visibility = View.GONE
+        }
+
         val durationId = activity.resources.getIdentifier(
             "result_meta_duration", "id", activity.packageName
         )
