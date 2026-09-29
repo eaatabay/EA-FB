@@ -69,3 +69,8 @@ test("movie stock coming-soon placeholder is hidden without touching TV",()=>{
   assert.ok(detailMeta.includes('"result_coming_soon"'));
   assert.ok(!detailMeta.includes('"result_tv_coming_soon"'));
 });
+
+test("detail metadata font inherits host TextView without unsafe resource lookup",()=>{
+  assert.ok(detailMeta.includes("(duration as? TextView)?.textSize"));
+  assert.ok(!detailMeta.includes('getDimension(duration.resources.getIdentifier'));
+});
