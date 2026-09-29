@@ -111,3 +111,8 @@ test("V25 reapplies future episode decoration after host RecyclerView binds",()=
   assert.ok(upcomingStyle.includes("YAKINDA"));
   assert.ok(upcomingStyle.includes("longTurkishDate(parsed)"));
 });
+
+test("V26 clears recycled YAKINDA badges before future-only decoration",()=>{
+  assert.ok(upcomingStyle.includes("removeView(badge)"));
+  assert.ok(upcomingStyle.includes("parsed <= System.currentTimeMillis()"));
+});
