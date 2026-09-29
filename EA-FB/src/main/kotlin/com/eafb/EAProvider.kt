@@ -612,10 +612,8 @@ class EAProvider : MainAPI() {
         // Some TV layouts hide detail tags below the fold. Put the clearly
         // sourced ratings at the top of the visible description as well.
         // Never substitute TMDb's vote_average for an unavailable IMDb score.
-        val ratingSummary = ratingBadges.takeIf { it.isNotEmpty() }
-            ?.joinToString("  •  ")
         val combinedPlot = listOfNotNull(
-            ratingSummary, seriesNote, upcomingLabel, overview, director
+            seriesNote, upcomingLabel, overview, director
         ).joinToString("\n\n")
         val recs = recommendations(item, media, tmdbId)
         // The film series has its own row. The host's recommendations contain
