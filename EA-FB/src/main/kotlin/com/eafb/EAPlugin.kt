@@ -10,6 +10,7 @@ class EAPlugin : Plugin() {
     override fun load(context: Context) {
         EASettings.initialize(context)
         FilmSeriesRail.install(context)
+        DetailMetaRow.install(context)
         registerMainAPI(EAProvider())
         openSettings = { uiContext -> EASettingsDialog.show(uiContext) }
     }
