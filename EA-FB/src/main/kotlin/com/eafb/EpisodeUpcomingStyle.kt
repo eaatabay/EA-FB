@@ -27,8 +27,8 @@ internal object EpisodeUpcomingStyle {
     private const val PROVIDER = "EA-FB V6 STAGING"
     private const val BADGE_TAG = "ea-fb-upcoming-badge"
     private val main = Handler(Looper.getMainLooper())
-    internal data class FutureEpisode(val episode: Int, val date: Long)
-    private val dates = ConcurrentHashMap<String, Map<Int, Long>>()
+    internal data class FutureEpisode(val season: Int, val episode: Int, val date: Long)
+    private val dates = ConcurrentHashMap<String, Map<Pair<Int, Int>, Long>>()
     private val registered = java.util.Collections.newSetFromMap(
         java.util.WeakHashMap<FragmentActivity, Boolean>()
     )
@@ -48,10 +48,10 @@ internal object EpisodeUpcomingStyle {
     }
 
     fun publish(seriesUrl: String, futureEpisodes: Collection<FutureEpisode>) {
-        dates[seriesUrl] = futureEpisodes.associate { it.episode to it.date }
+        dates[seriesUrl] = futureEpisodes.associate { (it.season to it.episode) to it.date }
         main.post { renderRegistered() }
         main.postDelayed({ renderRegistered() }, 250)
-        main.postDelayed({ renderRegistered() }, 900)
+        main.postDelayed({ renderRegistered() }, 900)\n        main.postDelayed({ renderRegistered() }, 1800)\n        main.postDelayed({ renderRegistered() }, 3000)
     }
 
     private fun renderRegistered() {
@@ -96,7 +96,7 @@ internal object EpisodeUpcomingStyle {
         val holderId = activity.resources.getIdentifier("episode_holder_large", "id", activity.packageName)
         val dateId = activity.resources.getIdentifier("episode_date", "id", activity.packageName)
         val posterId = activity.resources.getIdentifier("episode_poster", "id", activity.packageName)
-        val textId = activity.resources.getIdentifier("episode_text", "id", activity.packageName)
+        val textId = activity.resources.getIdentifier("episode_text", "id", activity.packageName)\n        val seasonId = activity.resources.getIdentifier("episode_season", "id", activity.packageName)
         if (holderId == 0 || dateId == 0 || posterId == 0 || textId == 0) return
         findViews(root, holderId).forEach { holder ->
             val dateView = holder.findViewById<TextView>(dateId) ?: return@forEach
