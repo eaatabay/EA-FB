@@ -137,3 +137,7 @@ test("V29 forces resolved future episode title into visible host title view",()=
   assert.ok(upcomingStyle.includes('text = "$episodeNo. $actualName"'));
   assert.ok(upcomingStyle.includes("visibility = View.VISIBLE"));
 });
+
+test("V30 explicitly binds resolved TMDb title to CloudStream Episode.name",()=>{
+  assert.ok(provider.includes("this.name = episodeName.ifBlank { null }"));
+});
