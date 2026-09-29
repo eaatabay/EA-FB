@@ -150,7 +150,7 @@ class StageReleaseTests(unittest.TestCase):
     def test_reject_oversized_zip_member_before_decompression(self):
         path = self.make_archive()
         with zipfile.ZipFile(path, "a") as z:
-            z.writestr("oversized.bin", b"x" * (64 * 1029 * 1029 + 1),
+            z.writestr("oversized.bin", b"x" * (64 * 1024 * 1024 + 1),
                        compress_type=zipfile.ZIP_DEFLATED)
         with self.assertRaisesRegex(ValueError, "Oversized"):
             module.stage(self.root)
