@@ -1,8 +1,6 @@
 package com.eafb
 
 import android.app.Dialog
-import android.app.Activity
-import android.content.ContextWrapper
 import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.Color
@@ -162,8 +160,7 @@ object EASettingsDialog {
         root.addView(footer, margin(ctx, 12, 0))
         val refresh = button(ctx, "KAYDET VE ANA SAYFAYI YENİLE") {
             // Ask CloudStream's HomeViewModel for the same forced reload used by
-            // its own refresh/account flow. Activity.recreate() did not invalidate
-            // the host home cache reliably on Mi Box.
+            // its own refresh/account flow; this invalidates the home cache on Mi Box.
             refreshRequested = true
             dialog.dismiss()
             MainActivity.reloadHomeEvent(true)
