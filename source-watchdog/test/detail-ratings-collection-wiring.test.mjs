@@ -55,7 +55,7 @@ test("chronological film series cue precedes long synopsis in details",()=>{
 });
 
 test("future TV episodes use long Turkish date and EA-FB yellow upcoming badge",()=>{
-  assert.match(provider,/EpisodeUpcomingStyle\.publish\(url, episodes\.mapNotNull \{ it\.airDate \}/);
+  assert.ok(provider.includes('EpisodeUpcomingStyle.publish(url, episodes.mapNotNull { it.date }'));
   assert.ok(upcomingStyle.includes('if (!url.contains("/tv/")) return'));
   assert.ok(upcomingStyle.includes('SimpleDateFormat("d MMMM yyyy EEEE"'));
   assert.ok(upcomingStyle.includes('text = "YAKINDA"'));
