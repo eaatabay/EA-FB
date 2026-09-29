@@ -28,7 +28,7 @@ test("source-labeled ratings stay in detail tags and out of description",()=>{
   assert.match(provider,/imdbRating\?\.let \{ "IMDb " \+ scoreText\(it\)/);
   assert.match(provider,/tmdbRating\?\.let \{ "TMDb " \+ scoreText\(it\)/);
   assert.ok(provider.indexOf('imdbRating?.let { "IMDb "') < provider.indexOf('tmdbRating?.let { "TMDb "'));
-  assert.match(provider,/tags = ratingBadges \+ genres\(item\)/);
+  assert.match(provider,/tags = ratingBadges \\+ genreLabels/);
 });
 
 test("TV detail metadata moves ratings and genres beside duration with native fallback",()=>{
