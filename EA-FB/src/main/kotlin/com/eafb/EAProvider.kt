@@ -519,7 +519,7 @@ class EAProvider : MainAPI() {
                             newEpisode(
                                 "$mainUrl/tv/$id/season/$number/episode/$episodeNo",
                                 initializer = {
-                                name = episodeName.ifBlank { "Bölüm $episodeNo" }
+                                this.name = episodeName.ifBlank { null }
                                 this.season = number
                                 this.episode = episodeNo
                                 posterUrl = image(still, "w500") ?: fallbackBackdrop
