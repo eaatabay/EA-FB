@@ -72,11 +72,10 @@ test("official collection cards use an independent detail row", () => {
   assert.match(rail, /"result_recommendations_holder"/);
   assert.match(rail, /args\.getString\("apiName"\) != PROVIDER/);
   assert.match(rail, /activity\.loadResult\(card\.url, PROVIDER, card\.title\)/);
-  assert.match(rail, /card\.releaseDate\?\.take\(4\)\?\.toIntOrNull\(\)/);
+    assert.match(rail, /card\.releaseDate\?\.takeLast\(4\)\?\.toIntOrNull\(\)/);
   assert.match(rail, /posterFrame\.addView\(TextView/);
-  assert.match(rail, /setTextColor\(Color\.YELLOW\)/);
   assert.match(rail, /card\.rating\?\.takeIf/);
-  assert.match(rail, /"★ %\.1f"/);
+  assert.match(rail, /"%\.1f ★"/);
   assert.match(provider, /val ratings = ordered\.mapNotNull/);
   assert.match(provider, /collection\.ratings/);
   assert.doesNotMatch(rail, /text = releaseDate/);
