@@ -513,7 +513,9 @@ class EAProvider : MainAPI() {
                                 posterUrl = image(entry.optString("still_path"), "w500")
                                 score = rating?.let { Score.from10(it) }
                                 description = if (rating != null) {
-                                    text + (if (text.isBlank()) "" else "\n\n") +
+                                    text + (if (text.isBlank()) "" else "
+
+") +
                                         "Bölüm puanı: TMDb " +
                                         String.format(Locale.ROOT, "%.1f", rating) + "/10"
                                 } else text
@@ -618,7 +620,9 @@ class EAProvider : MainAPI() {
         // Never substitute TMDb's vote_average for an unavailable IMDb score.
         val combinedPlot = listOfNotNull(
             seriesNote, upcomingLabel, overview, director
-        ).joinToString("\n\n")
+        ).joinToString("
+
+")
         val recs = recommendations(item, media, tmdbId)
         // The film series has its own row. The host's recommendations contain
         // only unrelated suggestions, never a second copy of the series.
@@ -629,7 +633,9 @@ class EAProvider : MainAPI() {
             val episodes = tvEpisodes(tmdbId, item.optJSONArray("seasons"))
             EpisodeUpcomingStyle.publish(url, episodes.mapNotNull { ep ->
                 ep.date?.takeIf { it > System.currentTimeMillis() }?.let { date ->
-                    val season = ep.season\n                    val episode = ep.episode\n                    if (season != null && episode != null) EpisodeUpcomingStyle.FutureEpisode(season, episode, date) else null
+                    val season = ep.season
+                    val episode = ep.episode
+                    if (season != null && episode != null) EpisodeUpcomingStyle.FutureEpisode(season, episode, date) else null
                 }
             })
             newTvSeriesLoadResponse(title, url, kind, episodes) {
