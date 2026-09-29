@@ -12,6 +12,7 @@ import android.os.Looper
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
+import android.view.ViewTreeObserver
 import android.widget.FrameLayout
 import android.widget.TextView
 import androidx.fragment.app.Fragment
@@ -30,6 +31,7 @@ internal object EpisodeUpcomingStyle {
     private val main = Handler(Looper.getMainLooper())
     internal data class FutureEpisode(val season: Int, val episode: Int, val date: Long)
     private val dates = ConcurrentHashMap<String, Map<Pair<Int, Int>, Long>>()
+    private val observedRoots = java.util.Collections.newSetFromMap(java.util.WeakHashMap<View, Boolean>())
     private val registered = java.util.Collections.newSetFromMap(
         java.util.WeakHashMap<FragmentActivity, Boolean>()
     )
@@ -96,6 +98,13 @@ internal object EpisodeUpcomingStyle {
         if (!url.contains("/tv/")) return
         val root = fragment.view ?: return
         val activity = fragment.activity as? FragmentActivity ?: return
+        synchronized(observedRoots) {
+            if (observedRoots.add(root)) {
+                root.viewTreeObserver.addOnGlobalLayoutListener {
+                    if (root.isAttachedToWindow) main.post { renderFragment(fragment) }
+                }
+            }
+        }
         val holderIds = listOf("episode_holder_large", "episode_holder").mapNotNull { name ->
             activity.resources.getIdentifier(name, "id", activity.packageName).takeIf { it != 0 }
         }
