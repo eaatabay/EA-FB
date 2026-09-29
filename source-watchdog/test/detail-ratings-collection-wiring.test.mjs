@@ -84,7 +84,7 @@ test("V21 exact upcoming UI suppresses native countdown and both host placeholde
 test("V22 uses literal episode regex and exact long Turkish TMDb date",()=>{
   assert.ok(upcomingStyle.includes('Regex("""^\\s*(\\d+)\\.""")'));
   assert.ok(provider.includes('SimpleDateFormat("d MMMM yyyy EEEE", Locale("tr", "TR"))'));
-  assert.ok(provider.includes('FutureEpisode(season, episode, date)'));
+  assert.ok(provider.includes('FutureEpisode(season, episode, date, ep.name)'));
 });
 
 test("V23 persists load score for all CloudStream watch-status bookmark rails",()=>{
