@@ -25,7 +25,7 @@ import java.util.concurrent.ConcurrentHashMap
 /** TV-only styling for future EA-FB episodes; movie details are never registered. */
 internal object EpisodeUpcomingStyle {
     private const val PROVIDER = "EA-FB V6 STAGING"
-    private const val BADGE_TAG = "ea-fb-upcoming-badge"
+    private const val BADGE_TAG = "ea-fb-upcoming-badge"\n    private const val DATE_TAG = "ea-fb-upcoming-date"
     private val main = Handler(Looper.getMainLooper())
     internal data class FutureEpisode(val season: Int, val episode: Int, val date: Long)
     private val dates = ConcurrentHashMap<String, Map<Pair<Int, Int>, Long>>()
@@ -109,9 +109,21 @@ internal object EpisodeUpcomingStyle {
                 ?.groupValues?.getOrNull(1)?.toIntOrNull() ?: return@forEach
             val candidates = futureDates.filterKeys { key -> key.second == episodeNo }
             val parsed = candidates.values.minOrNull() ?: return@forEach
-            dateView?.let {
-                it.text = longTurkishDate(parsed)
-                it.visibility = View.VISIBLE
+            val dateLabel = longTurkishDate(parsed)
+            if (dateView != null) {
+                dateView.text = dateLabel
+                dateView.visibility = View.VISIBLE
+            } else {
+                val textView = holder.findViewById<TextView>(textId) ?: return@forEach
+                val parent = textView.parent as? ViewGroup ?: return@forEach
+                val existing = parent.findViewWithTag<TextView>(DATE_TAG)
+                if (existing != null) existing.text = dateLabel else parent.addView(TextView(activity).apply {
+                    tag = DATE_TAG
+                    text = dateLabel
+                    textSize = textView.textSize / activity.resources.displayMetrics.scaledDensity
+                    setTextColor(textView.currentTextColor)
+                    setPadding(dp(activity, 8), 0, dp(activity, 8), 0)
+                })
             }
 
             if (posterId == 0) return@forEach
