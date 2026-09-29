@@ -25,7 +25,7 @@ class StageReleaseTests(unittest.TestCase):
     def make_archive(self):
         path = self.root / "EA-FB" / "build" / "EA-FB.cs3"
         with zipfile.ZipFile(path, "w") as z:
-            z.writestr("classes.dex", b"dex-test-placeholder" * 28)
+            z.writestr("classes.dex", b"dex-test-placeholder" * 29)
             z.writestr("manifest.json", '{"name":"EA-FB"}')
         return path
 
@@ -43,12 +43,12 @@ class StageReleaseTests(unittest.TestCase):
     def test_v6_staging_version_increments_without_changing_default_release(self):
         self.make_archive()
         (self.root / "build" / "plugins.json").write_text(json.dumps([
-            {"internalName": "EA-FB", "version": 28}
+            {"internalName": "EA-FB", "version": 29}
         ]))
         with self.assertRaisesRegex(ValueError, "Expected EA-FB v6"):
             module.stage(self.root)
         dist = module.stage(self.root, staging=True)
-        self.assertEqual(json.loads((dist / "plugins.json").read_text())[0]["version"], 28)
+        self.assertEqual(json.loads((dist / "plugins.json").read_text())[0]["version"], 29)
 
     def test_reject_stale_plugin_version(self):
         self.make_archive()
@@ -78,7 +78,7 @@ class StageReleaseTests(unittest.TestCase):
     def test_reject_invalid_compiled_manifest(self):
         path = self.make_archive()
         with zipfile.ZipFile(path, "w") as z:
-            z.writestr("classes.dex", b"dex-test-placeholder" * 28)
+            z.writestr("classes.dex", b"dex-test-placeholder" * 29)
             z.writestr("manifest.json", "{not-json")
         with self.assertRaisesRegex(ValueError, "Invalid .cs3 manifest JSON"):
             module.stage(self.root)
@@ -86,7 +86,7 @@ class StageReleaseTests(unittest.TestCase):
     def test_reject_other_plugin_manifest_identity(self):
         path = self.make_archive()
         with zipfile.ZipFile(path, "w") as z:
-            z.writestr("classes.dex", b"dex-test-placeholder" * 28)
+            z.writestr("classes.dex", b"dex-test-placeholder" * 29)
             z.writestr("manifest.json", '{"name":"OTHER"}')
         with self.assertRaisesRegex(ValueError, "Unexpected .cs3 manifest identity"):
             module.stage(self.root)
@@ -95,12 +95,12 @@ class StageReleaseTests(unittest.TestCase):
         path = self.make_archive()
         for version in (4, 5, 7, "6", 6.0, True, None):
             with zipfile.ZipFile(path, "w") as z:
-                z.writestr("classes.dex", b"dex-test-placeholder" * 28)
+                z.writestr("classes.dex", b"dex-test-placeholder" * 29)
                 z.writestr("manifest.json", json.dumps({"name": "EA-FB", "version": version}))
             with self.assertRaisesRegex(ValueError, "identity or version"):
                 module.stage(self.root)
         with zipfile.ZipFile(path, "w") as z:
-            z.writestr("classes.dex", b"dex-test-placeholder" * 28)
+            z.writestr("classes.dex", b"dex-test-placeholder" * 29)
             z.writestr("manifest.json", json.dumps({"name": "EA-FB", "version": 6}))
         self.assertTrue((module.stage(self.root) / "EA-FB.cs3").is_file())
 
@@ -150,7 +150,7 @@ class StageReleaseTests(unittest.TestCase):
     def test_reject_oversized_zip_member_before_decompression(self):
         path = self.make_archive()
         with zipfile.ZipFile(path, "a") as z:
-            z.writestr("oversized.bin", b"x" * (64 * 1028 * 1028 + 1),
+            z.writestr("oversized.bin", b"x" * (64 * 1029 * 1029 + 1),
                        compress_type=zipfile.ZIP_DEFLATED)
         with self.assertRaisesRegex(ValueError, "Oversized"):
             module.stage(self.root)
