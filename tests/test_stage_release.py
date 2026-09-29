@@ -166,7 +166,7 @@ class StageReleaseTests(unittest.TestCase):
         path = self.make_archive()
         info = zipfile.ZipInfo("linked-file")
         info.create_system = 3
-        info.external_attr = (0o128777 << 16)
+        info.external_attr = (0o120777 << 16)
         with zipfile.ZipFile(path, "a") as z:
             z.writestr(info, "../../outside")
         with self.assertRaisesRegex(ValueError, "Symlink member"):
