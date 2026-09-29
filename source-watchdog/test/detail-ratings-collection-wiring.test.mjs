@@ -25,7 +25,7 @@ test("franchise detail cards only reference visible official collection artwork"
 
 test("source-labeled ratings stay in detail tags and out of description",()=>{
   assert.doesNotMatch(provider,/val ratingSummary =/);
-  assert.match(provider,/val combinedPlot = listOfNotNull\(\s*seriesNote, upcomingLabel, overview, director/);
+  assert.match(provider,/val combinedPlot = listOfNotNull\(\s*seriesNote, overview, director/);
   assert.match(provider,/imdbRating\?\.let \{ "IMDb " \+ scoreText\(it\)/);
   assert.match(provider,/tmdbRating\?\.let \{ "TMDb " \+ scoreText\(it\)/);
   assert.ok(provider.indexOf('imdbRating?.let { "IMDb "') < provider.indexOf('tmdbRating?.let { "TMDb "'));
@@ -50,7 +50,7 @@ test("posterless first-page platform and genre rails use bounded same-route reco
 
 test("chronological film series cue precedes long synopsis in details",()=>{
   assert.match(provider,/val seriesNote = collectionLabel/);
-  assert.match(provider,/listOfNotNull\(\s*seriesNote, upcomingLabel, overview, director/);
+  assert.match(provider,/listOfNotNull\(\s*seriesNote, overview, director/);
   assert.match(provider,/recommendations = movieRelated/);
 });
 
@@ -98,7 +98,7 @@ test("V24 moves next-air label out of plot into native TV airing row",()=>{
   assert.ok(detailMeta.includes('"result_next_airing_holder"'));
   assert.ok(detailMeta.includes('"result_next_airing_time"'));
   assert.ok(provider.includes("DetailMetaRow.publish(url, imdbRating, tmdbRating, genreLabels, nextAirDateLabel)"));
-  assert.ok(!provider.includes("seriesNote, upcomingLabel, overview, director"));
+  assert.ok(!provider.includes("seriesNote, overview, director"));
 });
 test("V24 compact future rows receive injected exact long date",()=>{
   assert.ok(upcomingStyle.includes('DATE_TAG'));
