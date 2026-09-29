@@ -511,8 +511,13 @@ class EAProvider : MainAPI() {
                                 this.season = number
                                 this.episode = episodeNo
                                 posterUrl = image(entry.optString("still_path"), "w500")
-                                score = rating?.let { Score.from10(it) }
-                                description = if (rating != null) {
+                                val future = date.isNotBlank() && try {
+                                    SimpleDateFormat("yyyy-MM-dd", Locale.ROOT).parse(date)?.time?.let { it > System.currentTimeMillis() } == true
+                                } catch (_: Exception) { false }
+                                score = if (future) null else rating?.let { Score.from10(it) }
+                                description = if (future) {
+                                    text.ifBlank { "Bölüm özeti henüz yayınlanmadı." }
+                                } else if (rating != null) {
                                     text + (if (text.isBlank()) "" else "\\n\\n") +
                                         "Bölüm puanı: TMDb " +
                                         String.format(Locale.ROOT, "%.1f", rating) + "/10"
@@ -637,6 +642,7 @@ class EAProvider : MainAPI() {
             newTvSeriesLoadResponse(title, url, kind, episodes) {
                 plot = combinedPlot
                 year = yearValue
+                score = tmdbRating?.let { Score.from10(it) }
                 // IMDb/TMDb appear exactly once in explicit tags.
                 posterUrl = poster
                 backgroundPosterUrl = backdrop
