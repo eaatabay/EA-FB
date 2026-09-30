@@ -36,28 +36,194 @@ function json(object, status = 200, ttl = 0) {
   });
 }
 
-function localizedEpisodeTitle(payload, language, preferredRegion) {
+const TITLE_TRANSLATION_VERSION = "v42-localize-1";
+const TITLE_AI_MODEL = "@cf/meta/llama-3.1-8b-instruct";
+const titleBatchInFlight = new Set();
+
+function localizedEpisodeTitle(payload, language, preferredRegion = "") {
   const rows = Array.isArray(payload?.translations) ? payload.translations : [];
   let fallback = null;
   for (const row of rows) {
     if (String(row?.iso_639_1 || "").toLowerCase() !== language) continue;
     const name = String(row?.data?.name || "").trim();
     if (!name) continue;
-    if (String(row?.iso_3166_1 || "").toUpperCase() === preferredRegion) return name;
+    if (preferredRegion &&
+        String(row?.iso_3166_1 || "").toUpperCase() === preferredRegion) return name;
     if (fallback === null) fallback = name;
   }
   return fallback;
 }
-function turkishEpisodeTitle(payload) { return localizedEpisodeTitle(payload, "tr", "TR"); }
-function englishEpisodeTitle(payload) { return localizedEpisodeTitle(payload, "en", "US"); }
-function usableMachineTitle(value) {
-  const title = String(value?.translated_text || "").trim();
-  if (!title || title.length > 160 || /[\u0000-\u001f]/.test(title)) return null;
+function turkishEpisodeTitle(payload) {
+  return localizedEpisodeTitle(payload, "tr", "TR");
+}
+function sourceEpisodeTitle(payload, language) {
+  const preferred = {
+    en:"US", es:"ES", fr:"FR", de:"DE", it:"IT", pt:"BR", tr:"TR",
+    ko:"KR", ja:"JP", zh:"CN", ru:"RU", ar:"SA"
+  }[language] || "";
+  return localizedEpisodeTitle(payload, language, preferred);
+}
+function normalizedTitle(value) {
+  return String(value || "").normalize("NFKC").trim().replace(/\s+/g, " ")
+    .toLocaleLowerCase("tr-TR");
+}
+function sameTitle(a, b) {
+  return Boolean(a && b) && normalizedTitle(a) === normalizedTitle(b);
+}
+function genericEpisodeTitle(value, episode) {
+  const normalized = normalizedTitle(value).replace(/[.:]+$/g, "");
+  if (!normalized) return true;
+  const n = String(episode);
+  const words = [
+    "episode","bölüm","episodio","episódio","épisode","folge","capítulo",
+    "capitulo","odcinek","эпизод","серия","エピソード","에피소드"
+  ];
+  if (words.some(word => normalized === word + " " + n ||
+      normalized === word + " #" + n || normalized === n + " " + word)) return true;
+  return normalized === "第" + n + "集";
+}
+function usableLocalizedTitle(value, episode) {
+  const title = String(value || "").trim().replace(/\s+/g, " ");
+  if (!title || title.length > 160 || /[\u0000-\u001f]/.test(title) ||
+      genericEpisodeTitle(title, episode)) return null;
   return title;
 }
-function genericEnglishEpisodeTitle(value, episode) {
-  const normalized = String(value || "").trim().toLowerCase().replace(/\s+/g, " ");
-  return normalized === "episode " + episode || normalized === "episode #" + episode;
+function polishTurkishTitle(value) {
+  const cleaned = String(value || "").trim().replace(/\s+/g, " ");
+  return cleaned.split(" ").map(token =>
+    token.replace(/^([^\p{L}]*)(\p{L})/u,
+      (_, prefix, letter) => prefix + letter.toLocaleUpperCase("tr-TR"))
+  ).join(" ");
+}
+async function readTitleCache(db, seriesId, season, rows) {
+  const out = new Map();
+  if (!db?.prepare || !rows.length) return out;
+  try {
+    const episodes = [...new Set(rows.map(row => row.episode))];
+    const marks = episodes.map(() => "?").join(",");
+    const result = await db.prepare(
+      "SELECT episode,source_language,original_title,turkish_title " +
+      "FROM episode_title_cache WHERE series_id=? AND season=? " +
+      "AND translation_version=? AND episode IN (" + marks + ")"
+    ).bind(seriesId, season, TITLE_TRANSLATION_VERSION, ...episodes).all();
+    const wanted = new Map(rows.map(row => [row.episode, row]));
+    for (const item of result?.results || []) {
+      const row = wanted.get(Number(item.episode));
+      const title = usableLocalizedTitle(item.turkish_title, Number(item.episode));
+      if (row && title && String(item.source_language || "") === row.sourceLanguage &&
+          String(item.original_title || "") === row.original) {
+        out.set(row.episode, {title, original: row.original});
+      }
+    }
+  } catch {}
+  return out;
+}
+async function writeTitleCache(db, seriesId, season, sourceLanguage, rows) {
+  if (!db?.prepare || !db?.batch || !rows.length) return;
+  try {
+    const sql =
+      "INSERT INTO episode_title_cache " +
+      "(series_id,season,episode,source_language,original_title,turkish_title," +
+      "translation_version,model,updated_at) VALUES (?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP) " +
+      "ON CONFLICT(series_id,season,episode) DO UPDATE SET " +
+      "source_language=excluded.source_language,original_title=excluded.original_title," +
+      "turkish_title=excluded.turkish_title,translation_version=excluded.translation_version," +
+      "model=excluded.model,updated_at=CURRENT_TIMESTAMP";
+    await db.batch(rows.map(row => db.prepare(sql).bind(
+      seriesId, season, row.episode, sourceLanguage, row.original, row.title,
+      TITLE_TRANSLATION_VERSION, TITLE_AI_MODEL
+    )));
+  } catch {}
+}
+async function acquireTitleLock(db, key) {
+  if (titleBatchInFlight.has(key)) return false;
+  titleBatchInFlight.add(key);
+  if (!db?.prepare) return true;
+  try {
+    const now = Math.floor(Date.now() / 1000);
+    const row = await db.prepare(
+      "INSERT INTO episode_title_locks(lock_key,expires_at) VALUES (?,?) " +
+      "ON CONFLICT(lock_key) DO UPDATE SET expires_at=excluded.expires_at " +
+      "WHERE episode_title_locks.expires_at<=? RETURNING lock_key"
+    ).bind(key, now + 30, now).first();
+    if (!row) {
+      titleBatchInFlight.delete(key);
+      return false;
+    }
+  } catch {}
+  return true;
+}
+async function releaseTitleLock(db, key) {
+  titleBatchInFlight.delete(key);
+  if (!db?.prepare) return;
+  try {
+    await db.prepare("DELETE FROM episode_title_locks WHERE lock_key=?").bind(key).run();
+  } catch {}
+}
+function parseLocalizedAiResponse(result, requested) {
+  let payload = result?.response ?? result;
+  if (typeof payload === "string") {
+    try { payload = JSON.parse(payload); } catch { return []; }
+  }
+  const items = Array.isArray(payload?.titles) ? payload.titles : [];
+  const wanted = new Map(requested.map(row => [row.episode, row]));
+  const out = [];
+  const seen = new Set();
+  for (const item of items) {
+    const episode = Number(item?.episode);
+    const input = wanted.get(episode);
+    if (!input || seen.has(episode)) continue;
+    const raw = usableLocalizedTitle(item?.title, episode);
+    if (!raw) continue;
+    const title = polishTurkishTitle(raw);
+    if (!title) continue;
+    seen.add(episode);
+    out.push({episode, title, original: input.original});
+  }
+  return out;
+}
+async function localizeTitleBatch(env, sourceLanguage, rows) {
+  if (!env.AI?.run || !rows.length) return [];
+  const system =
+    "Sen profesyonel bir film ve dizi yerelleştirme çevirmenisin. " +
+    "Verilen bölüm başlıklarını belirtilen kaynak dilinden doğrudan Türkçeye yerelleştir; " +
+    "İngilizceyi ara dil olarak kullanma. Kelime kelime çeviri yapma. Deyimsel, mecazi, " +
+    "kültürel, mizahi ve dramatik anlamı koruyarak Türkiye'deki profesyonel bir dijital " +
+    "yayın platformunda kullanılabilecek doğal ve sanatsal başlık üret. Özel isimleri, " +
+    "kişi ve yer adlarını gereksiz yere çevirme. Bir deyim veya kelime oyunu varsa Türkçedeki " +
+    "en doğal karşılığı kullan. Anlamdan emin değilsen olay veya anlam uydurma. Başlık zaten " +
+    "Türkçeyse değiştirme. Episode 7, Bölüm 7 ve benzeri jenerik adlara yeni başlık uydurma. " +
+    "Açıklama, gerekçe, tırnak işareti veya bölüm numarası ekleme.";
+  const requested = rows.map(row => ({episode:row.episode, title:row.original}));
+  const schema = {
+    type:"object",
+    properties:{
+      titles:{
+        type:"array",
+        items:{
+          type:"object",
+          properties:{episode:{type:"integer"},title:{type:"string"}},
+          required:["episode","title"],
+          additionalProperties:false
+        }
+      }
+    },
+    required:["titles"],
+    additionalProperties:false
+  };
+  const result = await env.AI.run(TITLE_AI_MODEL, {
+    messages:[
+      {role:"system",content:system},
+      {role:"user",content:JSON.stringify({
+        source_language:sourceLanguage,
+        episodes:requested
+      })}
+    ],
+    response_format:{type:"json_schema",json_schema:schema},
+    temperature:0.25,
+    max_tokens:Math.min(700, 120 + rows.length * 50)
+  });
+  return parseLocalizedAiResponse(result, rows);
 }
 
 function catalogRequest(url) {
@@ -91,19 +257,22 @@ function catalogRequest(url) {
     parts[4] === "episode-titles";
   if (episodeTitleBatch) {
     const language = q.get("language") || "tr-TR";
+    const sourceLanguage = (q.get("source_language") || "en").toLowerCase();
     const raw = q.get("episodes") || "";
     if (language !== "tr-TR" || q.getAll("language").length > 1 ||
-        q.getAll("episodes").length !== 1 ||
-        [...q.keys()].some(k => !["language", "episodes"].includes(k))) return null;
+        q.getAll("episodes").length !== 1 || q.getAll("source_language").length > 1 ||
+        !/^[a-z]{2,3}$/.test(sourceLanguage) ||
+        [...q.keys()].some(k => !["language", "episodes", "source_language"].includes(k))) return null;
     const episodeNumbers = raw.split(",").map(v => Number(v));
     const canonical = [...episodeNumbers].sort((a,b)=>a-b);
-    if (episodeNumbers.length < 1 || episodeNumbers.length > 12 ||
+    if (episodeNumbers.length < 1 || episodeNumbers.length > 10 ||
         episodeNumbers.some(n => !Number.isInteger(n) || n < 1 || n > 1000) ||
         new Set(episodeNumbers).size !== episodeNumbers.length ||
         raw !== canonical.join(",")) return null;
     const accepted = new URLSearchParams();
     accepted.set("episodes", raw);
     accepted.set("language", "tr-TR");
+    accepted.set("source_language", sourceLanguage);
     accepted.sort();
     return {
       upstreamPath: "/" + parts.join("/"),
@@ -113,7 +282,8 @@ function catalogRequest(url) {
         seriesId: Number(parts[1]),
         season: Number(parts[3]),
         episodes: episodeNumbers,
-      },
+        sourceLanguage
+      }
     };
   }
 
