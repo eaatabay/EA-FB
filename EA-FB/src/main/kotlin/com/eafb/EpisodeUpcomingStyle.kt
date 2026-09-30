@@ -27,7 +27,7 @@ import java.util.concurrent.ConcurrentHashMap
 internal object EpisodeUpcomingStyle {
     private const val PROVIDER = "EA-FB V6 STAGING"
     private const val BADGE_TAG = "ea-fb-upcoming-badge"
-    private const val DATE_TAG = "ea-fb-upcoming-date"
+    private const val DATE_TAG = "ea-fb-upcoming-date" // V30
     private val main = Handler(Looper.getMainLooper())
     internal data class FutureEpisode(val season: Int, val episode: Int, val date: Long, val name: String? = null)
     private val dates = ConcurrentHashMap<String, Map<Pair<Int, Int>, FutureEpisode>>()
