@@ -689,6 +689,10 @@ class EAProvider : MainAPI() {
             .distinctBy { it.url }
         return if (isSeries) {
             val episodes = tvEpisodes(tmdbId, item.optJSONArray("seasons"), backdrop)
+            // V38: the initial metadata publish happens before season fan-out.
+            // Republish after that bounded work so first-open detail rows are
+            // rendered against the host views that are about to receive the response.
+            DetailMetaRow.publish(url, imdbRating, tmdbRating, genreLabels, nextAirDateLabel)
             EpisodeUpcomingStyle.publish(url, episodes.mapNotNull { ep ->
                 ep.date?.takeIf { it > System.currentTimeMillis() }?.let { date ->
                     val season = ep.season

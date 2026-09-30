@@ -197,3 +197,14 @@ test("V37 catalog paging dedupes repeated card URLs across page calls without to
   assert.ok(provider.includes("mainPageDeduper.filter("));
   assert.ok(provider.includes("category.id + \"|\" + sortMode.name"));
 });
+
+test("V38 retries first-open detail metadata after season loading without layout polling",()=>{
+  const detailMeta=readFileSync(new URL("../../EA-FB/src/main/kotlin/com/eafb/DetailMetaRow.kt",import.meta.url),"utf8");
+  const episodeLoad = provider.indexOf('val episodes = tvEpisodes(tmdbId');
+  const republish = provider.indexOf('DetailMetaRow.publish(url, imdbRating, tmdbRating, genreLabels, nextAirDateLabel)', episodeLoad);
+  assert.ok(episodeLoad >= 0 && republish > episodeLoad);
+  assert.ok(detailMeta.includes('main.postDelayed({ renderRegistered() }, 300)'));
+  assert.ok(detailMeta.includes('main.postDelayed({ renderRegistered() }, 900)'));
+  assert.ok(detailMeta.includes('main.postDelayed({ renderRegistered() }, 1800)'));
+  assert.ok(!detailMeta.includes("addOnGlobalLayoutListener"));
+});

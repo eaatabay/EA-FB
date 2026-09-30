@@ -55,12 +55,20 @@ internal object DetailMetaRow {
 
     fun publish(url: String, imdb: Double?, tmdb: Double?, genres: List<String>, nextEpisode: String? = null) {
         entries[url] = Meta(imdb, tmdb, genres, nextEpisode)
-        main.post {
-            synchronized(registered) {
-                registered.toList().forEach { activity ->
-                    if (!activity.isFinishing && !activity.isDestroyed) {
-                        activity.supportFragmentManager.fragments.forEach(::renderTree)
-                    }
+        // V38: load() can spend longer than the fragment's first lifecycle window
+        // collecting season metadata. Keep retries bounded and cheap, but let the
+        // host bind its result views before the last passes.
+        main.post { renderRegistered() }
+        main.postDelayed({ renderRegistered() }, 300)
+        main.postDelayed({ renderRegistered() }, 900)
+        main.postDelayed({ renderRegistered() }, 1800)
+    }
+
+    private fun renderRegistered() {
+        synchronized(registered) {
+            registered.toList().forEach { activity ->
+                if (!activity.isFinishing && !activity.isDestroyed) {
+                    activity.supportFragmentManager.fragments.forEach(::renderTree)
                 }
             }
         }
