@@ -114,7 +114,7 @@ test("V25 reapplies future episode decoration after host RecyclerView binds",()=
 
 test("V26 clears recycled YAKINDA badges before future-only decoration",()=>{
   assert.ok(upcomingStyle.includes("removeView(badge)"));
-  assert.ok(upcomingStyle.includes("parsed <= System.currentTimeMillis()"));
+  assert.ok(upcomingStyle.includes("it.episode == episodeNo && it.date > now"));
 });
 
 test("V27 fills blank Turkish episode metadata from English and uses series backdrop for missing stills",()=>{
@@ -144,7 +144,7 @@ test("V30 explicitly binds resolved TMDb title to CloudStream Episode.name",()=>
 
 test("V31 rejects localized generic episode labels before EN SxE fallback",()=>{
   assert.ok(provider.includes("genericEpisodeName"));
-  assert.ok(provider.includes("!genericEpisodeName(englishName) -> englishName"));
+  assert.ok(provider.includes("!genericEpisodeName(englishName, episodeNo) -> englishName"));
   assert.ok(provider.includes("this.name = episodeName.ifBlank { null }"));
 });
 
