@@ -77,7 +77,7 @@ test("detail metadata font inherits host TextView without unsafe resource lookup
 test("V21 exact upcoming UI suppresses native countdown and both host placeholders",()=>{
   assert.ok(provider.includes("private fun nextEpisode") && provider.includes("NextAiring? = null"));
   assert.ok(upcomingStyle.includes("episodeNo = Regex("));
-  assert.ok(upcomingStyle.includes("futureEpisodes[visibleSeason to episodeNo]"));
+  assert.ok(upcomingStyle.includes("hostMarksUpcoming"));
   assert.ok(detailMeta.includes('listOf("result_coming_soon", "result_tv_coming_soon")'));
 });
 
@@ -152,5 +152,14 @@ test("V32 binds future decoration and metadata fallback to SxE identity",()=>{
   assert.ok(provider.includes('row.optInt("season_number", number) == number'));
   assert.ok(provider.includes('row.optInt("episode_number") == episodeNo'));
   assert.ok(upcomingStyle.includes("futureEpisodes[visibleSeason to episodeNo]"));
-  assert.ok(!upcomingStyle.includes("filterKeys { key -> key.second == episodeNo }"));
+  assert.ok(!upcomingStyle.includes("findVisibleSeason(root)"));
+});
+
+test("V33 generic episode names really fall through to EN and upcoming uses host row state",()=>{
+  assert.ok(provider.includes('Regex("""(?i)^$escapedEpisode\\.?\\s*bölüm$""")'));
+  assert.ok(provider.includes('Regex("""(?i)^episode\\s*$escapedEpisode$""")'));
+  assert.ok(!provider.includes('episode\\\\s*'));
+  assert.ok(upcomingStyle.includes('getIdentifier("episode_upcoming_format", "string"'));
+  assert.ok(upcomingStyle.includes("nativeDateText.startsWith(upcomingPrefix"));
+  assert.ok(upcomingStyle.includes("if (!hostMarksUpcoming) return@forEach"));
 });
