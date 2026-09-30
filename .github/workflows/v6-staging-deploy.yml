@@ -1,4 +1,4 @@
-# V41 staging-only deployment. Never deploy production, never expose TMDb secrets.
+# V42 staging-only deployment. Never deploy production, never expose TMDb secrets.
 name: EA-FB V6 staging deploy
 on:
   workflow_dispatch:
@@ -39,24 +39,75 @@ jobs:
           if (stage.name !== 'ea-fb-catalog-v6-staging' ||
               prod.name === stage.name || 'routes' in stage ||
               'd1_databases' in stage || 'zone_id' in stage ||
-              stage.ai?.binding !== 'AI' || 'ai' in prod) {
+              stage.ai?.binding !== 'AI' || 'ai' in prod ||
+              'd1_databases' in prod) {
             throw Error('Refusing non-isolated staging configuration');
           }
-          console.log('PASS: staging-only Worker name + AI binding, production has no AI binding');
+          const migration=readFileSync('worker/migrations/0001_episode_title_cache.sql','utf8');
+          if (!migration.includes('CREATE TABLE IF NOT EXISTS episode_title_cache') ||
+              !migration.includes('CREATE TABLE IF NOT EXISTS episode_title_locks')) {
+            throw Error('Missing V42 title-cache D1 migration');
+          }
+          console.log('PASS: staging-only Worker + AI; production remains free of AI/D1');
           JS
       - name: Test V6 Worker
         working-directory: worker
         run: |
           npm install --no-audit --no-fund
           npm test
-      - name: Deploy V6 staging Worker only
+      - name: Provision V42 staging title cache and deploy Worker
         working-directory: worker
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN_V6_STAGING }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID_V6_STAGING }}
           WRANGLER_SEND_METRICS: "false"
-        run: npx wrangler deploy --config wrangler.staging.jsonc
-      - name: Verify staging health and V41 AI title fallback
+        run: |
+          set -euo pipefail
+          DB_NAME="ea-fb-title-cache-v6-staging"
+
+          find_db_id() {
+            npx wrangler d1 list --json > /tmp/eafb-d1-list.json
+            node --input-type=module - "$DB_NAME" /tmp/eafb-d1-list.json <<'JS'
+          import {readFileSync} from "node:fs";
+          const [name,file]=process.argv.slice(2);
+          const dbs=JSON.parse(readFileSync(file,"utf8"));
+          const db=Array.isArray(dbs) ? dbs.find(x=>x?.name===name) : null;
+          if (db) process.stdout.write(String(db.uuid || db.database_id || ""));
+          JS
+          }
+
+          DB_ID="$(find_db_id)"
+          if [ -z "$DB_ID" ]; then
+            echo "Creating isolated V42 staging D1: $DB_NAME"
+            npx wrangler d1 create "$DB_NAME" --location eeur
+            for attempt in 1 2 3 4 5; do
+              DB_ID="$(find_db_id)"
+              [ -n "$DB_ID" ] && break
+              sleep 2
+            done
+          fi
+          [ -n "$DB_ID" ] || { echo "::error::Could not resolve staging D1 id"; exit 3; }
+
+          node --input-type=module - "$DB_NAME" "$DB_ID" <<'JS'
+          import {readFileSync,writeFileSync} from "node:fs";
+          const [name,id]=process.argv.slice(2);
+          const source=JSON.parse(readFileSync("wrangler.staging.jsonc","utf8"));
+          if (source.name!=="ea-fb-catalog-v6-staging" || source.ai?.binding!=="AI" ||
+              "routes" in source || "d1_databases" in source) {
+            throw Error("Refusing to derive runtime config from non-isolated staging source");
+          }
+          source.d1_databases=[{
+            binding:"TITLE_CACHE",
+            database_name:name,
+            database_id:id,
+            migrations_dir:"migrations"
+          }];
+          writeFileSync("wrangler.staging.runtime.jsonc",JSON.stringify(source,null,2)+"\n");
+          JS
+
+          npx wrangler d1 migrations apply "$DB_NAME" --remote --config wrangler.staging.runtime.jsonc
+          npx wrangler deploy --config wrangler.staging.runtime.jsonc
+      - name: Verify staging health and V42 title localization
         run: |
           STAGING_URL="$(node -e "const fs=require('fs'); const c=JSON.parse(fs.readFileSync('config/backend.v6-staging.json','utf8')); process.stdout.write(c.apiBaseUrl || '')")"
           test -n "$STAGING_URL" || { echo "::error::Missing staging API base URL"; exit 2; }
