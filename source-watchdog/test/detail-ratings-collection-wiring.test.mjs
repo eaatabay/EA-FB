@@ -141,3 +141,9 @@ test("V29 forces resolved future episode title into visible host title view",()=
 test("V30 explicitly binds resolved TMDb title to CloudStream Episode.name",()=>{
   assert.ok(provider.includes("this.name = episodeName.ifBlank { null }"));
 });
+
+test("V31 rejects localized generic episode labels before EN SxE fallback",()=>{
+  assert.ok(provider.includes("genericEpisodeName"));
+  assert.ok(provider.includes("!genericEpisodeName(englishName) -> englishName"));
+  assert.ok(provider.includes("this.name = episodeName.ifBlank { null }"));
+});
