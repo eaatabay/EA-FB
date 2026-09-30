@@ -508,7 +508,12 @@ class EAProvider : MainAPI() {
                                 ?: return@mapNotNull null
                             val episodeNo = entry.optInt("episode_number")
                                 .takeIf { it > 0 } ?: return@mapNotNull null
-                            val english = englishByEpisode[episodeNo]
+                            // Identity is season + episode, never episode number alone.
+                            // Also require the EN fallback row to belong to this same season.
+                            val english = englishByEpisode[episodeNo]?.takeIf { row ->
+                                row.optInt("season_number", number) == number &&
+                                    row.optInt("episode_number") == episodeNo
+                            }
                             val date = entry.optString("air_date").ifBlank { english?.optString("air_date").orEmpty() }
                             val rating = entry.optDouble("vote_average", 0.0)
                                 .takeIf { it > 0.1 && it <= 10.0 &&
