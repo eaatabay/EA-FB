@@ -147,3 +147,10 @@ test("V31 rejects localized generic episode labels before EN SxE fallback",()=>{
   assert.ok(provider.includes("!genericEpisodeName(englishName) -> englishName"));
   assert.ok(provider.includes("this.name = episodeName.ifBlank { null }"));
 });
+
+test("V32 binds future decoration and metadata fallback to SxE identity",()=>{
+  assert.ok(provider.includes('row.optInt("season_number", number) == number'));
+  assert.ok(provider.includes('row.optInt("episode_number") == episodeNo'));
+  assert.ok(upcoming.includes("futureEpisodes[visibleSeason to episodeNo]"));
+  assert.ok(!upcoming.includes("filterKeys { key -> key.second == episodeNo }"));
+});
