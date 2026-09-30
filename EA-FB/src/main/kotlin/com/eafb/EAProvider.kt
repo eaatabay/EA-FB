@@ -516,49 +516,65 @@ class EAProvider : MainAPI() {
 
     private data class EpisodeTitleBatch(val season: Int, val episodes: List<Int>)
 
+    /**
+     * V42 title enrichment stays bounded per detail open, but a long season is
+     * split into requests instead of being discarded just because it has >12 episodes.
+     */
     private fun titleBatches(episodes: List<Episode>): List<EpisodeTitleBatch> {
-        var remaining = 36
+        var remaining = 48
         val batches = mutableListOf<EpisodeTitleBatch>()
         episodes.groupBy { it.season }.toSortedMap(compareBy<Int?> { it ?: Int.MAX_VALUE })
             .forEach { (season, rows) ->
+                if (remaining <= 0) return@forEach
                 val seasonNo = season?.takeIf { it > 0 } ?: return@forEach
                 val numbers = rows.mapNotNull { it.episode?.takeIf { number -> number > 0 } }
                     .distinct().sorted()
-                if (numbers.isEmpty() || numbers.size > 12 || numbers.size > remaining) return@forEach
-                batches += EpisodeTitleBatch(seasonNo, numbers)
-                remaining -= numbers.size
+                for (chunk in numbers.chunked(10)) {
+                    if (remaining <= 0) break
+                    val bounded = chunk.take(remaining)
+                    if (bounded.isNotEmpty()) {
+                        batches += EpisodeTitleBatch(seasonNo, bounded)
+                        remaining -= bounded.size
+                    }
+                }
             }
         return batches
     }
 
     private suspend fun fetchTurkishEpisodeTitles(
-        id: Int, batch: EpisodeTitleBatch
+        id: Int, batch: EpisodeTitleBatch, sourceLanguage: String
     ): List<EpisodeTitleStyle.TitleEpisode> {
         val query = batch.episodes.joinToString(",")
-        val response = getJson("/tv/$id/season/${batch.season}/episode-titles?episodes=$query")
-            ?: return emptyList()
+        val safeSource = sourceLanguage.lowercase(Locale.ROOT)
+            .takeIf { it.matches(Regex("^[a-z]{2,3}$")) } ?: "en"
+        val response = getJson(
+            "/tv/$id/season/${batch.season}/episode-titles?episodes=$query&source_language=$safeSource"
+        ) ?: return emptyList()
         val titles = response.optJSONObject("titles") ?: return emptyList()
-        val resolved = batch.episodes.mapNotNull { episodeNo ->
+        val originals = response.optJSONObject("originals")
+        return batch.episodes.mapNotNull { episodeNo ->
             val name = titles.optString(episodeNo.toString()).trim()
             name.takeUnless { genericEpisodeName(it, episodeNo) }?.let {
-                EpisodeTitleStyle.TitleEpisode(batch.season, episodeNo, it)
+                val original = originals?.optString(episodeNo.toString())?.trim()
+                    ?.takeIf { value -> value.isNotBlank() && value != name }
+                EpisodeTitleStyle.TitleEpisode(batch.season, episodeNo, it, original)
             }
         }
-        // V42: a complete short-season batch is the expected result. A partial
-        // batch leaves the existing row titles untouched instead of creating
-        // the mixed TR/EN state seen on MobLand.
-        return resolved.takeIf { it.size == batch.episodes.size } ?: emptyList()
     }
 
     private fun scheduleTurkishEpisodeTitles(
-        id: Int, seriesUrl: String, episodes: List<Episode>
+        id: Int, seriesUrl: String, episodes: List<Episode>, sourceLanguage: String
     ) {
         val batches = titleBatches(episodes)
         if (batches.isEmpty()) return
         episodeTitleScope.launch {
-            val resolved = coroutineScope {
-                batches.map { batch -> async { fetchTurkishEpisodeTitles(id, batch) } }
-                    .awaitAll().flatten()
+            val resolved = mutableListOf<EpisodeTitleStyle.TitleEpisode>()
+            for (wave in batches.chunked(2)) {
+                resolved += coroutineScope {
+                    wave.map { batch ->
+                        async { fetchTurkishEpisodeTitles(id, batch, sourceLanguage) }
+                    }.awaitAll().flatten()
+                }
             }
             if (resolved.isEmpty()) return@launch
             EpisodeTitleStyle.publish(seriesUrl, resolved)
@@ -765,7 +781,9 @@ class EAProvider : MainAPI() {
             .distinctBy { it.url }
         return if (isSeries) {
             val episodes = tvEpisodes(tmdbId, item.optJSONArray("seasons"), backdrop)
-            scheduleTurkishEpisodeTitles(tmdbId, url, episodes)
+            scheduleTurkishEpisodeTitles(
+                tmdbId, url, episodes, item.optString("original_language")
+            )
             // V38: the initial metadata publish happens before season fan-out.
             // Republish after that bounded work so first-open detail rows are
             // rendered against the host views that are about to receive the response.
