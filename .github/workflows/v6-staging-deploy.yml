@@ -1,4 +1,4 @@
-# Manual staging-only deployment. Never deploy production, never expose TMDb secrets.
+# V41 staging-only deployment. Never deploy production, never expose TMDb secrets.
 name: EA-FB V6 staging deploy
 on:
   workflow_dispatch:
@@ -38,10 +38,11 @@ jobs:
           const stage=JSON.parse(readFileSync('worker/wrangler.staging.jsonc'));
           if (stage.name !== 'ea-fb-catalog-v6-staging' ||
               prod.name === stage.name || 'routes' in stage ||
-              'd1_databases' in stage || 'zone_id' in stage) {
+              'd1_databases' in stage || 'zone_id' in stage ||
+              stage.ai?.binding !== 'AI' || 'ai' in prod) {
             throw Error('Refusing non-isolated staging configuration');
           }
-          console.log('PASS: staging-only Worker name, no production routes or D1');
+          console.log('PASS: staging-only Worker name + AI binding, production has no AI binding');
           JS
       - name: Test V6 Worker
         working-directory: worker

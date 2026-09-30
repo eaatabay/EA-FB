@@ -577,3 +577,46 @@ test("catalog rejects duplicate/trailing slashes, empty query and fragments",asy
   }
   assert.equal(calls.length,0);
 });
+
+test("V41 machine-translates titles missing official Turkish metadata", async () => {
+  const { env, ctx, calls } = setup();
+  const aiCalls = [];
+  env.AI = { run: async (model, input) => {
+    aiCalls.push({model,input});
+    return {translated_text: input.text === "Plan B" ? "B Planı" : "Kavşak"};
+  }};
+  globalThis.fetch = async (url, opts) => {
+    calls.push({url,opts});
+    const episode = Number(String(url).match(/episode\/(\d+)\/translations$/)?.[1]);
+    const english = episode === 3 ? "Plan B" : "The Crossroads";
+    return new Response(JSON.stringify({translations:[
+      {iso_639_1:"en",iso_3166_1:"US",data:{name:english}},
+      {iso_639_1:"tr",iso_3166_1:"TR",data:{name:""}},
+    ]}), {headers:{"content-type":"application/json"}});
+  };
+  const res = await gateway.fetch(new Request(
+    "https://example.workers.dev/v1/tv/247718/season/1/episode-titles?episodes=3,7&language=tr-TR"
+  ), env, ctx);
+  assert.equal(res.status,200);
+  assert.deepEqual(await res.json(), {titles:{"3":"B Planı","7":"Kavşak"}});
+  assert.equal(calls.length,2);
+  assert.equal(aiCalls.length,2);
+  assert.ok(aiCalls.every(c => c.model === "@cf/meta/m2m100-1.2b"));
+});
+
+test("V41 official Turkish title bypasses machine translation", async () => {
+  const { env, ctx, calls } = setup();
+  env.AI = { run: async () => { throw Error("AI_SHOULD_NOT_RUN"); } };
+  globalThis.fetch = async (url, opts) => {
+    calls.push({url,opts});
+    return new Response(JSON.stringify({translations:[
+      {iso_639_1:"en",iso_3166_1:"US",data:{name:"Jigsaw Puzzle"}},
+      {iso_639_1:"tr",iso_3166_1:"TR",data:{name:"Yapboz"}},
+    ]}), {headers:{"content-type":"application/json"}});
+  };
+  const res = await gateway.fetch(new Request(
+    "https://example.workers.dev/v1/tv/247718/season/1/episode-titles?episodes=2&language=tr-TR"
+  ), env, ctx);
+  assert.deepEqual(await res.json(), {titles:{"2":"Yapboz"}});
+  assert.equal(calls.length,1);
+});
