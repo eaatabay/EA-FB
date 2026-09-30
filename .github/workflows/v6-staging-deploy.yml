@@ -2,6 +2,10 @@
 name: EA-FB V6 staging deploy
 on:
   workflow_dispatch:
+  push:
+    branches: [feature/detail-dual-ratings-v6]
+    paths:
+      - ".github/workflows/v6-staging-deploy.yml"
 permissions:
   contents: read
 concurrency:
