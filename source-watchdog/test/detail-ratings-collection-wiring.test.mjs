@@ -105,11 +105,10 @@ test("V24 compact future rows receive exact Turkish long date",()=>{
   assert.ok(upcomingStyle.includes('parent.addView(TextView(activity)'));
 });
 
-test("V25 reapplies future episode decoration after host RecyclerView binds",()=>{
-  assert.ok(upcomingStyle.includes("addOnGlobalLayoutListener"));
+test("future episode decoration still renders after the host binds rows",()=>{
   assert.ok(upcomingStyle.includes("renderFragment(fragment)"));
   assert.ok(upcomingStyle.includes("YAKINDA"));
-  assert.ok(upcomingStyle.includes("longTurkishDate(parsed)"));
+  assert.ok(upcomingStyle.includes("longTurkishDate(future.date)"));
 });
 
 test("V26 clears recycled YAKINDA badges before future-only decoration",()=>{
@@ -161,20 +160,27 @@ test("V33 generic episode names really fall through instead of preserving placeh
   assert.ok(!provider.includes('episode\\\\s*'));
 });
 
-test("V34 prefers genuine Turkish episode translations before English fallback",()=>{
-  assert.ok(worker.includes('parts[6] === "translations"'));
-  assert.ok(provider.includes("getUnlocalizedJson("));
-  assert.ok(provider.includes("turkishEpisodeName(it, episodeNo)"));
-  assert.ok(provider.includes("translatedTurkishName"));
-  assert.ok(provider.indexOf("!genericEpisodeName(translatedTurkishName.orEmpty(), episodeNo)") <
-    provider.indexOf("!genericEpisodeName(englishName, episodeNo)"));
+test("V35 removes per-episode translation HTTP calls from the blocking detail path",()=>{
+  assert.ok(worker.includes('parts[6] === "translations"'),
+    "the exact server capability may remain for future lazy enrichment");
+  assert.ok(!provider.includes("getUnlocalizedJson("));
+  assert.ok(!provider.includes('"/tv/$id/season/$number/episode/$episodeNo/translations"'));
+  assert.ok(!provider.includes("translatedTurkishName"));
+  assert.ok(provider.includes("!genericEpisodeName(localizedName, episodeNo) -> localizedName"));
+  assert.ok(provider.includes("!genericEpisodeName(englishName, episodeNo) -> englishName"));
 });
 
-test("V34 binds long-date YAKINDA to CloudStream native future row state",()=>{
+test("V35 binds YAKINDA to native future state and newly attached RecyclerView rows",()=>{
   assert.ok(upcomingStyle.includes('getIdentifier("episode_play_icon", "id"'));
   assert.ok(upcomingStyle.includes("nativePlay.visibility != View.VISIBLE"));
-  assert.ok(upcomingStyle.includes("dateView?.visibility == View.VISIBLE"));
-  assert.ok(upcomingStyle.includes("if (!hostMarksUpcoming) return@forEach"));
+  assert.ok(upcomingStyle.includes("if (!hostMarksUpcoming) return@row"));
+  assert.ok(upcomingStyle.includes("RecyclerView.OnChildAttachStateChangeListener"));
+  assert.ok(upcomingStyle.includes("onChildViewAttachedToWindow"));
+  assert.ok(upcomingStyle.includes("renderRows(view, current, activity)"));
+  assert.ok(upcomingStyle.includes("observedLists"));
+  assert.ok(upcomingStyle.includes("seenTitles"));
+  assert.ok(!upcomingStyle.includes("addOnGlobalLayoutListener"));
+  assert.ok(!upcomingStyle.includes("dateView?.visibility == View.VISIBLE"));
   assert.ok(!upcomingStyle.includes('getIdentifier("episode_upcoming_format", "string"'));
   assert.ok(!upcomingStyle.includes("nativeDateText.startsWith(upcomingPrefix"));
 });
