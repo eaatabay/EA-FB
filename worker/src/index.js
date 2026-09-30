@@ -36,6 +36,19 @@ function json(object, status = 200, ttl = 0) {
   });
 }
 
+function turkishEpisodeTitle(payload) {
+  const rows = Array.isArray(payload?.translations) ? payload.translations : [];
+  let fallback = null;
+  for (const row of rows) {
+    if (String(row?.iso_639_1 || "").toLowerCase() !== "tr") continue;
+    const name = String(row?.data?.name || "").trim();
+    if (!name) continue;
+    if (String(row?.iso_3166_1 || "").toUpperCase() === "TR") return name;
+    if (fallback === null) fallback = name;
+  }
+  return fallback;
+}
+
 function catalogRequest(url) {
   const p = url.pathname;
   let ttl = 3600;
@@ -58,6 +71,39 @@ function catalogRequest(url) {
   if (episodeTranslations) {
     if ([...q.keys()].length !== 0) return null;
     return { upstreamPath: "/" + parts.join("/"), params: new URLSearchParams(), ttl: 21600 };
+  }
+
+  // V40: a short season is enriched lazily behind one client request.
+  const episodeTitleBatch = parts[0] === "tv" && parts.length === 5 &&
+    /^\d{1,9}$/.test(parts[1]) && +parts[1] > 0 && parts[2] === "season" &&
+    /^\d{1,3}$/.test(parts[3]) && +parts[3] <= 100 &&
+    parts[4] === "episode-titles";
+  if (episodeTitleBatch) {
+    const language = q.get("language") || "tr-TR";
+    const raw = q.get("episodes") || "";
+    if (language !== "tr-TR" || q.getAll("language").length > 1 ||
+        q.getAll("episodes").length !== 1 ||
+        [...q.keys()].some(k => !["language", "episodes"].includes(k))) return null;
+    const episodeNumbers = raw.split(",").map(v => Number(v));
+    const canonical = [...episodeNumbers].sort((a,b)=>a-b);
+    if (episodeNumbers.length < 1 || episodeNumbers.length > 12 ||
+        episodeNumbers.some(n => !Number.isInteger(n) || n < 1 || n > 1000) ||
+        new Set(episodeNumbers).size !== episodeNumbers.length ||
+        raw !== canonical.join(",")) return null;
+    const accepted = new URLSearchParams();
+    accepted.set("episodes", raw);
+    accepted.set("language", "tr-TR");
+    accepted.sort();
+    return {
+      upstreamPath: "/" + parts.join("/"),
+      params: accepted,
+      ttl: 21600,
+      batchEpisodeTitles: {
+        seriesId: Number(parts[1]),
+        season: Number(parts[3]),
+        episodes: episodeNumbers,
+      },
+    };
   }
 
   const accepted = new URLSearchParams();
@@ -189,10 +235,60 @@ export default {
         // Edge cache failure is not a TMDb outage. Fetch metadata normally.
       }
     }
-    const upstreamUrl = UPSTREAM + catalog.upstreamPath + catalogSuffix;
     // Some dashboards copy an optional Bearer prefix. Never send Bearer Bearer.
     const token = String(env.TMDB_READ_ACCESS_TOKEN).trim().replace(/^Bearer\s+/i, "").trim();
     if (!token) return json({ error: "catalog_unconfigured" }, 503);
+
+    if (catalog.batchEpisodeTitles) {
+      let validResponses = 0;
+      const titles = {};
+      try {
+        const rows = await withUpstreamDeadline(async signal =>
+          Promise.all(catalog.batchEpisodeTitles.episodes.map(async episode => {
+            try {
+              const upstreamUrl = UPSTREAM + "/tv/" + catalog.batchEpisodeTitles.seriesId +
+                "/season/" + catalog.batchEpisodeTitles.season +
+                "/episode/" + episode + "/translations";
+              const response = await fetch(upstreamUrl, {
+                method: "GET",
+                headers: {
+                  authorization: "Bearer " + token,
+                  accept: "application/json",
+                },
+                redirect: "manual",
+                signal,
+              });
+              if (response.status >= 300 && response.status < 400) return null;
+              if (!response.ok ||
+                  !(response.headers.get("content-type") || "").includes("application/json")) return null;
+              const body = await readBoundedText(response, 200_000);
+              const payload = JSON.parse(body);
+              if (!payload || typeof payload !== "object" || Array.isArray(payload) ||
+                  !Array.isArray(payload.translations)) return null;
+              validResponses++;
+              return [episode, turkishEpisodeTitle(payload)];
+            } catch {
+              return null;
+            }
+          })), 6500);
+        for (const row of rows) {
+          if (row?.[1]) titles[String(row[0])] = row[1];
+        }
+      } catch {
+        // Best-effort background enrichment; the initial detail remains untouched.
+      }
+      const responseTtl = validResponses === catalog.batchEpisodeTitles.episodes.length
+        ? catalog.ttl : 60;
+      const response = json({ titles }, 200, responseTtl);
+      if (cache && ctx?.waitUntil) {
+        try {
+          ctx.waitUntil(Promise.resolve(cache.put(cacheKey,response.clone())).catch(()=>{}));
+        } catch {}
+      }
+      return response;
+    }
+
+    const upstreamUrl = UPSTREAM + catalog.upstreamPath + catalogSuffix;
     let upstream, body, upstreamPhase = "fetch";
     try {
       ({upstream,body} = await withUpstreamDeadline(async signal => {
