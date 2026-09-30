@@ -77,7 +77,7 @@ test("detail metadata font inherits host TextView without unsafe resource lookup
 test("V21 exact upcoming UI suppresses native countdown and both host placeholders",()=>{
   assert.ok(provider.includes("private fun nextEpisode") && provider.includes("NextAiring? = null"));
   assert.ok(upcomingStyle.includes("episodeNo = Regex("));
-  assert.ok(upcomingStyle.includes("hostMarksUpcoming"));
+  assert.ok(upcomingStyle.includes("it.episode == episodeNo && it.date > now"));
   assert.ok(detailMeta.includes('listOf("result_coming_soon", "result_tv_coming_soon")'));
 });
 
@@ -150,7 +150,7 @@ test("V31 rejects localized generic episode labels before EN SxE fallback",()=>{
 test("V32 binds future decoration and metadata fallback to SxE identity",()=>{
   assert.ok(provider.includes('row.optInt("season_number", number) == number'));
   assert.ok(provider.includes('row.optInt("episode_number") == episodeNo'));
-  assert.ok(upcomingStyle.includes("hostMarksUpcoming"));
+  assert.ok(upcomingStyle.includes("it.episode == episodeNo && it.date > now"));
   assert.ok(!upcomingStyle.includes("findVisibleSeason(root)"));
 });
 
@@ -174,7 +174,7 @@ test("V35 removes per-episode translation HTTP calls from the blocking detail pa
 
 test("V35 binds YAKINDA to native future state and debounced scroll rendering",()=>{
   assert.ok(upcomingStyle.includes('getIdentifier("episode_play_icon", "id"'));
-  assert.ok(upcomingStyle.includes("nativePlay.visibility != View.VISIBLE"));
+  assert.ok(upcomingStyle.includes("it.episode == episodeNo && it.date > now"));
   assert.ok(upcomingStyle.includes("if (!hostMarksUpcoming) return@row"));
   assert.ok(upcomingStyle.includes("addOnScrollChangedListener"));
   assert.ok(upcomingStyle.includes("pendingScrollRenders"));
