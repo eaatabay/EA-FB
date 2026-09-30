@@ -28,6 +28,8 @@ elif path.startswith("/v1/discover/"):
     assert isinstance(data.get("results"),list) and isinstance(data.get("page"),int)
 elif path.startswith("/v1/collection/"):
     assert isinstance(data.get("parts"),list)
+elif path.endswith("/translations"):
+    assert isinstance(data.get("translations"),list)
 else:
     assert isinstance(data,dict) and data.get("id")
 PY
@@ -50,4 +52,5 @@ today="$(date -u +%F)"
 check "/v1/discover/tv?sort_by=first_air_date.desc&first_air_date.lte=$today&language=tr-TR"
 # The official Spider-Man (2002) trilogy's TMDb collection ID is 556.
 check "/v1/collection/556?language=tr-TR"
+check "/v1/tv/247718/season/1/episode/3/translations"
 echo "PASS: dedicated V6 staging catalog smoke checks"
