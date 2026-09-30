@@ -126,11 +126,20 @@ internal object EpisodeUpcomingStyle {
             val episodeText = holder.findViewById<TextView>(textId)?.text?.toString().orEmpty()
             val episodeNo = Regex("""^\s*(\d+)\.""").find(episodeText)
                 ?.groupValues?.getOrNull(1)?.toIntOrNull() ?: return@forEach
-            // A visible row alone does not expose its season. Never match E3 from one season
-            // to future E3 from another season (The Simpsons exposed this bug).
-            // Resolve the visible season from CloudStream's season selector text first.
-            val visibleSeason = findVisibleSeason(root) ?: return@forEach
-            val future = futureEpisodes[visibleSeason to episodeNo] ?: return@forEach
+            // Let CloudStream's own EpisodeAdapter tell us whether THIS bound row is upcoming.
+            // That adapter has the real Episode object (including season), so this avoids
+            // cross-season E3/E3 collisions without guessing the selected season from UI text.
+            val upcomingFormatId = activity.resources.getIdentifier("episode_upcoming_format", "string", activity.packageName)
+            val upcomingPrefix = if (upcomingFormatId != 0) {
+                activity.getString(upcomingFormatId, "").trim()
+            } else ""
+            val nativeDateText = dateView?.text?.toString().orEmpty().trim()
+            val hostMarksUpcoming = upcomingPrefix.isNotBlank() &&
+                nativeDateText.startsWith(upcomingPrefix, ignoreCase = true)
+            if (!hostMarksUpcoming) return@forEach
+            val future = futureEpisodes.values
+                .filter { it.episode == episodeNo }
+                .minByOrNull { it.date } ?: return@forEach
             val parsed = future.date
             if (parsed <= System.currentTimeMillis()) return@forEach
             future.name?.takeIf { it.isNotBlank() }?.let { actualName ->
@@ -179,22 +188,6 @@ internal object EpisodeUpcomingStyle {
                 })
             }
         }
-    }
-
-    private fun findVisibleSeason(root: View): Int? {
-        val labels = mutableListOf<String>()
-        fun walk(view: View) {
-            if (view is TextView && view.visibility == View.VISIBLE) labels += view.text?.toString().orEmpty()
-            if (view is ViewGroup) for (i in 0 until view.childCount) walk(view.getChildAt(i))
-        }
-        walk(root)
-        val patterns = listOf(
-            Regex("""(?i)^\\s*(?:sezon|season)\\s*(\\d+)\\s*$"""),
-            Regex("""(?i)^\\s*(\\d+)\\.\\s*(?:sezon|season)\\s*$""")
-        )
-        return labels.asSequence().mapNotNull { label ->
-            patterns.firstNotNullOfOrNull { it.matchEntire(label)?.groupValues?.getOrNull(1)?.toIntOrNull() }
-        }.firstOrNull()
     }
 
     private fun findViews(root: View, id: Int): List<View> {
