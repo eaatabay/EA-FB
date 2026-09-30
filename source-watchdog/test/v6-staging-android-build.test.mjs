@@ -92,3 +92,12 @@ test("empty Turkish Apple and Paramount feeds use an explicitly labeled foreign 
   assert.match(provider, /replace\("watch_region=TR", "watch_region=GB"\)/);
   assert.match(provider, /GB kataloğu; Türkiye erişimi doğrulanmadı/);
 });
+
+
+test("V36 upcoming badges use future metadata rather than native play visibility", () => {
+  const style = read("EA-FB/src/main/kotlin/com/eafb/EpisodeUpcomingStyle.kt");
+  assert.match(style, /val candidates = futureEpisodes\.values\.filter \{/);
+  assert.match(style, /it\.episode == episodeNo && it\.date > now/);
+  assert.doesNotMatch(style, /if \(!hostMarksUpcoming\) return@row/);
+  assert.match(style, /nativePlay/);
+});
