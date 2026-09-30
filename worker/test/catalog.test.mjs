@@ -157,13 +157,14 @@ test("V40 batches Turkish episode titles behind one bounded client request", asy
   assert.ok(calls.every(c => c.opts.headers.authorization === "Bearer " + env.TMDB_READ_ACCESS_TOKEN));
 });
 
-test("V40 title batch input is canonical and capped at twelve episodes", async () => {
+test("V42 title batch input is canonical and capped per request", async () => {
   const { env, ctx, calls } = setup();
   for (const suffix of [
     "episodes=2,1&language=tr-TR",
     "episodes=1,1&language=tr-TR",
-    "episodes=1,2,3,4,5,6,7,8,9,10,11,12,13&language=tr-TR",
+    "episodes=1,2,3,4,5,6,7,8,9,10,11&language=tr-TR",
     "episodes=1&language=en-US",
+    "episodes=1&language=tr-TR&source_language=english",
     "episodes=1&language=tr-TR&extra=x",
   ]) {
     const res = await gateway.fetch(new Request(
@@ -578,45 +579,131 @@ test("catalog rejects duplicate/trailing slashes, empty query and fragments",asy
   assert.equal(calls.length,0);
 });
 
-test("V41 machine-translates titles missing official Turkish metadata", async () => {
-  const { env, ctx, calls } = setup();
-  const aiCalls = [];
-  env.AI = { run: async (model, input) => {
+test("V42 localizes missing titles in one structured AI batch", async () => {
+  const {env,ctx,calls}=setup();
+  const aiCalls=[];
+  env.AI={run:async(model,input)=>{
     aiCalls.push({model,input});
-    return {translated_text: input.text === "Plan B" ? "B Planı" : "Kavşak"};
+    return {response:JSON.stringify({titles:[
+      {episode:3,title:"B planı"},
+      {episode:7,title:"kavşak"}
+    ]})};
   }};
-  globalThis.fetch = async (url, opts) => {
+  globalThis.fetch=async(url,opts)=>{
     calls.push({url,opts});
-    const episode = Number(String(url).match(/episode\/(\d+)\/translations$/)?.[1]);
-    const english = episode === 3 ? "Plan B" : "The Crossroads";
+    const episode=Number(String(url).match(/episode\/(\d+)\/translations$/)?.[1]);
+    const english=episode===3?"Plan B":"The Crossroads";
     return new Response(JSON.stringify({translations:[
       {iso_639_1:"en",iso_3166_1:"US",data:{name:english}},
-      {iso_639_1:"tr",iso_3166_1:"TR",data:{name:""}},
-    ]}), {headers:{"content-type":"application/json"}});
+      {iso_639_1:"tr",iso_3166_1:"TR",data:{name:""}}
+    ]}),{headers:{"content-type":"application/json"}});
   };
-  const res = await gateway.fetch(new Request(
-    "https://example.workers.dev/v1/tv/247718/season/1/episode-titles?episodes=3,7&language=tr-TR"
-  ), env, ctx);
-  assert.equal(res.status,200);
-  assert.deepEqual(await res.json(), {titles:{"3":"B Planı","7":"Kavşak"}});
+  const res=await gateway.fetch(new Request(
+    "https://example.workers.dev/v1/tv/247718/season/1/episode-titles?episodes=3,7&source_language=en&language=tr-TR"
+  ),env,ctx);
+  assert.deepEqual(await res.json(),{
+    titles:{"3":"B Planı","7":"Kavşak"},
+    originals:{"3":"Plan B","7":"The Crossroads"}
+  });
   assert.equal(calls.length,2);
-  assert.equal(aiCalls.length,2);
-  assert.ok(aiCalls.every(c => c.model === "@cf/meta/m2m100-1.2b"));
+  assert.equal(aiCalls.length,1);
+  assert.equal(aiCalls[0].model,"@cf/meta/llama-3.1-8b-instruct");
+  assert.equal(aiCalls[0].input.response_format.type,"json_schema");
+  assert.match(aiCalls[0].input.messages[0].content,/İngilizceyi ara dil olarak kullanma/);
 });
 
-test("V41 official Turkish title bypasses machine translation", async () => {
-  const { env, ctx, calls } = setup();
-  env.AI = { run: async () => { throw Error("AI_SHOULD_NOT_RUN"); } };
-  globalThis.fetch = async (url, opts) => {
+test("V42 official Turkish title bypasses AI", async () => {
+  const {env,ctx,calls}=setup();
+  env.AI={run:async()=>{throw Error("AI_SHOULD_NOT_RUN");}};
+  globalThis.fetch=async(url,opts)=>{
     calls.push({url,opts});
     return new Response(JSON.stringify({translations:[
       {iso_639_1:"en",iso_3166_1:"US",data:{name:"Jigsaw Puzzle"}},
-      {iso_639_1:"tr",iso_3166_1:"TR",data:{name:"Yapboz"}},
-    ]}), {headers:{"content-type":"application/json"}});
+      {iso_639_1:"tr",iso_3166_1:"TR",data:{name:"Yapboz"}}
+    ]}),{headers:{"content-type":"application/json"}});
   };
-  const res = await gateway.fetch(new Request(
-    "https://example.workers.dev/v1/tv/247718/season/1/episode-titles?episodes=2&language=tr-TR"
-  ), env, ctx);
-  assert.deepEqual(await res.json(), {titles:{"2":"Yapboz"}});
+  const res=await gateway.fetch(new Request(
+    "https://example.workers.dev/v1/tv/247718/season/1/episode-titles?episodes=2&source_language=en&language=tr-TR"
+  ),env,ctx);
+  assert.deepEqual(await res.json(),{titles:{"2":"Yapboz"}});
   assert.equal(calls.length,1);
 });
+
+test("V42 treats copied source text in tr metadata as untranslated", async () => {
+  const {env,ctx}=setup();
+  let aiCalls=0;
+  env.AI={run:async()=>{
+    aiCalls++;
+    return {response:JSON.stringify({titles:[{episode:4,title:"beyaz perde"}]})};
+  }};
+  globalThis.fetch=async()=>new Response(JSON.stringify({translations:[
+    {iso_639_1:"en",iso_3166_1:"US",data:{name:"White Screen"}},
+    {iso_639_1:"tr",iso_3166_1:"TR",data:{name:"White Screen"}}
+  ]}),{headers:{"content-type":"application/json"}});
+  const res=await gateway.fetch(new Request(
+    "https://example.workers.dev/v1/tv/247718/season/1/episode-titles?episodes=4&source_language=en&language=tr-TR"
+  ),env,ctx);
+  assert.deepEqual(await res.json(),{
+    titles:{"4":"Beyaz Perde"},
+    originals:{"4":"White Screen"}
+  });
+  assert.equal(aiCalls,1);
+});
+
+test("V42 translates directly from the series original language", async () => {
+  const {env,ctx}=setup();
+  let aiInput;
+  env.AI={run:async(_model,input)=>{
+    aiInput=input;
+    return {response:JSON.stringify({titles:[{episode:5,title:"Kâğıt Ev"}]})};
+  }};
+  globalThis.fetch=async()=>new Response(JSON.stringify({translations:[
+    {iso_639_1:"es",iso_3166_1:"ES",data:{name:"La casa de papel"}},
+    {iso_639_1:"en",iso_3166_1:"US",data:{name:"The House of Paper"}},
+    {iso_639_1:"tr",iso_3166_1:"TR",data:{name:""}}
+  ]}),{headers:{"content-type":"application/json"}});
+  const res=await gateway.fetch(new Request(
+    "https://example.workers.dev/v1/tv/1/season/1/episode-titles?episodes=5&source_language=es&language=tr-TR"
+  ),env,ctx);
+  assert.deepEqual(await res.json(),{
+    titles:{"5":"Kâğıt Ev"},
+    originals:{"5":"La casa de papel"}
+  });
+  const request=JSON.parse(aiInput.messages[1].content);
+  assert.equal(request.source_language,"es");
+  assert.deepEqual(request.episodes,[{episode:5,title:"La casa de papel"}]);
+  assert.ok(!aiInput.messages[1].content.includes("The House of Paper"));
+});
+
+test("V42 D1 hit bypasses AI and reuses original source title", async () => {
+  const {env,ctx}=setup();
+  env.AI={run:async()=>{throw Error("AI_SHOULD_NOT_RUN");}};
+  env.TITLE_CACHE={
+    prepare(){
+      return {
+        bind(){
+          return {
+            all:async()=>({results:[{
+              episode:3,
+              source_language:"en",
+              original_title:"Plan B",
+              turkish_title:"B Planı"
+            }]})
+          };
+        }
+      };
+    }
+  };
+  globalThis.fetch=async()=>new Response(JSON.stringify({translations:[
+    {iso_639_1:"en",iso_3166_1:"US",data:{name:"Plan B"}},
+    {iso_639_1:"tr",iso_3166_1:"TR",data:{name:""}}
+  ]}),{headers:{"content-type":"application/json"}});
+  const res=await gateway.fetch(new Request(
+    "https://example.workers.dev/v1/tv/247718/season/1/episode-titles?episodes=3&source_language=en&language=tr-TR"
+  ),env,ctx);
+  assert.deepEqual(await res.json(),{
+    titles:{"3":"B Planı"},
+    originals:{"3":"Plan B"}
+  });
+});
+
