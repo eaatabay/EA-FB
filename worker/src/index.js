@@ -427,6 +427,8 @@ export default {
     if (catalog.batchEpisodeTitles) {
       let validResponses = 0;
       const titles = {};
+      const originals = {};
+      const skipped = [];
       let rows = [];
       try {
         rows = await withUpstreamDeadline(async signal =>
@@ -439,10 +441,10 @@ export default {
                 method: "GET",
                 headers: {
                   authorization: "Bearer " + token,
-                  accept: "application/json",
+                  accept: "application/json"
                 },
                 redirect: "manual",
-                signal,
+                signal
               });
               if (response.status >= 300 && response.status < 400) return null;
               if (!response.ok ||
@@ -454,45 +456,111 @@ export default {
               validResponses++;
               return {
                 episode,
+                sourceLanguage: catalog.batchEpisodeTitles.sourceLanguage,
                 turkish: turkishEpisodeTitle(payload),
-                english: englishEpisodeTitle(payload),
+                original: sourceEpisodeTitle(
+                  payload, catalog.batchEpisodeTitles.sourceLanguage
+                )
               };
             } catch {
               return null;
             }
           })), 6500);
+
+        const candidates = [];
         for (const row of rows) {
-          if (row?.turkish) titles[String(row.episode)] = row.turkish;
+          if (!row) continue;
+          const official = usableLocalizedTitle(row.turkish, row.episode);
+          const original = usableLocalizedTitle(row.original, row.episode);
+          const trustworthyOfficial = official && (
+            row.sourceLanguage === "tr" || !original || !sameTitle(official, original)
+          );
+          if (trustworthyOfficial) {
+            titles[String(row.episode)] = official;
+            continue;
+          }
+          if (!original) {
+            skipped.push(row.episode);
+            continue;
+          }
+          candidates.push({...row, original});
         }
-        const missing = rows.filter(row =>
-          row && !row.turkish && row.english &&
-          !genericEnglishEpisodeTitle(row.english, row.episode));
+
+        const cached = await readTitleCache(
+          env.TITLE_CACHE,
+          catalog.batchEpisodeTitles.seriesId,
+          catalog.batchEpisodeTitles.season,
+          candidates
+        );
+        for (const row of candidates) {
+          const hit = cached.get(row.episode);
+          if (!hit) continue;
+          titles[String(row.episode)] = hit.title;
+          originals[String(row.episode)] = hit.original;
+        }
+
+        const missing = candidates.filter(row => !titles[String(row.episode)]);
         if (missing.length && env.AI?.run) {
-          const translated = await withUpstreamDeadline(() =>
-            Promise.all(missing.map(async row => {
-              try {
-                const result = await env.AI.run("@cf/meta/m2m100-1.2b", {
-                  text: row.english,
-                  source_lang: "en",
-                  target_lang: "tr",
-                });
-                return [row.episode, usableMachineTitle(result)];
-              } catch {
-                return null;
+          const lockKey = [
+            catalog.batchEpisodeTitles.seriesId,
+            catalog.batchEpisodeTitles.season,
+            catalog.batchEpisodeTitles.sourceLanguage,
+            missing.map(row => row.episode).join(",")
+          ].join(":");
+          const acquired = await acquireTitleLock(env.TITLE_CACHE, lockKey);
+          if (acquired) {
+            try {
+              const translated = await withUpstreamDeadline(
+                () => localizeTitleBatch(
+                  env, catalog.batchEpisodeTitles.sourceLanguage, missing
+                ),
+                7000
+              );
+              await writeTitleCache(
+                env.TITLE_CACHE,
+                catalog.batchEpisodeTitles.seriesId,
+                catalog.batchEpisodeTitles.season,
+                catalog.batchEpisodeTitles.sourceLanguage,
+                translated
+              );
+              for (const row of translated) {
+                titles[String(row.episode)] = row.title;
+                originals[String(row.episode)] = row.original;
               }
-            })), 5000);
-          for (const row of translated) {
-            if (row?.[1]) titles[String(row[0])] = row[1];
+            } catch {
+              // Best effort. Existing original title stays visible.
+            } finally {
+              await releaseTitleLock(env.TITLE_CACHE, lockKey);
+            }
+          } else {
+            await new Promise(resolve => setTimeout(resolve, 350));
+            const late = await readTitleCache(
+              env.TITLE_CACHE,
+              catalog.batchEpisodeTitles.seriesId,
+              catalog.batchEpisodeTitles.season,
+              missing
+            );
+            for (const row of missing) {
+              const hit = late.get(row.episode);
+              if (!hit) continue;
+              titles[String(row.episode)] = hit.title;
+              originals[String(row.episode)] = hit.original;
+            }
           }
         }
       } catch {
-        // Best-effort background enrichment; the initial detail remains untouched.
+        // Background enrichment must never break the detail response.
       }
+
+      const resolvedCount = Object.keys(titles).length + skipped.length;
       const responseTtl =
         validResponses === catalog.batchEpisodeTitles.episodes.length &&
-        Object.keys(titles).length === catalog.batchEpisodeTitles.episodes.length
+        resolvedCount === catalog.batchEpisodeTitles.episodes.length
           ? catalog.ttl : 60;
-      const response = json({ titles }, 200, responseTtl);
+      const payload = { titles };
+      if (Object.keys(originals).length) payload.originals = originals;
+      if (skipped.length) payload.skipped = skipped.sort((x,y)=>x-y);
+      const response = json(payload, 200, responseTtl);
       if (cache && ctx?.waitUntil) {
         try {
           ctx.waitUntil(Promise.resolve(cache.put(cacheKey,response.clone())).catch(()=>{}));
