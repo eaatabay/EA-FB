@@ -172,10 +172,10 @@ test("V35 removes per-episode translation HTTP calls from the blocking detail pa
   assert.ok(provider.includes("val englishRows = if (needsEnglish)"));
 });
 
-test("V35 binds YAKINDA to native future state and debounced scroll rendering",()=>{
+test("V36 binds YAKINDA to future metadata and debounced scroll rendering",()=>{
   assert.ok(upcomingStyle.includes('getIdentifier("episode_play_icon", "id"'));
   assert.ok(upcomingStyle.includes("it.episode == episodeNo && it.date > now"));
-  assert.ok(upcomingStyle.includes("if (!hostMarksUpcoming) return@row"));
+  assert.ok(!upcomingStyle.includes("if (!hostMarksUpcoming) return@row"));
   assert.ok(upcomingStyle.includes("addOnScrollChangedListener"));
   assert.ok(upcomingStyle.includes("pendingScrollRenders"));
   assert.ok(upcomingStyle.includes("postDelayed"));
