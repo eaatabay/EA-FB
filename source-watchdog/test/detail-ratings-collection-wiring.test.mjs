@@ -186,3 +186,5 @@ test("V35 binds YAKINDA to native future state and newly attached RecyclerView r
   assert.ok(!upcomingStyle.includes('getIdentifier("episode_upcoming_format", "string"'));
   assert.ok(!upcomingStyle.includes("nativeDateText.startsWith(upcomingPrefix"));
 });
+
+// V35 final full-CI trigger after staging guard repair.
