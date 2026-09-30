@@ -48,6 +48,18 @@ function catalogRequest(url) {
   if (parts.some((s) => !/^[a-zA-Z0-9_-]+$/.test(s))) return null;
 
   const q = url.searchParams;
+  // Exact TMDb TV-episode translations endpoint. It accepts no language/page
+  // query here; the client selects the Turkish translation from the payload.
+  const episodeTranslations = parts[0] === "tv" && parts.length === 7 &&
+    /^\d{1,9}$/.test(parts[1]) && +parts[1] > 0 && parts[2] === "season" &&
+    /^\d{1,3}$/.test(parts[3]) && +parts[3] <= 100 && parts[4] === "episode" &&
+    /^\d{1,4}$/.test(parts[5]) && +parts[5] > 0 && +parts[5] <= 1000 &&
+    parts[6] === "translations";
+  if (episodeTranslations) {
+    if ([...q.keys()].length !== 0) return null;
+    return { upstreamPath: "/" + parts.join("/"), params: new URLSearchParams(), ttl: 21600 };
+  }
+
   const accepted = new URLSearchParams();
   const language = q.get("language") || "tr-TR";
   if (!LANGUAGES.has(language)) return null;
