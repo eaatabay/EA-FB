@@ -74,11 +74,15 @@ test("detail metadata font inherits host TextView without unsafe resource lookup
   assert.ok(!detailMeta.includes('getDimension(duration.resources.getIdentifier'));
 });
 
-test("V21 exact upcoming UI suppresses native countdown and both host placeholders",()=>{
-  assert.ok(provider.includes("private fun nextEpisode") && provider.includes("NextAiring? = null"));
+test("V39 keeps native next-air binding as first-open fallback and exact custom date as final row",()=>{
+  assert.ok(provider.includes("return NextAiring(episode, airing.unixSeconds, season)"));
   assert.ok(upcomingStyle.includes("EpisodeRowPolicy.episodeNumber"));
   assert.ok(upcomingStyle.includes("it.episode == episodeNo && it.date > now"));
   assert.ok(detailMeta.includes('listOf("result_coming_soon", "result_tv_coming_soon")'));
+  assert.ok(detailMeta.includes("observeDetailFocus(root, fragment)"));
+  assert.ok(detailMeta.includes("renderNextEpisode(root, meta, activity)"));
+  assert.ok(detailMeta.includes("addOnGlobalFocusChangeListener"));
+  assert.ok(!detailMeta.includes("addOnGlobalLayoutListener"));
 });
 
 test("V22 keeps exact long Turkish TMDb date while V37 centralizes row parsing",()=>{
@@ -207,4 +211,12 @@ test("V38 retries first-open detail metadata after season loading without layout
   assert.ok(detailMeta.includes('main.postDelayed({ renderRegistered() }, 900)'));
   assert.ok(detailMeta.includes('main.postDelayed({ renderRegistered() }, 1800)'));
   assert.ok(!detailMeta.includes("addOnGlobalLayoutListener"));
+});
+
+test("V39 first-open next-air repair stays isolated from episode-row performance code",()=>{
+  assert.ok(detailMeta.includes("pendingFocusRenders"));
+  assert.ok(detailMeta.includes("main.postDelayed({"));
+  assert.ok(detailMeta.includes("renderNextEpisodeOnly(fragment)"));
+  assert.ok(!detailMeta.includes("androidx.recyclerview.widget.RecyclerView"));
+  assert.ok(upcomingStyle.includes("pendingFocusRenders"));
 });

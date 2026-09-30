@@ -487,7 +487,13 @@ class EAProvider : MainAPI() {
             ?.optString("air_date")
             ?.let { EpisodeAirPolicy.parse(it, System.currentTimeMillis()) }
 
-    private fun nextEpisode(item: JSONObject, airing: EpisodeAirPolicy.Airing?): NextAiring? = null
+    private fun nextEpisode(item: JSONObject, airing: EpisodeAirPolicy.Airing?): NextAiring? {
+        airing ?: return null
+        val next = item.optJSONObject("next_episode_to_air") ?: return null
+        val episode = next.optInt("episode_number").takeIf { it > 0 } ?: return null
+        val season = next.optInt("season_number").takeIf { it > 0 }
+        return NextAiring(episode, airing.unixSeconds, season)
+    }
 
     private fun genericEpisodeName(value: String, episodeNo: Int): Boolean {
         val normalized = value.trim()

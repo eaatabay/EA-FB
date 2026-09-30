@@ -38,6 +38,12 @@ internal object DetailMetaRow {
     private val registered = java.util.Collections.newSetFromMap(
         java.util.WeakHashMap<FragmentActivity, Boolean>()
     )
+    private val observedFocusRoots = java.util.Collections.newSetFromMap(
+        java.util.WeakHashMap<View, Boolean>()
+    )
+    private val pendingFocusRenders = java.util.Collections.newSetFromMap(
+        java.util.WeakHashMap<View, Boolean>()
+    )
 
     fun install(context: Context) {
         val application = context.applicationContext as? Application ?: return
@@ -106,24 +112,19 @@ internal object DetailMetaRow {
         val meta = entries[url] ?: return
         val activity = fragment.activity as? FragmentActivity ?: return
 
+        // V39: CloudStream binds/clears its native next-air views after provider
+        // load on the first visit. TV focus moves happen after that binding, so a
+        // throttled focus hook restores only our exact long-date row. This avoids
+        // global-layout polling and does not touch episode-row decoration.
+        observeDetailFocus(root, fragment)
+        renderNextEpisode(root, meta, activity)
+
         // CloudStream's movie layout may expose its generic "coming soon"
         // placeholder even when EA-FB has a normal movie detail response.
         // Hide only that stock movie placeholder; TV upcoming UI is separate.
         // These are CloudStream's generic empty-state placeholders, not EA-FB
         // collection/recommendation headings. They can be surfaced by the host
         // after our async detail response, so hide both variants on EA-FB details.
-        meta.nextEpisode?.let { label ->
-            val episodesId = activity.resources.getIdentifier("result_episodes_text", "id", activity.packageName)
-            val holderId = activity.resources.getIdentifier("result_next_airing_holder", "id", activity.packageName)
-            val nextId = activity.resources.getIdentifier("result_next_airing", "id", activity.packageName)
-            val timeId = activity.resources.getIdentifier("result_next_airing_time", "id", activity.packageName)
-            if (holderId != 0 && nextId != 0 && timeId != 0) {
-                root.findViewById<View>(holderId)?.visibility = View.VISIBLE
-                root.findViewById<TextView>(nextId)?.apply { text = label; visibility = View.VISIBLE }
-                root.findViewById<TextView>(timeId)?.apply { text = ""; visibility = View.GONE }
-            }
-        }
-
         listOf("result_coming_soon", "result_tv_coming_soon").forEach { name ->
             val id = activity.resources.getIdentifier(name, "id", activity.packageName)
             if (id != 0) root.findViewById<View>(id)?.visibility = View.GONE
@@ -163,6 +164,43 @@ internal object DetailMetaRow {
         if (tagsId != 0 && additions.isNotEmpty()) {
             root.findViewById<View>(tagsId)?.visibility = View.GONE
         }
+    }
+
+    private fun observeDetailFocus(root: View, fragment: Fragment) {
+        synchronized(observedFocusRoots) {
+            if (!observedFocusRoots.add(root)) return
+        }
+        root.viewTreeObserver.addOnGlobalFocusChangeListener { _, newFocus ->
+            if (newFocus == null) return@addOnGlobalFocusChangeListener
+            synchronized(pendingFocusRenders) {
+                if (!pendingFocusRenders.add(root)) return@addOnGlobalFocusChangeListener
+            }
+            main.postDelayed({
+                synchronized(pendingFocusRenders) { pendingFocusRenders.remove(root) }
+                if (root.isAttachedToWindow) renderNextEpisodeOnly(fragment)
+            }, 80)
+        }
+    }
+
+    private fun renderNextEpisodeOnly(fragment: Fragment) {
+        val root = fragment.view ?: return
+        val args = fragment.arguments ?: return
+        if (args.getString("apiName") != PROVIDER) return
+        val url = args.getString("url") ?: return
+        val meta = entries[url] ?: return
+        val activity = fragment.activity as? FragmentActivity ?: return
+        renderNextEpisode(root, meta, activity)
+    }
+
+    private fun renderNextEpisode(root: View, meta: Meta, activity: FragmentActivity) {
+        val label = meta.nextEpisode ?: return
+        val holderId = activity.resources.getIdentifier("result_next_airing_holder", "id", activity.packageName)
+        val nextId = activity.resources.getIdentifier("result_next_airing", "id", activity.packageName)
+        val timeId = activity.resources.getIdentifier("result_next_airing_time", "id", activity.packageName)
+        if (holderId == 0 || nextId == 0 || timeId == 0) return
+        root.findViewById<View>(holderId)?.visibility = View.VISIBLE
+        root.findViewById<TextView>(nextId)?.apply { text = label; visibility = View.VISIBLE }
+        root.findViewById<TextView>(timeId)?.apply { text = ""; visibility = View.GONE }
     }
 
     private data class Label(val text: String, val color: Int)
