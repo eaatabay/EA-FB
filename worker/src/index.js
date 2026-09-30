@@ -169,7 +169,9 @@ export default {
       return json({ error: "catalog_busy" }, 429);
     }
 
-    const cacheUrl = new URL(url.origin + "/v1" + catalog.upstreamPath + "?" + catalog.params);
+    const catalogQuery = catalog.params.toString();
+    const catalogSuffix = catalogQuery ? "?" + catalogQuery : "";
+    const cacheUrl = new URL(url.origin + "/v1" + catalog.upstreamPath + catalogSuffix);
     // Partition metadata caches by enrichment mode. When the private OMDb key
     // is enabled after v5, a warm TMDb-only cache must not hide IMDb ratings.
     // Only the mode, never the private credential, enters the cache key.
@@ -187,7 +189,7 @@ export default {
         // Edge cache failure is not a TMDb outage. Fetch metadata normally.
       }
     }
-    const upstreamUrl = UPSTREAM + catalog.upstreamPath + "?" + catalog.params;
+    const upstreamUrl = UPSTREAM + catalog.upstreamPath + catalogSuffix;
     // Some dashboards copy an optional Bearer prefix. Never send Bearer Bearer.
     const token = String(env.TMDB_READ_ACCESS_TOKEN).trim().replace(/^Bearer\s+/i, "").trim();
     if (!token) return json({ error: "catalog_unconfigured" }, 503);
