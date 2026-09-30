@@ -29,7 +29,7 @@ def verify():
     assert 'main/config/backend.json' not in provider
     assert 'override var name = "EA-FB V6 STAGING"' in provider
     assert 'ea_fb_catalog_settings_v6_staging' in settings
-    assert re.search(r'^version = 34$', build, re.MULTILINE)
+    assert re.search(r'^version = 35$', build, re.MULTILINE)
     print("PASS: red V6 client pinned exclusively to staging Worker and branch config")
 
 def apply():
