@@ -155,11 +155,26 @@ test("V32 binds future decoration and metadata fallback to SxE identity",()=>{
   assert.ok(!upcomingStyle.includes("findVisibleSeason(root)"));
 });
 
-test("V33 generic episode names really fall through to EN and upcoming uses host row state",()=>{
+test("V33 generic episode names really fall through instead of preserving placeholders",()=>{
   assert.ok(provider.includes('Regex("""(?i)^$escapedEpisode\\.?\\s*bölüm$""")'));
   assert.ok(provider.includes('Regex("""(?i)^episode\\s*$escapedEpisode$""")'));
   assert.ok(!provider.includes('episode\\\\s*'));
-  assert.ok(upcomingStyle.includes('getIdentifier("episode_upcoming_format", "string"'));
-  assert.ok(upcomingStyle.includes("nativeDateText.startsWith(upcomingPrefix"));
+});
+
+test("V34 prefers genuine Turkish episode translations before English fallback",()=>{
+  assert.ok(worker.includes('parts[6] === "translations"'));
+  assert.ok(provider.includes("getUnlocalizedJson("));
+  assert.ok(provider.includes("turkishEpisodeName(it, episodeNo)"));
+  assert.ok(provider.includes("translatedTurkishName"));
+  assert.ok(provider.indexOf("!genericEpisodeName(translatedTurkishName.orEmpty(), episodeNo)") <
+    provider.indexOf("!genericEpisodeName(englishName, episodeNo)"));
+});
+
+test("V34 binds long-date YAKINDA to CloudStream native future row state",()=>{
+  assert.ok(upcomingStyle.includes('getIdentifier("episode_play_icon", "id"'));
+  assert.ok(upcomingStyle.includes("nativePlay.visibility != View.VISIBLE"));
+  assert.ok(upcomingStyle.includes("dateView?.visibility == View.VISIBLE"));
   assert.ok(upcomingStyle.includes("if (!hostMarksUpcoming) return@forEach"));
+  assert.ok(!upcomingStyle.includes('getIdentifier("episode_upcoming_format", "string"'));
+  assert.ok(!upcomingStyle.includes("nativeDateText.startsWith(upcomingPrefix"));
 });
