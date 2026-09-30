@@ -12,7 +12,7 @@ import android.os.Looper
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
-import android.view.ViewTreeObserver
+import androidx.recyclerview.widget.RecyclerView
 import android.widget.FrameLayout
 import android.widget.TextView
 import androidx.fragment.app.Fragment
@@ -31,7 +31,9 @@ internal object EpisodeUpcomingStyle {
     private val main = Handler(Looper.getMainLooper())
     internal data class FutureEpisode(val season: Int, val episode: Int, val date: Long, val name: String? = null)
     private val dates = ConcurrentHashMap<String, Map<Pair<Int, Int>, FutureEpisode>>()
-    private val observedRoots = java.util.Collections.newSetFromMap(java.util.WeakHashMap<View, Boolean>())
+    private val observedLists = java.util.Collections.newSetFromMap(
+        java.util.WeakHashMap<RecyclerView, Boolean>()
+    )
     private val registered = java.util.Collections.newSetFromMap(
         java.util.WeakHashMap<FragmentActivity, Boolean>()
     )
@@ -55,8 +57,6 @@ internal object EpisodeUpcomingStyle {
         main.post { renderRegistered() }
         main.postDelayed({ renderRegistered() }, 250)
         main.postDelayed({ renderRegistered() }, 900)
-        main.postDelayed({ renderRegistered() }, 1800)
-        main.postDelayed({ renderRegistered() }, 3000)
     }
 
     private fun renderRegistered() {
@@ -78,7 +78,8 @@ internal object EpisodeUpcomingStyle {
                     fm: FragmentManager, fragment: Fragment, view: View, state: Bundle?
                 ) {
                     main.post { renderFragment(fragment) }
-                    main.postDelayed({ renderFragment(fragment) }, 500)
+                    main.postDelayed({ renderFragment(fragment) }, 250)
+                    main.postDelayed({ renderFragment(fragment) }, 750)
                 }
             }, true
         )
@@ -98,13 +99,42 @@ internal object EpisodeUpcomingStyle {
         if (!url.contains("/tv/")) return
         val root = fragment.view ?: return
         val activity = fragment.activity as? FragmentActivity ?: return
-        synchronized(observedRoots) {
-            if (observedRoots.add(root)) {
-                root.viewTreeObserver.addOnGlobalLayoutListener {
-                    if (root.isAttachedToWindow) main.post { renderFragment(fragment) }
-                }
+
+        // V35: observe only RecyclerView child attachment. The old global-layout
+        // hook rescanned the whole detail tree on every image/layout pass and
+        // became expensive on long shows such as The Simpsons.
+        observeEpisodeLists(root, fragment, url)
+        renderRows(root, futureEpisodes, activity)
+    }
+
+    private fun observeEpisodeLists(root: View, fragment: Fragment, url: String) {
+        findRecyclerViews(root).forEach { list ->
+            synchronized(observedLists) {
+                if (!observedLists.add(list)) return@forEach
             }
+            list.addOnChildAttachStateChangeListener(
+                object : RecyclerView.OnChildAttachStateChangeListener {
+                    override fun onChildViewAttachedToWindow(view: View) {
+                        main.post {
+                            val current = dates[url] ?: return@post
+                            val activity = fragment.activity as? FragmentActivity ?: return@post
+                            if (fragment.view != null && view.isAttachedToWindow) {
+                                renderRows(view, current, activity)
+                            }
+                        }
+                    }
+
+                    override fun onChildViewDetachedFromWindow(view: View) = Unit
+                }
+            )
         }
+    }
+
+    private fun renderRows(
+        root: View,
+        futureEpisodes: Map<Pair<Int, Int>, FutureEpisode>,
+        activity: FragmentActivity
+    ) {
         val holderIds = listOf("episode_holder_large", "episode_holder").mapNotNull { name ->
             activity.resources.getIdentifier(name, "id", activity.packageName).takeIf { it != 0 }
         }
@@ -113,7 +143,16 @@ internal object EpisodeUpcomingStyle {
         val playId = activity.resources.getIdentifier("episode_play_icon", "id", activity.packageName)
         val textId = activity.resources.getIdentifier("episode_text", "id", activity.packageName)
         if (holderIds.isEmpty() || textId == 0) return
-        holderIds.flatMap { findViews(root, it) }.forEach { holder ->
+
+        // The large layout contains both holder ids. Deduplicate by its one title
+        // TextView so a row is decorated once instead of once per nested holder.
+        val seenTitles = java.util.Collections.newSetFromMap(
+            java.util.IdentityHashMap<TextView, Boolean>()
+        )
+        holderIds.flatMap { findViews(root, it) }.forEach row@ { holder ->
+            val textView = holder.findViewById<TextView>(textId) ?: return@row
+            if (!seenTitles.add(textView)) return@row
+
             // RecyclerView recycles episode rows. Always clear our decoration first;
             // otherwise a future row's badge can leak onto an already-aired episode.
             if (posterId != 0) {
@@ -123,18 +162,20 @@ internal object EpisodeUpcomingStyle {
                     }
                 }
             }
+
             val dateView = if (dateId != 0) holder.findViewById<TextView>(dateId) else null
-            val episodeText = holder.findViewById<TextView>(textId)?.text?.toString().orEmpty()
+            val episodeText = textView.text?.toString().orEmpty()
             val episodeNo = Regex("""^\s*(\d+)\.""").find(episodeText)
-                ?.groupValues?.getOrNull(1)?.toIntOrNull() ?: return@forEach
-            // CloudStream's EpisodeAdapter hides the native play icon when the
-            // bound Episode.airDate is still in the future. This is row-specific,
-            // so it avoids translated countdown parsing and cross-season E3/E3 guesses.
+                ?.groupValues?.getOrNull(1)?.toIntOrNull() ?: return@row
+
+            // CloudStream's large EpisodeAdapter explicitly hides this icon only
+            // while the bound Episode.airDate is in the future, and restores it
+            // for aired/unknown-date rows. No localized countdown parsing needed.
             val nativePlay = if (playId != 0) holder.findViewById<View>(playId) else null
             val hostMarksUpcoming = nativePlay != null &&
-                nativePlay.visibility != View.VISIBLE &&
-                dateView?.visibility == View.VISIBLE
-            if (!hostMarksUpcoming) return@forEach
+                nativePlay.visibility != View.VISIBLE
+            if (!hostMarksUpcoming) return@row
+
             val now = System.currentTimeMillis()
             val rowName = episodeText.substringAfter('.', "").trim()
             val candidates = futureEpisodes.values.filter {
@@ -145,18 +186,21 @@ internal object EpisodeUpcomingStyle {
                     candidate.name?.trim()?.equals(rowName, ignoreCase = true) == true
                 }
                 ?: candidates.minByOrNull { it.date }
-                ?: return@forEach
-            val parsed = future.date
+                ?: return@row
+
             future.name?.takeIf { it.isNotBlank() }?.let { actualName ->
-                holder.findViewById<TextView>(textId)?.apply { text = "$episodeNo. $actualName"; visibility = View.VISIBLE }
+                textView.apply {
+                    text = "$episodeNo. $actualName"
+                    visibility = View.VISIBLE
+                }
             }
-            val dateLabel = longTurkishDate(parsed)
+
+            val dateLabel = longTurkishDate(future.date)
             if (dateView != null) {
                 dateView.text = dateLabel
                 dateView.visibility = View.VISIBLE
             } else {
-                val textView = holder.findViewById<TextView>(textId) ?: return@forEach
-                val parent = textView.parent as? ViewGroup ?: return@forEach
+                val parent = textView.parent as? ViewGroup ?: return@row
                 val existing = parent.findViewWithTag<TextView>(DATE_TAG)
                 if (existing != null) existing.text = dateLabel else parent.addView(TextView(activity).apply {
                     tag = DATE_TAG
@@ -167,9 +211,9 @@ internal object EpisodeUpcomingStyle {
                 })
             }
 
-            if (posterId == 0) return@forEach
-            val poster = holder.findViewById<View>(posterId) ?: return@forEach
-            val frame = poster.parent as? FrameLayout ?: return@forEach
+            if (posterId == 0) return@row
+            val poster = holder.findViewById<View>(posterId) ?: return@row
+            val frame = poster.parent as? FrameLayout ?: return@row
             if (frame.findViewWithTag<View>(BADGE_TAG) == null) {
                 frame.addView(TextView(activity).apply {
                     tag = BADGE_TAG
@@ -193,6 +237,16 @@ internal object EpisodeUpcomingStyle {
                 })
             }
         }
+    }
+
+    private fun findRecyclerViews(root: View): List<RecyclerView> {
+        val out = mutableListOf<RecyclerView>()
+        fun walk(view: View) {
+            if (view is RecyclerView) out += view
+            if (view is ViewGroup) for (i in 0 until view.childCount) walk(view.getChildAt(i))
+        }
+        walk(root)
+        return out
     }
 
     private fun findViews(root: View, id: Int): List<View> {
