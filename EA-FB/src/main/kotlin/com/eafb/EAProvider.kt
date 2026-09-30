@@ -526,10 +526,10 @@ class EAProvider : MainAPI() {
                                 if (normalized.isBlank()) return true
                                 val escapedEpisode = Regex.escape(episodeNo.toString())
                                 return listOf(
-                                    Regex("""(?i)^bölüm\\s*$escapedEpisode$"""),
-                                    Regex("""(?i)^$escapedEpisode\\.?\\s*bölüm$"""),
-                                    Regex("""(?i)^episode\\s*$escapedEpisode$"""),
-                                    Regex("""(?i)^episode\\s*#?\\s*\\d+\\.$escapedEpisode$""")
+                                    Regex("""(?i)^bölüm\s*$escapedEpisode$"""),
+                                    Regex("""(?i)^$escapedEpisode\.?\s*bölüm$"""),
+                                    Regex("""(?i)^episode\s*$escapedEpisode$"""),
+                                    Regex("""(?i)^episode\s*#?\s*\d+\.$escapedEpisode$""")
                                 ).any { it.matches(normalized) }
                             }
                             val episodeName = when {
