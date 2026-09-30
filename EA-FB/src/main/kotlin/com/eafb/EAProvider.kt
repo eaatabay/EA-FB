@@ -487,6 +487,32 @@ class EAProvider : MainAPI() {
 
     private fun nextEpisode(item: JSONObject, airing: EpisodeAirPolicy.Airing?): NextAiring? = null
 
+    private fun genericEpisodeName(value: String, episodeNo: Int): Boolean {
+        val normalized = value.trim()
+        if (normalized.isBlank()) return true
+        val escapedEpisode = Regex.escape(episodeNo.toString())
+        return listOf(
+            Regex("""(?i)^bölüm\s*$escapedEpisode$"""),
+            Regex("""(?i)^$escapedEpisode\.?\s*bölüm$"""),
+            Regex("""(?i)^episode\s*$escapedEpisode$"""),
+            Regex("""(?i)^episode\s*#?\s*\d+\.$escapedEpisode$""")
+        ).any { it.matches(normalized) }
+    }
+
+    private fun turkishEpisodeName(translations: JSONObject?, episodeNo: Int): String? {
+        val rows = translations?.optJSONArray("translations") ?: return null
+        var fallback: String? = null
+        for (index in 0 until rows.length()) {
+            val row = rows.optJSONObject(index) ?: continue
+            if (!row.optString("iso_639_1").equals("tr", ignoreCase = true)) continue
+            val name = row.optJSONObject("data")?.optString("name").orEmpty().trim()
+            if (genericEpisodeName(name, episodeNo)) continue
+            if (row.optString("iso_3166_1").equals("TR", ignoreCase = true)) return name
+            if (fallback == null) fallback = name
+        }
+        return fallback
+    }
+
     /** Only metadata: actual episode sources will be resolved by adapters later. */
     private suspend fun tvEpisodes(id: Int, seasonList: JSONArray?, fallbackBackdrop: String?): List<Episode> {
         if (seasonList == null) return emptyList()
