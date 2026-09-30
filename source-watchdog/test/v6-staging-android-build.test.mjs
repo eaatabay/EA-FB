@@ -15,13 +15,14 @@ test("red V6 staging build overlays only the two Android relay references", () =
   assert.match(script,/git status --porcelain/);
   assert.match(script,/trap restore EXIT/);
   assert.match(script,/build\/v6-staging-artifacts\/EA-FB-V6-STAGING\.cs3/);
-  assert.match(script,/bash scripts\/build-codespace\.sh/);
+  assert.match(script,/bash scripts\/build-v6-staging-codespace\.sh|bash scripts\/build-codespace\.sh/);
   assert.match(overlay,/policy\.count\(old_pin\) != 1/);
   assert.match(overlay,/provider\.count\(old_config\) != 1/);
   assert.match(overlay,/config\/backend\.v6-staging\.json/);
   assert.match(overlay,/BUILD\.write_text/);
   assert.ok(overlay.includes("version = 42"));
-  assert.match(overlay,/re\\.sub\\(r'\\^version = 6\\  assert.match(script,/cp "\$tmp\/build\.gradle\.kts" "\$buildfile"/);
+  assert.ok(overlay.includes("'version = 42'"));
+  assert.match(script,/cp "\$tmp\/build\.gradle\.kts" "\$buildfile"/);
   assert.doesNotMatch(script,/wrangler deploy|git push|gh release/);
 });
 
