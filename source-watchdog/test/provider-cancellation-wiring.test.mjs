@@ -8,10 +8,10 @@ const root=resolve(fileURLToPath(new URL("../../",import.meta.url)));
 const provider=readFileSync(resolve(root,
  "EA-FB/src/main/kotlin/com/eafb/EAProvider.kt"),"utf8");
 
-test("all three suspending catalog/live fetches preserve coroutine cancellation",()=>{
+test("all suspending catalog/live fetches preserve coroutine cancellation",()=>{
  assert.ok(provider.includes("import kotlinx.coroutines.CancellationException"));
- assert.equal((provider.match(/catch \(cancelled: CancellationException\) \{ throw cancelled \}/g)||[]).length,3);
- for(const url of ["channelsUrl","catalogConfigUrl","url"]){
+ assert.equal((provider.match(/catch \(cancelled: CancellationException\) \{ throw cancelled \}/g)||[]).length,4);
+ for(const url of ["channelsUrl","catalogConfigUrl","url",'"$relay/v1$path"']){
   assert.ok(provider.includes("JSONObject(app.get("+url+").text)"),url);
  }
  assert.ok(!provider.includes("runCatching { JSONObject(app.get("));
