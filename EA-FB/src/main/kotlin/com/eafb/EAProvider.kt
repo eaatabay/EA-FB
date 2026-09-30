@@ -9,9 +9,13 @@ import com.lagradost.cloudstream3.ShowStatus
 import com.lagradost.cloudstream3.addDate
 import com.lagradost.cloudstream3.newEpisode
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import org.json.JSONArray
 import java.util.Locale
 import java.text.SimpleDateFormat
@@ -61,6 +65,9 @@ class EAProvider : MainAPI() {
     private val channelsUrl = "https://raw.githubusercontent.com/eaatabay/EA-FB/main/config/channels.json"
     private val categories = HomeCategories.all.filter { it.tmdbPath != null }
     private val mainPageDeduper = CatalogPageDeduper()
+    // V40: Turkish episode-title enrichment is deliberately outside load().
+    // The V39 detail response remains fast; short-season title batches run later.
+    private val episodeTitleScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     // Keep every category registered with CloudStream. The host may cache mainPage
     // requests at provider initialization, so removing a disabled category here
     // prevents it from reappearing when the viewer enables it later.
@@ -507,6 +514,65 @@ class EAProvider : MainAPI() {
         ).any { it.matches(normalized) }
     }
 
+    private data class EpisodeTitleBatch(val season: Int, val episodes: List<Int>)
+
+    private fun titleBatches(episodes: List<Episode>): List<EpisodeTitleBatch> {
+        var remaining = 36
+        val batches = mutableListOf<EpisodeTitleBatch>()
+        episodes.groupBy { it.season }.toSortedMap(compareBy<Int?> { it ?: Int.MAX_VALUE })
+            .forEach { (season, rows) ->
+                val seasonNo = season?.takeIf { it > 0 } ?: return@forEach
+                val numbers = rows.mapNotNull { it.episode?.takeIf { number -> number > 0 } }
+                    .distinct().sorted()
+                if (numbers.isEmpty() || numbers.size > 12 || numbers.size > remaining) return@forEach
+                batches += EpisodeTitleBatch(seasonNo, numbers)
+                remaining -= numbers.size
+            }
+        return batches
+    }
+
+    private suspend fun fetchTurkishEpisodeTitles(
+        id: Int, batch: EpisodeTitleBatch
+    ): List<EpisodeTitleStyle.TitleEpisode> {
+        val query = batch.episodes.joinToString(",")
+        val response = getJson("/tv/$id/season/${batch.season}/episode-titles?episodes=$query")
+            ?: return emptyList()
+        val titles = response.optJSONObject("titles") ?: return emptyList()
+        return batch.episodes.mapNotNull { episodeNo ->
+            val name = titles.optString(episodeNo.toString()).trim()
+            name.takeUnless { genericEpisodeName(it, episodeNo) }?.let {
+                EpisodeTitleStyle.TitleEpisode(batch.season, episodeNo, it)
+            }
+        }
+    }
+
+    private fun scheduleTurkishEpisodeTitles(
+        id: Int, seriesUrl: String, episodes: List<Episode>
+    ) {
+        val batches = titleBatches(episodes)
+        if (batches.isEmpty()) return
+        episodeTitleScope.launch {
+            val resolved = coroutineScope {
+                batches.map { batch -> async { fetchTurkishEpisodeTitles(id, batch) } }
+                    .awaitAll().flatten()
+            }
+            if (resolved.isEmpty()) return@launch
+            EpisodeTitleStyle.publish(seriesUrl, resolved)
+            val translated = resolved.associateBy { it.season to it.episode }
+            EpisodeUpcomingStyle.publish(seriesUrl, episodes.mapNotNull { ep ->
+                ep.date?.takeIf { it > System.currentTimeMillis() }?.let { date ->
+                    val season = ep.season
+                    val episode = ep.episode
+                    if (season != null && episode != null) {
+                        EpisodeUpcomingStyle.FutureEpisode(
+                            season, episode, date, translated[season to episode]?.name ?: ep.name
+                        )
+                    } else null
+                }
+            })
+        }
+    }
+
     /** Only metadata: actual episode sources will be resolved by adapters later. */
     private suspend fun tvEpisodes(id: Int, seasonList: JSONArray?, fallbackBackdrop: String?): List<Episode> {
         if (seasonList == null) return emptyList()
@@ -695,6 +761,7 @@ class EAProvider : MainAPI() {
             .distinctBy { it.url }
         return if (isSeries) {
             val episodes = tvEpisodes(tmdbId, item.optJSONArray("seasons"), backdrop)
+            scheduleTurkishEpisodeTitles(tmdbId, url, episodes)
             // V38: the initial metadata publish happens before season fan-out.
             // Republish after that bounded work so first-open detail rows are
             // rendered against the host views that are about to receive the response.
