@@ -230,6 +230,9 @@ internal object EpisodeUpcomingStyle {
             holder.findViewWithTag<View>(BADGE_TAG)?.let { badge ->
                 (badge.parent as? ViewGroup)?.removeView(badge)
             }
+            holder.findViewWithTag<View>(DATE_TAG)?.let { date ->
+                (date.parent as? ViewGroup)?.removeView(date)
+            }
 
             val dateView = if (dateId != 0) holder.findViewById<TextView>(dateId) else null
             val episodeText = textView.text?.toString().orEmpty()
