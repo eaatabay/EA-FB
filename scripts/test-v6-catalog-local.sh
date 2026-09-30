@@ -25,6 +25,12 @@ kotlinc EA-FB/src/main/kotlin/com/eafb/CatalogCardPolicy.kt \
   EA-FB/src/main/kotlin/com/eafb/CatalogPagePolicy.kt \
   core-tests/CatalogPagePolicyTest.kt -include-runtime -d "$TMP/pages.jar"
 java -jar "$TMP/pages.jar"
+kotlinc EA-FB/src/main/kotlin/com/eafb/EpisodeRowPolicy.kt \
+  core-tests/EpisodeRowPolicyTest.kt -include-runtime -d "$TMP/episode-row.jar"
+java -jar "$TMP/episode-row.jar"
+kotlinc EA-FB/src/main/kotlin/com/eafb/CatalogPageDeduper.kt \
+  core-tests/CatalogPageDeduperTest.kt -include-runtime -d "$TMP/page-dedupe.jar"
+java -jar "$TMP/page-dedupe.jar"
 kotlinc EA-FB/src/main/kotlin/com/eafb/Domain.kt \
   EA-FB/src/main/kotlin/com/eafb/CatalogSortPolicy.kt \
   core-tests/CatalogSortPolicyTest.kt -include-runtime -d "$TMP/sort.jar"
