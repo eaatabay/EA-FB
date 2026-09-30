@@ -225,7 +225,7 @@ internal object EpisodeTitleStyle {
                 textView.text?.toString().orEmpty(), episodeWord
             ) ?: return@row
             val title = selection.season?.let { episodeTitles[it to episodeNo] }
-                ?: if (selection.visible) null
+                ?: if (selection.visible) return@row
                 else episodeTitles.values.filter { it.episode == episodeNo }.singleOrNull()
                 ?: return@row
             textView.text = "$episodeNo. ${title.name}"
