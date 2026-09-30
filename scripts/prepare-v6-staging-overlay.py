@@ -55,7 +55,7 @@ def apply():
         old_config, f'private val catalogConfigUrl = "{CONFIG_URL}"'))
     SETTINGS.write_text(settings.replace(
         old_store, 'private const val STORE = "ea_fb_catalog_settings_v6_staging"'))
-    BUILD.write_text(re.sub(r'^version = 6$', 'version = 32', build, count=1, flags=re.MULTILINE))
+    BUILD.write_text(re.sub(r'^version = 6$', 'version = 33', build, count=1, flags=re.MULTILINE))
     verify()
 
 if __name__ == "__main__":
