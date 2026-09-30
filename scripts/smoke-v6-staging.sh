@@ -28,6 +28,8 @@ elif path.startswith("/v1/discover/"):
     assert isinstance(data.get("results"),list) and isinstance(data.get("page"),int)
 elif path.startswith("/v1/collection/"):
     assert isinstance(data.get("parts"),list)
+elif "/episode-titles?" in path:
+    assert isinstance(data.get("titles"),dict)
 elif path.endswith("/translations"):
     assert isinstance(data.get("translations"),list)
 else:
@@ -54,3 +56,6 @@ check "/v1/discover/tv?sort_by=first_air_date.desc&first_air_date.lte=$today&lan
 check "/v1/collection/556?language=tr-TR"
 check "/v1/tv/247718/season/1/episode/3/translations"
 echo "PASS: dedicated V6 staging catalog smoke checks"
+
+# V40 lazy batch: one client request, bounded short-season enrichment.
+check "/v1/tv/247718/season/1/episode-titles?episodes=3,7&language=tr-TR"
