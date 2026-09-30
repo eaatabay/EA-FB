@@ -126,8 +126,11 @@ internal object EpisodeUpcomingStyle {
             val episodeText = holder.findViewById<TextView>(textId)?.text?.toString().orEmpty()
             val episodeNo = Regex("""^\s*(\d+)\.""").find(episodeText)
                 ?.groupValues?.getOrNull(1)?.toIntOrNull() ?: return@forEach
-            val candidates = futureEpisodes.filterKeys { key -> key.second == episodeNo }.values
-            val future = candidates.minByOrNull { it.date } ?: return@forEach
+            // A visible row alone does not expose its season. Never match E3 from one season
+            // to future E3 from another season (The Simpsons exposed this bug).
+            // Resolve the visible season from CloudStream's season selector text first.
+            val visibleSeason = findVisibleSeason(root) ?: return@forEach
+            val future = futureEpisodes[visibleSeason to episodeNo] ?: return@forEach
             val parsed = future.date
             if (parsed <= System.currentTimeMillis()) return@forEach
             future.name?.takeIf { it.isNotBlank() }?.let { actualName ->
@@ -176,6 +179,22 @@ internal object EpisodeUpcomingStyle {
                 })
             }
         }
+    }
+
+    private fun findVisibleSeason(root: View): Int? {
+        val labels = mutableListOf<String>()
+        fun walk(view: View) {
+            if (view is TextView && view.visibility == View.VISIBLE) labels += view.text?.toString().orEmpty()
+            if (view is ViewGroup) for (i in 0 until view.childCount) walk(view.getChildAt(i))
+        }
+        walk(root)
+        val patterns = listOf(
+            Regex("""(?i)^\\s*(?:sezon|season)\\s*(\\d+)\\s*$"""),
+            Regex("""(?i)^\\s*(\\d+)\\.\\s*(?:sezon|season)\\s*$""")
+        )
+        return labels.asSequence().mapNotNull { label ->
+            patterns.firstNotNullOfOrNull { it.matchEntire(label)?.groupValues?.getOrNull(1)?.toIntOrNull() }
+        }.firstOrNull()
     }
 
     private fun findViews(root: View, id: Int): List<View> {
