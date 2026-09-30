@@ -172,16 +172,18 @@ test("V35 removes per-episode translation HTTP calls from the blocking detail pa
   assert.ok(provider.includes("val englishRows = if (needsEnglish)"));
 });
 
-test("V35 binds YAKINDA to native future state and newly attached RecyclerView rows",()=>{
+test("V35 binds YAKINDA to native future state and debounced scroll rendering",()=>{
   assert.ok(upcomingStyle.includes('getIdentifier("episode_play_icon", "id"'));
   assert.ok(upcomingStyle.includes("nativePlay.visibility != View.VISIBLE"));
   assert.ok(upcomingStyle.includes("if (!hostMarksUpcoming) return@row"));
-  assert.ok(upcomingStyle.includes("RecyclerView.OnChildAttachStateChangeListener"));
-  assert.ok(upcomingStyle.includes("onChildViewAttachedToWindow"));
-  assert.ok(upcomingStyle.includes("renderRows(view, current, activity)"));
-  assert.ok(upcomingStyle.includes("observedLists"));
+  assert.ok(upcomingStyle.includes("addOnScrollChangedListener"));
+  assert.ok(upcomingStyle.includes("pendingScrollRenders"));
+  assert.ok(upcomingStyle.includes("postDelayed"));
+  assert.ok(upcomingStyle.includes("renderFragment(fragment)"));
+  assert.ok(upcomingStyle.includes("observedScrollRoots"));
   assert.ok(upcomingStyle.includes("seenTitles"));
   assert.ok(!upcomingStyle.includes("addOnGlobalLayoutListener"));
+  assert.ok(!upcomingStyle.includes("androidx.recyclerview.widget.RecyclerView"));
   assert.ok(!upcomingStyle.includes("dateView?.visibility == View.VISIBLE"));
   assert.ok(!upcomingStyle.includes('getIdentifier("episode_upcoming_format", "string"'));
   assert.ok(!upcomingStyle.includes("nativeDateText.startsWith(upcomingPrefix"));
