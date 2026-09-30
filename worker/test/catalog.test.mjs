@@ -135,6 +135,45 @@ test("episode translations relay is exact and sends no localization query", asyn
   assert.equal(new URL(calls[0].url).search, "");
 });
 
+test("V40 batches Turkish episode titles behind one bounded client request", async () => {
+  const { env, ctx, calls } = setup();
+  globalThis.fetch = async (url, opts) => {
+    calls.push({url, opts});
+    const episode = Number(String(url).match(/episode\/(\d+)\/translations$/)?.[1]);
+    const tr = episode === 3 ? "Kurtlar Arasında" : episode === 7 ? "Dönüş Noktası" : "";
+    return new Response(JSON.stringify({translations:[
+      {iso_639_1:"en",iso_3166_1:"US",data:{name:"English "+episode}},
+      {iso_639_1:"tr",iso_3166_1:"TR",data:{name:tr}},
+    ]}), {headers:{"content-type":"application/json"}});
+  };
+  const request = new Request(
+    "https://example.workers.dev/v1/tv/247718/season/1/episode-titles?episodes=3,7&language=tr-TR"
+  );
+  const res = await gateway.fetch(request, env, ctx);
+  assert.equal(res.status, 200);
+  assert.deepEqual(await res.json(), {titles:{"3":"Kurtlar Arasında","7":"Dönüş Noktası"}});
+  assert.equal(calls.length, 2);
+  assert.ok(calls.every(c => !new URL(c.url).search));
+  assert.ok(calls.every(c => c.opts.headers.authorization === "Bearer " + env.TMDB_READ_ACCESS_TOKEN));
+});
+
+test("V40 title batch input is canonical and capped at twelve episodes", async () => {
+  const { env, ctx, calls } = setup();
+  for (const suffix of [
+    "episodes=2,1&language=tr-TR",
+    "episodes=1,1&language=tr-TR",
+    "episodes=1,2,3,4,5,6,7,8,9,10,11,12,13&language=tr-TR",
+    "episodes=1&language=en-US",
+    "episodes=1&language=tr-TR&extra=x",
+  ]) {
+    const res = await gateway.fetch(new Request(
+      "https://example.workers.dev/v1/tv/247718/season/1/episode-titles?" + suffix
+    ), env, ctx);
+    assert.equal(res.status, 400, suffix);
+  }
+  assert.equal(calls.length, 0);
+});
+
 test("discovery sort validates film, series, and rated-list safeguards", async () => {
   const { env, ctx, calls } = setup();
   for (const path of [
