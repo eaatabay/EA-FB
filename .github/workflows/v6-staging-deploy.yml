@@ -55,7 +55,7 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID_V6_STAGING }}
           WRANGLER_SEND_METRICS: "false"
         run: npx wrangler deploy --config wrangler.staging.jsonc
-      - name: Verify staging health and V34 episode translations
+      - name: Verify staging health and V40 lazy title batches
         run: |
           STAGING_URL="$(node -e "const fs=require('fs'); const c=JSON.parse(fs.readFileSync('config/backend.v6-staging.json','utf8')); process.stdout.write(c.apiBaseUrl || '')")"
           test -n "$STAGING_URL" || { echo "::error::Missing staging API base URL"; exit 2; }
