@@ -162,13 +162,13 @@ internal object EpisodeUpcomingStyle {
             val episodeNo = Regex("""^\s*(\d+)\.""").find(episodeText)
                 ?.groupValues?.getOrNull(1)?.toIntOrNull() ?: return@row
 
-            // CloudStream's large EpisodeAdapter explicitly hides this icon only
-            // while the bound Episode.airDate is in the future, and restores it
-            // for aired/unknown-date rows. No localized countdown parsing needed.
+            // V36: our published metadata is authoritative for future dates.
+            // CloudStream can render far-future rows with a visible play icon even
+            // though Episode.airDate is in the future; requiring that icon to be
+            // hidden caused MobLand's last four future rows to miss YAKINDA.
+            // We still read the native icon only as host context; eligibility below
+            // is based on the episode's future date, never on recycled view state.
             val nativePlay = if (playId != 0) holder.findViewById<View>(playId) else null
-            val hostMarksUpcoming = nativePlay != null &&
-                nativePlay.visibility != View.VISIBLE
-            if (!hostMarksUpcoming) return@row
 
             val now = System.currentTimeMillis()
             val rowName = episodeText.substringAfter('.', "").trim()
