@@ -168,6 +168,8 @@ test("V35 removes per-episode translation HTTP calls from the blocking detail pa
   assert.ok(!provider.includes("translatedTurkishName"));
   assert.ok(provider.includes("!genericEpisodeName(localizedName, episodeNo) -> localizedName"));
   assert.ok(provider.includes("!genericEpisodeName(englishName, episodeNo) -> englishName"));
+  assert.ok(provider.includes("val needsEnglish = (0 until episodeRows.length()).any"));
+  assert.ok(provider.includes("val englishRows = if (needsEnglish)"));
 });
 
 test("V35 binds YAKINDA to native future state and newly attached RecyclerView rows",()=>{
