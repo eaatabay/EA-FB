@@ -49,6 +49,8 @@ test("rejects upstream arbitrary URLs and unexpected parameters", async () => {
     "/v1/movie/1?api_key=STOLEN",
     "/v1/movie/1?append_to_response=account",
     "/v1/tv/1/season/99999",
+    "/v1/tv/1/season/1/episode/1001/translations",
+    "/v1/tv/1/season/1/episode/1/translations?language=tr-TR",
     "/v1/discover/movie?with_watch_providers=1;DROP%20TABLE",
     "/v1/search/multi?query=",
     "/v1/movie/1?language=es-ES",
@@ -112,12 +114,25 @@ test("serves exact paths used by EA-FB 28-category catalog", async () => {
     "/v1/search/multi?query=Silo",
     "/v1/movie/123?append_to_response=credits,recommendations,external_ids",
     "/v1/tv/4/season/0",
+    "/v1/tv/4/season/1/episode/2/translations",
     "/v1/collection/987",
   ]) {
     const res = await gateway.fetch(new Request("https://example.workers.dev"+path), env, ctx);
     assert.equal(res.status, 200, path);
   }
-  assert.equal(calls.length, 17);
+  assert.equal(calls.length, 18);
+});
+
+test("episode translations relay is exact and sends no localization query", async () => {
+  const { env, ctx, calls } = setup();
+  const res = await gateway.fetch(new Request(
+    "https://example.workers.dev/v1/tv/247718/season/1/episode/3/translations"
+  ), env, ctx);
+  assert.equal(res.status, 200);
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].url,
+    "https://api.themoviedb.org/3/tv/247718/season/1/episode/3/translations");
+  assert.equal(new URL(calls[0].url).search, "");
 });
 
 test("discovery sort validates film, series, and rated-list safeguards", async () => {
