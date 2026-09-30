@@ -55,15 +55,7 @@ def apply():
         old_config, f'private val catalogConfigUrl = "{CONFIG_URL}"'))
     SETTINGS.write_text(settings.replace(
         old_store, 'private const val STORE = "ea_fb_catalog_settings_v6_staging"'))
-    BUILD.write_text(re.sub(r'^version = 6    verify()
-
-if __name__ == "__main__":
-    try:
-        verify() if sys.argv[1:] == ["--verify"] else apply() if not sys.argv[1:] else (
-            sys.exit("Usage: prepare-v6-staging-overlay.py [--verify]"))
-    except (OSError, ValueError, AssertionError) as exc:
-        sys.exit(f"BLOCKED: staging overlay check failed: {exc}")
-, 'version = 35', build, count=1, flags=re.MULTILINE))
+    BUILD.write_text(re.sub(r'^version = 6$', 'version = 35', build, count=1, flags=re.MULTILINE))
     verify()
 
 if __name__ == "__main__":
