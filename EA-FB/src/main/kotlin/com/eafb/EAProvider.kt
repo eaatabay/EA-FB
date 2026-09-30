@@ -514,7 +514,24 @@ class EAProvider : MainAPI() {
                                 .takeIf { it > 0.1 && it <= 10.0 &&
                                     entry.optInt("vote_count") > 0 }
                             val text = entry.optString("overview").ifBlank { english?.optString("overview").orEmpty() }
-                            val episodeName = entry.optString("name").ifBlank { english?.optString("name").orEmpty() }
+                            val localizedName = entry.optString("name")
+                            val englishName = english?.optString("name").orEmpty()
+                            fun genericEpisodeName(value: String): Boolean {
+                                val normalized = value.trim()
+                                if (normalized.isBlank()) return true
+                                val escapedEpisode = Regex.escape(episodeNo.toString())
+                                return listOf(
+                                    Regex("""(?i)^bölüm\\s*$escapedEpisode$"""),
+                                    Regex("""(?i)^$escapedEpisode\\.?\\s*bölüm$"""),
+                                    Regex("""(?i)^episode\\s*$escapedEpisode$"""),
+                                    Regex("""(?i)^episode\\s*#?\\s*\\d+\\.$escapedEpisode$""")
+                                ).any { it.matches(normalized) }
+                            }
+                            val episodeName = when {
+                                !genericEpisodeName(localizedName) -> localizedName
+                                !genericEpisodeName(englishName) -> englishName
+                                else -> ""
+                            }
                             val still = entry.optString("still_path").ifBlank { english?.optString("still_path").orEmpty() }
                             newEpisode(
                                 "$mainUrl/tv/$id/season/$number/episode/$episodeNo",
