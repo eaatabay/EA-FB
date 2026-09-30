@@ -1,9 +1,9 @@
 [
   {
-    "fileHash": "sha256-7f168b33d4a8296e6919c24151c1cba9ec97012720834195f85dcb76d54ff499",
+    "fileHash": "sha256-fa42ee18d34aa8dbdcfd913d9b8528e2ff454a2a5f5b744052afd49907026c72",
     "apiVersion": 1,
     "repositoryUrl": "https://github.com/eaatabay/EA-FB",
-    "fileSize": 147126,
+    "fileSize": 152618,
     "status": 3,
     "language": "tr",
     "authors": [
@@ -14,7 +14,7 @@
       "TvSeries",
       "Live"
     ],
-    "version": 36,
+    "version": 37,
     "internalName": "EA-FB",
     "description": "EA-FB: tek arayüzde film, dizi ve izinli canlı TV - gelistirme onizlemesi",
     "url": "https://raw.githubusercontent.com/eaatabay/EA-FB/feature/detail-dual-ratings-v6/dist-v6-staging/EA-FB-V6-STAGING.cs3",
