@@ -506,10 +506,21 @@ class EAProvider : MainAPI() {
                             ?: return@async emptyList<Episode>()
                         val episodeRows = season.optJSONArray("episodes")
                             ?: return@async emptyList<Episode>()
-                        // TMDb localizes episode metadata. Turkish can legitimately be blank,
-                        // so fetch English only as a field-level fallback for the same episode.
-                        val englishRows = getJson("/tv/$id/season/$number", language = "en-US")
-                            ?.optJSONArray("episodes")
+                        // V35: avoid the second season request when Turkish already has
+                        // every field we use. Large libraries should pay for EN only when at
+                        // least one episode actually needs a title/overview/still fallback.
+                        val needsEnglish = (0 until episodeRows.length()).any { idx ->
+                            val row = episodeRows.optJSONObject(idx) ?: return@any false
+                            val episodeNo = row.optInt("episode_number").takeIf { it > 0 }
+                                ?: return@any false
+                            genericEpisodeName(row.optString("name"), episodeNo) ||
+                                row.optString("overview").isBlank() ||
+                                row.optString("still_path").isBlank()
+                        }
+                        val englishRows = if (needsEnglish) {
+                            getJson("/tv/$id/season/$number", language = "en-US")
+                                ?.optJSONArray("episodes")
+                        } else null
                         val englishByEpisode = (0 until (englishRows?.length() ?: 0)).mapNotNull { idx ->
                             englishRows?.optJSONObject(idx)?.let { row ->
                                 row.optInt("episode_number").takeIf { it > 0 }?.let { it to row }
