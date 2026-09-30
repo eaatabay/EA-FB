@@ -538,12 +538,16 @@ class EAProvider : MainAPI() {
         val response = getJson("/tv/$id/season/${batch.season}/episode-titles?episodes=$query")
             ?: return emptyList()
         val titles = response.optJSONObject("titles") ?: return emptyList()
-        return batch.episodes.mapNotNull { episodeNo ->
+        val resolved = batch.episodes.mapNotNull { episodeNo ->
             val name = titles.optString(episodeNo.toString()).trim()
             name.takeUnless { genericEpisodeName(it, episodeNo) }?.let {
                 EpisodeTitleStyle.TitleEpisode(batch.season, episodeNo, it)
             }
         }
+        // V42: a complete short-season batch is the expected result. A partial
+        // batch leaves the existing row titles untouched instead of creating
+        // the mixed TR/EN state seen on MobLand.
+        return resolved.takeIf { it.size == batch.episodes.size } ?: emptyList()
     }
 
     private fun scheduleTurkishEpisodeTitles(
