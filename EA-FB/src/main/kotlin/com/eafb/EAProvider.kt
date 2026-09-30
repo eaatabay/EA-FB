@@ -142,6 +142,13 @@ class EAProvider : MainAPI() {
             catch (cancelled: CancellationException) { throw cancelled }
             catch (_: Exception) { null }
     }
+    private suspend fun getUnlocalizedJson(path: String): JSONObject? {
+        val relay = catalogRelay()
+        return try { JSONObject(app.get("$relay/v1$path").text) }
+            catch (cancelled: CancellationException) { throw cancelled }
+            catch (_: Exception) { null }
+    }
+
     private fun mediaKind(item: JSONObject, fallback: MediaKind): MediaKind =
         if (item.optString("media_type") == "tv" || (item.has("name") && !item.has("title"))) MediaKind.SERIES
         else if (item.optString("media_type") == "movie") MediaKind.MOVIE
