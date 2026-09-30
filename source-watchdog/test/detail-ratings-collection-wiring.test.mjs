@@ -5,6 +5,8 @@ const provider=readFileSync(new URL("../../EA-FB/src/main/kotlin/com/eafb/EAProv
 const worker=readFileSync(new URL("../../worker/src/index.js",import.meta.url),"utf8");
 const detailMeta=readFileSync(new URL("../../EA-FB/src/main/kotlin/com/eafb/DetailMetaRow.kt",import.meta.url),"utf8");
 const upcomingStyle=readFileSync(new URL("../../EA-FB/src/main/kotlin/com/eafb/EpisodeUpcomingStyle.kt",import.meta.url),"utf8");
+const episodeTitleStyle=readFileSync(new URL("../../EA-FB/src/main/kotlin/com/eafb/EpisodeTitleStyle.kt",import.meta.url),"utf8");
+const plugin=readFileSync(new URL("../../EA-FB/src/main/kotlin/com/eafb/EAPlugin.kt",import.meta.url),"utf8");
 test("IMDb title badge requires independently sourced OMDb score",()=>{
   assert.match(provider,/optString\("source"\) == "OMDb API"/);
   assert.match(provider,/optJSONObject\("external_ids"\)\?\.optString\("imdb_id"\)/);
@@ -219,4 +221,24 @@ test("V39 first-open next-air repair stays isolated from episode-row performance
   assert.ok(detailMeta.includes("renderNextEpisodeOnly(fragment)"));
   assert.ok(!detailMeta.includes("androidx.recyclerview.widget.RecyclerView"));
   assert.ok(upcomingStyle.includes("pendingFocusRenders"));
+});
+
+test("V40 enriches Turkish episode titles lazily without blocking the V39 detail path",()=>{
+  assert.ok(plugin.includes("EpisodeTitleStyle.install(context)"));
+  assert.ok(provider.includes("CoroutineScope(SupervisorJob() + Dispatchers.IO)"));
+  assert.ok(provider.includes("scheduleTurkishEpisodeTitles(tmdbId, url, episodes)"));
+  assert.ok(provider.includes('episode-titles?episodes=$query'));
+  assert.ok(provider.includes("numbers.size > 12"));
+  assert.ok(provider.includes("var remaining = 36"));
+  assert.ok(provider.includes("EpisodeTitleStyle.publish(seriesUrl, resolved)"));
+  assert.ok(provider.includes("translated[season to episode]?.name ?: ep.name"));
+  assert.ok(!provider.includes('"/tv/$id/season/$number/episode/$episodeNo/translations"'));
+  assert.ok(worker.includes('parts[4] === "episode-titles"'));
+  assert.ok(worker.includes("episodeNumbers.length > 12"));
+  assert.ok(worker.includes("withUpstreamDeadline"));
+  assert.ok(episodeTitleStyle.includes("EpisodeRowPolicy.episodeNumber"));
+  assert.ok(episodeTitleStyle.includes("addOnGlobalFocusChangeListener"));
+  assert.ok(episodeTitleStyle.includes("addOnScrollChangedListener"));
+  assert.ok(!episodeTitleStyle.includes("addOnGlobalLayoutListener"));
+  assert.ok(!episodeTitleStyle.includes("androidx.recyclerview.widget.RecyclerView"));
 });
