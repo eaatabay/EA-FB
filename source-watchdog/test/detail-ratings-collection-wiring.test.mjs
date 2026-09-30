@@ -151,7 +151,7 @@ test("V31 rejects localized generic episode labels before EN SxE fallback",()=>{
 test("V32 binds future decoration and metadata fallback to SxE identity",()=>{
   assert.ok(provider.includes('row.optInt("season_number", number) == number'));
   assert.ok(provider.includes('row.optInt("episode_number") == episodeNo'));
-  assert.ok(upcomingStyle.includes("futureEpisodes[visibleSeason to episodeNo]"));
+  assert.ok(upcomingStyle.includes("hostMarksUpcoming"));
   assert.ok(!upcomingStyle.includes("findVisibleSeason(root)"));
 });
 
