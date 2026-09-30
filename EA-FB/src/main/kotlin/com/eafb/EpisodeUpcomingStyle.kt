@@ -110,6 +110,7 @@ internal object EpisodeUpcomingStyle {
         }
         val dateId = activity.resources.getIdentifier("episode_date", "id", activity.packageName)
         val posterId = activity.resources.getIdentifier("episode_poster", "id", activity.packageName)
+        val playId = activity.resources.getIdentifier("episode_play_icon", "id", activity.packageName)
         val textId = activity.resources.getIdentifier("episode_text", "id", activity.packageName)
         if (holderIds.isEmpty() || textId == 0) return
         holderIds.flatMap { findViews(root, it) }.forEach { holder ->
@@ -126,22 +127,26 @@ internal object EpisodeUpcomingStyle {
             val episodeText = holder.findViewById<TextView>(textId)?.text?.toString().orEmpty()
             val episodeNo = Regex("""^\s*(\d+)\.""").find(episodeText)
                 ?.groupValues?.getOrNull(1)?.toIntOrNull() ?: return@forEach
-            // Let CloudStream's own EpisodeAdapter tell us whether THIS bound row is upcoming.
-            // That adapter has the real Episode object (including season), so this avoids
-            // cross-season E3/E3 collisions without guessing the selected season from UI text.
-            val upcomingFormatId = activity.resources.getIdentifier("episode_upcoming_format", "string", activity.packageName)
-            val upcomingPrefix = if (upcomingFormatId != 0) {
-                activity.getString(upcomingFormatId, "").trim()
-            } else ""
-            val nativeDateText = dateView?.text?.toString().orEmpty().trim()
-            val hostMarksUpcoming = upcomingPrefix.isNotBlank() &&
-                nativeDateText.startsWith(upcomingPrefix, ignoreCase = true)
+            // CloudStream's EpisodeAdapter hides the native play icon when the
+            // bound Episode.airDate is still in the future. This is row-specific,
+            // so it avoids translated countdown parsing and cross-season E3/E3 guesses.
+            val nativePlay = if (playId != 0) holder.findViewById<View>(playId) else null
+            val hostMarksUpcoming = nativePlay != null &&
+                nativePlay.visibility != View.VISIBLE &&
+                dateView?.visibility == View.VISIBLE
             if (!hostMarksUpcoming) return@forEach
-            val future = futureEpisodes.values
-                .filter { it.episode == episodeNo }
-                .minByOrNull { it.date } ?: return@forEach
+            val now = System.currentTimeMillis()
+            val rowName = episodeText.substringAfter('.', "").trim()
+            val candidates = futureEpisodes.values.filter {
+                it.episode == episodeNo && it.date > now
+            }
+            val future = candidates.singleOrNull()
+                ?: candidates.firstOrNull { candidate ->
+                    candidate.name?.trim()?.equals(rowName, ignoreCase = true) == true
+                }
+                ?: candidates.minByOrNull { it.date }
+                ?: return@forEach
             val parsed = future.date
-            if (parsed <= System.currentTimeMillis()) return@forEach
             future.name?.takeIf { it.isNotBlank() }?.let { actualName ->
                 holder.findViewById<TextView>(textId)?.apply { text = "$episodeNo. $actualName"; visibility = View.VISIBLE }
             }
