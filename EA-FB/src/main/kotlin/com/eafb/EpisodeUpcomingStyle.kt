@@ -12,7 +12,6 @@ import android.os.Looper
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
-import androidx.recyclerview.widget.RecyclerView
 import android.widget.FrameLayout
 import android.widget.TextView
 import androidx.fragment.app.Fragment
@@ -31,8 +30,11 @@ internal object EpisodeUpcomingStyle {
     private val main = Handler(Looper.getMainLooper())
     internal data class FutureEpisode(val season: Int, val episode: Int, val date: Long, val name: String? = null)
     private val dates = ConcurrentHashMap<String, Map<Pair<Int, Int>, FutureEpisode>>()
-    private val observedLists = java.util.Collections.newSetFromMap(
-        java.util.WeakHashMap<RecyclerView, Boolean>()
+    private val observedScrollRoots = java.util.Collections.newSetFromMap(
+        java.util.WeakHashMap<View, Boolean>()
+    )
+    private val pendingScrollRenders = java.util.Collections.newSetFromMap(
+        java.util.WeakHashMap<View, Boolean>()
     )
     private val registered = java.util.Collections.newSetFromMap(
         java.util.WeakHashMap<FragmentActivity, Boolean>()
@@ -100,33 +102,25 @@ internal object EpisodeUpcomingStyle {
         val root = fragment.view ?: return
         val activity = fragment.activity as? FragmentActivity ?: return
 
-        // V35: observe only RecyclerView child attachment. The old global-layout
-        // hook rescanned the whole detail tree on every image/layout pass and
-        // became expensive on long shows such as The Simpsons.
-        observeEpisodeLists(root, fragment, url)
+        // V35: react to user scrolling instead of every layout/image pass.
+        // A debounced scroll callback catches episode rows that become visible later
+        // without the V34 global-layout rescan storm on long shows.
+        observeEpisodeScrolling(root, fragment)
         renderRows(root, futureEpisodes, activity)
     }
 
-    private fun observeEpisodeLists(root: View, fragment: Fragment, url: String) {
-        findRecyclerViews(root).forEach { list ->
-            synchronized(observedLists) {
-                if (!observedLists.add(list)) return@forEach
+    private fun observeEpisodeScrolling(root: View, fragment: Fragment) {
+        synchronized(observedScrollRoots) {
+            if (!observedScrollRoots.add(root)) return
+        }
+        root.viewTreeObserver.addOnScrollChangedListener {
+            synchronized(pendingScrollRenders) {
+                if (!pendingScrollRenders.add(root)) return@addOnScrollChangedListener
             }
-            list.addOnChildAttachStateChangeListener(
-                object : RecyclerView.OnChildAttachStateChangeListener {
-                    override fun onChildViewAttachedToWindow(view: View) {
-                        main.post {
-                            val current = dates[url] ?: return@post
-                            val activity = fragment.activity as? FragmentActivity ?: return@post
-                            if (fragment.view != null && view.isAttachedToWindow) {
-                                renderRows(view, current, activity)
-                            }
-                        }
-                    }
-
-                    override fun onChildViewDetachedFromWindow(view: View) = Unit
-                }
-            )
+            main.postDelayed({
+                synchronized(pendingScrollRenders) { pendingScrollRenders.remove(root) }
+                if (root.isAttachedToWindow) renderFragment(fragment)
+            }, 120)
         }
     }
 
@@ -237,16 +231,6 @@ internal object EpisodeUpcomingStyle {
                 })
             }
         }
-    }
-
-    private fun findRecyclerViews(root: View): List<RecyclerView> {
-        val out = mutableListOf<RecyclerView>()
-        fun walk(view: View) {
-            if (view is RecyclerView) out += view
-            if (view is ViewGroup) for (i in 0 until view.childCount) walk(view.getChildAt(i))
-        }
-        walk(root)
-        return out
     }
 
     private fun findViews(root: View, id: Int): List<View> {
