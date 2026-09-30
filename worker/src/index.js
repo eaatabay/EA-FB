@@ -36,28 +36,17 @@ function json(object, status = 200, ttl = 0) {
   });
 }
 
-function localizedEpisodeTitle(payload, language, preferredRegion) {
+function turkishEpisodeTitle(payload) {
   const rows = Array.isArray(payload?.translations) ? payload.translations : [];
   let fallback = null;
   for (const row of rows) {
-    if (String(row?.iso_639_1 || "").toLowerCase() !== language) continue;
+    if (String(row?.iso_639_1 || "").toLowerCase() !== "tr") continue;
     const name = String(row?.data?.name || "").trim();
     if (!name) continue;
-    if (String(row?.iso_3166_1 || "").toUpperCase() === preferredRegion) return name;
+    if (String(row?.iso_3166_1 || "").toUpperCase() === "TR") return name;
     if (fallback === null) fallback = name;
   }
   return fallback;
-}
-function turkishEpisodeTitle(payload) { return localizedEpisodeTitle(payload, "tr", "TR"); }
-function englishEpisodeTitle(payload) { return localizedEpisodeTitle(payload, "en", "US"); }
-function usableMachineTitle(value) {
-  const title = String(value?.translated_text || "").trim();
-  if (!title || title.length > 160 || /[\u0000-\u001f]/.test(title)) return null;
-  return title;
-}
-function genericEnglishEpisodeTitle(value, episode) {
-  const normalized = String(value || "").trim().toLowerCase().replace(/\s+/g, " ");
-  return normalized === "episode " + episode || normalized === "episode #" + episode;
 }
 
 function catalogRequest(url) {
@@ -233,12 +222,28 @@ export default {
     // is enabled after v5, a warm TMDb-only cache must not hide IMDb ratings.
     // Only the mode, never the private credential, enters the cache key.
     cacheUrl.searchParams.set("_ea_fb_rating", env.OMDB_API_KEY ? "omdb-v1" : "tmdb-v1");
+    const cacheKey = new Request(cacheUrl.toString(), { method: "GET" });
+    const cache = typeof caches === "undefined" ? null : caches.default;
+    if (cache) {
+      try {
+        // An edge cache lookup that never settles is also optional. Give it
+        // 1.5s, then fetch origin under its separate 12s hard deadline.
+        const cached = await withUpstreamDeadline(
+          () => cache.match(cacheKey),1500);
+        if (cached) return cached;
+      } catch {
+        // Edge cache failure is not a TMDb outage. Fetch metadata normally.
+      }
+    }
+    // Some dashboards copy an optional Bearer prefix. Never send Bearer Bearer.
+    const token = String(env.TMDB_READ_ACCESS_TOKEN).trim().replace(/^Bearer\s+/i, "").trim();
+    if (!token) return json({ error: "catalog_unconfigured" }, 503);
+
     if (catalog.batchEpisodeTitles) {
       let validResponses = 0;
       const titles = {};
-      let rows = [];
       try {
-        rows = await withUpstreamDeadline(async signal =>
+        const rows = await withUpstreamDeadline(async signal =>
           Promise.all(catalog.batchEpisodeTitles.episodes.map(async episode => {
             try {
               const upstreamUrl = UPSTREAM + "/tv/" + catalog.batchEpisodeTitles.seriesId +
@@ -246,7 +251,10 @@ export default {
                 "/episode/" + episode + "/translations";
               const response = await fetch(upstreamUrl, {
                 method: "GET",
-                headers: { authorization: "Bearer " + token, accept: "application/json" },
+                headers: {
+                  authorization: "Bearer " + token,
+                  accept: "application/json",
+                },
                 redirect: "manual",
                 signal,
               });
@@ -258,50 +266,24 @@ export default {
               if (!payload || typeof payload !== "object" || Array.isArray(payload) ||
                   !Array.isArray(payload.translations)) return null;
               validResponses++;
-              return {
-                episode,
-                turkish: turkishEpisodeTitle(payload),
-                english: englishEpisodeTitle(payload),
-              };
+              return [episode, turkishEpisodeTitle(payload)];
             } catch {
               return null;
             }
           })), 6500);
         for (const row of rows) {
-          if (row?.turkish) titles[String(row.episode)] = row.turkish;
-        }
-        const missing = rows.filter(row =>
-          row && !row.turkish && row.english &&
-          !genericEnglishEpisodeTitle(row.english, row.episode));
-        if (missing.length && env.AI?.run) {
-          const translated = await withUpstreamDeadline(() =>
-            Promise.all(missing.map(async row => {
-              try {
-                const result = await env.AI.run("@cf/meta/m2m100-1.2b", {
-                  text: row.english,
-                  source_lang: "en",
-                  target_lang: "tr",
-                });
-                return [row.episode, usableMachineTitle(result)];
-              } catch {
-                return null;
-              }
-            })), 5000);
-          for (const row of translated) {
-            if (row?.[1]) titles[String(row[0])] = row[1];
-          }
+          if (row?.[1]) titles[String(row[0])] = row[1];
         }
       } catch {
         // Best-effort background enrichment; the initial detail remains untouched.
       }
-      const responseTtl =
-        validResponses === catalog.batchEpisodeTitles.episodes.length &&
-        Object.keys(titles).length === catalog.batchEpisodeTitles.episodes.length
-          ? catalog.ttl : 60;
+      const responseTtl = validResponses === catalog.batchEpisodeTitles.episodes.length
+        ? catalog.ttl : 60;
       const response = json({ titles }, 200, responseTtl);
       if (cache && ctx?.waitUntil) {
-        try { ctx.waitUntil(Promise.resolve(cache.put(cacheKey,response.clone())).catch(()=>{})); }
-        catch {}
+        try {
+          ctx.waitUntil(Promise.resolve(cache.put(cacheKey,response.clone())).catch(()=>{}));
+        } catch {}
       }
       return response;
     }
