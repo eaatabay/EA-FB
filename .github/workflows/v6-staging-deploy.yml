@@ -55,12 +55,8 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID_V6_STAGING }}
           WRANGLER_SEND_METRICS: "false"
         run: npx wrangler deploy --config wrangler.staging.jsonc
-      - name: Verify staging health (no secrets in logs)
-        env:
-          STAGING_URL: ${{ vars.EA_FB_V6_STAGING_URL }}
+      - name: Verify staging health and V34 episode translations
         run: |
-          if [[ -z "$STAGING_URL" ]]; then
-            echo "Staging deployed. Configure environment variable EA_FB_V6_STAGING_URL to enable health smoke test."
-            exit 0
-          fi
+          STAGING_URL="$(node -e "const fs=require('fs'); const c=JSON.parse(fs.readFileSync('config/backend.v6-staging.json','utf8')); process.stdout.write(c.apiBaseUrl || '')")"
+          test -n "$STAGING_URL" || { echo "::error::Missing staging API base URL"; exit 2; }
           EA_FB_V6_STAGING_URL="$STAGING_URL" bash scripts/smoke-v6-staging.sh
