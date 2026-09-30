@@ -3,7 +3,12 @@ package com.eafb
 import android.app.Activity
 import android.app.Application
 import android.content.Context
+import android.graphics.Color
 import android.os.Bundle
+import android.text.Spannable
+import android.text.SpannableStringBuilder
+import android.text.style.ForegroundColorSpan
+import android.text.style.RelativeSizeSpan
 import android.os.Handler
 import android.os.Looper
 import android.view.View
@@ -23,7 +28,12 @@ import java.util.concurrent.ConcurrentHashMap
  */
 internal object EpisodeTitleStyle {
     private const val PROVIDER = "EA-FB V6 STAGING"
-    internal data class TitleEpisode(val season: Int, val episode: Int, val name: String)
+    internal data class TitleEpisode(
+        val season: Int,
+        val episode: Int,
+        val name: String,
+        val original: String? = null
+    )
 
     private val main = Handler(Looper.getMainLooper())
     private val titles = ConcurrentHashMap<String, Map<Pair<Int, Int>, TitleEpisode>>()
@@ -228,7 +238,31 @@ internal object EpisodeTitleStyle {
                 ?: if (selection.visible) return@row
                 else episodeTitles.values.filter { it.episode == episodeNo }.singleOrNull()
                 ?: return@row
-            textView.text = "$episodeNo. ${title.name}"
+            val mainLine = "$episodeNo. ${title.name}"
+            val original = title.original?.trim()
+                ?.takeIf { it.isNotBlank() && !it.equals(title.name, ignoreCase = true) }
+            textView.text = if (original == null) {
+                mainLine
+            } else {
+                val value = SpannableStringBuilder(mainLine)
+                    .append("\n")
+                    .append(original)
+                val start = mainLine.length + 1
+                value.setSpan(
+                    RelativeSizeSpan(0.78f), start, value.length,
+                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                )
+                val base = textView.currentTextColor
+                val faded = Color.argb(
+                    (Color.alpha(base) * 0.55f).toInt().coerceIn(0, 255),
+                    Color.red(base), Color.green(base), Color.blue(base)
+                )
+                value.setSpan(
+                    ForegroundColorSpan(faded), start, value.length,
+                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                )
+                value
+            }
             textView.visibility = View.VISIBLE
         }
     }
