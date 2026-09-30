@@ -76,13 +76,13 @@ test("detail metadata font inherits host TextView without unsafe resource lookup
 
 test("V21 exact upcoming UI suppresses native countdown and both host placeholders",()=>{
   assert.ok(provider.includes("private fun nextEpisode") && provider.includes("NextAiring? = null"));
-  assert.ok(upcomingStyle.includes("episodeNo = Regex("));
+  assert.ok(upcomingStyle.includes("EpisodeRowPolicy.episodeNumber"));
   assert.ok(upcomingStyle.includes("it.episode == episodeNo && it.date > now"));
   assert.ok(detailMeta.includes('listOf("result_coming_soon", "result_tv_coming_soon")'));
 });
 
-test("V22 uses literal episode regex and exact long Turkish TMDb date",()=>{
-  assert.ok(upcomingStyle.includes('Regex("""^\\s*(\\d+)\\.""")'));
+test("V22 keeps exact long Turkish TMDb date while V37 centralizes row parsing",()=>{
+  assert.ok(upcomingStyle.includes("EpisodeRowPolicy.episodeNumber"));
   assert.ok(provider.includes('SimpleDateFormat("d MMMM yyyy EEEE", Locale("tr", "TR"))'));
   assert.ok(provider.includes('FutureEpisode(season, episode, date, ep.name)'));
 });
@@ -172,21 +172,28 @@ test("V35 removes per-episode translation HTTP calls from the blocking detail pa
   assert.ok(provider.includes("val englishRows = if (needsEnglish)"));
 });
 
-test("V36 binds YAKINDA to future metadata and debounced scroll rendering",()=>{
-  assert.ok(upcomingStyle.includes('getIdentifier("episode_play_icon", "id"'));
-  assert.ok(upcomingStyle.includes("it.episode == episodeNo && it.date > now"));
-  assert.ok(!upcomingStyle.includes("if (!hostMarksUpcoming) return@row"));
+test("V37 binds YAKINDA to season-aware metadata with bounded scroll/focus rendering",()=>{
+  assert.ok(upcomingStyle.includes("EpisodeRowPolicy.episodeNumber"));
+  assert.ok(upcomingStyle.includes("futureEpisodes[season to episodeNo]"));
+  assert.ok(upcomingStyle.includes("val seasonSelection = selectedSeason(root, activity)"));
   assert.ok(upcomingStyle.includes("addOnScrollChangedListener"));
+  assert.ok(upcomingStyle.includes("addOnGlobalFocusChangeListener"));
   assert.ok(upcomingStyle.includes("pendingScrollRenders"));
-  assert.ok(upcomingStyle.includes("postDelayed"));
+  assert.ok(upcomingStyle.includes("pendingFocusRenders"));
   assert.ok(upcomingStyle.includes("renderFragment(fragment)"));
   assert.ok(upcomingStyle.includes("observedScrollRoots"));
   assert.ok(upcomingStyle.includes("seenTitles"));
+  assert.ok(upcomingStyle.includes("Compact CloudStream episode rows have no poster at all"));
   assert.ok(!upcomingStyle.includes("addOnGlobalLayoutListener"));
   assert.ok(!upcomingStyle.includes("androidx.recyclerview.widget.RecyclerView"));
-  assert.ok(!upcomingStyle.includes("dateView?.visibility == View.VISIBLE"));
+  assert.ok(!upcomingStyle.includes("minByOrNull { it.date }"));
   assert.ok(!upcomingStyle.includes('getIdentifier("episode_upcoming_format", "string"'));
-  assert.ok(!upcomingStyle.includes("nativeDateText.startsWith(upcomingPrefix"));
 });
 
 // V35 final full-CI trigger after staging guard repair.
+
+test("V37 catalog paging dedupes repeated card URLs across page calls without touching Worker routing",()=>{
+  assert.ok(provider.includes("private val mainPageDeduper = CatalogPageDeduper()"));
+  assert.ok(provider.includes("mainPageDeduper.filter("));
+  assert.ok(provider.includes("category.id + \"|\" + sortMode.name"));
+});
