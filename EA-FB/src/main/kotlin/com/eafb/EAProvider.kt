@@ -60,6 +60,7 @@ class EAProvider : MainAPI() {
     private val livePrefix = "$mainUrl/ea-fb-live/"
     private val channelsUrl = "https://raw.githubusercontent.com/eaatabay/EA-FB/main/config/channels.json"
     private val categories = HomeCategories.all.filter { it.tmdbPath != null }
+    private val mainPageDeduper = CatalogPageDeduper()
     // Keep every category registered with CloudStream. The host may cache mainPage
     // requests at provider initialization, so removing a disabled category here
     // prevents it from reappearing when the viewer enables it later.
@@ -289,12 +290,20 @@ class EAProvider : MainAPI() {
             else -> ""
         }
         val rawLength = response?.optJSONArray("results")?.length() ?: 0
+        val hasNext = CatalogPagePolicy.allowNextPage(
+            usedFallback || usedForeignCatalog, scannedExtraPages,
+            page, rawLength, response?.optInt("total_pages", 0) ?: 0
+        )
+        // Trending ranks can move between separately cached TMDb pages, and some
+        // hosts may ask for an already-appended page again. Keep feed-local URL
+        // identity across pagination calls; page 1 resets state for normal refresh.
+        val visibleResults = mainPageDeduper.filter(
+            category.id + "|" + sortMode.name, page, results
+        ) { it.url }
         return newHomePageResponse(
-            listOf(HomePageList(label, results, false)),
-            CatalogPagePolicy.allowNextPage(
-                usedFallback || usedForeignCatalog, scannedExtraPages,
-                page, rawLength, response?.optInt("total_pages", 0) ?: 0
-            )
+            if (visibleResults.isEmpty()) emptyList()
+            else listOf(HomePageList(label, visibleResults, false)),
+            hasNext
         )
     }
 
