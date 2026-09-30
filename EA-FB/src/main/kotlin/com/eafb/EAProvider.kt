@@ -142,13 +142,6 @@ class EAProvider : MainAPI() {
             catch (cancelled: CancellationException) { throw cancelled }
             catch (_: Exception) { null }
     }
-    private suspend fun getUnlocalizedJson(path: String): JSONObject? {
-        val relay = catalogRelay()
-        return try { JSONObject(app.get("$relay/v1$path").text) }
-            catch (cancelled: CancellationException) { throw cancelled }
-            catch (_: Exception) { null }
-    }
-
     private fun mediaKind(item: JSONObject, fallback: MediaKind): MediaKind =
         if (item.optString("media_type") == "tv" || (item.has("name") && !item.has("title"))) MediaKind.SERIES
         else if (item.optString("media_type") == "movie") MediaKind.MOVIE
@@ -499,20 +492,6 @@ class EAProvider : MainAPI() {
         ).any { it.matches(normalized) }
     }
 
-    private fun turkishEpisodeName(translations: JSONObject?, episodeNo: Int): String? {
-        val rows = translations?.optJSONArray("translations") ?: return null
-        var fallback: String? = null
-        for (index in 0 until rows.length()) {
-            val row = rows.optJSONObject(index) ?: continue
-            if (!row.optString("iso_639_1").equals("tr", ignoreCase = true)) continue
-            val name = row.optJSONObject("data")?.optString("name").orEmpty().trim()
-            if (genericEpisodeName(name, episodeNo)) continue
-            if (row.optString("iso_3166_1").equals("TR", ignoreCase = true)) return name
-            if (fallback == null) fallback = name
-        }
-        return fallback
-    }
-
     /** Only metadata: actual episode sources will be resolved by adapters later. */
     private suspend fun tvEpisodes(id: Int, seasonList: JSONArray?, fallbackBackdrop: String?): List<Episode> {
         if (seasonList == null) return emptyList()
@@ -554,15 +533,13 @@ class EAProvider : MainAPI() {
                             val text = entry.optString("overview").ifBlank { english?.optString("overview").orEmpty() }
                             val localizedName = entry.optString("name")
                             val englishName = english?.optString("name").orEmpty()
-                            val translatedTurkishName = if (genericEpisodeName(localizedName, episodeNo)) {
-                                getUnlocalizedJson(
-                                    "/tv/$id/season/$number/episode/$episodeNo/translations"
-                                )?.let { turkishEpisodeName(it, episodeNo) }
-                            } else null
+                            // V35: never block a detail page on one HTTP request per episode.
+                            // TMDb's season payload is the fast Turkish source; if its title is
+                            // only a generic "Bölüm N", use the already-fetched EN season row.
+                            // The exact translations relay stays available server-side for a
+                            // future lazy/cache-backed enrichment path, but is not in load().
                             val episodeName = when {
                                 !genericEpisodeName(localizedName, episodeNo) -> localizedName
-                                !genericEpisodeName(translatedTurkishName.orEmpty(), episodeNo) ->
-                                    translatedTurkishName.orEmpty()
                                 !genericEpisodeName(englishName, episodeNo) -> englishName
                                 else -> ""
                             }
