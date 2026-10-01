@@ -29,6 +29,7 @@ test("red V6 staging build overlays only the two Android relay references", () =
 test("V44 long series have no 48-episode ceiling and Worker decides which titles need AI", () => {
   const provider=read("EA-FB/src/main/kotlin/com/eafb/EAProvider.kt");
   assert.match(provider,/numbers\.chunked\(10\)/);
+  assert.match(provider,/toSortedMap\(compareByDescending<Int>/);
   assert.doesNotMatch(provider,/var remaining = 48/);
   assert.doesNotMatch(provider,/take\(remaining\)/);
   assert.match(provider,/val missingTurkishTitle = genericEpisodeName\(localizedName, episodeNo\)/);
