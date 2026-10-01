@@ -576,15 +576,25 @@ class EAProvider : MainAPI() {
         if (batches.isEmpty()) return
         episodeTitleScope.launch {
             val resolved = mutableListOf<EpisodeTitleStyle.TitleEpisode>()
-            for (wave in batches.chunked(2)) {
+            // Publish the newest-season results as soon as the first wave lands.
+            // A 37-season show must not wait for every historical batch before
+            // the viewer can see titles. Throttle later refreshes to avoid
+            // flooding the TV detail layout with one render per HTTP request.
+            val waves = batches.chunked(2)
+            for ((waveIndex, wave) in waves.withIndex()) {
                 resolved += coroutineScope {
                     wave.map { batch ->
                         async { fetchTurkishEpisodeTitles(id, batch, sourceLanguage) }
                     }.awaitAll().flatten()
                 }
+                if (resolved.isNotEmpty() &&
+                    (waveIndex == 0 || (waveIndex + 1) % 6 == 0 ||
+                        waveIndex == waves.lastIndex)) {
+                    // Cumulative snapshot: preserve all earlier season titles.
+                    EpisodeTitleStyle.publish(seriesUrl, resolved)
+                }
             }
             if (resolved.isEmpty()) return@launch
-            EpisodeTitleStyle.publish(seriesUrl, resolved)
             val translated = resolved.associateBy { it.season to it.episode }
             EpisodeUpcomingStyle.publish(seriesUrl, episodes.mapNotNull { ep ->
                 ep.date?.takeIf { it > System.currentTimeMillis() }?.let { date ->
