@@ -816,3 +816,44 @@ test("D1 cleanup failure cannot hide an official TMDb title",async()=>{
   assert.deepEqual(await res.json(),{titles:{"9":"Son Bölüm"}});
   await Promise.all(background);
 });
+
+
+test("V45 ignores legacy D1 AI titles and bypasses the V44 edge cache", async () => {
+  const {env,ctx}=setup();
+  const statements=[];
+  let aiCalls=0;
+  const responses=[];
+  env.TITLE_CACHE={
+    prepare(sql) {return {bind(...params) {
+      statements.push({sql,params});
+      return {
+        all:async()=>({results:[]}),
+        first:async()=>({lock_key:"ok"}),
+        run:async()=>({})
+      };
+    }};},
+    batch:async()=>{}
+  };
+  env.AI={run:async()=>{aiCalls++;return {response:JSON.stringify({
+    titles:[{episode:8,title:"Kesinlikle Hayır!"}]
+  })};}};
+  globalThis.fetch=async()=>new Response(JSON.stringify({translations:[
+    {iso_639_1:"en",iso_3166_1:"US",data:{name:"Hell No"}},
+    {iso_639_1:"tr",iso_3166_1:"TR",data:{name:""}}
+  ]}),{headers:{"content-type":"application/json"}});
+  const originalMatch=globalThis.caches.default.match;
+  const originalPut=globalThis.caches.default.put;
+  const cacheKeys=[];
+  globalThis.caches.default.match=async req=>{cacheKeys.push(req.url);return originalMatch(req);};
+  globalThis.caches.default.put=async(req,res)=>{cacheKeys.push(req.url);return originalPut(req,res);};
+  const res=await gateway.fetch(new Request(
+    "https://example.workers.dev/v1/tv/1413/season/13/episode-titles/en?episodes=8&language=tr-TR"
+  ),env,ctx);
+  responses.push(await res.json());
+  assert.equal(aiCalls,1,"legacy translations must be regenerated");
+  assert.equal(responses[0].titles["8"],"Kesinlikle Hayır!");
+  const lookup=statements.find(x=>x.sql.includes("SELECT episode,source_language"));
+  assert.ok(lookup,"D1 version-gated lookup must run");
+  assert.ok(lookup.params.includes("v45-localize-4"));
+  assert.ok(cacheKeys.every(x=>x.includes("tmdb-plus-ai-v45")));
+});
