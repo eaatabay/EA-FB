@@ -243,7 +243,7 @@ test("V39 first-open next-air repair stays isolated from episode-row performance
   assert.ok(upcomingStyle.includes("pendingFocusRenders"));
 });
 
-test("V44 resolves every normal-season title lazily while Worker keeps official Turkish ahead of AI",()=>{
+test("V45 resolves every normal-season title lazily while Worker keeps official Turkish ahead of AI",()=>{
   assert.ok(plugin.includes("EpisodeTitleStyle.install(context)"));
   assert.ok(provider.includes("CoroutineScope(SupervisorJob() + Dispatchers.IO)"));
   assert.ok(provider.includes("scheduleTurkishEpisodeTitles("));
@@ -261,9 +261,9 @@ test("V44 resolves every normal-season title lazily while Worker keeps official 
   assert.ok(!provider.includes('"/tv/$id/season/$number/episode/$episodeNo/translations"'));
   assert.ok(worker.includes('parts[4] === "episode-titles"'));
   assert.ok(worker.includes("episodeNumbers.length > 10"));
-  assert.ok(worker.includes('TITLE_TRANSLATION_VERSION = "v43-localize-3"'),
-    "reuse valid D1 AI cache while V44 edge cache semantics change");
-  assert.ok(worker.includes('tmdb-plus-ai-v44'));
+  assert.ok(worker.includes('TITLE_TRANSLATION_VERSION = "v45-localize-4"'),
+    "invalidate legacy D1 AI cache when V45 translation semantics change");
+  assert.ok(worker.includes('tmdb-plus-ai-v45'));
   assert.ok(worker.includes('"episode","chapter","bölüm"'));
   assert.ok(worker.includes("sourceEpisodeOverview"));
   assert.ok(worker.includes("row.context ? {context:row.context.slice(0, 700)}"));
