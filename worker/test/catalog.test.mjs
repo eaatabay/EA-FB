@@ -606,7 +606,7 @@ test("V42 localizes missing titles in one structured AI batch", async () => {
   });
   assert.equal(calls.length,2);
   assert.equal(aiCalls.length,1);
-  assert.equal(aiCalls[0].model,"@cf/meta/llama-3.1-8b-instruct");
+  assert.equal(aiCalls[0].model,"@cf/meta/llama-3.3-70b-instruct-fp8-fast");
   assert.equal(aiCalls[0].input.response_format.type,"json_schema");
   assert.match(aiCalls[0].input.messages[0].content,/İngilizceyi ara dil olarak kullanma/);
 });
