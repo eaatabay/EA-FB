@@ -17,6 +17,8 @@ import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.FragmentManager
+import androidx.recyclerview.widget.RecyclerView
+import java.lang.ref.WeakReference
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -51,6 +53,16 @@ internal object EpisodeTitleStyle {
     )
     private val pendingFocusRenders = java.util.Collections.newSetFromMap(
         java.util.WeakHashMap<View, Boolean>()
+    )
+    private data class EpisodeListWatch(
+        val adapter: RecyclerView.Adapter<*>,
+        val observer: RecyclerView.AdapterDataObserver
+    )
+    // The host's episode adapter replaces/rebinds rows after each season change.
+    // Observe that one list rather than polling every global layout on long series.
+    private val episodeListWatches = java.util.WeakHashMap<RecyclerView, EpisodeListWatch>()
+    private val pendingEpisodeListRenders = java.util.Collections.newSetFromMap(
+        java.util.WeakHashMap<RecyclerView, Boolean>()
     )
 
     fun install(context: Context) {
@@ -102,6 +114,11 @@ internal object EpisodeTitleStyle {
                 override fun onFragmentResumed(fm: FragmentManager, fragment: Fragment) {
                     scheduleFirstBindRenders(fragment)
                 }
+                override fun onFragmentViewDestroyed(
+                    fm: FragmentManager, fragment: Fragment, view: View
+                ) {
+                    releaseEpisodeListWatch(view, fragment.activity as? FragmentActivity)
+                }
             }, true
         )
         main.post { host.supportFragmentManager.fragments.forEach(::renderTree) }
@@ -136,6 +153,7 @@ internal object EpisodeTitleStyle {
         val activity = fragment.activity as? FragmentActivity ?: return
         observeEpisodeScrolling(root, fragment)
         observeEpisodeFocus(root, fragment, activity)
+        observeEpisodeList(root, fragment, activity)
         renderRows(root, episodeTitles, activity)
     }
 
@@ -174,6 +192,67 @@ internal object EpisodeTitleStyle {
                 if (root.isAttachedToWindow) renderFragment(fragment)
             }
         }
+    }
+
+    /**
+     * CloudStream ResultFragmentTv submits a new episode list when the selected
+     * season changes. An adapter data observer fires even when TV focus stays on
+     * the season selector and no user scroll is generated.
+     */
+    private fun observeEpisodeList(root: View, fragment: Fragment, activity: FragmentActivity) {
+        val id = activity.resources.getIdentifier("result_episodes", "id", activity.packageName)
+        if (id == 0) return
+        val list = root.findViewById<RecyclerView>(id) ?: return
+        val adapter = list.adapter ?: return
+        val prior = episodeListWatches[list]
+        if (prior?.adapter === adapter) return
+        prior?.adapter?.unregisterAdapterDataObserver(prior.observer)
+
+        val fragmentRef = WeakReference(fragment)
+        val listRef = WeakReference(list)
+        val observer = object : RecyclerView.AdapterDataObserver() {
+            private fun changed() = scheduleEpisodeListRender(fragmentRef, listRef)
+            override fun onChanged() = changed()
+            override fun onItemRangeChanged(positionStart: Int, itemCount: Int) = changed()
+            override fun onItemRangeInserted(positionStart: Int, itemCount: Int) = changed()
+            override fun onItemRangeRemoved(positionStart: Int, itemCount: Int) = changed()
+            override fun onItemRangeMoved(fromPosition: Int, toPosition: Int, itemCount: Int) = changed()
+        }
+        adapter.registerAdapterDataObserver(observer)
+        episodeListWatches[list] = EpisodeListWatch(adapter, observer)
+    }
+
+    private fun scheduleEpisodeListRender(
+        fragmentRef: WeakReference<Fragment>, listRef: WeakReference<RecyclerView>
+    ) {
+        val list = listRef.get() ?: return
+        if (!pendingEpisodeListRenders.add(list)) return
+        // Adapter notifications precede the actual row bind/layout. Repaint at
+        // the next UI turn and once more after binding; never an endless poll.
+        for (delay in listOf(48L, 220L)) {
+            main.postDelayed({
+                val fragment = fragmentRef.get()
+                if (fragment != null && fragment.view?.isAttachedToWindow == true &&
+                    listRef.get()?.isAttachedToWindow == true) {
+                    renderFragment(fragment)
+                }
+                if (delay == 220L) {
+                    listRef.get()?.let(pendingEpisodeListRenders::remove)
+                }
+            }, delay)
+        }
+    }
+
+    private fun releaseEpisodeListWatch(root: View, activity: FragmentActivity?) {
+        val id = activity?.resources?.getIdentifier(
+            "result_episodes", "id", activity.packageName
+        ) ?: return
+        if (id == 0) return
+        val list = root.findViewById<RecyclerView>(id) ?: return
+        episodeListWatches.remove(list)?.let {
+            it.adapter.unregisterAdapterDataObserver(it.observer)
+        }
+        pendingEpisodeListRenders.remove(list)
     }
 
     private fun insideEpisodeRow(view: View, root: View, holderIds: Set<Int>): Boolean {
