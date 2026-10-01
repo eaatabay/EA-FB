@@ -243,20 +243,27 @@ test("V39 first-open next-air repair stays isolated from episode-row performance
   assert.ok(upcomingStyle.includes("pendingFocusRenders"));
 });
 
-test("V43 enriches source-language episode titles with context without blocking the V39 detail path",()=>{
+test("V44 enriches every missing normal-season title lazily without blocking the V39 detail path",()=>{
   assert.ok(plugin.includes("EpisodeTitleStyle.install(context)"));
   assert.ok(provider.includes("CoroutineScope(SupervisorJob() + Dispatchers.IO)"));
   assert.ok(provider.includes("scheduleTurkishEpisodeTitles("));
   assert.ok(provider.includes('item.optString("original_language")'));
   assert.ok(provider.includes('episode-titles/$safeSource?episodes=$query'));
   assert.ok(provider.includes("numbers.chunked(10)"));
-  assert.ok(provider.includes("var remaining = 48"));
+  assert.ok(!provider.includes("var remaining = 48"));
+  assert.ok(provider.includes("EpisodeTitleCandidate"));
+  assert.ok(provider.includes("missingTurkishTitle"));
+  assert.ok(provider.includes("if (number > 0 && missingTurkishTitle)"));
+  assert.ok(provider.includes("titleBatches(titleCandidates)"));
   assert.ok(provider.includes("EpisodeTitleStyle.publish(seriesUrl, resolved)"));
   assert.ok(provider.includes("translated[season to episode]?.name ?: ep.name"));
   assert.ok(!provider.includes('"/tv/$id/season/$number/episode/$episodeNo/translations"'));
   assert.ok(worker.includes('parts[4] === "episode-titles"'));
   assert.ok(worker.includes("episodeNumbers.length > 10"));
-  assert.ok(worker.includes('TITLE_TRANSLATION_VERSION = "v43-localize-3"'));
+  assert.ok(worker.includes('TITLE_TRANSLATION_VERSION = "v43-localize-3"'),
+    "reuse valid D1 AI cache while V44 edge cache semantics change");
+  assert.ok(worker.includes('tmdb-plus-ai-v44'));
+  assert.ok(worker.includes('"episode","chapter","bölüm"'));
   assert.ok(worker.includes("sourceEpisodeOverview"));
   assert.ok(worker.includes("row.context ? {context:row.context.slice(0, 700)}"));
   assert.ok(worker.includes("localizeTitleBatch"));
