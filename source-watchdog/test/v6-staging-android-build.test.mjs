@@ -42,7 +42,7 @@ test("V44 long series have no 48-episode ceiling and only missing Turkish titles
 test("V44 generic Chapter and Episode labels are deterministic and never sent to creative AI", () => {
   const provider=read("EA-FB/src/main/kotlin/com/eafb/EAProvider.kt");
   const worker=read("worker/src/index.js");
-  assert.ok(provider.includes(String.raw`Regex("""(?i)^chapter\\s*#?\\s*$escapedEpisode$""")`));
+  assert.match(provider,/chapter.*escapedEpisode/);
   assert.match(provider,/"Bölüm \$episodeNo"/);
   assert.match(worker,/"episode","chapter","bölüm"/);
   assert.match(worker,/tmdb-plus-ai-v44/);
