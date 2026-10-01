@@ -68,3 +68,9 @@ Bir sonuç bir **varyanttır**: `sourceId, mediaId, episodeId?, providerDisplayN
 - Gömülü, akış içi seçilebilir ve haricî altyazı dosyası ayrı teknik etiketlerdir. Kullanıcının oynatıcı içinde sonradan değiştirdiği altyazı/ses yalnız desteklenen olay API'si varsa ölçülür; aksi hâlde ilk seçilen kaynak varyantı sayılır.
 - Film/dizi, kaynak, gün/hafta/ay, ses dili, altyazı dili ve çözünürlük filtreleri; düşük örneklem ve `bilinmiyor` değerleri saklanmadan gösterilir.
 - Kaynak kullanım analitiği için mümkünse kimliksiz toplulaştırılmış sayaç kullanılır; kişiye özel izleme alışkanlıklarını gereksiz yere kaydetme. Telemetri etkin değilse sıfır yerine `veri toplanmıyor` gösterilir.
+
+## İçerik bazında kaynak ve dil istatistikleri
+- Sayaçlar TMDb içerik kimliği + film/dizi türü ile ilişkilendirilir; dizide varsa sezon ve bölüm kimliği ayrıca tutulur. Başlık değişse de kimlik değişmez.
+- Admin raporları: film/dizi -> kaynak -> ses türü (TR dublaj / orijinal / diğer / bilinmiyor) -> altyazı dili ve türü -> çözünürlük; ayrıca kaynak -> en çok seçilen içerikler.
+- Kullanıcının araması, kaynak seçmesi ve doğrulanmış oynatma başlangıcı farklı olaylardır; başlatma doğrulanamıyorsa yalnız seçim sayısı gösterilir. Aynı denemenin tekrarlanan bildirimleri çift sayılmaz.
+- Kişi bazında ayrıntılı izleme dökümü varsayılan değildir; toplu içerik istatistikleri tercih edilir. İçerik adı hassas olabileceğinden kullanıcı bilgilendirmesi, tercih ve saklama süresi şartları geçerlidir.
