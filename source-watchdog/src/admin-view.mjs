@@ -33,6 +33,8 @@ export function summarizeSources(records,now) {
     rows.push({
       id:String(config.id).slice(0,64),
       status,
+      revision:Number.isSafeInteger(record.revision) && record.revision >= 0
+        ? record.revision : null,
       url:String(config.currentUrl??"").slice(0,2048),
       last:utc(state.lastCheckedAt),
       next:utc(state.nextCheckAt),
@@ -43,13 +45,19 @@ export function summarizeSources(records,now) {
   return {counts,rows,generatedAt:utc(now)};
 }
 
-export function renderAdminDashboard(data) {
+export function renderAdminDashboard(data, {editable = false, nonce = ""} = {}) {
   const stats=Object.entries(data.counts).map(([key,count])=>
     "<div class='metric'><strong>"+Number(count)+"</strong><span>"+
       escapeHtml(key)+"</span></div>").join("");
   const cells=data.rows.map(row=>"<tr>"+[
     row.id,row.status,row.url,row.last,row.next,row.error
-  ].map(v=>"<td>"+escapeHtml(v)+"</td>").join("")+"</tr>").join("");
+  ].map(v=>"<td>"+escapeHtml(v)+"</td>").join("")+
+    (editable ? "<td>"+(row.revision===null ? "—" :
+      ["disable","enable","retest","rollback"].map(action=>
+        "<button type='button' data-action='"+action+"' data-source='"+
+        escapeHtml(row.id)+"' data-revision='"+row.revision+"'>"+
+        ({disable:"Kapat",enable:"Aç",retest:"Yeniden test",rollback:"Geri al"}[action])+
+        "</button>").join(" "))+"</td>" : "")+"</tr>").join("");
   const css=[
     ":root{color-scheme:dark;font:16px system-ui,Arial;color:#f0f4ff;background:#081b36}",
     "*{box-sizing:border-box}main{max-width:1280px;margin:auto;padding:28px 20px}",
@@ -62,6 +70,8 @@ export function renderAdminDashboard(data) {
     "th,td{text-align:left;border-bottom:1px solid #305780;padding:12px}",
     "th{color:#f4cb36}td{overflow-wrap:anywhere}",
     "footer{color:#b5c4df;margin-top:24px;font-size:13px}",
+    "button{background:#f4cb36;color:#081b36;border:0;border-radius:6px;padding:8px;margin:3px;cursor:pointer}",
+    "button:disabled{opacity:.55;cursor:wait}.feedback{color:#f4cb36;min-height:24px}",
   ].join("");
   return "<!doctype html><html lang='tr'><head><meta charset='utf-8'>"+
     "<meta name='viewport' content='width=device-width,initial-scale=1'>"+
@@ -71,7 +81,41 @@ export function renderAdminDashboard(data) {
     "<section class='metrics' aria-label='Kaynak durumları'>"+stats+"</section>"+
     "<div class='wrap'><table><thead><tr><th>Kaynak</th><th>Durum</th>"+
     "<th>Onaylı adres</th><th>Son kontrol</th><th>Sonraki kontrol</th>"+
-    "<th>Hata</th></tr></thead><tbody>"+cells+"</tbody></table></div>"+
-    "<footer>Bu panel salt okunurdur; kaynak ayarlarını değiştirmez.</footer>"+
+    "<th>Hata</th>"+(editable?"<th>İşlem</th>":"")+
+    "</tr></thead><tbody>"+cells+"</tbody></table></div>"+
+    (editable ? "<p id='feedback' class='feedback' role='status' aria-live='polite'></p>" :
+      "<footer>Bu panel salt okunurdur; kaynak ayarlarını değiştirmez.</footer>")+
+    (editable ? "<script nonce='"+escapeHtml(nonce)+"'>"+ADMIN_SCRIPT+"</script>" : "")+
     "</main></body></html>";
 }
+
+/** Static code only; untrusted registry fields never enter JavaScript source. */
+const ADMIN_SCRIPT = `document.addEventListener("click",async event=>{
+  const button=event.target.closest("button[data-action]");
+  if(!button||button.disabled)return;
+  const id=button.dataset.source, action=button.dataset.action;
+  const revision=Number(button.dataset.revision);
+  const message=document.getElementById("feedback");
+  if(!/^[a-z][a-z0-9-]{2,63}$/.test(id)||
+     !["disable","enable","retest","rollback"].includes(action)||
+     !Number.isSafeInteger(revision)||revision<0)return;
+  const label={disable:"kapatmak",enable:"açmak",retest:"yeniden test etmek",
+    rollback:"son sağlıklı adrese geri almak"}[action];
+  if(!window.confirm(id+" kaynağını "+label+" istiyor musun?"))return;
+  button.disabled=true;message.textContent="İşlem uygulanıyor…";
+  try{
+    const res=await fetch("/admin/api/sources/"+encodeURIComponent(id),{
+      method:"POST",credentials:"same-origin",
+      headers:{"content-type":"application/json","x-eafb-admin-action":"confirmed"},
+      body:JSON.stringify({action,expectedRevision:revision})
+    });
+    const result=await res.json();
+    if(!res.ok)throw Error(result.error||"admin_unavailable");
+    message.textContent=id+": işlem kaydedildi; panel yenileniyor.";
+    window.location.reload();
+  }catch(error){
+    message.textContent=id+": "+(error.message==="revision_conflict"?
+      "Başka işlem yapıldı; sayfayı yenile.":"İşlem başarısız: "+error.message);
+    button.disabled=false;
+  }
+});`;
