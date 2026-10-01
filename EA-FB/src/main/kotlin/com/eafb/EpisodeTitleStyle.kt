@@ -57,7 +57,7 @@ internal object EpisodeTitleStyle {
         val app = context.applicationContext as? Application ?: return
         app.registerActivityLifecycleCallbacks(object : Application.ActivityLifecycleCallbacks {
             override fun onActivityCreated(activity: Activity, state: Bundle?) = attach(activity)
-            override fun onActivityResumed(activity: Activity) = attach(activity)
+            override fun onActivityResumed(activity: Activity) {\n                attach(activity)\n                main.post { renderRegistered() }\n                main.postDelayed({ renderRegistered() }, 350)\n            }
             override fun onActivityStarted(activity: Activity) = Unit
             override fun onActivityPaused(activity: Activity) = Unit
             override fun onActivityStopped(activity: Activity) = Unit
@@ -93,13 +93,28 @@ internal object EpisodeTitleStyle {
                 override fun onFragmentViewCreated(
                     fm: FragmentManager, fragment: Fragment, view: View, state: Bundle?
                 ) {
-                    main.post { renderFragment(fragment) }
-                    main.postDelayed({ renderFragment(fragment) }, 300)
-                    main.postDelayed({ renderFragment(fragment) }, 900)
+                    scheduleFirstBindRenders(fragment)
+                }
+                override fun onFragmentResumed(fm: FragmentManager, fragment: Fragment) {
+                    scheduleFirstBindRenders(fragment)
                 }
             }, true
         )
         main.post { host.supportFragmentManager.fragments.forEach(::renderTree) }
+    }
+
+    // CloudStream binds/rebinds the visible episode rows after fragment creation.
+    // Bounded retries cover first-open and season selection without layout polling.
+    // Focus and scroll observers below continue to handle later recycled rows.
+    private fun scheduleFirstBindRenders(fragment: Fragment) {
+        val root = fragment.view ?: return
+        for (delay in listOf(0L, 250L, 750L, 1600L)) {
+            main.postDelayed({
+                if (fragment.view === root && root.isAttachedToWindow) {
+                    renderFragment(fragment)
+                }
+            }, delay)
+        }
     }
 
     private fun renderTree(fragment: Fragment) {
