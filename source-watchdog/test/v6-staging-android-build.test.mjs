@@ -41,6 +41,18 @@ test("V44 long series have no 48-episode ceiling and Worker decides which titles
   assert.match(provider,/numbers\.chunked\(10\)/);
 });
 
+test("V44 streams newest-season translations before all long-series batches finish", () => {
+  const provider=read("EA-FB/src/main/kotlin/com/eafb/EAProvider.kt");
+  assert.match(provider,/val waves = batches\.chunked\(2\)/);
+  assert.match(provider,/for \(\(waveIndex, wave\) in waves\.withIndex\(\)\)/);
+  assert.match(provider,/waveIndex == 0 \|\| \(waveIndex \+ 1\) % 6 == 0/);
+  assert.match(provider,/waveIndex == waves\.lastIndex/);
+  const firstPublish=provider.indexOf("EpisodeTitleStyle.publish(seriesUrl, resolved)");
+  const afterLoop=provider.indexOf("if (resolved.isEmpty()) return@launch",firstPublish);
+  assert.ok(firstPublish >= 0 && afterLoop > firstPublish,
+    "first-wave titles must be published before the complete backlog settles");
+});
+
 test("V44 generic Chapter and Episode labels are deterministic and never sent to creative AI", () => {
   const provider=read("EA-FB/src/main/kotlin/com/eafb/EAProvider.kt");
   const worker=read("worker/src/index.js");
