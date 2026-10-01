@@ -33,6 +33,7 @@ internal object DetailMetaRow {
 
     private const val PROVIDER = "EA-FB V6 STAGING"
     private const val MARKER_PREFIX = "ea-fb-detail-meta-"
+    private const val EPISODE_PANEL_SCALE = 0.90f
     private val main = Handler(Looper.getMainLooper())
     private val entries = ConcurrentHashMap<String, Meta>()
     private val registered = java.util.Collections.newSetFromMap(
@@ -130,6 +131,25 @@ internal object DetailMetaRow {
             if (id != 0) root.findViewById<View>(id)?.visibility = View.GONE
         }
 
+        // Keep LoadResponse.score for watch-status/bookmark rails, but remove
+        // CloudStream's unlabeled native score from this detail page. EA-FB's
+        // source-labelled IMDb (yellow) and TMDb (green) values remain visible.
+        val nativeRatingId = activity.resources.getIdentifier(
+            "result_meta_rating", "id", activity.packageName
+        )
+        if (nativeRatingId != 0) {
+            findViews(root, nativeRatingId).forEach { it.visibility = View.GONE }
+        }
+
+        // TV-only visual refinement: CloudStream exposes the complete season +
+        // episode area as episode_holder_tv. Scaling that one container keeps
+        // buttons, cards, text and spacing proportional instead of shrinking
+        // individual labels. Pivot at the outer/top edge so the panel stays
+        // anchored to the side of the screen.
+        if (url.contains("/tv/")) {
+            scaleEpisodePanel(root, activity)
+        }
+
         val durationId = activity.resources.getIdentifier(
             "result_meta_duration", "id", activity.packageName
         )
@@ -201,6 +221,37 @@ internal object DetailMetaRow {
         root.findViewById<View>(holderId)?.visibility = View.VISIBLE
         root.findViewById<TextView>(nextId)?.apply { text = label; visibility = View.VISIBLE }
         root.findViewById<TextView>(timeId)?.apply { text = ""; visibility = View.GONE }
+    }
+
+    private fun scaleEpisodePanel(root: View, activity: FragmentActivity) {
+        val id = activity.resources.getIdentifier(
+            "episode_holder_tv", "id", activity.packageName
+        )
+        if (id == 0) return
+        val panel = root.findViewById<View>(id) ?: return
+        panel.post {
+            if (!panel.isAttachedToWindow || panel.width <= 0) return@post
+            panel.pivotX = if (panel.layoutDirection == View.LAYOUT_DIRECTION_RTL) {
+                0f
+            } else {
+                panel.width.toFloat()
+            }
+            panel.pivotY = 0f
+            panel.scaleX = EPISODE_PANEL_SCALE
+            panel.scaleY = EPISODE_PANEL_SCALE
+        }
+    }
+
+    private fun findViews(root: View, id: Int): List<View> {
+        val out = mutableListOf<View>()
+        fun walk(view: View) {
+            if (view.id == id) out += view
+            if (view is ViewGroup) {
+                for (i in 0 until view.childCount) walk(view.getChildAt(i))
+            }
+        }
+        walk(root)
+        return out
     }
 
     private data class Label(val text: String, val color: Int)

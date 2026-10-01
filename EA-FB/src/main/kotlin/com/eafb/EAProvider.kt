@@ -669,10 +669,6 @@ class EAProvider : MainAPI() {
                                 score = if (future) null else rating?.let { Score.from10(it) }
                                 description = if (future) {
                                     text.ifBlank { "Bölüm özeti henüz yayınlanmadı." }
-                                } else if (rating != null) {
-                                    text + (if (text.isBlank()) "" else "\\n\\n") +
-                                        "Bölüm puanı: TMDb " +
-                                        String.format(Locale.ROOT, "%.1f", rating) + "/10"
                                 } else text
                                 runTime = entry.optInt("runtime").takeIf { it > 0 }
                                 addDate(date)
@@ -772,7 +768,7 @@ class EAProvider : MainAPI() {
         // Never substitute TMDb's vote_average for an unavailable IMDb score.
         val combinedPlot = listOfNotNull(
             seriesNote, overview, director
-        ).joinToString("\\n\\n")
+        ).joinToString("\n\n")
         val recs = recommendations(item, media, tmdbId)
         // The film series has its own row. The host's recommendations contain
         // only unrelated suggestions, never a second copy of the series.

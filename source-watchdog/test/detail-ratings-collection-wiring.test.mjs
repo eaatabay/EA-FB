@@ -25,13 +25,33 @@ test("franchise detail cards only reference visible official collection artwork"
   assert.doesNotMatch(provider,/movieRelated.*take\(32\)/);
 });
 
-test("source-labeled ratings stay in detail tags and out of description",()=>{
+test("source-labeled ratings stay in detail tags while the unlabeled native score is hidden",()=>{
   assert.doesNotMatch(provider,/val ratingSummary =/);
   assert.match(provider,/val combinedPlot = listOfNotNull\(\s*seriesNote, overview, director/);
   assert.match(provider,/imdbRating\?\.let \{ "IMDb " \+ scoreText\(it\)/);
   assert.match(provider,/tmdbRating\?\.let \{ "TMDb " \+ scoreText\(it\)/);
   assert.ok(provider.indexOf('imdbRating?.let { "IMDb "') < provider.indexOf('tmdbRating?.let { "TMDb "'));
   assert.match(provider,/tags = ratingBadges \+ genreLabels/);
+  assert.ok(detailMeta.includes('"result_meta_rating"'));
+  assert.ok(detailMeta.includes("findViews(root, nativeRatingId)"));
+  assert.ok(provider.includes("score = tmdbRating?.let { Score.from10(it) }"),
+    "bookmark/watch-status rails must keep the stored score");
+});
+
+test("episode descriptions do not repeat the visible TMDb score and use real synopsis line breaks",()=>{
+  assert.ok(!provider.includes("Bölüm puanı: TMDb"));
+  assert.ok(provider.includes(').joinToString("\\n\\n")'));
+  assert.ok(!provider.includes(').joinToString("\\\\n\\\\n")'));
+  assert.match(provider,/description = if \(future\) \{[\s\S]*?\} else text/);
+});
+
+test("TV season and episode panel scales as one 90 percent unit",()=>{
+  assert.ok(detailMeta.includes("private const val EPISODE_PANEL_SCALE = 0.90f"));
+  assert.ok(detailMeta.includes('"episode_holder_tv"'));
+  assert.ok(detailMeta.includes("panel.scaleX = EPISODE_PANEL_SCALE"));
+  assert.ok(detailMeta.includes("panel.scaleY = EPISODE_PANEL_SCALE"));
+  assert.ok(detailMeta.includes("panel.pivotY = 0f"));
+  assert.ok(detailMeta.includes("panel.width.toFloat()"));
 });
 
 test("TV detail metadata moves ratings and genres beside duration with native fallback",()=>{
@@ -223,7 +243,7 @@ test("V39 first-open next-air repair stays isolated from episode-row performance
   assert.ok(upcomingStyle.includes("pendingFocusRenders"));
 });
 
-test("V42 enriches source-language episode titles lazily without blocking the V39 detail path",()=>{
+test("V43 enriches source-language episode titles with context without blocking the V39 detail path",()=>{
   assert.ok(plugin.includes("EpisodeTitleStyle.install(context)"));
   assert.ok(provider.includes("CoroutineScope(SupervisorJob() + Dispatchers.IO)"));
   assert.ok(provider.includes("scheduleTurkishEpisodeTitles("));
@@ -236,7 +256,9 @@ test("V42 enriches source-language episode titles lazily without blocking the V3
   assert.ok(!provider.includes('"/tv/$id/season/$number/episode/$episodeNo/translations"'));
   assert.ok(worker.includes('parts[4] === "episode-titles"'));
   assert.ok(worker.includes("episodeNumbers.length > 10"));
-  assert.ok(worker.includes("TITLE_TRANSLATION_VERSION"));
+  assert.ok(worker.includes('TITLE_TRANSLATION_VERSION = "v43-localize-3"'));
+  assert.ok(worker.includes("sourceEpisodeOverview"));
+  assert.ok(worker.includes("row.context ? {context:row.context.slice(0, 700)}"));
   assert.ok(worker.includes("localizeTitleBatch"));
   assert.ok(worker.includes("withUpstreamDeadline"));
   assert.ok(episodeTitleStyle.includes("EpisodeRowPolicy.episodeNumber"));

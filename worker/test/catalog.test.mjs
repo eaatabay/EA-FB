@@ -592,9 +592,12 @@ test("V42 localizes missing titles in one structured AI batch", async () => {
     calls.push({url,opts});
     const episode=Number(String(url).match(/episode\/(\d+)\/translations$/)?.[1]);
     const english=episode===3?"Plan B":"The Crossroads";
+    const overview=episode===3
+      ?"A backup plan becomes necessary after the first move fails."
+      :"The family reaches a literal and moral crossroads.";
     return new Response(JSON.stringify({translations:[
-      {iso_639_1:"en",iso_3166_1:"US",data:{name:english}},
-      {iso_639_1:"tr",iso_3166_1:"TR",data:{name:""}}
+      {iso_639_1:"en",iso_3166_1:"US",data:{name:english,overview}},
+      {iso_639_1:"tr",iso_3166_1:"TR",data:{name:"",overview:""}}
     ]}),{headers:{"content-type":"application/json"}});
   };
   const res=await gateway.fetch(new Request(
@@ -609,6 +612,12 @@ test("V42 localizes missing titles in one structured AI batch", async () => {
   assert.equal(aiCalls[0].model,"@cf/meta/llama-3.3-70b-instruct-fp8-fast");
   assert.equal(aiCalls[0].input.response_format.type,"json_schema");
   assert.match(aiCalls[0].input.messages[0].content,/İngilizceyi ara dil olarak kullanma/);
+  assert.match(aiCalls[0].input.messages[0].content,/çatallar değildir/);
+  const aiRequest=JSON.parse(aiCalls[0].input.messages[1].content);
+  assert.equal(aiRequest.episodes[0].context,
+    "A backup plan becomes necessary after the first move fails.");
+  assert.equal(aiRequest.episodes[1].context,
+    "The family reaches a literal and moral crossroads.");
 });
 
 test("V42 official Turkish title bypasses AI", async () => {

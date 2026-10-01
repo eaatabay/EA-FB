@@ -1,4 +1,4 @@
-# V42 staging-only deployment. Never deploy production, never expose TMDb secrets. Re-run after D1 API permission was granted.
+# V43 staging-only deployment. Never deploy production, never expose TMDb secrets. Context-aware title localization and detail UI cleanup.
 name: EA-FB V6 staging deploy
 on:
   workflow_dispatch:

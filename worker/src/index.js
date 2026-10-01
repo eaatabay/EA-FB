@@ -36,7 +36,7 @@ function json(object, status = 200, ttl = 0) {
   });
 }
 
-const TITLE_TRANSLATION_VERSION = "v42-localize-2";
+const TITLE_TRANSLATION_VERSION = "v43-localize-3";
 const TITLE_AI_MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
 const titleBatchInFlight = new Set();
 
@@ -62,6 +62,23 @@ function sourceEpisodeTitle(payload, language) {
     ko:"KR", ja:"JP", zh:"CN", ru:"RU", ar:"SA"
   }[language] || "";
   return localizedEpisodeTitle(payload, language, preferred);
+}
+function sourceEpisodeOverview(payload, language) {
+  const preferred = {
+    en:"US", es:"ES", fr:"FR", de:"DE", it:"IT", pt:"BR", tr:"TR",
+    ko:"KR", ja:"JP", zh:"CN", ru:"RU", ar:"SA"
+  }[language] || "";
+  const rows = Array.isArray(payload?.translations) ? payload.translations : [];
+  let fallback = null;
+  for (const row of rows) {
+    if (String(row?.iso_639_1 || "").toLowerCase() !== language) continue;
+    const overview = String(row?.data?.overview || "").trim().replace(/\s+/g, " ");
+    if (!overview) continue;
+    if (preferred &&
+        String(row?.iso_3166_1 || "").toUpperCase() === preferred) return overview;
+    if (fallback === null) fallback = overview;
+  }
+  return fallback;
 }
 function normalizedTitle(value) {
   return String(value || "").normalize("NFKC").trim().replace(/\s+/g, " ")
@@ -185,16 +202,25 @@ function parseLocalizedAiResponse(result, requested) {
 async function localizeTitleBatch(env, sourceLanguage, rows) {
   if (!env.AI?.run || !rows.length) return [];
   const system =
-    "Sen profesyonel bir film ve dizi yerelleştirme çevirmenisin. " +
+    "Sen profesyonel bir film ve dizi yerelleştirme editörüsün. " +
     "Verilen bölüm başlıklarını belirtilen kaynak dilinden doğrudan Türkçeye yerelleştir; " +
-    "İngilizceyi ara dil olarak kullanma. Kelime kelime çeviri yapma. Deyimsel, mecazi, " +
-    "kültürel, mizahi ve dramatik anlamı koruyarak Türkiye'deki profesyonel bir dijital " +
-    "yayın platformunda kullanılabilecek doğal ve sanatsal başlık üret. Özel isimleri, " +
-    "kişi ve yer adlarını gereksiz yere çevirme. Bir deyim veya kelime oyunu varsa Türkçedeki " +
-    "en doğal karşılığı kullan. Anlamdan emin değilsen olay veya anlam uydurma. Başlık zaten " +
-    "Türkçeyse değiştirme. Episode 7, Bölüm 7 ve benzeri jenerik adlara yeni başlık uydurma. " +
-    "Açıklama, gerekçe, tırnak işareti veya bölüm numarası ekleme.";
-  const requested = rows.map(row => ({episode:row.episode, title:row.original}));
+    "İngilizceyi ara dil olarak kullanma. Önce gerçek anlamı ve Türkçe dilbilgisini çöz; " +
+    "kaynak dilin kelime sırasını, iyelik yapısını veya ilk sözlük anlamını körlemesine kopyalama. " +
+    "Başlıkları aynı sezonun bir başlık dizisi olarak birlikte değerlendir. Deyim, mecaz, kelime " +
+    "oyunu, şarkı/albüm/kitap/film referansı, kişi, yer, marka ve diğer özel ad ihtimallerini " +
+    "kontrol et. Yerleşik Türkçe karşılığı olmayan gerçek özel adları sırf kelimeleri çevrilebiliyor " +
+    "diye bozma; gerekiyorsa özgün başlığı koru. context alanı yalnızca anlamı ayırt etmek içindir; " +
+    "özetten yeni olay, kişi veya spoiler ekleme. Türkçe sonuç doğal, dilbilgisel ve yayın platformu " +
+    "kalitesinde olmalı. Örnek kalite çizgisi: crossroads bağlama göre Yol Ayrımı/Kavşak'tır, " +
+    "çatallar değildir; the beast in me yapısı İçimdeki Canavar gibi doğal kurulur; banquet ziyafettir. " +
+    "Anlamdan emin değilsen uydurmak yerine özgün başlığı koru. Başlık zaten Türkçeyse değiştirme. " +
+    "Episode 7, Bölüm 7 ve benzeri jenerik adlara yeni başlık uydurma. Açıklama, gerekçe, tırnak " +
+    "işareti veya bölüm numarası ekleme.";
+  const requested = rows.map(row => ({
+    episode:row.episode,
+    title:row.original,
+    ...(row.context ? {context:row.context.slice(0, 700)} : {})
+  }));
   const schema = {
     type:"object",
     properties:{
@@ -404,7 +430,7 @@ export default {
     cacheUrl.searchParams.set("_ea_fb_rating", env.OMDB_API_KEY ? "omdb-v1" : "tmdb-v1");
     if (catalog.batchEpisodeTitles) {
       cacheUrl.searchParams.set("_ea_fb_titles",
-        env.AI?.run ? "tmdb-plus-ai-v42" : "tmdb-only-v42");
+        env.AI?.run ? "tmdb-plus-ai-v43" : "tmdb-only-v43");
     }
     const cacheKey = new Request(cacheUrl.toString(), { method: "GET" });
     const cache = typeof caches === "undefined" ? null : caches.default;
@@ -458,6 +484,9 @@ export default {
                 sourceLanguage: catalog.batchEpisodeTitles.sourceLanguage,
                 turkish: turkishEpisodeTitle(payload),
                 original: sourceEpisodeTitle(
+                  payload, catalog.batchEpisodeTitles.sourceLanguage
+                ),
+                context: sourceEpisodeOverview(
                   payload, catalog.batchEpisodeTitles.sourceLanguage
                 )
               };
