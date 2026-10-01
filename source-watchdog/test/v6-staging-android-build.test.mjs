@@ -20,18 +20,32 @@ test("red V6 staging build overlays only the two Android relay references", () =
   assert.match(overlay,/provider\.count\(old_config\) != 1/);
   assert.match(overlay,/config\/backend\.v6-staging\.json/);
   assert.match(overlay,/BUILD\.write_text/);
-  assert.ok(overlay.includes("version = 43"));
-  assert.ok(overlay.includes("BUILD.write_text(re.sub(r'^version = 6$', 'version = 43'"));
+  assert.ok(overlay.includes("version = 44"));
+  assert.ok(overlay.includes("BUILD.write_text(re.sub(r'^version = 6$', 'version = 44'"));
   assert.match(script,/cp "\$tmp\/build\.gradle\.kts" "\$buildfile"/);
   assert.doesNotMatch(script,/wrangler deploy|git push|gh release/);
 });
 
-test("V43 long seasons are split into bounded title requests instead of skipped", () => {
+test("V44 long series have no 48-episode ceiling and only missing Turkish titles enter enrichment", () => {
   const provider=read("EA-FB/src/main/kotlin/com/eafb/EAProvider.kt");
   assert.match(provider,/numbers\.chunked\(10\)/);
-  assert.match(provider,/var remaining = 48/);
-  assert.doesNotMatch(provider,/numbers\.size > 12/);
+  assert.doesNotMatch(provider,/var remaining = 48/);
+  assert.doesNotMatch(provider,/take\(remaining\)/);
+  assert.match(provider,/val missingTurkishTitle = genericEpisodeName\(localizedName, episodeNo\)/);
+  assert.match(provider,/if \(number > 0 && missingTurkishTitle\)/);
+  assert.match(provider,/titleCandidates \+= EpisodeTitleCandidate\(number, episodeNo\)/);
+  assert.match(provider,/titleBatches\(titleCandidates\)/);
   assert.match(provider,/episode-titles\/\$safeSource\?episodes=\$query/);
+  assert.match(provider,/numbers\.chunked\(10\)/);
+});
+
+test("V44 generic Chapter and Episode labels are deterministic and never sent to creative AI", () => {
+  const provider=read("EA-FB/src/main/kotlin/com/eafb/EAProvider.kt");
+  const worker=read("worker/src/index.js");
+  assert.match(provider,/\^chapter\\\\s\*#\?\\\\s\*\$escapedEpisode\$/);
+  assert.match(provider,/"Bölüm \$episodeNo"/);
+  assert.match(worker,/"episode","chapter","bölüm"/);
+  assert.match(worker,/tmdb-plus-ai-v44/);
 });
 
 test("normal plugin retains production relay pin until explicit staging build",()=>{
