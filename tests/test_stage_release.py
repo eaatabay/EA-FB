@@ -43,7 +43,7 @@ class StageReleaseTests(unittest.TestCase):
     def test_v6_staging_version_increments_without_changing_default_release(self):
         self.make_archive()
         (self.root / "build" / "plugins.json").write_text(json.dumps([
-            {"internalName": "EA-FB", "version": 46}
+            {"internalName": "EA-FB", "version": 47}
         ]))
         with self.assertRaisesRegex(ValueError, "Expected EA-FB v6"):
             module.stage(self.root)
