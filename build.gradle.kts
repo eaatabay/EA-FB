@@ -57,8 +57,6 @@ subprojects {
         val compileOnly by configurations
         cloudstream("com.lagradost:cloudstream3:pre-release")
         compileOnly("androidx.fragment:fragment:1.8.9")
-        // Only observe CloudStream\'s own episode adapter; Android host supplies RecyclerView.
-        compileOnly("androidx.recyclerview:recyclerview:1.3.2")
         implementation(kotlin("stdlib"))
         // CloudStream app.get exposes NiceHttp Requests; required for Kotlin compilation.
         implementation("com.github.Blatzar:NiceHttp:0.4.11")

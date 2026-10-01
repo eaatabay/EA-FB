@@ -273,7 +273,7 @@ test("V45 resolves every normal-season title lazily while Worker keeps official 
   assert.ok(episodeTitleStyle.includes("addOnGlobalFocusChangeListener"));
   assert.ok(episodeTitleStyle.includes("addOnScrollChangedListener"));
   assert.ok(!episodeTitleStyle.includes("addOnGlobalLayoutListener"));
-  assert.ok(episodeTitleStyle.includes("androidx.recyclerview.widget.RecyclerView"));
+  assert.ok(!episodeTitleStyle.includes("androidx.recyclerview.widget.RecyclerView"));
 });
 
 test("episode titles repaint after initial row binding and when returning to a detail",()=>{
@@ -285,20 +285,4 @@ test("episode titles repaint after initial row binding and when returning to a d
   assert.match(episodeTitleStyle,/addOnGlobalFocusChangeListener/);
   assert.match(episodeTitleStyle,/addOnScrollChangedListener/);
   assert.doesNotMatch(episodeTitleStyle,/addOnGlobalLayoutListener/);
-});
-
-test("V47 repaints translated rows on actual CloudStream episode adapter notifications",()=>{
-  assert.match(episodeTitleStyle,/resources.getIdentifier\("result_episodes", "id"/);
-  assert.match(episodeTitleStyle,/list\.adapter/);
-  assert.match(episodeTitleStyle,/registerAdapterDataObserver\(observer\)/);
-  assert.match(episodeTitleStyle,/onItemRangeInserted\(positionStart: Int, itemCount: Int\)/);
-  assert.match(episodeTitleStyle,/onItemRangeRemoved\(positionStart: Int, itemCount: Int\)/);
-  assert.match(episodeTitleStyle,/onItemRangeChanged\(positionStart: Int, itemCount: Int\)/);
-  assert.match(episodeTitleStyle,/onItemRangeMoved\(fromPosition: Int, toPosition: Int, itemCount: Int\)/);
-  assert.match(episodeTitleStyle,/scheduleEpisodeListRender\(fragmentRef, listRef\)/);
-  assert.match(episodeTitleStyle,/listOf\(48L, 220L\)/);
-  assert.match(episodeTitleStyle,/onFragmentViewDestroyed[\s\S]*?releaseEpisodeListWatch/);
-  assert.match(episodeTitleStyle,/unregisterAdapterDataObserver\(it.observer\)/);
-  assert.doesNotMatch(episodeTitleStyle,/addOnGlobalLayoutListener/);
-  assert.doesNotMatch(episodeTitleStyle,/notifyDataSetChanged\(/);
 });
