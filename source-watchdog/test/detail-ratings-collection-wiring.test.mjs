@@ -192,7 +192,7 @@ test("V35 removes per-episode translation HTTP calls from the blocking detail pa
   assert.ok(!provider.includes("getUnlocalizedJson("));
   assert.ok(!provider.includes('"/tv/$id/season/$number/episode/$episodeNo/translations"'));
   assert.ok(!provider.includes("translatedTurkishName"));
-  assert.ok(provider.includes("!genericEpisodeName(localizedName, episodeNo) -> localizedName"));
+  assert.ok(provider.includes("!missingTurkishTitle -> localizedName"));
   assert.ok(provider.includes("!genericEpisodeName(englishName, episodeNo) -> englishName"));
   assert.ok(provider.includes("val needsEnglish = (0 until episodeRows.length()).any"));
   assert.ok(provider.includes("val englishRows = if (needsEnglish)"));
@@ -226,7 +226,7 @@ test("V37 catalog paging dedupes repeated card URLs across page calls without to
 
 test("V38 retries first-open detail metadata after season loading without layout polling",()=>{
   const detailMeta=readFileSync(new URL("../../EA-FB/src/main/kotlin/com/eafb/DetailMetaRow.kt",import.meta.url),"utf8");
-  const episodeLoad = provider.indexOf('val episodes = tvEpisodes(tmdbId');
+  const episodeLoad = provider.indexOf('val episodeLoad = tvEpisodes(tmdbId');
   const republish = provider.indexOf('DetailMetaRow.publish(url, imdbRating, tmdbRating, genreLabels, nextAirDateLabel)', episodeLoad);
   assert.ok(episodeLoad >= 0 && republish > episodeLoad);
   assert.ok(detailMeta.includes('main.postDelayed({ renderRegistered() }, 300)'));
