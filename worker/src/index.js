@@ -251,18 +251,17 @@ function catalogRequest(url) {
   }
 
   // V40: a short season is enriched lazily behind one client request.
-  const episodeTitleBatch = parts[0] === "tv" && parts.length === 5 &&
+  const episodeTitleBatch = parts[0] === "tv" && parts.length === 6 &&
     /^\d{1,9}$/.test(parts[1]) && +parts[1] > 0 && parts[2] === "season" &&
     /^\d{1,3}$/.test(parts[3]) && +parts[3] <= 100 &&
-    parts[4] === "episode-titles";
+    parts[4] === "episode-titles" && /^[a-z]{2,3}$/.test(parts[5]);
   if (episodeTitleBatch) {
     const language = q.get("language") || "tr-TR";
-    const sourceLanguage = (q.get("source_language") || "en").toLowerCase();
+    const sourceLanguage = parts[5].toLowerCase();
     const raw = q.get("episodes") || "";
     if (language !== "tr-TR" || q.getAll("language").length > 1 ||
-        q.getAll("episodes").length !== 1 || q.getAll("source_language").length > 1 ||
-        !/^[a-z]{2,3}$/.test(sourceLanguage) ||
-        [...q.keys()].some(k => !["language", "episodes", "source_language"].includes(k))) return null;
+        q.getAll("episodes").length !== 1 ||
+        [...q.keys()].some(k => !["language", "episodes"].includes(k))) return null;
     const episodeNumbers = raw.split(",").map(v => Number(v));
     const canonical = [...episodeNumbers].sort((a,b)=>a-b);
     if (episodeNumbers.length < 1 || episodeNumbers.length > 10 ||
@@ -405,7 +404,7 @@ export default {
     cacheUrl.searchParams.set("_ea_fb_rating", env.OMDB_API_KEY ? "omdb-v1" : "tmdb-v1");
     if (catalog.batchEpisodeTitles) {
       cacheUrl.searchParams.set("_ea_fb_titles",
-        env.AI?.run ? "tmdb-plus-ai-v1" : "tmdb-only-v1");
+        env.AI?.run ? "tmdb-plus-ai-v42" : "tmdb-only-v42");
     }
     const cacheKey = new Request(cacheUrl.toString(), { method: "GET" });
     const cache = typeof caches === "undefined" ? null : caches.default;
