@@ -92,7 +92,7 @@ function genericEpisodeTitle(value, episode) {
   if (!normalized) return true;
   const n = String(episode);
   const words = [
-    "episode","bölüm","episodio","episódio","épisode","folge","capítulo",
+    "episode","chapter","bölüm","episodio","episódio","épisode","folge","capítulo",
     "capitulo","odcinek","эпизод","серия","エピソード","에피소드"
   ];
   if (words.some(word => normalized === word + " " + n ||
@@ -430,7 +430,7 @@ export default {
     cacheUrl.searchParams.set("_ea_fb_rating", env.OMDB_API_KEY ? "omdb-v1" : "tmdb-v1");
     if (catalog.batchEpisodeTitles) {
       cacheUrl.searchParams.set("_ea_fb_titles",
-        env.AI?.run ? "tmdb-plus-ai-v43" : "tmdb-only-v43");
+        env.AI?.run ? "tmdb-plus-ai-v44" : "tmdb-only-v44");
     }
     const cacheKey = new Request(cacheUrl.toString(), { method: "GET" });
     const cache = typeof caches === "undefined" ? null : caches.default;
