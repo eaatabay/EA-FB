@@ -139,5 +139,5 @@ test("V37 upcoming badges use season-aware metadata without native play visibili
   assert.match(style, /addOnGlobalFocusChangeListener/);
   assert.doesNotMatch(style, /if \(!hostMarksUpcoming\) return@row/);
   assert.doesNotMatch(style, /nativePlay/);
-  assert.match(style, /androidx\.recyclerview\.widget\.RecyclerView/);
+  assert.doesNotMatch(style, /androidx\.recyclerview\.widget\.RecyclerView/);
 });
