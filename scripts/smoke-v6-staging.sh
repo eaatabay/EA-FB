@@ -28,7 +28,7 @@ elif path.startswith("/v1/discover/"):
     assert isinstance(data.get("results"),list) and isinstance(data.get("page"),int)
 elif path.startswith("/v1/collection/"):
     assert isinstance(data.get("parts"),list)
-elif "/episode-titles?" in path:
+elif "/episode-titles/" in path:
     assert isinstance(data.get("titles"),dict)
 elif path.endswith("/translations"):
     assert isinstance(data.get("translations"),list)
