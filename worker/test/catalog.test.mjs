@@ -637,6 +637,21 @@ test("V42 official Turkish title bypasses AI", async () => {
   assert.equal(calls.length,1);
 });
 
+test("V44 generic Chapter labels bypass creative AI and remain skipped", async () => {
+  const {env,ctx}=setup();
+  let aiCalls=0;
+  env.AI={run:async()=>{aiCalls++; throw Error("AI_SHOULD_NOT_RUN");}};
+  globalThis.fetch=async()=>new Response(JSON.stringify({translations:[
+    {iso_639_1:"en",iso_3166_1:"US",data:{name:"Chapter 1"}},
+    {iso_639_1:"tr",iso_3166_1:"TR",data:{name:""}}
+  ]}),{headers:{"content-type":"application/json"}});
+  const res=await gateway.fetch(new Request(
+    "https://example.workers.dev/v1/tv/1413/season/6/episode-titles/en?episodes=1&language=tr-TR"
+  ),env,ctx);
+  assert.deepEqual(await res.json(),{titles:{},skipped:[1]});
+  assert.equal(aiCalls,0);
+});
+
 test("V42 treats copied source text in tr metadata as untranslated", async () => {
   const {env,ctx}=setup();
   let aiCalls=0;
