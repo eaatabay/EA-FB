@@ -152,6 +152,22 @@ async function writeTitleCache(db, seriesId, season, sourceLanguage, rows) {
     )));
   } catch {}
 }
+// Official TMDb titles supersede generated translations permanently. Delete only
+// the confirmed episode rows, not the rest of this season or any other series.
+// Keep this best-effort: D1 errors must not affect an official title response.
+async function deleteOfficialTitleCache(db, seriesId, season, episodes) {
+  if (!db?.prepare || !episodes.length) return;
+  try {
+    const unique = [...new Set(episodes)];
+    const marks = unique.map(() => "?").join(",");
+    await db.prepare(
+      "DELETE FROM episode_title_cache WHERE series_id=? AND season=? " +
+      "AND episode IN (" + marks + ")"
+    ).bind(seriesId, season, ...unique).run();
+  } catch {
+    // TMDb remains authoritative even if staging D1 is missing or unavailable.
+  }
+}
 async function acquireTitleLock(db, key) {
   if (titleBatchInFlight.has(key)) return false;
   titleBatchInFlight.add(key);
@@ -213,6 +229,11 @@ async function localizeTitleBatch(env, sourceLanguage, rows) {
     "özetten yeni olay, kişi veya spoiler ekleme. Türkçe sonuç doğal, dilbilgisel ve yayın platformu " +
     "kalitesinde olmalı. Örnek kalite çizgisi: crossroads bağlama göre Yol Ayrımı/Kavşak'tır, " +
     "çatallar değildir; the beast in me yapısı İçimdeki Canavar gibi doğal kurulur; banquet ziyafettir. " +
+    "İngilizce deyimleri kelimesi kelimesine çevirme: Hell no! bağlamına göre Asla! veya " +
+    "Kesinlikle hayır! olur, Hayır Cehenneme olmaz. Fiilin istediği Türkçe hâl ekini " +
+    "mutlaka denetle: I hate you için Senden nefret ediyorum, Seni nefret ediyorum değil. " +
+    "Her başlığı döndürmeden önce anlam, deyim, hâl eki ve Türkçe sözdizimi açısından " +
+    "yeniden kontrol et; kaynakta olmayan soru veya olumsuzluk ekleme. " +
     "Anlamdan emin değilsen uydurmak yerine özgün başlığı koru. Başlık zaten Türkçeyse değiştirme. " +
     "Episode 7, Bölüm 7 ve benzeri jenerik adlara yeni başlık uydurma. Açıklama, gerekçe, tırnak " +
     "işareti veya bölüm numarası ekleme.";
@@ -496,6 +517,7 @@ export default {
           })), 6500);
 
         const candidates = [];
+        const officialEpisodes = [];
         for (const row of rows) {
           if (!row) continue;
           const official = usableLocalizedTitle(row.turkish, row.episode);
@@ -505,6 +527,7 @@ export default {
           );
           if (trustworthyOfficial) {
             titles[String(row.episode)] = official;
+            officialEpisodes.push(row.episode);
             continue;
           }
           if (!original) {
@@ -512,6 +535,19 @@ export default {
             continue;
           }
           candidates.push({...row, original});
+        }
+
+        // The cleanup runs after the response and cannot delay opening a long
+        // season. Never delete a merely copied, generic or unverified title.
+        if (officialEpisodes.length && env.TITLE_CACHE?.prepare && ctx?.waitUntil) {
+          try {
+            ctx.waitUntil(deleteOfficialTitleCache(
+              env.TITLE_CACHE,
+              catalog.batchEpisodeTitles.seriesId,
+              catalog.batchEpisodeTitles.season,
+              officialEpisodes
+            ));
+          } catch {}
         }
 
         const cached = await readTitleCache(
