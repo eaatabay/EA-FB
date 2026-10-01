@@ -237,16 +237,17 @@ internal object EpisodeTitleStyle {
                     renderFragment(fragment)
                 }
                 if (delay == 220L) {
-                    listRef.get()?.let(pendingEpisodeListRenders::remove)
+                    listRef.get()?.let { pendingEpisodeListRenders.remove(it) }
                 }
             }, delay)
         }
     }
 
     private fun releaseEpisodeListWatch(root: View, activity: FragmentActivity?) {
-        val id = activity?.resources?.getIdentifier(
-            "result_episodes", "id", activity.packageName
-        ) ?: return
+        val host = activity ?: return
+        val id = host.resources.getIdentifier(
+            "result_episodes", "id", host.packageName
+        )
         if (id == 0) return
         val list = root.findViewById<RecyclerView>(id) ?: return
         episodeListWatches.remove(list)?.let {
