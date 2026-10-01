@@ -57,7 +57,11 @@ internal object EpisodeTitleStyle {
         val app = context.applicationContext as? Application ?: return
         app.registerActivityLifecycleCallbacks(object : Application.ActivityLifecycleCallbacks {
             override fun onActivityCreated(activity: Activity, state: Bundle?) = attach(activity)
-            override fun onActivityResumed(activity: Activity) {\n                attach(activity)\n                main.post { renderRegistered() }\n                main.postDelayed({ renderRegistered() }, 350)\n            }
+            override fun onActivityResumed(activity: Activity) {
+                attach(activity)
+                main.post { renderRegistered() }
+                main.postDelayed({ renderRegistered() }, 350)
+            }
             override fun onActivityStarted(activity: Activity) = Unit
             override fun onActivityPaused(activity: Activity) = Unit
             override fun onActivityStopped(activity: Activity) = Unit
