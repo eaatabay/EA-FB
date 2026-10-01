@@ -58,11 +58,11 @@ check "/v1/tv/247718/season/1/episode/3/translations"
 echo "PASS: dedicated V6 staging catalog smoke checks"
 
 # V42 lazy batch: official Turkish title first, bounded AI fallback when missing.
-check "/v1/tv/247718/season/1/episode-titles?episodes=3,7&source_language=en&language=tr-TR"
+check "/v1/tv/247718/season/1/episode-titles/en?episodes=3,7&language=tr-TR"
 
 # V42 staging AI binding must fill known MobLand gaps.
 tmp_titles="$(mktemp)"
-code="$(curl --silent --show-error --max-redirs 0 --max-time 25   --output "$tmp_titles" --write-out '%{http_code}'   "$url/v1/tv/247718/season/1/episode-titles?episodes=3,7&source_language=en&language=tr-TR")"
+code="$(curl --silent --show-error --max-redirs 0 --max-time 25   --output "$tmp_titles" --write-out '%{http_code}'   "$url/v1/tv/247718/season/1/episode-titles/en?episodes=3,7&language=tr-TR")"
 test "$code" = 200 || { echo "FAIL: V42 title fallback HTTP $code" >&2; rm -f "$tmp_titles"; exit 1; }
 python3 - "$tmp_titles" <<'PY'
 import json,sys
