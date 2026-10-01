@@ -61,3 +61,10 @@ Bir sonuç bir **varyanttır**: `sourceId, mediaId, episodeId?, providerDisplayN
 - Operasyonel göstergeler: halen arızalı kaynaklar, admin_required bekleme süresi, son sağlıklı kontrol, art arda başarısızlık, en sık arıza nedeni, en çok seçilen ve en yüksek başarısızlık oranlı kaynaklar.
 - Kapsam/sınır: mevcut watchdog kaynak durumlarını ve bazı admin eylemlerini kaydeder; istemciden kaynak seçimi/oynatma doğrulaması telemetrisi henüz yok. Panel yeni sayaçları veri akışı bağlanmadan sıfır gerçek kullanım gibi sunmamalı: `veri toplanmıyor` demeli.
 - Kullanıcı etkinliği analitiği açıkça bilgilendirilerek ve uygun izin/tercih seçenekleriyle yapılır; admin için kaynak düzeyinde anonim toplamlar tercih edilir. İzleme süresi için ayrı kapsam açılmadıkça geliştirme yapılmaz.
+
+## Ses/altyazı tercih istatistikleri
+- Kaynak ve dönem bazında `audioType` (Türkçe dublaj, orijinal dil, diğer dil, bilinmiyor) ve `subtitleType` (Türkçe altyazı, başka dilde altyazı, altyazısız, bilinmiyor) kırılımı. Bir kaynak seçimi tek bir ses sınıfında sayılır; ses ve altyazı ayrı boyutlardır, birbirinin toplamı gibi sunulmaz.
+- Dublajlı ve altyazılı varyantın kaç kez seçildiği, doğrulanmış oynatma başlangıcı mevcutsa kaç kez gerçekten başladığı ayrı sayılır. Çözünürlük (4K/1080p/720p/bilinmiyor) ile çapraz filtrelenebilir.
+- Gömülü, akış içi seçilebilir ve haricî altyazı dosyası ayrı teknik etiketlerdir. Kullanıcının oynatıcı içinde sonradan değiştirdiği altyazı/ses yalnız desteklenen olay API'si varsa ölçülür; aksi hâlde ilk seçilen kaynak varyantı sayılır.
+- Film/dizi, kaynak, gün/hafta/ay, ses dili, altyazı dili ve çözünürlük filtreleri; düşük örneklem ve `bilinmiyor` değerleri saklanmadan gösterilir.
+- Kaynak kullanım analitiği için mümkünse kimliksiz toplulaştırılmış sayaç kullanılır; kişiye özel izleme alışkanlıklarını gereksiz yere kaydetme. Telemetri etkin değilse sıfır yerine `veri toplanmıyor` gösterilir.
