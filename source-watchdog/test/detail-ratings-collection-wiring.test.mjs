@@ -228,7 +228,7 @@ test("V42 enriches source-language episode titles lazily without blocking the V3
   assert.ok(provider.includes("CoroutineScope(SupervisorJob() + Dispatchers.IO)"));
   assert.ok(provider.includes("scheduleTurkishEpisodeTitles("));
   assert.ok(provider.includes('item.optString("original_language")'));
-  assert.ok(provider.includes('episode-titles?episodes=$query&source_language=$safeSource'));
+  assert.ok(provider.includes('episode-titles/$safeSource?episodes=$query'));
   assert.ok(provider.includes("numbers.chunked(10)"));
   assert.ok(provider.includes("var remaining = 48"));
   assert.ok(provider.includes("EpisodeTitleStyle.publish(seriesUrl, resolved)"));
