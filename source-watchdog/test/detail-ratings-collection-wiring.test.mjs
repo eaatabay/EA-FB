@@ -243,7 +243,7 @@ test("V39 first-open next-air repair stays isolated from episode-row performance
   assert.ok(upcomingStyle.includes("pendingFocusRenders"));
 });
 
-test("V44 enriches every missing normal-season title lazily without blocking the V39 detail path",()=>{
+test("V44 resolves every normal-season title lazily while Worker keeps official Turkish ahead of AI",()=>{
   assert.ok(plugin.includes("EpisodeTitleStyle.install(context)"));
   assert.ok(provider.includes("CoroutineScope(SupervisorJob() + Dispatchers.IO)"));
   assert.ok(provider.includes("scheduleTurkishEpisodeTitles("));
@@ -253,7 +253,8 @@ test("V44 enriches every missing normal-season title lazily without blocking the
   assert.ok(!provider.includes("var remaining = 48"));
   assert.ok(provider.includes("EpisodeTitleCandidate"));
   assert.ok(provider.includes("missingTurkishTitle"));
-  assert.ok(provider.includes("if (number > 0 && missingTurkishTitle)"));
+  assert.ok(provider.includes("if (number > 0)"));
+  assert.ok(!provider.includes("if (number > 0 && missingTurkishTitle)"));
   assert.ok(provider.includes("titleBatches(titleCandidates)"));
   assert.ok(provider.includes("EpisodeTitleStyle.publish(seriesUrl, resolved)"));
   assert.ok(provider.includes("translated[season to episode]?.name ?: ep.name"));
