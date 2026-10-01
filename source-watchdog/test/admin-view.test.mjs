@@ -64,3 +64,36 @@ test("future or corrupted health states are explicit anomalies, not degraded",()
  assert.ok(html.includes("invalid_state"));
  assert.ok(!html.includes("future_unreviewed_status"));
 });
+
+test("write-enabled panel exposes revision-bound actions without inline event handlers",()=>{
+  const source=row("licensed-demo");
+  source.revision=7;
+  const html=renderAdminDashboard(summarizeSources([source],1800000000000),
+    {editable:true,nonce:"nonce123"});
+  assert.match(html,/data-action='disable'/);
+  assert.match(html,/data-action='enable'/);
+  assert.match(html,/data-action='retest'/);
+  assert.match(html,/data-action='rollback'/);
+  assert.match(html,/data-revision='7'/);
+  assert.match(html,/script nonce='nonce123'/);
+  assert.match(html,/expectedRevision:revision/);
+  assert.match(html,/x-eafb-admin-action/);
+  assert.doesNotMatch(html,/onclick=/);
+  assert.doesNotMatch(html,/<form/);
+});
+test("read-only panel does not include active controls or JavaScript",()=>{
+  const source=row("licensed-demo");
+  source.revision=8;
+  const html=renderAdminDashboard(summarizeSources([source],1800000000000));
+  assert.doesNotMatch(html,/<script/);
+  assert.doesNotMatch(html,/<button/);
+  assert.match(html,/salt okunurdur/);
+});
+test("untrusted source IDs are escaped in editable controls",()=>{
+  const source=row("x' onclick='alert(1)");
+  source.revision=3;
+  const html=renderAdminDashboard(summarizeSources([source],1800000000000),
+    {editable:true,nonce:"safe"});
+  assert.doesNotMatch(html,/onclick=/);
+  assert.match(html,/&#39;/);
+});
