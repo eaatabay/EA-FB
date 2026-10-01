@@ -164,7 +164,6 @@ test("V42 title batch input is canonical and capped per request", async () => {
     "episodes=1,1&language=tr-TR",
     "episodes=1,2,3,4,5,6,7,8,9,10,11&language=tr-TR",
     "episodes=1&language=en-US",
-    "episodes=1&language=tr-TR&source_language=english",
     "episodes=1&language=tr-TR&extra=x",
   ]) {
     const res = await gateway.fetch(new Request(
@@ -599,7 +598,7 @@ test("V42 localizes missing titles in one structured AI batch", async () => {
     ]}),{headers:{"content-type":"application/json"}});
   };
   const res=await gateway.fetch(new Request(
-    "https://example.workers.dev/v1/tv/247718/season/1/episode-titles?episodes=3,7&source_language=en&language=tr-TR"
+    "https://example.workers.dev/v1/tv/247718/season/1/episode-titles/en?episodes=3,7&language=tr-TR"
   ),env,ctx);
   assert.deepEqual(await res.json(),{
     titles:{"3":"B Planı","7":"Kavşak"},
@@ -623,7 +622,7 @@ test("V42 official Turkish title bypasses AI", async () => {
     ]}),{headers:{"content-type":"application/json"}});
   };
   const res=await gateway.fetch(new Request(
-    "https://example.workers.dev/v1/tv/247718/season/1/episode-titles?episodes=2&source_language=en&language=tr-TR"
+    "https://example.workers.dev/v1/tv/247718/season/1/episode-titles/en?episodes=2&language=tr-TR"
   ),env,ctx);
   assert.deepEqual(await res.json(),{titles:{"2":"Yapboz"}});
   assert.equal(calls.length,1);
@@ -641,7 +640,7 @@ test("V42 treats copied source text in tr metadata as untranslated", async () =>
     {iso_639_1:"tr",iso_3166_1:"TR",data:{name:"White Screen"}}
   ]}),{headers:{"content-type":"application/json"}});
   const res=await gateway.fetch(new Request(
-    "https://example.workers.dev/v1/tv/247718/season/1/episode-titles?episodes=4&source_language=en&language=tr-TR"
+    "https://example.workers.dev/v1/tv/247718/season/1/episode-titles/en?episodes=4&language=tr-TR"
   ),env,ctx);
   assert.deepEqual(await res.json(),{
     titles:{"4":"Beyaz Perde"},
@@ -663,7 +662,7 @@ test("V42 translates directly from the series original language", async () => {
     {iso_639_1:"tr",iso_3166_1:"TR",data:{name:""}}
   ]}),{headers:{"content-type":"application/json"}});
   const res=await gateway.fetch(new Request(
-    "https://example.workers.dev/v1/tv/1/season/1/episode-titles?episodes=5&source_language=es&language=tr-TR"
+    "https://example.workers.dev/v1/tv/1/season/1/episode-titles/es?episodes=5&language=tr-TR"
   ),env,ctx);
   assert.deepEqual(await res.json(),{
     titles:{"5":"Kâğıt Ev"},
@@ -699,7 +698,7 @@ test("V42 D1 hit bypasses AI and reuses original source title", async () => {
     {iso_639_1:"tr",iso_3166_1:"TR",data:{name:""}}
   ]}),{headers:{"content-type":"application/json"}});
   const res=await gateway.fetch(new Request(
-    "https://example.workers.dev/v1/tv/247718/season/1/episode-titles?episodes=3&source_language=en&language=tr-TR"
+    "https://example.workers.dev/v1/tv/247718/season/1/episode-titles/en?episodes=3&language=tr-TR"
   ),env,ctx);
   assert.deepEqual(await res.json(),{
     titles:{"3":"B Planı"},
