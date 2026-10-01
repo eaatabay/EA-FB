@@ -1,4 +1,4 @@
-# RED-only deployment: V44 Android + staging Worker official-TMDb title precedence and D1 AI-cache cleanup. Never production.
+# RED-only deployment: V45 Android + staging Worker translation-memory refresh. Never production.
 name: EA-FB V6 staging deploy
 on:
   workflow_dispatch:
@@ -58,8 +58,8 @@ jobs:
       - name: Verify scoped official-title cache cleanup before RED deployment
         working-directory: worker
         run: |
-          node --test --test-name-pattern="official TMDb titles clear only their own stale AI rows|unverified, copied or generic Turkish metadata never deletes AI cache|D1 cleanup failure cannot hide an official TMDb title" test/catalog.test.mjs
-      - name: Provision V44 staging title cache and deploy Worker
+          node --test --test-name-pattern="official TMDb titles clear only their own stale AI rows|unverified, copied or generic Turkish metadata never deletes AI cache|D1 cleanup failure cannot hide an official TMDb title|V45 ignores legacy D1 AI titles and bypasses the V44 edge cache" test/catalog.test.mjs
+      - name: Provision V45 staging title cache and deploy Worker
         working-directory: worker
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN_V6_STAGING }}
@@ -84,7 +84,7 @@ jobs:
           if npx wrangler d1 list --json > /tmp/eafb-d1-list.json 2>/tmp/eafb-d1-list.err; then
             D1_API_OK="true"
           else
-            echo "::warning::Staging Cloudflare token has no D1 API access; V44 will deploy without persistent D1 cache."
+            echo "::warning::Staging Cloudflare token has no D1 API access; V45 will deploy without persistent D1 cache."
             sed -n '1,8p' /tmp/eafb-d1-list.err || true
           fi
 
@@ -92,7 +92,7 @@ jobs:
           if [ "$D1_API_OK" = "true" ]; then
             DB_ID="$(parse_db_id)"
             if [ -z "$DB_ID" ]; then
-              echo "Creating isolated V44 staging D1: $DB_NAME"
+              echo "Creating isolated V45 staging D1: $DB_NAME"
               if npx wrangler d1 create "$DB_NAME" --location eeur; then
                 for attempt in 1 2 3 4 5; do
                   if npx wrangler d1 list --json > /tmp/eafb-d1-list.json 2>/tmp/eafb-d1-list.err; then
@@ -125,12 +125,14 @@ jobs:
           writeFileSync("wrangler.staging.runtime.jsonc",JSON.stringify(source,null,2)+"\n");
           JS
             npx wrangler d1 migrations apply "$DB_NAME" --remote --config wrangler.staging.runtime.jsonc
+            # RED-only, table-scoped reset; preserve any already-current V45 rows.
+            npx wrangler d1 execute "$DB_NAME" --remote --config wrangler.staging.runtime.jsonc --command "DELETE FROM episode_title_cache WHERE translation_version <> 'v45-localize-4';"
             DEPLOY_CONFIG="wrangler.staging.runtime.jsonc"
-            echo "PASS: V44 persistent D1 title cache is bound for staging."
+            echo "PASS: V45 persistent D1 title cache is bound for staging."
           fi
 
           npx wrangler deploy --config "$DEPLOY_CONFIG"
-      - name: Verify staging health and V44 title localization
+      - name: Verify staging health and V45 title localization
         run: |
           STAGING_URL="$(node -e "const fs=require('fs'); const c=JSON.parse(fs.readFileSync('config/backend.v6-staging.json','utf8')); process.stdout.write(c.apiBaseUrl || '')")"
           test -n "$STAGING_URL" || { echo "::error::Missing staging API base URL"; exit 2; }
