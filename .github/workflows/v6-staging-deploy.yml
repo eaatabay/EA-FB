@@ -64,9 +64,9 @@ jobs:
         run: |
           set -euo pipefail
           DB_NAME="ea-fb-title-cache-v6-staging"
+          DEPLOY_CONFIG="wrangler.staging.jsonc"
 
-          find_db_id() {
-            npx wrangler d1 list --json > /tmp/eafb-d1-list.json
+          parse_db_id() {
             node --input-type=module - "$DB_NAME" /tmp/eafb-d1-list.json <<'JS'
           import {readFileSync} from "node:fs";
           const [name,file]=process.argv.slice(2);
@@ -76,19 +76,35 @@ jobs:
           JS
           }
 
-          DB_ID="$(find_db_id)"
-          if [ -z "$DB_ID" ]; then
-            echo "Creating isolated V42 staging D1: $DB_NAME"
-            npx wrangler d1 create "$DB_NAME" --location eeur
-            for attempt in 1 2 3 4 5; do
-              DB_ID="$(find_db_id)"
-              [ -n "$DB_ID" ] && break
-              sleep 2
-            done
+          D1_API_OK="false"
+          if npx wrangler d1 list --json > /tmp/eafb-d1-list.json 2>/tmp/eafb-d1-list.err; then
+            D1_API_OK="true"
+          else
+            echo "::warning::Staging Cloudflare token has no D1 API access; V42 will deploy without persistent D1 cache."
+            sed -n '1,8p' /tmp/eafb-d1-list.err || true
           fi
-          [ -n "$DB_ID" ] || { echo "::error::Could not resolve staging D1 id"; exit 3; }
 
-          node --input-type=module - "$DB_NAME" "$DB_ID" <<'JS'
+          DB_ID=""
+          if [ "$D1_API_OK" = "true" ]; then
+            DB_ID="$(parse_db_id)"
+            if [ -z "$DB_ID" ]; then
+              echo "Creating isolated V42 staging D1: $DB_NAME"
+              if npx wrangler d1 create "$DB_NAME" --location eeur; then
+                for attempt in 1 2 3 4 5; do
+                  if npx wrangler d1 list --json > /tmp/eafb-d1-list.json 2>/tmp/eafb-d1-list.err; then
+                    DB_ID="$(parse_db_id)"
+                    [ -n "$DB_ID" ] && break
+                  fi
+                  sleep 2
+                done
+              else
+                echo "::warning::Could not create staging D1 with current token; continuing without persistent cache."
+              fi
+            fi
+          fi
+
+          if [ -n "$DB_ID" ]; then
+            node --input-type=module - "$DB_NAME" "$DB_ID" <<'JS'
           import {readFileSync,writeFileSync} from "node:fs";
           const [name,id]=process.argv.slice(2);
           const source=JSON.parse(readFileSync("wrangler.staging.jsonc","utf8"));
@@ -104,9 +120,12 @@ jobs:
           }];
           writeFileSync("wrangler.staging.runtime.jsonc",JSON.stringify(source,null,2)+"\n");
           JS
+            npx wrangler d1 migrations apply "$DB_NAME" --remote --config wrangler.staging.runtime.jsonc
+            DEPLOY_CONFIG="wrangler.staging.runtime.jsonc"
+            echo "PASS: V42 persistent D1 title cache is bound for staging."
+          fi
 
-          npx wrangler d1 migrations apply "$DB_NAME" --remote --config wrangler.staging.runtime.jsonc
-          npx wrangler deploy --config wrangler.staging.runtime.jsonc
+          npx wrangler deploy --config "$DEPLOY_CONFIG"
       - name: Verify staging health and V42 title localization
         run: |
           STAGING_URL="$(node -e "const fs=require('fs'); const c=JSON.parse(fs.readFileSync('config/backend.v6-staging.json','utf8')); process.stdout.write(c.apiBaseUrl || '')")"
