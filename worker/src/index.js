@@ -36,8 +36,8 @@ function json(object, status = 200, ttl = 0) {
   });
 }
 
-const TITLE_TRANSLATION_VERSION = "v42-localize-1";
-const TITLE_AI_MODEL = "@cf/meta/llama-3.1-8b-instruct";
+const TITLE_TRANSLATION_VERSION = "v42-localize-2";
+const TITLE_AI_MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
 const titleBatchInFlight = new Set();
 
 function localizedEpisodeTitle(payload, language, preferredRegion = "") {
