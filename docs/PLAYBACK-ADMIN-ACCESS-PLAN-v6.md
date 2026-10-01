@@ -50,3 +50,14 @@ Bir sonuç bir **varyanttır**: `sourceId, mediaId, episodeId?, providerDisplayN
 4. İzinli gerçek adaptör bazında test ve ayrı kullanıcı onaylı staging.
 5. Davet/cihaz erişim kapısı, rızalı olay toplama, saklama/silme ve yönetim.
 6. Mi Box doğrulaması, yalnız gerekli dağıtım dosyaları, ZIP yedeği ve geri alma.
+
+## Kaynak istatistikleri — admin öncelikli
+- İzleme süresi öncelik dışı; oynatıcı telemetrisi olmadan kesin süre iddiası yok.
+- Kaynak başına dönem seçimi: son 24 saat / 7 gün / 30 gün / tüm zamanlar; olay zamanları UTC saklanır, panelde yerel saat gösterilebilir.
+- Kullanım hunisi ayrı sayılır: `searchResultShown`, `sourceSelected`, `playbackStartAttempt`, `playbackStartConfirmed` (istemci gerçekten doğrulayabiliyorsa), `playbackStartFailed`. Arama sonucu gösterimini izleme olarak sayma.
+- Hata sayısı ve oranı: bağlantı çözümlenemedi, zaman aşımı, bozuk URL, oynatma başlatma hatası, içerik eşleşmeme, kullanıcı iptali (hata değildir) ayrı sınıflandırılır. Hata oranının paydası aynı dönemdeki ilgili denemelerdir. Yetersiz örneklem ayrıca belirtilir.
+- Otomatik müdahale: deneme sayısı, başarı/başarısızlık, son deneme, ortalama düzelme süresi, rollback sayısı ve onarım sonrasında tekrar arıza oranı.
+- Manuel müdahale: disable/enable/retest/rollback ve onaylı adres değişimi gibi eylemler ayrı sayılır; aktör takma kimliği, UTC zaman, kaynak revizyonu ve sonuç audit kayıtlarına bağlanır. Kullanıcıya ait gizli anahtar veya ham erişim bilgisi gösterilmez.
+- Operasyonel göstergeler: halen arızalı kaynaklar, admin_required bekleme süresi, son sağlıklı kontrol, art arda başarısızlık, en sık arıza nedeni, en çok seçilen ve en yüksek başarısızlık oranlı kaynaklar.
+- Kapsam/sınır: mevcut watchdog kaynak durumlarını ve bazı admin eylemlerini kaydeder; istemciden kaynak seçimi/oynatma doğrulaması telemetrisi henüz yok. Panel yeni sayaçları veri akışı bağlanmadan sıfır gerçek kullanım gibi sunmamalı: `veri toplanmıyor` demeli.
+- Kullanıcı etkinliği analitiği açıkça bilgilendirilerek ve uygun izin/tercih seçenekleriyle yapılır; admin için kaynak düzeyinde anonim toplamlar tercih edilir. İzleme süresi için ayrı kapsam açılmadıkça geliştirme yapılmaz.
