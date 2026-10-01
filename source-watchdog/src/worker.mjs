@@ -141,7 +141,12 @@ export function createWatchdogWorker({
         }
         try {
           const records = await readRegistry(env.SOURCES_DB);
-          const html = renderAdmin(makeAdminOverview(records,nowMillis()));
+          const editable = adminWritesConfigured(env);
+          const nonce = editable
+            ? Array.from(crypto.getRandomValues(new Uint8Array(24)),
+              x => x.toString(16).padStart(2, "0")).join("")
+            : "";
+          const html = renderAdmin(makeAdminOverview(records,nowMillis()), {editable,nonce});
           return new Response(html,{status:200,headers:{
             "content-type":"text/html; charset=utf-8",
             "cache-control":"no-store",
@@ -149,6 +154,7 @@ export function createWatchdogWorker({
             "x-frame-options":"DENY",
             "referrer-policy":"no-referrer",
             "content-security-policy":"default-src 'none'; style-src 'unsafe-inline'; " +
+              (editable ? "script-src 'nonce-" + nonce + "'; connect-src 'self'; " : "") +
               "frame-ancestors 'none'; base-uri 'none'; form-action 'none'",
           }});
         } catch (_) {
