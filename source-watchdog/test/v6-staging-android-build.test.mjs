@@ -20,8 +20,8 @@ test("red V6 staging build overlays only the two Android relay references", () =
   assert.match(overlay,/provider\.count\(old_config\) != 1/);
   assert.match(overlay,/config\/backend\.v6-staging\.json/);
   assert.match(overlay,/BUILD\.write_text/);
-  assert.ok(overlay.includes("version = 44"));
-  assert.ok(overlay.includes("BUILD.write_text(re.sub(r'^version = 6$', 'version = 44'"));
+  assert.ok(overlay.includes("version = 45"));
+  assert.ok(overlay.includes("BUILD.write_text(re.sub(r'^version = 6$', 'version = 45'"));
   assert.match(script,/cp "\$tmp\/build\.gradle\.kts" "\$buildfile"/);
   assert.doesNotMatch(script,/wrangler deploy|git push|gh release/);
 });
@@ -59,7 +59,7 @@ test("V44 generic Chapter and Episode labels are deterministic and never sent to
   assert.match(provider,/chapter.*escapedEpisode/);
   assert.match(provider,/"Bölüm \$episodeNo"/);
   assert.match(worker,/"episode","chapter","bölüm"/);
-  assert.match(worker,/tmdb-plus-ai-v44/);
+  assert.match(worker,/tmdb-plus-ai-v45/);
 });
 
 test("normal plugin retains production relay pin until explicit staging build",()=>{
