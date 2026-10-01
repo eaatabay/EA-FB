@@ -1,4 +1,4 @@
-# V43 staging-only deployment. Never deploy production, never expose TMDb secrets. Context-aware title localization and detail UI cleanup.
+# V44 staging-only deployment. Never deploy production, never expose TMDb secrets. Long-series missing-title localization.
 name: EA-FB V6 staging deploy
 on:
   workflow_dispatch:
@@ -55,7 +55,7 @@ jobs:
         run: |
           npm install --no-audit --no-fund
           npm test
-      - name: Provision V42 staging title cache and deploy Worker
+      - name: Provision V44 staging title cache and deploy Worker
         working-directory: worker
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN_V6_STAGING }}
@@ -80,7 +80,7 @@ jobs:
           if npx wrangler d1 list --json > /tmp/eafb-d1-list.json 2>/tmp/eafb-d1-list.err; then
             D1_API_OK="true"
           else
-            echo "::warning::Staging Cloudflare token has no D1 API access; V42 will deploy without persistent D1 cache."
+            echo "::warning::Staging Cloudflare token has no D1 API access; V44 will deploy without persistent D1 cache."
             sed -n '1,8p' /tmp/eafb-d1-list.err || true
           fi
 
@@ -88,7 +88,7 @@ jobs:
           if [ "$D1_API_OK" = "true" ]; then
             DB_ID="$(parse_db_id)"
             if [ -z "$DB_ID" ]; then
-              echo "Creating isolated V42 staging D1: $DB_NAME"
+              echo "Creating isolated V44 staging D1: $DB_NAME"
               if npx wrangler d1 create "$DB_NAME" --location eeur; then
                 for attempt in 1 2 3 4 5; do
                   if npx wrangler d1 list --json > /tmp/eafb-d1-list.json 2>/tmp/eafb-d1-list.err; then
@@ -122,11 +122,11 @@ jobs:
           JS
             npx wrangler d1 migrations apply "$DB_NAME" --remote --config wrangler.staging.runtime.jsonc
             DEPLOY_CONFIG="wrangler.staging.runtime.jsonc"
-            echo "PASS: V42 persistent D1 title cache is bound for staging."
+            echo "PASS: V44 persistent D1 title cache is bound for staging."
           fi
 
           npx wrangler deploy --config "$DEPLOY_CONFIG"
-      - name: Verify staging health and V42 title localization
+      - name: Verify staging health and V44 title localization
         run: |
           STAGING_URL="$(node -e "const fs=require('fs'); const c=JSON.parse(fs.readFileSync('config/backend.v6-staging.json','utf8')); process.stdout.write(c.apiBaseUrl || '')")"
           test -n "$STAGING_URL" || { echo "::error::Missing staging API base URL"; exit 2; }
