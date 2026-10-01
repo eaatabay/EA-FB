@@ -48,7 +48,7 @@ class StageReleaseTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "Expected EA-FB v6"):
             module.stage(self.root)
         dist = module.stage(self.root, staging=True)
-        self.assertEqual(json.loads((dist / "plugins.json").read_text())[0]["version"], 46)
+        self.assertEqual(json.loads((dist / "plugins.json").read_text())[0]["version"], 47)
 
     def test_reject_stale_plugin_version(self):
         self.make_archive()
