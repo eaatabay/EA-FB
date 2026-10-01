@@ -1,4 +1,4 @@
-# V42 staging-only deployment. Never deploy production, never expose TMDb secrets. Source language is path-scoped.
+# V42 staging-only deployment. Never deploy production, never expose TMDb secrets. Source-language title route verified by green CI.
 name: EA-FB V6 staging deploy
 on:
   workflow_dispatch:
