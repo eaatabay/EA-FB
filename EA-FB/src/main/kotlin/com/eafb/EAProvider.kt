@@ -548,7 +548,7 @@ class EAProvider : MainAPI() {
         val safeSource = sourceLanguage.lowercase(Locale.ROOT)
             .takeIf { it.matches(Regex("^[a-z]{2,3}$")) } ?: "en"
         val response = getJson(
-            "/tv/$id/season/${batch.season}/episode-titles?episodes=$query&source_language=$safeSource"
+            "/tv/$id/season/${batch.season}/episode-titles/$safeSource?episodes=$query"
         ) ?: return emptyList()
         val titles = response.optJSONObject("titles") ?: return emptyList()
         val originals = response.optJSONObject("originals")
