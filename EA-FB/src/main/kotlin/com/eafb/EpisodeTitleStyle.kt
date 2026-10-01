@@ -61,6 +61,7 @@ internal object EpisodeTitleStyle {
     // The host's episode adapter replaces/rebinds rows after each season change.
     // Observe that one list rather than polling every global layout on long series.
     private val episodeListWatches = java.util.WeakHashMap<RecyclerView, EpisodeListWatch>()
+    private val fragmentEpisodeLists = java.util.WeakHashMap<Fragment, RecyclerView>()
     private val pendingEpisodeListRenders = java.util.Collections.newSetFromMap(
         java.util.WeakHashMap<RecyclerView, Boolean>()
     )
@@ -115,9 +116,9 @@ internal object EpisodeTitleStyle {
                     scheduleFirstBindRenders(fragment)
                 }
                 override fun onFragmentViewDestroyed(
-                    fm: FragmentManager, fragment: Fragment, view: View
+                    fm: FragmentManager, fragment: Fragment
                 ) {
-                    releaseEpisodeListWatch(view, fragment.activity as? FragmentActivity)
+                    releaseEpisodeListWatch(fragment)
                 }
             }, true
         )
@@ -220,6 +221,7 @@ internal object EpisodeTitleStyle {
         }
         adapter.registerAdapterDataObserver(observer)
         episodeListWatches[list] = EpisodeListWatch(adapter, observer)
+        fragmentEpisodeLists[fragment] = list
     }
 
     private fun scheduleEpisodeListRender(
@@ -243,13 +245,8 @@ internal object EpisodeTitleStyle {
         }
     }
 
-    private fun releaseEpisodeListWatch(root: View, activity: FragmentActivity?) {
-        val host = activity ?: return
-        val id = host.resources.getIdentifier(
-            "result_episodes", "id", host.packageName
-        )
-        if (id == 0) return
-        val list = root.findViewById<RecyclerView>(id) ?: return
+    private fun releaseEpisodeListWatch(fragment: Fragment) {
+        val list = fragmentEpisodeLists.remove(fragment) ?: return
         episodeListWatches.remove(list)?.let {
             it.adapter.unregisterAdapterDataObserver(it.observer)
         }
