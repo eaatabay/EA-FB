@@ -31,7 +31,7 @@ test("V42 long seasons are split into bounded title requests instead of skipped"
   assert.match(provider,/numbers\.chunked\(10\)/);
   assert.match(provider,/var remaining = 48/);
   assert.doesNotMatch(provider,/numbers\.size > 12/);
-  assert.match(provider,/source_language=\$safeSource/);
+  assert.match(provider,/episode-titles\/\$safeSource\?episodes=\$query/);
 });
 
 test("normal plugin retains production relay pin until explicit staging build",()=>{
