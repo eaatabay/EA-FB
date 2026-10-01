@@ -613,6 +613,8 @@ test("V42 localizes missing titles in one structured AI batch", async () => {
   assert.equal(aiCalls[0].input.response_format.type,"json_schema");
   assert.match(aiCalls[0].input.messages[0].content,/İngilizceyi ara dil olarak kullanma/);
   assert.match(aiCalls[0].input.messages[0].content,/çatallar değildir/);
+  assert.match(aiCalls[0].input.messages[0].content,/Senden nefret ediyorum/);
+  assert.match(aiCalls[0].input.messages[0].content,/Hell no!/);
   const aiRequest=JSON.parse(aiCalls[0].input.messages[1].content);
   assert.equal(aiRequest.episodes[0].context,
     "A backup plan becomes necessary after the first move fails.");
@@ -730,3 +732,87 @@ test("V42 D1 hit bypasses AI and reuses original source title", async () => {
   });
 });
 
+
+
+test("official TMDb titles clear only their own stale AI rows in one D1 statement", async () => {
+  const {env,ctx}=setup();
+  const statements=[];
+  const background=[];
+  ctx.waitUntil = task => {background.push(Promise.resolve(task));};
+  env.TITLE_CACHE={
+    prepare(sql) {
+      return {bind(...params) {
+        return {
+          run:async()=>{statements.push({sql,params});},
+          all:async()=>({results:[]}),
+        };
+      }};
+    }
+  };
+  globalThis.fetch=async url => {
+    const n=Number(String(url).match(/episode\/(\d+)\/translations$/)?.[1]);
+    const official={2:"Gerçek Başlık",5:"Yeni Resmî Başlık"};
+    return new Response(JSON.stringify({translations:[
+      {iso_639_1:"en",iso_3166_1:"US",data:{name:"Original "+n}},
+      {iso_639_1:"tr",iso_3166_1:"TR",data:{
+        // Episode 7 is an English copy, not an authoritative translation.
+        name:n===7?"Original 7":official[n] || ""
+      }}
+    ]}),{headers:{"content-type":"application/json"}});
+  };
+  const res=await gateway.fetch(new Request(
+    "https://example.workers.dev/v1/tv/1413/season/13/episode-titles/en?episodes=2,5,7&language=tr-TR"
+  ),env,ctx);
+  assert.deepEqual(await res.json(),{titles:{"2":"Gerçek Başlık","5":"Yeni Resmî Başlık"}});
+  await Promise.all(background);
+  assert.equal(statements.length,1,"clean up with one D1 statement");
+  assert.match(statements[0].sql,/DELETE FROM episode_title_cache/);
+  assert.match(statements[0].sql,/WHERE series_id=\? AND season=\? AND episode IN \(\?,\?\)/);
+  assert.deepEqual(statements[0].params,[1413,13,2,5],
+    "copied English title must never delete its AI cache row");
+});
+
+test("unverified, copied or generic Turkish metadata never deletes AI cache", async () => {
+  const {env,ctx}=setup();
+  let deletions=0;
+  const background=[];
+  ctx.waitUntil=task=>{background.push(Promise.resolve(task));};
+  env.TITLE_CACHE={
+    prepare(sql) {
+      if (sql.includes("DELETE FROM episode_title_cache")) deletions++;
+      return {bind(){return {
+        run:async()=>{},
+        all:async()=>({results:[]}),
+      };}};
+    }
+  };
+  globalThis.fetch=async url=>{
+    const n=Number(String(url).match(/episode\/(\d+)\/translations$/)?.[1]);
+    return new Response(JSON.stringify({translations:[
+      {iso_639_1:"en",iso_3166_1:"US",data:{name:n===3?"Chapter 3":"Hell No"}},
+      {iso_639_1:"tr",iso_3166_1:"TR",data:{name:n===3?"Bölüm 3":"Hell No"}}
+    ]}),{headers:{"content-type":"application/json"}});
+  };
+  const res=await gateway.fetch(new Request(
+    "https://example.workers.dev/v1/tv/1413/season/13/episode-titles/en?episodes=3,8&language=tr-TR"
+  ),env,ctx);
+  assert.deepEqual(await res.json(),{titles:{},skipped:[3]});
+  await Promise.all(background);
+  assert.equal(deletions,0);
+});
+
+test("D1 cleanup failure cannot hide an official TMDb title",async()=>{
+  const {env,ctx}=setup();
+  const background=[];
+  ctx.waitUntil=task=>{background.push(Promise.resolve(task));};
+  env.TITLE_CACHE={prepare:()=>{throw Error("STAGING_D1_UNAVAILABLE");}};
+  globalThis.fetch=async()=>new Response(JSON.stringify({translations:[
+    {iso_639_1:"en",iso_3166_1:"US",data:{name:"The Last Episode"}},
+    {iso_639_1:"tr",iso_3166_1:"TR",data:{name:"Son Bölüm"}}
+  ]}),{headers:{"content-type":"application/json"}});
+  const res=await gateway.fetch(new Request(
+    "https://example.workers.dev/v1/tv/1413/season/13/episode-titles/en?episodes=9&language=tr-TR"
+  ),env,ctx);
+  assert.deepEqual(await res.json(),{titles:{"9":"Son Bölüm"}});
+  await Promise.all(background);
+});
