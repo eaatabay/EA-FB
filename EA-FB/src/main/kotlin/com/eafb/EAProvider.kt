@@ -530,7 +530,11 @@ class EAProvider : MainAPI() {
      */
     private fun titleBatches(candidates: List<EpisodeTitleCandidate>): List<EpisodeTitleBatch> {
         val batches = mutableListOf<EpisodeTitleBatch>()
-        candidates.groupBy { it.season }.toSortedMap().forEach { (seasonNo, rows) ->
+        // Newest seasons go first so a 13th/37th season never waits behind
+        // hundreds of older uncached episodes; all seasons still remain in the queue.
+        candidates.groupBy { it.season }
+            .toSortedMap(compareByDescending<Int> { it })
+            .forEach { (seasonNo, rows) ->
             if (seasonNo <= 0) return@forEach
             val numbers = rows.map { it.episode }.filter { it > 0 }.distinct().sorted()
             numbers.chunked(10).forEach { chunk ->
