@@ -1,4 +1,4 @@
-# V44 staging-only deployment. Never deploy production, never expose TMDb secrets. Long-series missing-title localization.
+# RED-only deployment: V44 Android + staging Worker official-TMDb title precedence and D1 AI-cache cleanup. Never production.
 name: EA-FB V6 staging deploy
 on:
   workflow_dispatch:
@@ -55,6 +55,10 @@ jobs:
         run: |
           npm install --no-audit --no-fund
           npm test
+      - name: Verify scoped official-title cache cleanup before RED deployment
+        working-directory: worker
+        run: |
+          node --test --test-name-pattern="official TMDb titles clear only their own stale AI rows|unverified, copied or generic Turkish metadata never deletes AI cache|D1 cleanup failure cannot hide an official TMDb title" test/catalog.test.mjs
       - name: Provision V44 staging title cache and deploy Worker
         working-directory: worker
         env:
