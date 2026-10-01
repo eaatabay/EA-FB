@@ -36,7 +36,7 @@ function json(object, status = 200, ttl = 0) {
   });
 }
 
-const TITLE_TRANSLATION_VERSION = "v43-localize-3";
+const TITLE_TRANSLATION_VERSION = "v45-localize-4";
 const TITLE_AI_MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
 const titleBatchInFlight = new Set();
 
@@ -451,7 +451,7 @@ export default {
     cacheUrl.searchParams.set("_ea_fb_rating", env.OMDB_API_KEY ? "omdb-v1" : "tmdb-v1");
     if (catalog.batchEpisodeTitles) {
       cacheUrl.searchParams.set("_ea_fb_titles",
-        env.AI?.run ? "tmdb-plus-ai-v44" : "tmdb-only-v44");
+        env.AI?.run ? "tmdb-plus-ai-v45" : "tmdb-only-v45");
     }
     const cacheKey = new Request(cacheUrl.toString(), { method: "GET" });
     const cache = typeof caches === "undefined" ? null : caches.default;
