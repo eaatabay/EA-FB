@@ -510,34 +510,32 @@ class EAProvider : MainAPI() {
             Regex("""(?i)^bölüm\s*$escapedEpisode$"""),
             Regex("""(?i)^$escapedEpisode\.?\s*bölüm$"""),
             Regex("""(?i)^episode\s*$escapedEpisode$"""),
-            Regex("""(?i)^episode\s*#?\s*\d+\.$escapedEpisode$""")
+            Regex("""(?i)^episode\s*#?\s*\d+\.$escapedEpisode$"""),
+            Regex("""(?i)^chapter\s*#?\s*$escapedEpisode$""")
         ).any { it.matches(normalized) }
     }
 
     private data class EpisodeTitleBatch(val season: Int, val episodes: List<Int>)
+    private data class EpisodeTitleCandidate(val season: Int, val episode: Int)
+    private data class TvEpisodeLoad(
+        val episodes: List<Episode>,
+        val titleCandidates: List<EpisodeTitleCandidate>
+    )
 
     /**
-     * V42 title enrichment stays bounded per detail open, but a long season is
-     * split into requests instead of being discarded just because it has >12 episodes.
+     * V44: queue only episodes whose Turkish season payload has no usable title.
+     * There is deliberately no cross-series episode cap: every normal season can
+     * reach lazy enrichment, while each Worker request remains bounded to 10.
      */
-    private fun titleBatches(episodes: List<Episode>): List<EpisodeTitleBatch> {
-        var remaining = 48
+    private fun titleBatches(candidates: List<EpisodeTitleCandidate>): List<EpisodeTitleBatch> {
         val batches = mutableListOf<EpisodeTitleBatch>()
-        episodes.groupBy { it.season }.toSortedMap(compareBy<Int?> { it ?: Int.MAX_VALUE })
-            .forEach { (season, rows) ->
-                if (remaining <= 0) return@forEach
-                val seasonNo = season?.takeIf { it > 0 } ?: return@forEach
-                val numbers = rows.mapNotNull { it.episode?.takeIf { number -> number > 0 } }
-                    .distinct().sorted()
-                for (chunk in numbers.chunked(10)) {
-                    if (remaining <= 0) break
-                    val bounded = chunk.take(remaining)
-                    if (bounded.isNotEmpty()) {
-                        batches += EpisodeTitleBatch(seasonNo, bounded)
-                        remaining -= bounded.size
-                    }
-                }
+        candidates.groupBy { it.season }.toSortedMap().forEach { (seasonNo, rows) ->
+            if (seasonNo <= 0) return@forEach
+            val numbers = rows.map { it.episode }.filter { it > 0 }.distinct().sorted()
+            numbers.chunked(10).forEach { chunk ->
+                if (chunk.isNotEmpty()) batches += EpisodeTitleBatch(seasonNo, chunk)
             }
+        }
         return batches
     }
 
@@ -563,9 +561,13 @@ class EAProvider : MainAPI() {
     }
 
     private fun scheduleTurkishEpisodeTitles(
-        id: Int, seriesUrl: String, episodes: List<Episode>, sourceLanguage: String
+        id: Int,
+        seriesUrl: String,
+        episodes: List<Episode>,
+        titleCandidates: List<EpisodeTitleCandidate>,
+        sourceLanguage: String
     ) {
-        val batches = titleBatches(episodes)
+        val batches = titleBatches(titleCandidates)
         if (batches.isEmpty()) return
         episodeTitleScope.launch {
             val resolved = mutableListOf<EpisodeTitleStyle.TitleEpisode>()
@@ -594,22 +596,23 @@ class EAProvider : MainAPI() {
     }
 
     /** Only metadata: actual episode sources will be resolved by adapters later. */
-    private suspend fun tvEpisodes(id: Int, seasonList: JSONArray?, fallbackBackdrop: String?): List<Episode> {
-        if (seasonList == null) return emptyList()
+    private suspend fun tvEpisodes(
+        id: Int, seasonList: JSONArray?, fallbackBackdrop: String?
+    ): TvEpisodeLoad {
+        if (seasonList == null) return TvEpisodeLoad(emptyList(), emptyList())
         val seasons = (0 until seasonList.length()).mapNotNull { i ->
             seasonList.optJSONObject(i)?.optInt("season_number", -1)?.takeIf { it >= 0 }
         }.distinct().sorted()
-        return seasons.chunked(4).flatMap { batch ->
+
+        val loaded = seasons.chunked(4).flatMap { batch ->
             coroutineScope {
                 batch.map { number ->
                     async {
                         val season = getJson("/tv/$id/season/$number")
-                            ?: return@async emptyList<Episode>()
+                            ?: return@async TvEpisodeLoad(emptyList(), emptyList())
                         val episodeRows = season.optJSONArray("episodes")
-                            ?: return@async emptyList<Episode>()
-                        // V35: avoid the second season request when Turkish already has
-                        // every field we use. Large libraries should pay for EN only when at
-                        // least one episode actually needs a title/overview/still fallback.
+                            ?: return@async TvEpisodeLoad(emptyList(), emptyList())
+
                         val needsEnglish = (0 until episodeRows.length()).any { idx ->
                             val row = episodeRows.optJSONObject(idx) ?: return@any false
                             val episodeNo = row.optInt("episode_number").takeIf { it > 0 }
@@ -627,59 +630,81 @@ class EAProvider : MainAPI() {
                                 row.optInt("episode_number").takeIf { it > 0 }?.let { it to row }
                             }
                         }.toMap()
-                        (0 until episodeRows.length()).mapNotNull { i ->
+
+                        val titleCandidates = mutableListOf<EpisodeTitleCandidate>()
+                        val episodes = (0 until episodeRows.length()).mapNotNull { i ->
                             val entry = episodeRows.optJSONObject(i)
                                 ?: return@mapNotNull null
                             val episodeNo = entry.optInt("episode_number")
                                 .takeIf { it > 0 } ?: return@mapNotNull null
-                            // Identity is season + episode, never episode number alone.
-                            // Also require the EN fallback row to belong to this same season.
                             val english = englishByEpisode[episodeNo]?.takeIf { row ->
                                 row.optInt("season_number", number) == number &&
                                     row.optInt("episode_number") == episodeNo
                             }
-                            val date = entry.optString("air_date").ifBlank { english?.optString("air_date").orEmpty() }
+                            val date = entry.optString("air_date")
+                                .ifBlank { english?.optString("air_date").orEmpty() }
                             val rating = entry.optDouble("vote_average", 0.0)
                                 .takeIf { it > 0.1 && it <= 10.0 &&
                                     entry.optInt("vote_count") > 0 }
-                            val text = entry.optString("overview").ifBlank { english?.optString("overview").orEmpty() }
+                            val text = entry.optString("overview")
+                                .ifBlank { english?.optString("overview").orEmpty() }
                             val localizedName = entry.optString("name")
                             val englishName = english?.optString("name").orEmpty()
-                            // V35: never block a detail page on one HTTP request per episode.
-                            // TMDb's season payload is the fast Turkish source; if its title is
-                            // only a generic "Bölüm N", use the already-fetched EN season row.
-                            // The exact translations relay stays available server-side for a
-                            // future lazy/cache-backed enrichment path, but is not in load().
+                            val missingTurkishTitle = genericEpisodeName(localizedName, episodeNo)
+
+                            // Specials never consume normal-season title enrichment.
+                            // Official Turkish TMDb titles bypass the queue completely.
+                            if (number > 0 && missingTurkishTitle) {
+                                titleCandidates += EpisodeTitleCandidate(number, episodeNo)
+                            }
+
+                            // Do not let AI invent artistic names for generic labels.
+                            // Chapter/Episode placeholders are localized deterministically.
                             val episodeName = when {
-                                !genericEpisodeName(localizedName, episodeNo) -> localizedName
+                                !missingTurkishTitle -> localizedName
                                 !genericEpisodeName(englishName, episodeNo) -> englishName
+                                localizedName.isNotBlank() || englishName.isNotBlank() ->
+                                    "Bölüm $episodeNo"
                                 else -> ""
                             }
-                            val still = entry.optString("still_path").ifBlank { english?.optString("still_path").orEmpty() }
+                            val still = entry.optString("still_path")
+                                .ifBlank { english?.optString("still_path").orEmpty() }
                             newEpisode(
                                 "$mainUrl/tv/$id/season/$number/episode/$episodeNo",
                                 initializer = {
-                                this.name = episodeName.ifBlank { null }
-                                this.season = number
-                                this.episode = episodeNo
-                                posterUrl = image(still, "w500") ?: fallbackBackdrop
-                                val future = date.isNotBlank() && try {
-                                    SimpleDateFormat("yyyy-MM-dd", Locale.ROOT).parse(date)?.time?.let { it > System.currentTimeMillis() } == true
-                                } catch (_: Exception) { false }
-                                score = if (future) null else rating?.let { Score.from10(it) }
-                                description = if (future) {
-                                    text.ifBlank { "Bölüm özeti henüz yayınlanmadı." }
-                                } else text
-                                runTime = entry.optInt("runtime").takeIf { it > 0 }
-                                addDate(date)
+                                    this.name = episodeName.ifBlank { null }
+                                    this.season = number
+                                    this.episode = episodeNo
+                                    posterUrl = image(still, "w500") ?: fallbackBackdrop
+                                    val future = date.isNotBlank() && try {
+                                        SimpleDateFormat("yyyy-MM-dd", Locale.ROOT)
+                                            .parse(date)?.time?.let {
+                                                it > System.currentTimeMillis()
+                                            } == true
+                                    } catch (_: Exception) { false }
+                                    score = if (future) null else rating?.let { Score.from10(it) }
+                                    description = if (future) {
+                                        text.ifBlank { "Bölüm özeti henüz yayınlanmadı." }
+                                    } else text
+                                    runTime = entry.optInt("runtime").takeIf { it > 0 }
+                                    addDate(date)
                                 },
                                 fix = false
                             )
                         }
+                        TvEpisodeLoad(episodes, titleCandidates)
                     }
-                }.awaitAll().flatten()
+                }.awaitAll()
             }
-        }.sortedWith(compareBy({ it.season ?: 0 }, { it.episode ?: 0 }))
+        }
+
+        return TvEpisodeLoad(
+            episodes = loaded.flatMap { it.episodes }
+                .sortedWith(compareBy({ it.season ?: 0 }, { it.episode ?: 0 })),
+            titleCandidates = loaded.flatMap { it.titleCandidates }
+                .distinctBy { it.season to it.episode }
+                .sortedWith(compareBy({ it.season }, { it.episode }))
+        )
     }
 
     override suspend fun load(url: String): LoadResponse {
@@ -776,9 +801,14 @@ class EAProvider : MainAPI() {
         val movieRelated = recs.filterNot { it.url in collectionUrls }
             .distinctBy { it.url }
         return if (isSeries) {
-            val episodes = tvEpisodes(tmdbId, item.optJSONArray("seasons"), backdrop)
+            val episodeLoad = tvEpisodes(tmdbId, item.optJSONArray("seasons"), backdrop)
+            val episodes = episodeLoad.episodes
             scheduleTurkishEpisodeTitles(
-                tmdbId, url, episodes, item.optString("original_language")
+                tmdbId,
+                url,
+                episodes,
+                episodeLoad.titleCandidates,
+                item.optString("original_language")
             )
             // V38: the initial metadata publish happens before season fan-out.
             // Republish after that bounded work so first-open detail rows are
