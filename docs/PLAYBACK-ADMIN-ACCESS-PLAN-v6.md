@@ -74,3 +74,13 @@ Bir sonuç bir **varyanttır**: `sourceId, mediaId, episodeId?, providerDisplayN
 - Admin raporları: film/dizi -> kaynak -> ses türü (TR dublaj / orijinal / diğer / bilinmiyor) -> altyazı dili ve türü -> çözünürlük; ayrıca kaynak -> en çok seçilen içerikler.
 - Kullanıcının araması, kaynak seçmesi ve doğrulanmış oynatma başlangıcı farklı olaylardır; başlatma doğrulanamıyorsa yalnız seçim sayısı gösterilir. Aynı denemenin tekrarlanan bildirimleri çift sayılmaz.
 - Kişi bazında ayrıntılı izleme dökümü varsayılan değildir; toplu içerik istatistikleri tercih edilir. İçerik adı hassas olabileceğinden kullanıcı bilgilendirmesi, tercih ve saklama süresi şartları geçerlidir.
+
+## İleri aşama: kullanıcı deneyimi ve kendi kendine iyileştiren sıralama (öneri)
+- İstemci oynatma başlangıç zamanını güvenilir bildiriyorsa kaynak başına açılış gecikmesinin p50/p95 değerlerini topla; aksi halde yalnız resolver yanıt süresini ölç ve oynatma süresi diye etiketleme.
+- Aranıp sonuç bulunamayan içerikleri film/dizi TMDb kimliği bazında toplulaştır; yazım hatalı sorgular ve katalogda bulunmayan başlıklar ayrıştırılır.
+- Kullanıcının kısa sürede başka kaynağa geçişini `quickSwitch` olarak say; bunu tek başına hata veya kalite kusuru sayma.
+- Otomatik onarım başarısını anlık test ve 10/60 dakika sonra kalıcılık olarak ayrı değerlendir. Yeniden arıza oranını raporla.
+- Saatlik hata ve başarısız deneme oranları, veri yeterliliği ve kaynak bazında kontrol aralıkları gösterilsin.
+- Kaynak sıralamasında önce dil tercihi ve doğrulanmış kalite, sonra sağlık/başarılı başlangıç oranı/yanıt süresi kullanılabilir; az örneklemli yeni kaynaklar sonsuza kadar geri plana düşmesin, bozuk kaynak için güvenli cooldown ve otomatik geri dönüş olsun. Admin açıklanabilir karar gerekçesini görsün.
+- Admin önerileri yalnız önceden doğrulanmış işlemlerden gelsin: kontrollü tekrar deneme, onaylı son sağlıklı adrese rollback, geçici karantina; otomatik kod üretme, onaysız alan adı ekleme veya DRM/giriş koruması atlatma yok.
+- Kullanıcı etkinliklerinden çıkarılacak ölçümler için şeffaf bilgilendirme ve veri minimizasyonu ilkeleri korunur; bütün ölçümler 'uygulanmış' değil 'planlanmış' statüsündedir.
