@@ -275,3 +275,14 @@ test("V45 resolves every normal-season title lazily while Worker keeps official 
   assert.ok(!episodeTitleStyle.includes("addOnGlobalLayoutListener"));
   assert.ok(!episodeTitleStyle.includes("androidx.recyclerview.widget.RecyclerView"));
 });
+
+test("episode titles repaint after initial row binding and when returning to a detail",()=>{
+  assert.match(episodeTitleStyle,/override fun onFragmentViewCreated[\s\S]*?scheduleFirstBindRenders\(fragment\)/);
+  assert.match(episodeTitleStyle,/override fun onFragmentResumed[\s\S]*?scheduleFirstBindRenders\(fragment\)/);
+  assert.match(episodeTitleStyle,/override fun onActivityResumed[\s\S]*?renderRegistered\(\)/);
+  assert.match(episodeTitleStyle,/listOf\(0L, 250L, 750L, 1600L\)/);
+  assert.match(episodeTitleStyle,/fragment\.view === root && root\.isAttachedToWindow/);
+  assert.match(episodeTitleStyle,/addOnGlobalFocusChangeListener/);
+  assert.match(episodeTitleStyle,/addOnScrollChangedListener/);
+  assert.doesNotMatch(episodeTitleStyle,/addOnGlobalLayoutListener/);
+});
