@@ -135,7 +135,7 @@ test("episode translations relay is exact and sends no localization query", asyn
   assert.equal(new URL(calls[0].url).search, "");
 });
 
-test("V40 batches Turkish episode titles behind one bounded client request", async () => {
+test("V42 batches official Turkish episode titles behind one bounded client request", async () => {
   const { env, ctx, calls } = setup();
   globalThis.fetch = async (url, opts) => {
     calls.push({url, opts});
@@ -147,7 +147,7 @@ test("V40 batches Turkish episode titles behind one bounded client request", asy
     ]}), {headers:{"content-type":"application/json"}});
   };
   const request = new Request(
-    "https://example.workers.dev/v1/tv/247718/season/1/episode-titles?episodes=3,7&language=tr-TR"
+    "https://example.workers.dev/v1/tv/247718/season/1/episode-titles/en?episodes=3,7&language=tr-TR"
   );
   const res = await gateway.fetch(request, env, ctx);
   assert.equal(res.status, 200);
