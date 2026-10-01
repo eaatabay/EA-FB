@@ -523,9 +523,10 @@ class EAProvider : MainAPI() {
     )
 
     /**
-     * V44: queue only episodes whose Turkish season payload has no usable title.
-     * There is deliberately no cross-series episode cap: every normal season can
-     * reach lazy enrichment, while each Worker request remains bounded to 10.
+     * V44: every normal-season episode may reach the authoritative Worker title
+     * resolver. The Worker checks TMDb translations first and only missing Turkish
+     * titles enter D1/AI enrichment. There is deliberately no cross-series cap,
+     * while each request remains bounded to 10 episodes.
      */
     private fun titleBatches(candidates: List<EpisodeTitleCandidate>): List<EpisodeTitleBatch> {
         val batches = mutableListOf<EpisodeTitleBatch>()
@@ -652,9 +653,12 @@ class EAProvider : MainAPI() {
                             val englishName = english?.optString("name").orEmpty()
                             val missingTurkishTitle = genericEpisodeName(localizedName, episodeNo)
 
-                            // Specials never consume normal-season title enrichment.
-                            // Official Turkish TMDb titles bypass the queue completely.
-                            if (number > 0 && missingTurkishTitle) {
+                            // The localized season payload can contain an original-language
+                            // fallback even when no Turkish translation exists. Therefore it cannot
+                            // authoritatively decide whether AI is needed. Send every normal-season
+                            // episode to the Worker; there, official Turkish TMDb translations bypass
+                            // D1/AI and only truly missing titles become AI candidates.
+                            if (number > 0) {
                                 titleCandidates += EpisodeTitleCandidate(number, episodeNo)
                             }
 
