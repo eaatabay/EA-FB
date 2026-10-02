@@ -116,6 +116,8 @@ class MultiSourceEngine(
         if (query.kind != offer.kind) return false
         if (query.season != null &&
             (query.season != offer.season || query.episode != offer.episode)) return false
+        if (query.season != null && query.tmdbId != null &&
+            query.tmdbId != offer.tmdbId) return false
         // An equal external ID must not override a contradicting known release year.
         if (query.year != null && offer.year != null && query.year != offer.year) return false
         if (query.tmdbId != null && offer.tmdbId != null) return query.tmdbId == offer.tmdbId
