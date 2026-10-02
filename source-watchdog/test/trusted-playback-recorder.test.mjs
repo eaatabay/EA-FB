@@ -21,7 +21,7 @@ test("verified playback success writes only after proof and healthy rights grant
   const result=await recordVerifiedPlayback({...opts,
     writeSuccess:async(_db,m,s,at)=>{
       writes++;assert.equal(m,media);assert.equal(s,source);
-      assert.equal(at,nowMs);return {stored:true};
+      assert.equal(at,proof.observedAtMs);return {stored:true};
     }});
   assert.deepEqual(result,{stored:true});
   assert.equal(writes,1);
@@ -80,7 +80,7 @@ test("trusted failure only expires the exact candidate",async()=>{
     writeSuccess:async()=>{successWrites++;},
     expireCandidate:async(_db,m,s,at)=>{
       assert.equal(m,media);assert.equal(s,source);
-      assert.equal(at,nowMs);return {expired:true};
+      assert.equal(at,proof.observedAtMs);return {expired:true};
     },
   });
   assert.deepEqual(result,{expired:true});
