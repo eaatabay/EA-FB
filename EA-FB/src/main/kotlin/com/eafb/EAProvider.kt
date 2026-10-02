@@ -688,7 +688,7 @@ class EAProvider : MainAPI() {
                             val still = entry.optString("still_path")
                                 .ifBlank { english?.optString("still_path").orEmpty() }
                             newEpisode(
-                                "$mainUrl/tv/$id/season/$number/episode/$episodeNo",
+                                PlaybackData.episode(id, number, episodeNo),
                                 initializer = {
                                     this.name = episodeName.ifBlank { null }
                                     this.season = number
@@ -859,7 +859,7 @@ class EAProvider : MainAPI() {
                     ?.takeIf { it > 0 }
             }
         } else {
-            newMovieLoadResponse(title, url, kind, "") {
+            newMovieLoadResponse(title, url, kind, PlaybackData.movie(tmdbId)) {
                 plot = combinedPlot
                 year = yearValue
                 // IMDb/TMDb appear exactly once in explicit tags.
