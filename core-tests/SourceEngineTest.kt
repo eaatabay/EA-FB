@@ -127,6 +127,16 @@ fun main() = runBlocking {
         listOf(insecureOffer, fallbackOffers.first()), 1000) == listOf(
             SourceLink("source-b", "https://licensed.example/episode.m3u8",
                 1080, "tr", null)))
+    val sessionLink = SourceLink("source-b",
+        "https://licensed.example/session.m3u8", 1080, "tr", null,
+        requiresPrivateSession = true)
+    val sessionAdapter = TestAdapter("source-b", listOf(fallbackOffers.first()),
+        links = listOf(sessionLink))
+    val sessionEngine = MultiSourceEngine(listOf(sessionAdapter))
+    check(sessionEngine.resolveFirstAvailable(
+        epQuery, listOf(fallbackOffers.first()), 1000).isEmpty())
+    check(sessionEngine.resolve(
+        listOf(fallbackOffers.first()), 1000).isEmpty())
     check(runCatching {
         fallbackEngine.resolveFirstAvailable(epQuery, fallbackOffers, -1)
     }.isFailure)
