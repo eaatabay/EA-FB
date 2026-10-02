@@ -27,4 +27,18 @@ trap 'rm -rf "$TMP"' EXIT
 kotlinc EA-FB/src/main/kotlin/com/eafb/PlaybackData.kt \
   core-tests/PlaybackDataTest.kt -include-runtime -d "$TMP/playback-data.jar"
 java -jar "$TMP/playback-data.jar"
+
+# The exact episode query also depends on the existing coroutine-based engine.
+KOTLIN_HOME_REAL="$(cd "$(dirname "$(command -v kotlinc)")/.." && pwd)"
+COROUTINES="$KOTLIN_HOME_REAL/lib/kotlinx-coroutines-core-jvm.jar"
+if [ ! -f "$COROUTINES" ]; then
+  echo "Coroutines jar unavailable: exact episode query test not run" >&2
+  exit 2
+fi
+kotlinc -cp "$COROUTINES" EA-FB/src/main/kotlin/com/eafb/Domain.kt \
+  EA-FB/src/main/kotlin/com/eafb/SourceEngine.kt \
+  EA-FB/src/main/kotlin/com/eafb/PlaybackData.kt \
+  EA-FB/src/main/kotlin/com/eafb/PlaybackQuery.kt \
+  core-tests/PlaybackQueryTest.kt -include-runtime -d "$TMP/playback-query.jar"
+java -cp "$TMP/playback-query.jar:$COROUTINES" com.eafb.PlaybackQueryTestKt
 echo "== Offline playback checks complete =="
