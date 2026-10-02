@@ -66,7 +66,7 @@ export async function recordPlaybackSuccess(db, media, source, nowMs,
       quality = excluded.quality,
       last_confirmed_at_ms = excluded.last_confirmed_at_ms,
       expires_at_ms = excluded.expires_at_ms
-    WHERE excluded.last_confirmed_at_ms >= playback_success.last_confirmed_at_ms`)
+    WHERE excluded.last_confirmed_at_ms > playback_success.last_confirmed_at_ms`)
     .bind(key.kind, key.tmdbId, key.season, key.episode,
       candidate.sourceId, candidate.variantId, candidate.audioLanguage,
       candidate.quality, nowMs, expires).run();
