@@ -17,5 +17,30 @@ fun main() = runBlocking {
         "ea-fb:episode:42:3:2", "İsyan", 2026, 1000).isEmpty())
     check(PlaybackLinkBridge.alternatives(
         "ea-fb:live:abc", "Canlı", null, 1000).isEmpty())
+    val offer = MediaOffer("licensed", "Licensed", "İsyan", 2026,
+        MediaKind.MOVIE, "https://licensed.example/movie/42", 42)
+    val link = SourceLink("licensed", "https://licensed.example/movie/42.m3u8",
+        1080, "tr", null)
+    val adapter = object : MediaSourceAdapter {
+        override val id = "licensed"
+        override suspend fun search(query: MediaQuery): List<MediaOffer> = listOf(offer)
+        override suspend fun resolve(offer: MediaOffer): List<SourceLink> = listOf(link)
+    }
+    fun runtime(rights: Set<String>, enabled: Set<String>, healthy: Set<String>) =
+        PlaybackSourceRuntime(listOf(adapter), rights, enabled, healthy)
+    val allowed = runtime(setOf("licensed"), setOf("licensed"), setOf("licensed"))
+    check(allowed.canResolve("ea-fb:movie:42"))
+    check(allowed.alternatives("ea-fb:movie:42", "İsyan", 2026, 1000) == listOf(link))
+    check(allowed.alternatives("ea-fb:episode:42:3:2", "İsyan", 2026, 1000).isEmpty())
+    check(!runtime(emptySet(), setOf("licensed"), setOf("licensed"))
+        .canResolve("ea-fb:movie:42"))
+    check(!runtime(setOf("licensed"), emptySet(), setOf("licensed"))
+        .canResolve("ea-fb:movie:42"))
+    check(!runtime(setOf("licensed"), setOf("licensed"), emptySet())
+        .canResolve("ea-fb:movie:42"))
+    check(runCatching {
+        PlaybackSourceRuntime(listOf(adapter, adapter), setOf("licensed"),
+            setOf("licensed"), setOf("licensed"))
+    }.isFailure)
     println("PASS: V49 catalog bridge fails closed without live grants")
 }
