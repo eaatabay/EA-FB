@@ -17,15 +17,27 @@ data class MediaOffer(
     val year: Int?,
     val kind: MediaKind,
     val pageUrl: String,
-    val tmdbId: Int? = null
-)
+    val tmdbId: Int? = null,
+    val season: Int? = null,
+    val episode: Int? = null
+) {
+    init { require((season == null && episode == null) ||
+        (kind == MediaKind.SERIES && season != null && season >= 0 &&
+            episode != null && episode > 0)) }
+}
 
 data class MediaQuery(
     val title: String,
     val year: Int?,
     val kind: MediaKind,
-    val tmdbId: Int? = null
-)
+    val tmdbId: Int? = null,
+    val season: Int? = null,
+    val episode: Int? = null
+) {
+    init { require((season == null && episode == null) ||
+        (kind == MediaKind.SERIES && season != null && season >= 0 &&
+            episode != null && episode > 0)) }
+}
 
 /** Implement only for sources that permit integration. */
 interface MediaSourceAdapter {
@@ -102,6 +114,8 @@ class MultiSourceEngine(
 
     private fun sameContent(query: MediaQuery, offer: MediaOffer): Boolean {
         if (query.kind != offer.kind) return false
+        if (query.season != null &&
+            (query.season != offer.season || query.episode != offer.episode)) return false
         // An equal external ID must not override a contradicting known release year.
         if (query.year != null && offer.year != null && query.year != offer.year) return false
         if (query.tmdbId != null && offer.tmdbId != null) return query.tmdbId == offer.tmdbId
