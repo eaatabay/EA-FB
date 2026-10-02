@@ -6,11 +6,16 @@ package com.eafb
  * Only adapters included in a reviewed release can enter installedAdapters.
  */
 class PlaybackSourceRuntime(
-    private val installedAdapters: List<MediaSourceAdapter>,
-    private val releaseApprovedIds: Set<String>,
-    private val userEnabledIds: Set<String>,
-    private val healthyIds: Set<String>
+    installedAdapters: List<MediaSourceAdapter>,
+    releaseApprovedIds: Set<String>,
+    userEnabledIds: Set<String>,
+    healthyIds: Set<String>
 ) {
+    private val installedAdapters = installedAdapters.toList()
+    private val releaseApprovedIds = releaseApprovedIds.toSet()
+    private val userEnabledIds = userEnabledIds.toSet()
+    private val healthyIds = healthyIds.toSet()
+
     init {
         require(installedAdapters.map { it.id }.distinct().size == installedAdapters.size)
         require(installedAdapters.none { it.id.isBlank() })
