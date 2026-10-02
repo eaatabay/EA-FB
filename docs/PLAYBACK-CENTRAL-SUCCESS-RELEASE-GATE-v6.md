@@ -87,7 +87,8 @@ in the episode list. This is a *metadata display bug*, not evidence of
 successful playback. The detail label now uses
 `EpisodeAirPolicy.nextAirDateLabel` (same future-only rule as the
 native `nextAiring` property). `DetailMetaRow` also clears its own
-recycled next-airing holder when the provider has no future date.
+recycled next-airing holder when the provider has no future date,
+including after a detail page remains open across the airing-day boundary.
 The offline pure-Kotlin date regression passed locally for seven
 future/past/invalid cases across UTC and Europe/Istanbul; a full Android/UI build and Mi Box visual
 check remain required. No live staging publish was performed.
