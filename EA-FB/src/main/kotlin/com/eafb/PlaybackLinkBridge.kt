@@ -15,6 +15,17 @@ object PlaybackLinkBridge {
 
     fun isCatalogIdentity(data: String): Boolean = PlaybackData.parse(data) != null
 
+    /**
+     * Avoid even requesting catalog metadata when the release has no
+     * independently approved, user-enabled, healthy adapters.
+     */
+    fun canResolve(data: String): Boolean =
+        isCatalogIdentity(data) && PlaybackSourceGate.permitted(
+            installedAdapters, releaseApprovedIds, userEnabledIds, healthyIds
+        ).isNotEmpty()
+
+
+
     suspend fun alternatives(
         data: String,
         title: String,
