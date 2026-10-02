@@ -118,6 +118,7 @@ class MultiSourceEngine(
                 }
             }.awaitAll().flatten()
         SourcePicker.preferred(links, nowMillis, preferredLanguage, maxQuality)
+            .filter { it.quality == null || it.quality in 1..maxQuality }
     }
 
     /**
@@ -164,7 +165,8 @@ class MultiSourceEngine(
             val selected = SourcePicker.preferred(
                 links, nowMillis, preferredLanguage, maxQuality
             )
-            if (selected.isNotEmpty()) return selected
+            val compatible = selected.filter { it.quality == null || it.quality in 1..maxQuality }
+            if (compatible.isNotEmpty()) return compatible
         }
         return emptyList()
     }
