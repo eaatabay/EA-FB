@@ -25,4 +25,35 @@ object PlaybackSourceGate {
 
     fun query(data: String, title: String, year: Int?): MediaQuery? =
         PlaybackQuery.fromData(data, title, year)
+
+    /**
+     * Discovery and resolution remain inactive without all three independent
+     * permissions. This pure orchestration layer does not change V49's UI,
+     * register adapters, grant rights, persist URLs or attest playback.
+     */
+    suspend fun resolve(
+        data: String,
+        title: String,
+        year: Int?,
+        installed: List<MediaSourceAdapter>,
+        releaseApprovedIds: Set<String>,
+        userEnabledIds: Set<String>,
+        healthyIds: Set<String>,
+        nowMillis: Long,
+        preferredProviderIds: List<String> = emptyList(),
+        preferredLanguage: String = "tr",
+        maxQuality: Int = 1080
+    ): List<SourceLink> {
+        val media = query(data, title, year) ?: return emptyList()
+        val approved = permitted(installed, releaseApprovedIds, userEnabledIds, healthyIds)
+        if (approved.isEmpty()) return emptyList()
+        val engine = MultiSourceEngine(approved)
+        val offers = engine.find(media)
+        if (offers.isEmpty()) return emptyList()
+        return engine.resolveFirstAvailable(
+            media, offers, nowMillis,
+            preferredProviderIds.filter { id -> approved.any { it.id == id } }.distinct(),
+            preferredLanguage, maxQuality
+        )
+    }
 }
