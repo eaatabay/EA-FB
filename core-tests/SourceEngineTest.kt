@@ -140,6 +140,17 @@ fun main() = runBlocking {
     check(sessionEngine.resolve(
         listOf(fallbackOffers.first()), 1000).isEmpty())
     check(runCatching {
+        fallbackEngine.resolve(listOf(fallbackOffers.first()), -1)
+    }.isFailure)
+    check(runCatching {
+        fallbackEngine.resolve(listOf(fallbackOffers.first()), 1000,
+            maxQuality = 0)
+    }.isFailure)
+    check(runCatching {
+        fallbackEngine.resolveFirstAvailable(epQuery, fallbackOffers, 1000,
+            maxQuality = 0)
+    }.isFailure)
+    check(runCatching {
         fallbackEngine.resolveFirstAvailable(epQuery, fallbackOffers, -1)
     }.isFailure)
     println("PASS: source-engine + exact-episode assertions")
