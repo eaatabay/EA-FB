@@ -1,30 +1,28 @@
 package com.eafb
 
 /**
- * CloudStream-independent entry point for future catalog playback.
- *
- * No source is activated merely by shipping this code. An independently
- * reviewed release must provide approved adapter IDs, user preferences and
- * current health. The default V49-compatible state is deliberately empty.
+ * Explicit, immutable playback adapter configuration. No UI setting or
+ * remotely supplied flag can add an adapter or grant distribution rights.
+ * Only adapters included in a reviewed release can enter installedAdapters.
  */
-object PlaybackLinkBridge {
-    private val installedAdapters: List<MediaSourceAdapter> = emptyList()
-    private val releaseApprovedIds: Set<String> = emptySet()
-    private val userEnabledIds: Set<String> = emptySet()
-    private val healthyIds: Set<String> = emptySet()
+class PlaybackSourceRuntime(
+    private val installedAdapters: List<MediaSourceAdapter>,
+    private val releaseApprovedIds: Set<String>,
+    private val userEnabledIds: Set<String>,
+    private val healthyIds: Set<String>
+) {
+    init {
+        require(installedAdapters.map { it.id }.distinct().size == installedAdapters.size)
+        require(installedAdapters.none { it.id.isBlank() })
+    }
 
-    fun isCatalogIdentity(data: String): Boolean = PlaybackData.parse(data) != null
-
-    /**
-     * Avoid even requesting catalog metadata when the release has no
-     * independently approved, user-enabled, healthy adapters.
-     */
-    fun canResolve(data: String): Boolean =
-        isCatalogIdentity(data) && PlaybackSourceGate.permitted(
+    private fun permitted(): List<MediaSourceAdapter> =
+        PlaybackSourceGate.permitted(
             installedAdapters, releaseApprovedIds, userEnabledIds, healthyIds
-        ).isNotEmpty()
+        )
 
-
+    fun canResolve(data: String): Boolean =
+        PlaybackData.parse(data) != null && permitted().isNotEmpty()
 
     suspend fun alternatives(
         data: String,
@@ -32,12 +30,34 @@ object PlaybackLinkBridge {
         year: Int?,
         nowMillis: Long
     ): List<SourceLink> {
-        if (!isCatalogIdentity(data) || installedAdapters.isEmpty() ||
-            releaseApprovedIds.isEmpty() || userEnabledIds.isEmpty() ||
-            healthyIds.isEmpty()) return emptyList()
+        if (!canResolve(data)) return emptyList()
         return PlaybackSourceGate.alternatives(
-            data, title, year, installedAdapters, releaseApprovedIds,
+            data, title, year, permitted(), releaseApprovedIds,
             userEnabledIds, healthyIds, nowMillis
         )
     }
+}
+
+/**
+ * V49-compatible default: no unreviewed sources, no network discovery,
+ * no credential sharing. Wiring a reviewed runtime is a separate release step.
+ */
+object PlaybackLinkBridge {
+    private val runtime = PlaybackSourceRuntime(
+        installedAdapters = emptyList(),
+        releaseApprovedIds = emptySet(),
+        userEnabledIds = emptySet(),
+        healthyIds = emptySet()
+    )
+
+    fun isCatalogIdentity(data: String): Boolean = PlaybackData.parse(data) != null
+
+    fun canResolve(data: String): Boolean = runtime.canResolve(data)
+
+    suspend fun alternatives(
+        data: String,
+        title: String,
+        year: Int?,
+        nowMillis: Long
+    ): List<SourceLink> = runtime.alternatives(data, title, year, nowMillis)
 }
