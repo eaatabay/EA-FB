@@ -3,6 +3,7 @@ import {playbackKey} from "./playback-success.mjs";
 const NONCE = /^[A-Za-z0-9_-]{22,64}$/;
 const SOURCE = /^[a-z][a-z0-9-]{2,63}$/;
 const VARIANT = /^[a-zA-Z0-9][a-zA-Z0-9_.:-]{0,63}$/;
+const LANGUAGE = /^[a-z]{2,3}(?:-[a-z]{2,8})?$/;
 const MAX_AGE_MS = 60_000;
 
 /**
@@ -19,6 +20,10 @@ export function playbackObserverMessage(event) {
   if (!["success","failure"].includes(event?.outcome) ||
       !SOURCE.test(event?.source?.sourceId ?? "") ||
       !VARIANT.test(event?.source?.variantId ?? "") ||
+      !LANGUAGE.test(event?.source?.audioLanguage ?? "und") ||
+      (event?.source?.quality != null &&
+        (!Number.isSafeInteger(event.source.quality) ||
+          event.source.quality < 1 || event.source.quality > 4320)) ||
       !NONCE.test(event?.proof?.eventId ?? "") ||
       !Number.isSafeInteger(event?.proof?.observedAtMs) ||
       event.proof.observedAtMs < 0) {
@@ -29,6 +34,7 @@ export function playbackObserverMessage(event) {
     event.proof.eventId, event.proof.observedAtMs,
     event.outcome, key.kind, key.tmdbId, key.season, key.episode,
     event.source.sourceId, event.source.variantId,
+    event.source.audioLanguage ?? "und", event.source.quality ?? null,
   ]);
 }
 
