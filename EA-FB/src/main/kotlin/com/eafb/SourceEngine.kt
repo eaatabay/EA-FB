@@ -112,6 +112,53 @@ class MultiSourceEngine(
         SourcePicker.preferred(links, nowMillis, preferredLanguage, maxQuality)
     }
 
+    /**
+     * Try a centrally preferred, currently installed adapter first, then
+     * independent fallback offers. This only resolves fresh HTTPS links:
+     * successful discovery is NOT proof that the video actually played.
+     * The caller must pass offers from an approved source search; this method
+     * cannot grant distribution rights or persist playback history.
+     */
+    suspend fun resolveFirstAvailable(
+        query: MediaQuery,
+        offers: List<MediaOffer>,
+        nowMillis: Long,
+        preferredProviderIds: List<String> = emptyList(),
+        preferredLanguage: String = "tr",
+        maxQuality: Int = 1080
+    ): List<SourceLink> {
+        require(nowMillis >= 0)
+        require(preferredProviderIds.distinct().size == preferredProviderIds.size)
+        val installed = adapters.associateBy { it.id }
+        val rank = preferredProviderIds.withIndex().associate { it.value to it.index }
+        val ordered = offers.filter { offer ->
+            installed.containsKey(offer.providerId) && sameContent(query, offer)
+        }.sortedWith(compareBy<MediaOffer> {
+            rank[it.providerId] ?: Int.MAX_VALUE
+        })
+        for (offer in ordered) {
+            val adapter = installed[offer.providerId] ?: continue
+            val links = try {
+                withTimeout(perAdapterTimeoutMs) {
+                    adapter.resolve(offer).filter { link ->
+                        link.provider == adapter.id && link.url.startsWith("https://")
+                    }
+                }
+            } catch (_: TimeoutCancellationException) {
+                emptyList()
+            } catch (cancel: CancellationException) {
+                throw cancel
+            } catch (_: Exception) {
+                emptyList()
+            }
+            val selected = SourcePicker.preferred(
+                links, nowMillis, preferredLanguage, maxQuality
+            )
+            if (selected.isNotEmpty()) return selected
+        }
+        return emptyList()
+    }
+
     private fun sameContent(query: MediaQuery, offer: MediaOffer): Boolean {
         if (query.kind != offer.kind) return false
         if (query.season != null &&
