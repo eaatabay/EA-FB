@@ -141,3 +141,16 @@ test("V37 upcoming badges use season-aware metadata without native play visibili
   assert.doesNotMatch(style, /nativePlay/);
   assert.doesNotMatch(style, /androidx\.recyclerview\.widget\.RecyclerView/);
 });
+
+test("V47 red staging publish requires explicit opt-in and only stages RED files",()=>{
+  const script=read("scripts/publish-v47-red-staging.sh");
+  assert.match(script,/--publish/);
+  assert.match(script,/git branch --show-current/);
+  assert.match(script,/origin\/\$BRANCH/);
+  assert.match(script,/EA_FB_V6_STAGING_VERSION=47/);
+  assert.match(script,/entry\["version"\] == 46/);
+  assert.match(script,/entry\["version"\]==47/);
+  assert.match(script,/changed<=allowed/);
+  assert.match(script,/dist-v6-staging\/EA-FB-V6-STAGING\.cs3/);
+  assert.doesNotMatch(script,/wrangler deploy|git push origin main|dist\/EA-FB\.cs3/);
+});
