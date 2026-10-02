@@ -13,9 +13,12 @@ const row=readFileSync(resolve(root,
   "EA-FB/src/main/kotlin/com/eafb/DetailMetaRow.kt"),"utf8");
 
 test("next-air detail label is guarded by the same future-only date policy",()=>{
-  assert.match(provider,/EpisodeAirPolicy\.nextAirDateLabel\(/);
+  assert.match(provider,/EpisodeAirPolicy\.nearestFuture\(/);
+  assert.match(provider,/listOfNotNull\(nextHint\) \+ episodes\.mapNotNull/);
+  assert.match(provider,/nextAir\?\.let\(EpisodeAirPolicy::label\)/);
   assert.match(policy,/parse\(date, nowMillis\) \?: return null/);
-  assert.match(provider,/nextAiring = nextEpisode\(item, nextAir\)/);
+  assert.match(provider,/nextAiring = nextAir\?\.let/);
+  assert.match(provider,/NextAiring\(it\.episode, it\.dateMillis \/ 1000L, it\.season\)/);
 });
 test("recycled detail fragments clear a missing next airing instead of keeping stale text",()=>{
   assert.match(row,/if \(label == null\) \{/);
@@ -23,5 +26,5 @@ test("recycled detail fragments clear a missing next airing instead of keeping s
   assert.match(row,/findViewById<TextView>\(nextId\)\?\.apply \{/);
   assert.match(row,/text = ""/);
   assert.match(row,/nextEpisodeUntilMillis/);
-  assert.match(row,/System\\.currentTimeMillis\\(\\) < until/);
+  assert.match(row,/System\.currentTimeMillis\(\) < until/);
 });
