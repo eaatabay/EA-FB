@@ -55,7 +55,7 @@ export async function recordPlaybackSuccess(db, media, source, nowMs,
   const expires = nowMs + ttlMs;
   // Source approval/health MUST be verified by the caller; this function
   // deliberately accepts no URL and is not wired to an unauthenticated route.
-  await db.prepare(`INSERT INTO playback_success
+  const result = await db.prepare(`INSERT INTO playback_success
     (media_kind, tmdb_id, season, episode, source_id, variant_id,
      audio_language, quality, confirmed_count, last_confirmed_at_ms, expires_at_ms)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?)
@@ -70,7 +70,7 @@ export async function recordPlaybackSuccess(db, media, source, nowMs,
     .bind(key.kind, key.tmdbId, key.season, key.episode,
       candidate.sourceId, candidate.variantId, candidate.audioLanguage,
       candidate.quality, nowMs, expires).run();
-  return {stored:true};
+  return {stored:result?.meta?.changes === 1};
 }
 
 export async function findPlaybackCandidates(db, media, nowMs, limit = 5) {
