@@ -10,6 +10,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 RAW = "https://raw.githubusercontent.com/eaatabay/EA-FB/main/dist"
+STAGING_RAW = "https://raw.githubusercontent.com/eaatabay/EA-FB/develop/post-v49/dist"
 ICON = "https://raw.githubusercontent.com/eaatabay/EA-FB/main/assets/ea-fb-logo.png"
 
 
@@ -81,14 +82,15 @@ def stage(root=ROOT, staging=False):
     entry["iconUrl"] = ICON
     entry["fileSize"] = output.stat().st_size
     entry["repositoryUrl"] = "https://github.com/eaatabay/EA-FB"
-    entry["url"] = RAW + "/EA-FB.cs3"
+    dist_url = STAGING_RAW if staging else RAW
+    entry["url"] = dist_url + "/EA-FB.cs3"
     (dist / "plugins.json").write_text(json.dumps(entries, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     (dist / "repo.json").write_text(json.dumps({
         "name": "EA-FB",
         "iconUrl": ICON,
         "description": "Tek eklentide film, dizi ve izinli canlı TV",
         "manifestVersion": 1,
-        "pluginLists": [RAW + "/plugins.json"],
+        "pluginLists": [dist_url + "/plugins.json"],
     }, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(f"Staged {output.name}: {output.stat().st_size} bytes")
     return dist
