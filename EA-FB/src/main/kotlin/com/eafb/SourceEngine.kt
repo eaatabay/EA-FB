@@ -93,6 +93,8 @@ class MultiSourceEngine(
         val lookup = adapters.associateBy { it.id }
         // A caller may supply offers directly; do not trust them merely because
         // their provider ID is installed. Cap work and reject malformed origins.
+        require(nowMillis >= 0)
+        require(maxQuality > 0)
         val links = offers.asSequence()
             .filter { it.pageUrl.startsWith("https://") }
             .distinctBy { it.providerId to it.pageUrl }
@@ -137,6 +139,7 @@ class MultiSourceEngine(
         maxQuality: Int = 1080
     ): List<SourceLink> {
         require(nowMillis >= 0)
+        require(maxQuality > 0)
         require(preferredProviderIds.distinct().size == preferredProviderIds.size)
         val installed = adapters.associateBy { it.id }
         val rank = preferredProviderIds.withIndex().associate { it.value to it.index }
