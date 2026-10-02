@@ -107,9 +107,9 @@ export async function expirePlaybackCandidate(db, media, source, nowMs) {
   const result = await db.prepare(`UPDATE playback_success
     SET expires_at_ms = ?
     WHERE media_kind = ? AND tmdb_id = ? AND season = ? AND episode = ?
-      AND source_id = ? AND variant_id = ? AND expires_at_ms > ?`)
+      AND source_id = ? AND variant_id = ? AND expires_at_ms > ? AND last_confirmed_at_ms < ?`)
     .bind(nowMs, key.kind, key.tmdbId, key.season, key.episode,
-      candidate.sourceId, candidate.variantId, nowMs).run();
+      candidate.sourceId, candidate.variantId, nowMs, nowMs).run();
   return {expired:(result?.meta?.changes ?? 0) > 0};
 }
 
