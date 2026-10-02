@@ -66,7 +66,7 @@ export async function recordVerifiedPlayback({
   if (event.outcome === "failure") {
     // A failure only expires a previously recorded candidate, never the
     // whole source. Other viewers can retry independent healthy variants.
-    return expireCandidate(db, event.media, source, nowMs);
+    return expireCandidate(db, event.media, source, proof.observedAtMs);
   }
-  return writeSuccess(db, event.media, source, nowMs);
+  return writeSuccess(db, event.media, source, proof.observedAtMs);
 }
