@@ -66,5 +66,15 @@ fun main() = runBlocking {
         setOf("approved", "backup"), "ea-fb:episode:42:3:2").isEmpty())
     check(links(setOf("approved", "backup"), setOf("approved", "backup"),
         setOf("approved", "backup"), "ea-fb:live:test").isEmpty())
+    val alternatives = PlaybackSourceGate.alternatives(movie, "İsyan", 2026,
+        all, setOf("approved", "backup"), setOf("approved", "backup"),
+        setOf("approved", "backup"), 1000)
+    check(alternatives == listOf(playable))
+    check(PlaybackSourceGate.alternatives(movie, "İsyan", 2026,
+        all, setOf("approved", "backup"), setOf("approved"),
+        setOf("approved", "backup"), 1000).isEmpty())
+    check(PlaybackSourceGate.alternatives("ea-fb:live:test", "İsyan", 2026,
+        all, setOf("approved", "backup"), setOf("approved", "backup"),
+        setOf("approved", "backup"), 1000).isEmpty())
     println("PASS: fail-closed source gate, exact identity and approved fallback")
 }
