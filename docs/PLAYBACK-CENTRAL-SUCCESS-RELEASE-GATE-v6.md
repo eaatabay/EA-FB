@@ -88,6 +88,6 @@ successful playback. The detail label now uses
 `EpisodeAirPolicy.nextAirDateLabel` (same future-only rule as the
 native `nextAiring` property). `DetailMetaRow` also clears its own
 recycled next-airing holder when the provider has no future date.
-The offline pure-Kotlin date regression passed locally for five
-future/past/invalid cases; a full Android/UI build and Mi Box visual
+The offline pure-Kotlin date regression passed locally for seven
+future/past/invalid cases across UTC and Europe/Istanbul; a full Android/UI build and Mi Box visual
 check remain required. No live staging publish was performed.
