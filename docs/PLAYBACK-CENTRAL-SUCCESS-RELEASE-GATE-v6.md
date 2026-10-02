@@ -12,20 +12,29 @@ migration is authorized by this document.
   TMDb movie/episode to source ID and variant ID, with no URLs, cookies, user
   identifiers, playback headers or tokens.
 - `playback-success.mjs` reads, updates and expires private D1 candidates.
-- `playback-retention.mjs` offers bounded, manual expiry cleanup; no timer is enabled.
+- `playback-retention.mjs` offers bounded, manual candidate and replay-receipt
+  expiry cleanup; no timer is enabled.
 - `playback-candidate-service.mjs` orders eligible offers from current
   healthy, enabled, registry-approved sources that are **also** present in
   an independent, release-controlled rights grant list.
 - `PlaybackQuery` and `SourceEngine` preserve exact season/episode matching
-  for future adapter resolution; no adapters are currently wired.
+  for future adapter resolution; the engine can try a preferred approved
+  source first and fall back after an empty result, exception or timeout.
+  No adapters are currently wired.
 - `trusted-playback-recorder.mjs` requires an independently verified,
   fresh, source-specific playback observation and current registry health.
-  The default has no verifier, rights grants or public route, so it writes
-  nothing in a deployed release.
+  The private `playback-observer-proof.mjs` verifies HMAC-SHA256 signatures
+  from an independently trusted server-side observer, checks event age and
+  consumes D1 one-time receipts. Signatures bind media, source, variant,
+  language, quality and outcome. `playback-observer-service.mjs` composes
+  that proof with the rights/health-gated recorder. There is no signing
+  observer, server key, rights grant or public route in the release.
 
 ## Not implemented (do not represent as done)
 
-- No actual trusted player-start evidence producer or anti-replay verifier.
+- No actual trusted player-start evidence producer. The private HMAC proof
+  verifier exists, but cannot prove a client played a video unless an
+  independently trusted observer establishes playback before signing.
 - No authenticated consumer route for reading the short-lived candidate
   identities from the CloudStream client.
 - No app-side candidate-to-adapter resolution and automatic fallback.
@@ -43,7 +52,7 @@ migration is authorized by this document.
    user-specific playback links in telemetry or D1.
 3. Define authenticated read and write boundaries with bounded per-client
    request rates, safe cache TTL and minimal event retention.
-4. Apply D1 migration only to an isolated staging DB, test with real D1,
+4. Apply D1 migrations 0003–0005 only to an isolated staging DB, test with real D1,
    verify schema constraints and source/episode isolation.
 5. Wire client read, local fresh link resolution, first-success candidate,
    fallback to remaining approved healthy adapters, and stale-candidate
