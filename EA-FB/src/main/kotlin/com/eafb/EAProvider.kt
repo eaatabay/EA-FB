@@ -916,8 +916,25 @@ class EAProvider : MainAPI() {
             // V49 UI and existing demonstration/live playback paths stay intact.
             // Without separately approved live adapters the bridge returns no
             // links and performs no metadata or third-party network requests.
+            if (!PlaybackLinkBridge.canResolve(data)) return false
+            // The stable playback ID is not a title. Resolve the matching
+            // TMDb metadata through the existing credential-free catalog relay
+            // only after at least one independently permitted adapter exists.
+            val identity = PlaybackData.parse(data) ?: return false
+            val kind = if (identity is PlaybackData.Movie) "movie" else "tv"
+            val id = when (identity) {
+                is PlaybackData.Movie -> identity.tmdbId
+                is PlaybackData.Episode -> identity.tmdbId
+            }
+            val metadata = getJson("/$kind/$id") ?: return false
+            val title = metadata.optString(
+                if (identity is PlaybackData.Movie) "title" else "name"
+            ).trim()
+            if (title.isBlank()) return false
+            val year = mediaYear(metadata,
+                if (identity is PlaybackData.Movie) MediaKind.MOVIE else MediaKind.SERIES)
             val links = PlaybackLinkBridge.alternatives(
-                data, "", null, System.currentTimeMillis()
+                data, title, year, System.currentTimeMillis()
             )
             links.forEach { source ->
                 callback(newExtractorLink(
