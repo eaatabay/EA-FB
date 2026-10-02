@@ -6,7 +6,7 @@ package com.eafb
  * Changing the Worker host requires a reviewed plugin release.
  */
 object CatalogRelayPolicy {
-    const val approvedOrigin = "https://ea-fb-catalog.eaatabay.workers.dev"
+    const val approvedOrigin = "https://ea-fb-catalog-v6-staging.eaatabay.workers.dev"
     private const val MAX_STALE_MS = 24 * 60 * 60_000L
 
     fun approved(rawOrigin: String, status: String): String? =

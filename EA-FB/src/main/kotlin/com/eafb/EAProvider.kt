@@ -42,7 +42,7 @@ import org.json.JSONObject
 
 /** One CloudStream-visible provider. Other modules never register separately. */
 class EAProvider : MainAPI() {
-    override var name = "EA-FB"
+    override var name = "EA-FB V6 STAGING"
     override var mainUrl = "https://api.themoviedb.org/3"
     override var lang = "tr"
     override val supportedTypes = setOf(TvType.Movie, TvType.TvSeries, TvType.Live)
@@ -118,7 +118,7 @@ class EAProvider : MainAPI() {
     )
 
     // This public config contains only a relay URL. The TMDb token is server-side.
-    private val catalogConfigUrl = "https://raw.githubusercontent.com/eaatabay/EA-FB/main/config/backend.json"
+    private val catalogConfigUrl = "https://raw.githubusercontent.com/eaatabay/EA-FB/feature/detail-dual-ratings-v6/config/backend.v6-staging.json"
     @Volatile private var relayBase: String? = null
     @Volatile private var relayCheckedAt: Long = 0L
 
