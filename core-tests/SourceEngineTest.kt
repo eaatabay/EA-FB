@@ -115,6 +115,14 @@ fun main() = runBlocking {
     val mismatchedEngine = MultiSourceEngine(listOf(mismatchedFirst, fallbackB))
     check(mismatchedEngine.resolveFirstAvailable(epQuery, fallbackOffers, 1000,
         listOf("source-a", "source-b")).single().provider == "source-b")
+    val insecureOffer = exactEpisode.copy(
+        providerId = "source-b", pageUrl = "http://untrusted.example/episode")
+    check(fallbackEngine.resolveFirstAvailable(
+        epQuery, listOf(insecureOffer), 1000).isEmpty())
+    check(fallbackEngine.resolve(
+        listOf(insecureOffer), 1000).isEmpty())
+    check(fallbackEngine.resolve(
+        listOf(insecureOffer, fallbackOffers.first()), 1000).isEmpty())
     check(runCatching {
         fallbackEngine.resolveFirstAvailable(epQuery, fallbackOffers, -1)
     }.isFailure)
