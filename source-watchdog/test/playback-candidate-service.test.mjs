@@ -44,7 +44,7 @@ test("history prioritizes only healthy, rights-reviewed registry sources", async
   let readCount=0;
   const result=await orderPlaybackOffers({
     db,media,offers,nowMs:1000,
-    approvedSourceIds:offers.map(x=>x.sourceId),
+    approvedSourceIds:[...new Set(offers.map(x=>x.sourceId))],
     readRegistry:async()=>[
       record("source-a"),record("source-b"),
       record("source-disabled",{config:{enabled:false}}),
