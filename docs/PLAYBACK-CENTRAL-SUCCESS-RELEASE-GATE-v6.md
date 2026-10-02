@@ -78,3 +78,16 @@ migration is authorized by this document.
 - Failure expires only the matching movie/episode/source/variant candidate.
 - Missing verifier, grants, healthy registry or D1 means fail closed, not
   silent bypass.
+
+## 2026-10-02 — stale next-airing detail regression
+
+The reported **Cennetin Doğusu** example showed a 1 October 2026
+"Sonraki bölüm" date on 2 October, despite episode 7 already appearing
+in the episode list. This is a *metadata display bug*, not evidence of
+successful playback. The detail label now uses
+`EpisodeAirPolicy.nextAirDateLabel` (same future-only rule as the
+native `nextAiring` property). `DetailMetaRow` also clears its own
+recycled next-airing holder when the provider has no future date.
+The offline pure-Kotlin date regression passed locally for five
+future/past/invalid cases; a full Android/UI build and Mi Box visual
+check remain required. No live staging publish was performed.
