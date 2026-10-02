@@ -67,7 +67,7 @@ class MultiSourceEngine(
                         withTimeout(perAdapterTimeoutMs) {
                             adapter.search(query)
                                 .asSequence()
-                                .filter { it.providerId == adapter.id && sameContent(query, it) }
+                                .filter { it.providerId == adapter.id && it.pageUrl.startsWith("https://") && sameContent(query, it) }
                                 .take(30)
                                 .toList()
                         }
