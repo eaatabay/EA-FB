@@ -111,3 +111,21 @@ checks; this is not a full repository build, staging CS3 build, deployment or
 Mi Box verification. Do not claim the current compiled staging package
 contains these changes until an actual V6-only Android build is produced and
 published. No main/V5/blue/frozen V46 release is modified here.
+
+
+### V47 RED-only publishing handoff
+
+The current published RED staging manifest remains V46. V47 is not published
+merely by changing Kotlin source or committing a release script.
+`scripts/publish-v47-red-staging.sh --publish` is a deliberately explicit
+Codespaces-only build/publish command: it checks the exact red branch and
+clean synchronized checkout, verifies the frozen V46 manifest, uses a
+temporary **V47** staging-only overlay, compiles and verifies the CS3, and
+pushes only the three `dist-v6-staging/` files. The default overlay still
+builds frozen V46, and production V5/main/blue remain unchanged.
+No GitHub Actions minutes, Cloudflare Worker deployment, source grants,
+or D1 migration are required for this metadata-only client change.
+
+**The command has not been executed from this chat.** The Android SDK/Gradle
+build, actual Git push, and Mi Box acceptance must succeed before marking
+V47 published. If any gate fails, the script stops without claiming success.
