@@ -769,17 +769,9 @@ class EAProvider : MainAPI() {
         // TV detail enhancement: ratings + genres move beside duration when the
         // host exposes its stable result_meta_duration row. Native tags remain
         // populated as a compatibility fallback and are hidden only on success.
-        val nextAir = if (isSeries) upcomingEpisode(item) else null
-        val nextAirDateLabel = if (isSeries) item.optJSONObject("next_episode_to_air")?.let { next ->
-            EpisodeAirPolicy.nextAirDateLabel(
-                next.optString("air_date"),
-                next.optInt("season_number").takeIf { it > 0 },
-                next.optInt("episode_number").takeIf { it > 0 },
-                System.currentTimeMillis()
-            )
-        } else null
-        DetailMetaRow.publish(url, imdbRating, tmdbRating, genreLabels,
-            nextAirDateLabel, nextAir?.unixSeconds?.times(1000L))
+        // The final next-air label is selected AFTER the season fan-out,
+        // because TMDb's next_episode_to_air may still point to yesterday.
+        DetailMetaRow.publish(url, imdbRating, tmdbRating, genreLabels)
         // CloudStream's unlabeled native hero score duplicates these source-labeled
         // chips, so details deliberately show the chips only (no native score).
         val collection = if (!isSeries) {
@@ -823,11 +815,35 @@ class EAProvider : MainAPI() {
                 episodeLoad.titleCandidates,
                 item.optString("original_language")
             )
-            // V38: the initial metadata publish happens before season fan-out.
-            // Republish after that bounded work so first-open detail rows are
-            // rendered against the host views that are about to receive the response.
-            DetailMetaRow.publish(url, imdbRating, tmdbRating, genreLabels,
-            nextAirDateLabel, nextAir?.unixSeconds?.times(1000L))
+            // Combine the authoritative next-episode hint with the already
+            // fetched season rows. The hint can lag a day or more after release.
+            // Missing dates remain unknown, never fabricated.
+            val nextHint = item.optJSONObject("next_episode_to_air")?.let { next ->
+                val season = next.optInt("season_number").takeIf { it > 0 }
+                val episode = next.optInt("episode_number").takeIf { it > 0 }
+                val airing = EpisodeAirPolicy.parse(
+                    next.optString("air_date"), System.currentTimeMillis()
+                )
+                if (season != null && episode != null && airing != null) {
+                    EpisodeAirPolicy.Candidate(season, episode, airing.unixSeconds * 1000L)
+                } else null
+            }
+            val nextAir = EpisodeAirPolicy.nearestFuture(
+                listOfNotNull(nextHint) + episodes.mapNotNull { ep ->
+                    val season = ep.season?.takeIf { it > 0 }
+                    val episode = ep.episode?.takeIf { it > 0 }
+                    val date = ep.date?.takeIf { it > 0 }
+                    if (season != null && episode != null && date != null)
+                        EpisodeAirPolicy.Candidate(season, episode, date)
+                    else null
+                },
+                System.currentTimeMillis()
+            )
+            DetailMetaRow.publish(
+                url, imdbRating, tmdbRating, genreLabels,
+                nextAir?.let(EpisodeAirPolicy::label),
+                nextAir?.dateMillis
+            )
             EpisodeUpcomingStyle.publish(url, episodes.mapNotNull { ep ->
                 ep.date?.takeIf { it > System.currentTimeMillis() }?.let { date ->
                     val season = ep.season
@@ -845,7 +861,9 @@ class EAProvider : MainAPI() {
                 actors = people
                 tags = ratingBadges + genreLabels
                 recommendations = recs
-                nextAiring = nextEpisode(item, nextAir)
+                nextAiring = nextAir?.let {
+                    NextAiring(it.episode, it.dateMillis / 1000L, it.season)
+                }
                 showStatus = when (item.optString("status")) {
                     "Ended", "Canceled" -> ShowStatus.Completed
                     "Returning Series", "In Production" -> ShowStatus.Ongoing
