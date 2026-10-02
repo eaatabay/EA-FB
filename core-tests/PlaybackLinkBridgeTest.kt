@@ -38,6 +38,19 @@ fun main() = runBlocking {
         .canResolve("ea-fb:movie:42"))
     check(!runtime(setOf("licensed"), setOf("licensed"), emptySet())
         .canResolve("ea-fb:movie:42"))
+    val mutableAdapters = mutableListOf<MediaSourceAdapter>(adapter)
+    val mutableRights = mutableSetOf("licensed")
+    val mutableEnabled = mutableSetOf("licensed")
+    val mutableHealthy = mutableSetOf("licensed")
+    val snapshot = PlaybackSourceRuntime(
+        mutableAdapters, mutableRights, mutableEnabled, mutableHealthy
+    )
+    mutableAdapters.clear()
+    mutableRights.clear()
+    mutableEnabled.clear()
+    mutableHealthy.clear()
+    check(snapshot.canResolve("ea-fb:movie:42"))
+    check(snapshot.alternatives("ea-fb:movie:42", "İsyan", 2026, 1000) == listOf(link))
     val freshRuntime = PlaybackSourceRuntime.fromHealthObservations(
         listOf(adapter), setOf("licensed"), setOf("licensed"),
         listOf(SourceHealthObservation("licensed", true, 1000)), 1050, 100)
