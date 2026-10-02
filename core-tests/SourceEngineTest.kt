@@ -94,6 +94,15 @@ fun main() = runBlocking {
     check(fallbackEngine.resolveFirstAvailable(epQuery,
         listOf(exactEpisode.copy(providerId = "unknown")), 1000,
         listOf("unknown")).isEmpty())
+    val throwingFirst = TestAdapter("source-a", emptyList(), fail = true)
+    val failoverEngine = MultiSourceEngine(listOf(throwingFirst, fallbackB))
+    check(failoverEngine.resolveFirstAvailable(epQuery, fallbackOffers, 1000,
+        listOf("source-a", "source-b")).single().provider == "source-b")
+    val slowFirst = TestAdapter("source-a", emptyList(), delayMs = 300)
+    val timeoutEngine = MultiSourceEngine(listOf(slowFirst, fallbackB),
+        perAdapterTimeoutMs = 100)
+    check(timeoutEngine.resolveFirstAvailable(epQuery, fallbackOffers, 1000,
+        listOf("source-a", "source-b")).single().provider == "source-b")
     check(runCatching {
         fallbackEngine.resolveFirstAvailable(epQuery, fallbackOffers, -1)
     }.isFailure)
