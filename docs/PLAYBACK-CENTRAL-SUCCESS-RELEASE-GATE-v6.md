@@ -92,3 +92,22 @@ including after a detail page remains open across the airing-day boundary.
 The offline pure-Kotlin date regression passed locally for seven
 future/past/invalid cases across UTC and Europe/Istanbul; a full Android/UI build and Mi Box visual
 check remain required. No live staging publish was performed.
+
+
+## Next-airing metadata correction — 2026-10-02
+
+`EAProvider.load` now selects the nearest **future calendar day** across
+TMDb's `next_episode_to_air` hint and the already fetched per-season episode
+rows, instead of trusting the hint alone. Episodes with missing air dates are
+not guessed. Special season 0, invalid episode numbers, already aired dates,
+and same-day batch releases are excluded from the future-date label.
+The native CloudStream `nextAiring` and the custom detail label use the same
+selected episode. A stale view is cleared and the label expires when its date
+arrives. Tests cover weekly releases, finales, same-day batches, stale TMDb
+hints, multiple future dates, and Türkiye/UTC local calendar boundaries.
+
+A **manually transcribed copy of the pure Kotlin policy** passed 22 local
+checks; this is not a full repository build, staging CS3 build, deployment or
+Mi Box verification. Do not claim the current compiled staging package
+contains these changes until an actual V6-only Android build is produced and
+published. No main/V5/blue/frozen V46 release is modified here.
