@@ -57,6 +57,15 @@ kotlinc -cp "$COROUTINES" EA-FB/src/main/kotlin/com/eafb/Domain.kt \
   EA-FB/src/main/kotlin/com/eafb/SourceEngine.kt \
   core-tests/SourceEngineTest.kt -include-runtime -d "$TMP/playback-engine.jar"
 java -cp "$TMP/playback-engine.jar:$COROUTINES" com.eafb.SourceEngineTestKt
+echo "== EA-FB V6 fail-closed source gate: offline Kotlin =="
+kotlinc -cp "$COROUTINES" EA-FB/src/main/kotlin/com/eafb/Domain.kt \
+  EA-FB/src/main/kotlin/com/eafb/SourceEngine.kt \
+  EA-FB/src/main/kotlin/com/eafb/PlaybackData.kt \
+  EA-FB/src/main/kotlin/com/eafb/PlaybackQuery.kt \
+  EA-FB/src/main/kotlin/com/eafb/PlaybackSourceGate.kt \
+  core-tests/PlaybackSourceGateTest.kt -include-runtime -d "$TMP/playback-source-gate.jar"
+java -cp "$TMP/playback-source-gate.jar:$COROUTINES" com.eafb.PlaybackSourceGateTestKt
+
 echo "== EA-FB V6 future episode selection: offline Kotlin =="
 kotlinc EA-FB/src/main/kotlin/com/eafb/EpisodeAirPolicy.kt \
   core-tests/EpisodeAirPolicyTest.kt -include-runtime -d "$TMP/episode-air-policy.jar"
