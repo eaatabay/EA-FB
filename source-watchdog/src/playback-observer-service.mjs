@@ -18,7 +18,8 @@ export async function acceptTrustedPlaybackObservation({
   recordEvent = recordVerifiedPlayback,
 } = {}) {
   if (!db?.prepare || !(keyBytes instanceof Uint8Array) ||
-      keyBytes.byteLength < 32 || approvedSourceIds.length === 0)
+      keyBytes.byteLength < 32 || !Array.isArray(approvedSourceIds) ||
+      approvedSourceIds.length === 0)
     throw new Error("playback_observer_disabled");
   const verifier = await createVerifier(db,keyBytes,subtle);
   return recordEvent({db,event,nowMs,approvedSourceIds,
