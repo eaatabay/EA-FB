@@ -5,12 +5,14 @@ from pathlib import Path
 
 MIGRATION = Path(__file__).resolve().parents[1] / "migrations" / "0003_playback_success.sql"
 RETENTION = Path(__file__).resolve().parents[1] / "migrations" / "0004_playback_retention.sql"
+OBSERVER = Path(__file__).resolve().parents[1] / "migrations" / "0005_playback_observer_receipts.sql"
 
 class PlaybackSuccessMigrationTests(unittest.TestCase):
     def setUp(self):
         self.db = sqlite3.connect(":memory:")
         self.db.executescript(MIGRATION.read_text(encoding="utf-8"))
         self.db.executescript(RETENTION.read_text(encoding="utf-8"))
+        self.db.executescript(OBSERVER.read_text(encoding="utf-8"))
 
     def tearDown(self):
         self.db.close()
@@ -31,6 +33,19 @@ class PlaybackSuccessMigrationTests(unittest.TestCase):
             "token", "device_id", "user_id", "ip_address"})
         self.assertTrue({"media_kind", "tmdb_id", "season", "episode",
             "source_id", "variant_id", "expires_at_ms"} <= columns)
+
+    def test_observer_receipt_prevents_replay_without_user_identity(self):
+        self.assertEqual(self.db.execute("""INSERT INTO playback_observer_receipts
+            (event_id,expires_at_ms) VALUES (?,?)
+            ON CONFLICT(event_id) DO NOTHING""",
+            ("abcdefghijklmno0123456789", 60000)).rowcount, 1)
+        self.assertEqual(self.db.execute("""INSERT INTO playback_observer_receipts
+            (event_id,expires_at_ms) VALUES (?,?)
+            ON CONFLICT(event_id) DO NOTHING""",
+            ("abcdefghijklmno0123456789", 60000)).rowcount, 0)
+        columns = {row[1] for row in self.db.execute(
+            "PRAGMA table_info(playback_observer_receipts)")}
+        self.assertEqual(columns, {"event_id", "expires_at_ms"})
 
     def test_reapply_is_safe(self):
         self.db.executescript(MIGRATION.read_text(encoding="utf-8"))
