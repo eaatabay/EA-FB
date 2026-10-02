@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {playbackKey,recordPlaybackSuccess,findPlaybackCandidates}
+import {playbackKey,recordPlaybackSuccess,findPlaybackCandidates,\n  expirePlaybackCandidate,prioritizeApprovedOffers}
   from '../src/playback-success.mjs';
 
 test('movie and episode keys are separate and validated', () => {
@@ -55,4 +55,39 @@ test('read requires unexpired key-specific candidates and returns no URLs', asyn
   assert.ok(!JSON.stringify(results).includes('url'));
   await assert.rejects(findPlaybackCandidates(db,{kind:'movie',tmdbId:1},
     1_000,21),/invalid_candidate_query/);
+});
+
+test('failed candidate expires only the matching source and episode', async () => {
+  let sql, args;
+  const db={prepare(query){sql=query;return {bind(...values){args=values;return {
+    async run(){return {meta:{changes:1}};}};}};}};
+  const result=await expirePlaybackCandidate(db,
+    {kind:'series',tmdbId:44,season:3,episode:2},
+    {sourceId:'source-a',variantId:'tr-1080'},2000);
+  assert.deepEqual(result,{expired:true});
+  assert.match(sql,/UPDATE playback_success/);
+  assert.match(sql,/source_id = \?/);
+  assert.deepEqual(args,[2000,'series',44,3,2,'source-a','tr-1080',2000]);
+});
+
+test('prioritization respects registry approval, health and exact variant', () => {
+  const offers=[
+    {sourceId:'source-a',variantId:'original',approved:true,healthy:true},
+    {sourceId:'source-b',variantId:'tr',approved:false,healthy:true},
+    {sourceId:'source-c',variantId:'tr',approved:true,healthy:false},
+    {sourceId:'source-a',variantId:'tr',approved:true,healthy:true},
+    {sourceId:'source-d',variantId:'tr',approved:true,healthy:true},
+  ];
+  const history=[
+    {sourceId:'source-b',variantId:'tr'},
+    {sourceId:'source-a',variantId:'tr'},
+    {sourceId:'source-c',variantId:'tr'},
+  ];
+  assert.deepEqual(prioritizeApprovedOffers(offers,history),[
+    offers[3],offers[0],offers[4],
+  ]);
+  assert.deepEqual(prioritizeApprovedOffers(offers,[]),[
+    offers[0],offers[3],offers[4],
+  ]);
+  assert.throws(()=>prioritizeApprovedOffers(null,[]),/invalid_candidate_lists/);
 });
