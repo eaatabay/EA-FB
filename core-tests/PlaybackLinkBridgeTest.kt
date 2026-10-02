@@ -3,6 +3,9 @@ package com.eafb
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
+    check(!PlaybackLinkBridge.canResolve("ea-fb:movie:42"))
+    check(!PlaybackLinkBridge.canResolve("ea-fb:episode:42:3:2"))
+    check(!PlaybackLinkBridge.canResolve("ea-fb:live:abc"))
     check(PlaybackLinkBridge.isCatalogIdentity("ea-fb:movie:42"))
     check(PlaybackLinkBridge.isCatalogIdentity("ea-fb:episode:42:3:2"))
     check(!PlaybackLinkBridge.isCatalogIdentity("ea-fb:episode:42:3:0"))
