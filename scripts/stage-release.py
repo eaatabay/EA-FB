@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Prepare manifests from a real, locally compiled CloudStream package."""
 import json
+import os
 import stat
 import shutil
 import sys
@@ -13,7 +14,9 @@ ICON = "https://raw.githubusercontent.com/eaatabay/EA-FB/main/assets/ea-fb-logo.
 
 
 def stage(root=ROOT, staging=False):
-    expected_version = 46 if staging else 6
+    expected_version = int(os.environ.get("EA_FB_V6_STAGING_VERSION", "46")) if staging else 6
+    if staging and expected_version not in (46, 47):
+        raise ValueError("Only V46 or V47 isolated staging builds are supported")
     manifest_file = root / "build" / "plugins.json"
     if (root / "build").is_symlink() or manifest_file.is_symlink() or \
             (root / "EA-FB").is_symlink() or (root / "EA-FB" / "build").is_symlink():
