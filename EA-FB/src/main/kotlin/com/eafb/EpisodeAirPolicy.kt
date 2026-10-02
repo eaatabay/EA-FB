@@ -35,6 +35,49 @@ object EpisodeAirPolicy {
             (if (number.isNotEmpty()) " ($number)" else "") + ": $label"
     }
 
+    /** Candidate dates come from TMDb's next_episode_to_air or season episodes. */
+    data class Candidate(
+        val season: Int,
+        val episode: Int,
+        val dateMillis: Long
+    )
+
+    /**
+     * Select the nearest future calendar day, regardless of whether TMDb's
+     * next_episode_to_air has become stale. A same-day batch release is not
+     * "upcoming" without a trustworthy publication time.
+     *
+     * Ignore specials (season 0), missing numbers, unknown dates and invalid
+     * timestamps. This is metadata selection only; no network or playback.
+     */
+    fun nearestFuture(
+        candidates: List<Candidate>,
+        nowMillis: Long
+    ): Candidate? {
+        if (nowMillis < 0) return null
+        val today = SimpleDateFormat("yyyy-MM-dd", Locale.ROOT)
+            .format(java.util.Date(nowMillis))
+        return candidates.asSequence()
+            .filter { it.season > 0 && it.episode > 0 && it.dateMillis > 0 }
+            .filter { candidate ->
+                val date = SimpleDateFormat("yyyy-MM-dd", Locale.ROOT)
+                    .format(java.util.Date(candidate.dateMillis))
+                date > today
+            }
+            .minWithOrNull(
+                compareBy<Candidate> { it.dateMillis }
+                    .thenBy { it.season }
+                    .thenBy { it.episode }
+            )
+    }
+
+    fun label(candidate: Candidate): String {
+        val formatted = SimpleDateFormat(
+            "d MMMM yyyy EEEE", Locale("tr", "TR")
+        ).format(java.util.Date(candidate.dateMillis))
+        return "Sonraki bölüm (S${candidate.season} B${candidate.episode}): $formatted"
+    }
+
     fun parse(date: String, nowMillis: Long): Airing? {
         if (!Regex("\\d{4}-\\d{2}-\\d{2}").matches(date)) return null
         val millis = runCatching {
