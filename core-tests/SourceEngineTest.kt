@@ -103,6 +103,18 @@ fun main() = runBlocking {
         perAdapterTimeoutMs = 100)
     check(timeoutEngine.resolveFirstAvailable(epQuery, fallbackOffers, 1000,
         listOf("source-a", "source-b")).single().provider == "source-b")
+    val expiredFirst = TestAdapter("source-a", emptyList(), links = listOf(
+        SourceLink("source-a", "https://licensed.example/expired.m3u8",
+            1080, "tr", null, expiresAtMillis = 999)))
+    val expiredEngine = MultiSourceEngine(listOf(expiredFirst, fallbackB))
+    check(expiredEngine.resolveFirstAvailable(epQuery, fallbackOffers, 1000,
+        listOf("source-a", "source-b")).single().provider == "source-b")
+    val mismatchedFirst = TestAdapter("source-a", emptyList(), links = listOf(
+        SourceLink("unrelated", "https://licensed.example/foreign.m3u8",
+            1080, "tr", null)))
+    val mismatchedEngine = MultiSourceEngine(listOf(mismatchedFirst, fallbackB))
+    check(mismatchedEngine.resolveFirstAvailable(epQuery, fallbackOffers, 1000,
+        listOf("source-a", "source-b")).single().provider == "source-b")
     check(runCatching {
         fallbackEngine.resolveFirstAvailable(epQuery, fallbackOffers, -1)
     }.isFailure)
