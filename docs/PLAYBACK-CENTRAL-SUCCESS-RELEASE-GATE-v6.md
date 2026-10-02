@@ -8,13 +8,16 @@ migration is authorized by this document.
 
 - `PlaybackData` provides stable movie and exact episode identifiers for
   CloudStream metadata load responses. IDs are **not** playable stream URLs.
-- D1 migration `0003_playback_success.sql` stores a short-lived mapping from
+- D1 migrations `0003_playback_success.sql` and `0004_playback_retention.sql` store a short-lived mapping from
   TMDb movie/episode to source ID and variant ID, with no URLs, cookies, user
   identifiers, playback headers or tokens.
 - `playback-success.mjs` reads, updates and expires private D1 candidates.
+- `playback-retention.mjs` offers bounded, manual expiry cleanup; no timer is enabled.
 - `playback-candidate-service.mjs` orders eligible offers from current
   healthy, enabled, registry-approved sources that are **also** present in
   an independent, release-controlled rights grant list.
+- `PlaybackQuery` and `SourceEngine` preserve exact season/episode matching
+  for future adapter resolution; no adapters are currently wired.
 - `trusted-playback-recorder.mjs` requires an independently verified,
   fresh, source-specific playback observation and current registry health.
   The default has no verifier, rights grants or public route, so it writes
@@ -45,7 +48,8 @@ migration is authorized by this document.
 5. Wire client read, local fresh link resolution, first-success candidate,
    fallback to remaining approved healthy adapters, and stale-candidate
    invalidation. Do not change a currently playing stream.
-6. Run Node tests (`cd source-watchdog && npm test`), SQLite migration
+6. Run offline playback checks (`bash scripts/test-playback-v6.sh`),
+   full Node tests (`cd source-watchdog && npm test`), SQLite migration
    tests (`python3 -m unittest discover -s source-watchdog/tests -v`),
    Kotlin core tests and an Android build without GitHub Actions.
 7. On Mi Box, verify distinct episodes, dubbing preference, fallback after
