@@ -769,6 +769,7 @@ class EAProvider : MainAPI() {
         // TV detail enhancement: ratings + genres move beside duration when the
         // host exposes its stable result_meta_duration row. Native tags remain
         // populated as a compatibility fallback and are hidden only on success.
+        val nextAir = if (isSeries) upcomingEpisode(item) else null
         val nextAirDateLabel = if (isSeries) item.optJSONObject("next_episode_to_air")?.let { next ->
             EpisodeAirPolicy.nextAirDateLabel(
                 next.optString("air_date"),
@@ -777,7 +778,8 @@ class EAProvider : MainAPI() {
                 System.currentTimeMillis()
             )
         } else null
-        DetailMetaRow.publish(url, imdbRating, tmdbRating, genreLabels, nextAirDateLabel)
+        DetailMetaRow.publish(url, imdbRating, tmdbRating, genreLabels,
+            nextAirDateLabel, nextAir?.unixSeconds?.times(1000L))
         // CloudStream's unlabeled native hero score duplicates these source-labeled
         // chips, so details deliberately show the chips only (no native score).
         val collection = if (!isSeries) {
@@ -795,7 +797,6 @@ class EAProvider : MainAPI() {
                 id?.let(collection.ratings::get)
             )
         })
-        val nextAir = if (isSeries) upcomingEpisode(item) else null
         // Put a distant premiere date before the plot where it cannot be lost
         // beneath long descriptions; native nextAiring handles near-term dates.
         // Film collection text is a short cue, never a long duplicate title list.
@@ -825,7 +826,8 @@ class EAProvider : MainAPI() {
             // V38: the initial metadata publish happens before season fan-out.
             // Republish after that bounded work so first-open detail rows are
             // rendered against the host views that are about to receive the response.
-            DetailMetaRow.publish(url, imdbRating, tmdbRating, genreLabels, nextAirDateLabel)
+            DetailMetaRow.publish(url, imdbRating, tmdbRating, genreLabels,
+            nextAirDateLabel, nextAir?.unixSeconds?.times(1000L))
             EpisodeUpcomingStyle.publish(url, episodes.mapNotNull { ep ->
                 ep.date?.takeIf { it > System.currentTimeMillis() }?.let { date ->
                     val season = ep.season
