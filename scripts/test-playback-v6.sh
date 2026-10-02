@@ -76,6 +76,15 @@ kotlinc -cp "$COROUTINES" EA-FB/src/main/kotlin/com/eafb/Domain.kt \
   core-tests/PlaybackLinkBridgeTest.kt -include-runtime -d "$TMP/playback-link-bridge.jar"
 java -cp "$TMP/playback-link-bridge.jar:$COROUTINES" com.eafb.PlaybackLinkBridgeTestKt
 
+echo "== EA-FB V6 playback resolution handoff: offline Kotlin =="
+kotlinc -cp "$COROUTINES" EA-FB/src/main/kotlin/com/eafb/Domain.kt \
+  EA-FB/src/main/kotlin/com/eafb/SourceEngine.kt \
+  EA-FB/src/main/kotlin/com/eafb/PlaybackData.kt \
+  EA-FB/src/main/kotlin/com/eafb/PlaybackQuery.kt \
+  EA-FB/src/main/kotlin/com/eafb/PlaybackResolution.kt \
+  core-tests/PlaybackResolutionTest.kt -include-runtime -d "$TMP/playback-resolution.jar"
+java -cp "$TMP/playback-resolution.jar:$COROUTINES" com.eafb.PlaybackResolutionTestKt
+
 echo "== EA-FB V6 future episode selection: offline Kotlin =="
 kotlinc EA-FB/src/main/kotlin/com/eafb/EpisodeAirPolicy.kt \
   core-tests/EpisodeAirPolicyTest.kt -include-runtime -d "$TMP/episode-air-policy.jar"
