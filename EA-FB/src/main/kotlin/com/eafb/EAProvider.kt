@@ -484,11 +484,6 @@ class EAProvider : MainAPI() {
         )
     }
 
-    private fun longTurkishDate(iso: String): String? = try {
-        val parsed = SimpleDateFormat("yyyy-MM-dd", Locale.ROOT).parse(iso) ?: return null
-        SimpleDateFormat("d MMMM yyyy EEEE", Locale("tr", "TR")).format(parsed)
-    } catch (_: Exception) { null }
-
     private fun upcomingEpisode(item: JSONObject): EpisodeAirPolicy.Airing? =
         item.optJSONObject("next_episode_to_air")
             ?.optString("air_date")
