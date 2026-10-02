@@ -48,10 +48,12 @@ interface MediaSourceAdapter {
 
 /** Concurrent independent source resolution. No DRM bypass and no shared cache. */
 class MultiSourceEngine(
-    private val adapters: List<MediaSourceAdapter>,
+    adapters: List<MediaSourceAdapter>,
     private val maxConcurrent: Int = 4,
     private val perAdapterTimeoutMs: Long = 8_000
 ) {
+    private val adapters = adapters.toList()
+
     init {
         require(maxConcurrent in 1..16)
         require(perAdapterTimeoutMs in 100..60_000)
