@@ -23,6 +23,15 @@ class PlaybackSuccessMigrationTests(unittest.TestCase):
           VALUES (?,?,?,?,?,?,?,?,1,?,?)""",
           (kind,tmdb,season,episode,source,variant,"tr",1080,confirmed,expires))
 
+    def test_schema_never_persists_stream_urls_or_user_identity(self):
+        columns = {row[1] for row in self.db.execute(
+            "PRAGMA table_info(playback_success)")}
+        self.assertFalse(columns & {
+            "url", "stream_url", "playback_url", "cookie", "headers",
+            "token", "device_id", "user_id", "ip_address"})
+        self.assertTrue({"media_kind", "tmdb_id", "season", "episode",
+            "source_id", "variant_id", "expires_at_ms"} <= columns)
+
     def test_reapply_is_safe(self):
         self.db.executescript(MIGRATION.read_text(encoding="utf-8"))
         self.assertEqual(self.db.execute("SELECT COUNT(*) FROM playback_success").fetchone()[0],0)
