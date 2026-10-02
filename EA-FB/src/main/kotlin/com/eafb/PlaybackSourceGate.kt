@@ -50,10 +50,10 @@ object PlaybackSourceGate {
         val engine = MultiSourceEngine(approved)
         val offers = engine.find(media)
         if (offers.isEmpty()) return emptyList()
+        val approvedIds = approved.map { it.id }.toSet()
+        val orderedIds = preferredProviderIds.filter { it in approvedIds }.distinct()
         return engine.resolveFirstAvailable(
-            media, offers, nowMillis,
-            preferredProviderIds.filter { id -> approved.any { it.id == id } }.distinct(),
-            preferredLanguage, maxQuality
+            media, offers, nowMillis, orderedIds, preferredLanguage, maxQuality
         )
     }
 }
