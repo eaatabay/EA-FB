@@ -775,7 +775,9 @@ class EAProvider : MainAPI() {
         // host exposes its stable result_meta_duration row. Native tags remain
         // populated as a compatibility fallback and are hidden only on success.
         val nextAirDateLabel = if (isSeries) item.optJSONObject("next_episode_to_air")?.let { next ->
-            val date = next.optString("air_date").takeIf { it.isNotBlank() }?.let(::longTurkishDate)
+            val date = next.optString("air_date")
+                .takeIf { EpisodeAirPolicy.parse(it, System.currentTimeMillis()) != null }
+                ?.let(::longTurkishDate)
             val season = next.optInt("season_number").takeIf { it > 0 }
             val episode = next.optInt("episode_number").takeIf { it > 0 }
             date?.let { d ->
