@@ -213,11 +213,26 @@ internal object DetailMetaRow {
     }
 
     private fun renderNextEpisode(root: View, meta: Meta, activity: FragmentActivity) {
-        val label = meta.nextEpisode ?: return
         val holderId = activity.resources.getIdentifier("result_next_airing_holder", "id", activity.packageName)
         val nextId = activity.resources.getIdentifier("result_next_airing", "id", activity.packageName)
         val timeId = activity.resources.getIdentifier("result_next_airing_time", "id", activity.packageName)
         if (holderId == 0 || nextId == 0 || timeId == 0) return
+        val label = meta.nextEpisode
+        if (label == null) {
+            // A recycled CloudStream detail fragment may still display a
+            // previous next-air label. This provider has no future airing:
+            // clear only its own next-air row on every focus/render pass.
+            root.findViewById<View>(holderId)?.visibility = View.GONE
+            root.findViewById<TextView>(nextId)?.apply {
+                text = ""
+                visibility = View.GONE
+            }
+            root.findViewById<TextView>(timeId)?.apply {
+                text = ""
+                visibility = View.GONE
+            }
+            return
+        }
         root.findViewById<View>(holderId)?.visibility = View.VISIBLE
         root.findViewById<TextView>(nextId)?.apply { text = label; visibility = View.VISIBLE }
         root.findViewById<TextView>(timeId)?.apply { text = ""; visibility = View.GONE }
