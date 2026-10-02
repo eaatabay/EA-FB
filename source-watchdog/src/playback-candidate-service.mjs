@@ -1,5 +1,5 @@
 import { getPrivateRegistry } from "./registry.mjs";
-import { findPlaybackCandidates, prioritizeApprovedOffers } from "./playback-success.mjs";
+import { findPlaybackCandidates, prioritizeApprovedOffers, playbackKey } from "./playback-success.mjs";
 
 /**
  * Internal-only central-first lookup. Does NOT expose HTTP, return a stream
@@ -14,10 +14,12 @@ export async function orderPlaybackOffers({
   readRegistry = getPrivateRegistry,
   readHistory = findPlaybackCandidates,
 } = {}) {
+  const key = playbackKey(media);
   if (!db?.prepare || !Array.isArray(offers) ||
       !Number.isSafeInteger(nowMs) || nowMs < 0 ||
       !Array.isArray(approvedSourceIds) ||
-      approvedSourceIds.some(id => typeof id !== "string") ||
+      approvedSourceIds.some(id => typeof id !== "string" ||
+        !/^[a-z][a-z0-9-]{2,63}$/.test(id) || id.startsWith("fixture-")) ||
       new Set(approvedSourceIds).size !== approvedSourceIds.length)
     throw new Error("invalid_playback_lookup");
   if (approvedSourceIds.length === 0) return [];
@@ -34,7 +36,7 @@ export async function orderPlaybackOffers({
     !record.id.startsWith("fixture-") &&
     ["movie","series","both"].includes(record.config?.mediaKind) &&
     (record.config.mediaKind === "both" ||
-      record.config.mediaKind === media?.kind)
+      record.config.mediaKind === key.kind)
   ).map(record => record.id));
   if (healthy.size === 0) return [];
   // Fetch history only after rights, current registry health and identity
