@@ -55,7 +55,7 @@ test("TV season and episode panel scales as one 90 percent unit",()=>{
 });
 
 test("TV detail metadata moves ratings and genres beside duration with native fallback",()=>{
-  assert.ok(provider.includes("DetailMetaRow.publish(url, imdbRating, tmdbRating, genreLabels, nextAirDateLabel)"));
+  assert.ok(/DetailMetaRow\.publish\(\s*url, imdbRating, tmdbRating, genreLabels,\s*nextAir\?\.let\(EpisodeAirPolicy::label\),\s*nextAir\?\.dateMillis\s*\)/.test(provider));
   assert.ok(detailMeta.includes('"result_meta_duration"'));
   assert.ok(detailMeta.includes('"result_tag"'));
   assert.ok(detailMeta.includes("Color.YELLOW"));
@@ -97,7 +97,7 @@ test("detail metadata font inherits host TextView without unsafe resource lookup
 });
 
 test("V39 keeps native next-air binding as first-open fallback and exact custom date as final row",()=>{
-  assert.ok(provider.includes("return NextAiring(episode, airing.unixSeconds, season)"));
+  assert.ok(provider.includes("NextAiring(it.episode, it.dateMillis / 1000L, it.season)"));
   assert.ok(upcomingStyle.includes("EpisodeRowPolicy.episodeNumber"));
   assert.ok(upcomingStyle.includes("it.episode == episodeNo && it.date > now"));
   assert.ok(detailMeta.includes('listOf("result_coming_soon", "result_tv_coming_soon")'));
@@ -109,7 +109,7 @@ test("V39 keeps native next-air binding as first-open fallback and exact custom 
 
 test("V22 keeps exact long Turkish TMDb date while V37 centralizes row parsing",()=>{
   assert.ok(upcomingStyle.includes("EpisodeRowPolicy.episodeNumber"));
-  assert.ok(provider.includes('SimpleDateFormat("d MMMM yyyy EEEE", Locale("tr", "TR"))'));
+  assert.ok(provider.includes("EpisodeAirPolicy.nearestFuture("));
   assert.ok(provider.includes('FutureEpisode(season, episode, date, ep.name)'));
 });
 
@@ -123,7 +123,7 @@ test("V23 targets poster and compact episode holder variants",()=>{
 test("V24 moves next-air label out of plot into native TV airing row",()=>{
   assert.ok(detailMeta.includes('"result_next_airing_holder"'));
   assert.ok(detailMeta.includes('"result_next_airing_time"'));
-  assert.ok(provider.includes("DetailMetaRow.publish(url, imdbRating, tmdbRating, genreLabels, nextAirDateLabel)"));
+  assert.ok(/DetailMetaRow\.publish\(\s*url, imdbRating, tmdbRating, genreLabels,\s*nextAir\?\.let\(EpisodeAirPolicy::label\),\s*nextAir\?\.dateMillis\s*\)/.test(provider));
   assert.ok(!provider.includes("seriesNote, upcomingLabel, overview, director"));
 });
 test("V24 compact future rows receive exact Turkish long date",()=>{
@@ -227,7 +227,7 @@ test("V37 catalog paging dedupes repeated card URLs across page calls without to
 test("V38 retries first-open detail metadata after season loading without layout polling",()=>{
   const detailMeta=readFileSync(new URL("../../EA-FB/src/main/kotlin/com/eafb/DetailMetaRow.kt",import.meta.url),"utf8");
   const episodeLoad = provider.indexOf('val episodeLoad = tvEpisodes(tmdbId');
-  const republish = provider.indexOf('DetailMetaRow.publish(url, imdbRating, tmdbRating, genreLabels, nextAirDateLabel)', episodeLoad);
+  const republish = provider.indexOf('DetailMetaRow.publish(\n                url, imdbRating, tmdbRating, genreLabels,', episodeLoad);
   assert.ok(episodeLoad >= 0 && republish > episodeLoad);
   assert.ok(detailMeta.includes('main.postDelayed({ renderRegistered() }, 300)'));
   assert.ok(detailMeta.includes('main.postDelayed({ renderRegistered() }, 900)'));
