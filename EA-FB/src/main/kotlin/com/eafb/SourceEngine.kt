@@ -135,7 +135,7 @@ class MultiSourceEngine(
             installed.containsKey(offer.providerId) && sameContent(query, offer)
         }.sortedWith(compareBy<MediaOffer> {
             rank[it.providerId] ?: Int.MAX_VALUE
-        })
+        }).distinctBy { it.providerId to it.pageUrl }.take(32)
         for (offer in ordered) {
             val adapter = installed[offer.providerId] ?: continue
             val links = try {
