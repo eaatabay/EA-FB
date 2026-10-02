@@ -104,7 +104,8 @@ class MultiSourceEngine(
                     guard.withPermit {
                         try {
                             withTimeout(perAdapterTimeoutMs) {
-                                adapter.resolve(offer).filter { it.provider == adapter.id && it.url.startsWith("https://") }
+                                adapter.resolve(offer).filter { it.provider == adapter.id && it.url.startsWith("https://") &&
+                                    !it.requiresPrivateSession }
                             }
                         } catch (_: TimeoutCancellationException) {
                             emptyList()
@@ -149,7 +150,8 @@ class MultiSourceEngine(
             val links = try {
                 withTimeout(perAdapterTimeoutMs) {
                     adapter.resolve(offer).filter { link ->
-                        link.provider == adapter.id && link.url.startsWith("https://")
+                        link.provider == adapter.id && link.url.startsWith("https://") &&
+                            !link.requiresPrivateSession
                     }
                 }
             } catch (_: TimeoutCancellationException) {
