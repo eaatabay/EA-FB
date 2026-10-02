@@ -22,4 +22,6 @@ test("recycled detail fragments clear a missing next airing instead of keeping s
   assert.match(row,/findViewById<View>\(holderId\)\?\.visibility = View\.GONE/);
   assert.match(row,/findViewById<TextView>\(nextId\)\?\.apply \{/);
   assert.match(row,/text = ""/);
+  assert.match(row,/nextEpisodeUntilMillis/);
+  assert.match(row,/System\\.currentTimeMillis\\(\\) < until/);
 });
