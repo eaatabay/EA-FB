@@ -53,6 +53,8 @@ test("tampered media, variant, outcome or timestamp cannot reuse signature",asyn
   for(const changed of [
     {...event,media:{...event.media,episode:3}},
     {...event,source:{...event.source,variantId:"other"}},
+    {...event,source:{...event.source,audioLanguage:"tr"}},
+    {...event,source:{...event.source,quality:1080}},
     {...event,outcome:"failure"},
     {...event,proof:{...event.proof,observedAtMs:999_998}},
   ]) await assert.rejects(verify(changed,nowMs),/invalid_observer_signature/);
