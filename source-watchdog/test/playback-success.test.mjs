@@ -92,3 +92,12 @@ test('prioritization respects registry approval, health and exact variant', () =
   ]);
   assert.throws(()=>prioritizeApprovedOffers(null,[]),/invalid_candidate_lists/);
 });
+
+test('ignored stale confirmation must not report stored', async () => {
+  const db={prepare(){return {bind(){return {async run(){
+    return {meta:{changes:0}};
+  }};}};}};
+  assert.deepEqual(await recordPlaybackSuccess(db,
+    {kind:'movie',tmdbId:12},
+    {sourceId:'source-a',variantId:'tr'},1000),{stored:false});
+});
