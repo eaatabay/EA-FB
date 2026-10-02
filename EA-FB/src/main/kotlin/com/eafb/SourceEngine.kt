@@ -91,7 +91,14 @@ class MultiSourceEngine(
     ): List<SourceLink> = supervisorScope {
         val guard = Semaphore(maxConcurrent)
         val lookup = adapters.associateBy { it.id }
-        val links = offers.mapNotNull { offer -> lookup[offer.providerId]?.let { it to offer } }
+        // A caller may supply offers directly; do not trust them merely because
+        // their provider ID is installed. Cap work and reject malformed origins.
+        val links = offers.asSequence()
+            .filter { it.pageUrl.startsWith("https://") }
+            .distinctBy { it.providerId to it.pageUrl }
+            .take(32)
+            .mapNotNull { offer -> lookup[offer.providerId]?.let { it to offer } }
+            .toList()
             .map { (adapter, offer) ->
                 async(Dispatchers.IO) {
                     guard.withPermit {
