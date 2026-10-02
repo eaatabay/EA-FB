@@ -53,7 +53,8 @@ export async function createPlaybackObserverVerifier(db, keyBytes, subtle = cryp
   const key = await subtle.importKey("raw", keyBytes,
     {name:"HMAC",hash:"SHA-256"}, false, ["verify"]);
   return async function verifyEvidence(event, nowMs) {
-    if (!Number.isSafeInteger(nowMs) || nowMs < 0)
+    if (!Number.isSafeInteger(nowMs) || nowMs < 0 ||
+        !Number.isSafeInteger(nowMs + MAX_AGE_MS))
       throw new Error("invalid_observer_clock");
     const message = playbackObserverMessage(event);
     const observedAtMs = event.proof.observedAtMs;
