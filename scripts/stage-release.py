@@ -14,9 +14,9 @@ ICON = "https://raw.githubusercontent.com/eaatabay/EA-FB/main/assets/ea-fb-logo.
 
 
 def stage(root=ROOT, staging=False):
-    expected_version = int(os.environ.get("EA_FB_V6_STAGING_VERSION", "48")) if staging else 6
-    if staging and expected_version != 48:
-        raise ValueError("Only V48 isolated staging builds are supported")
+    expected_version = int(os.environ.get("EA_FB_V6_STAGING_VERSION", "49")) if staging else 6
+    if staging and expected_version != 49:
+        raise ValueError("Only V49 isolated staging builds are supported")
     manifest_file = root / "build" / "plugins.json"
     if (root / "build").is_symlink() or manifest_file.is_symlink() or \
             (root / "EA-FB").is_symlink() or (root / "EA-FB" / "build").is_symlink():

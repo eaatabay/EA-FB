@@ -1,0 +1,43 @@
+name: EA-FB V48 season title test build
+
+on:
+  push:
+    branches:
+      - fix/season-title-refresh-v48
+    paths:
+      - '.github/workflows/season-title-test.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+      - name: Install Android SDK 35
+        run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
+      - name: Setup Gradle 8.12
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.12'
+      - name: Static title refresh checks
+        run: node --test source-watchdog/test/season-title-refresh-wiring.test.mjs
+      - name: Build isolated staging package (no publishing)
+        env:
+          EA_FB_V6_STAGING_BUILD: '1'
+        run: bash scripts/build-codespace.sh
+      - name: Upload Mi Box test package
+        uses: actions/upload-artifact@v4
+        with:
+          name: EA-FB-V48-season-title-test
+          path: dist/EA-FB.cs3
+          if-no-files-found: error
+          retention-days: 7

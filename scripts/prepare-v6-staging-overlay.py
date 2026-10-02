@@ -18,9 +18,9 @@ PROVIDER = ROOT / "EA-FB/src/main/kotlin/com/eafb/EAProvider.kt"
 SETTINGS = ROOT / "EA-FB/src/main/kotlin/com/eafb/EASettings.kt"
 BUILD = ROOT / "EA-FB/build.gradle.kts"
 CONFIG = ROOT / "config/backend.v6-staging.json"
-STAGING_VERSION = int(os.environ.get("EA_FB_V6_STAGING_VERSION", "48"))
-if STAGING_VERSION != 48:
-    raise ValueError("Only new red V48 staging builds are allowed")
+STAGING_VERSION = int(os.environ.get("EA_FB_V6_STAGING_VERSION", "49"))
+if STAGING_VERSION != 49:
+    raise ValueError("Only new red V49 staging builds are allowed")
 
 
 def verify():

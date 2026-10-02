@@ -52,6 +52,13 @@ internal object EpisodeTitleStyle {
     private val pendingFocusRenders = java.util.Collections.newSetFromMap(
         java.util.WeakHashMap<View, Boolean>()
     )
+    private val observedSeasonRoots = java.util.Collections.newSetFromMap(
+        java.util.WeakHashMap<View, Boolean>()
+    )
+    private val seasonSignatures = java.util.WeakHashMap<View, String>()
+    private val pendingSeasonRenders = java.util.Collections.newSetFromMap(
+        java.util.WeakHashMap<View, Boolean>()
+    )
 
     fun install(context: Context) {
         val app = context.applicationContext as? Application ?: return
@@ -136,6 +143,7 @@ internal object EpisodeTitleStyle {
         val activity = fragment.activity as? FragmentActivity ?: return
         observeEpisodeScrolling(root, fragment)
         observeEpisodeFocus(root, fragment, activity)
+        observeSeasonSelection(root, fragment, activity)
         renderRows(root, episodeTitles, activity)
     }
 
@@ -174,6 +182,46 @@ internal object EpisodeTitleStyle {
                 if (root.isAttachedToWindow) renderFragment(fragment)
             }
         }
+    }
+
+    // A season switch rebinds episode rows without entering the episode list.
+    // Observe layout changes, not a repeating timer: render only when the visible
+    // season selector changes, then retry briefly while CloudStream binds rows.
+    private fun observeSeasonSelection(root: View, fragment: Fragment, activity: FragmentActivity) {
+        synchronized(observedSeasonRoots) {
+            if (!observedSeasonRoots.add(root)) return
+        }
+        val initial = selectedSeason(root, activity)
+        synchronized(seasonSignatures) {
+            seasonSignatures[root] = "${initial.visible}:${initial.season}"
+        }
+        root.viewTreeObserver.addOnGlobalLayoutListener {
+            if (!root.isAttachedToWindow || fragment.view !== root) return@addOnGlobalLayoutListener
+            val selection = selectedSeason(root, activity)
+            val signature = "${selection.visible}:${selection.season}"
+            val changed = synchronized(seasonSignatures) {
+                if (seasonSignatures[root] == signature) false
+                else {
+                    seasonSignatures[root] = signature
+                    true
+                }
+            }
+            if (changed) scheduleSeasonRenders(root, fragment)
+        }
+    }
+
+    private fun scheduleSeasonRenders(root: View, fragment: Fragment) {
+        synchronized(pendingSeasonRenders) {
+            if (!pendingSeasonRenders.add(root)) return
+        }
+        for (delay in listOf(0L, 180L, 450L, 950L)) {
+            main.postDelayed({
+                if (fragment.view === root && root.isAttachedToWindow) renderFragment(fragment)
+            }, delay)
+        }
+        main.postDelayed({
+            synchronized(pendingSeasonRenders) { pendingSeasonRenders.remove(root) }
+        }, 1000L)
     }
 
     private fun insideEpisodeRow(view: View, root: View, holderIds: Set<Int>): Boolean {
