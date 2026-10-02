@@ -1,0 +1,8 @@
+{
+  "name": "EA-FB V46 FROZEN",
+  "description": "Frozen V46 independent of red staging updates",
+  "manifestVersion": 1,
+  "pluginLists": [
+    "https://raw.githubusercontent.com/eaatabay/EA-FB/archive/frozen-v46-20261001/archive/v46/plugins.json"
+  ]
+}
