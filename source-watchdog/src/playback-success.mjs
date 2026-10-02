@@ -93,3 +93,43 @@ export async function findPlaybackCandidates(db, media, nowMs, limit = 5) {
     lastConfirmedAtMs:row.last_confirmed_at_ms,
   }));
 }
+
+/**
+ * Mark a previously confirmed candidate as stale when a trusted resolver or
+ * playback checker verifies it no longer works. This is not a client-facing
+ * write endpoint. Failure does not delete the provider or block other variants.
+ */
+export async function expirePlaybackCandidate(db, media, source, nowMs) {
+  requireDb(db);
+  const key = playbackKey(media);
+  const candidate = validatedSource(source);
+  if (!integer(nowMs, 0)) throw new Error('invalid_failure_clock');
+  const result = await db.prepare(`UPDATE playback_success
+    SET expires_at_ms = ?
+    WHERE media_kind = ? AND tmdb_id = ? AND season = ? AND episode = ?
+      AND source_id = ? AND variant_id = ? AND expires_at_ms > ?`)
+    .bind(nowMs, key.kind, key.tmdbId, key.season, key.episode,
+      candidate.sourceId, candidate.variantId, nowMs).run();
+  return {expired:(result?.meta?.changes ?? 0) > 0};
+}
+
+/**
+ * Prioritize central success history only among currently reviewed/healthy
+ * provider variants supplied by a trusted registry. Never turn historical
+ * IDs into playable URLs; the adapter must freshly resolve the offer.
+ */
+export function prioritizeApprovedOffers(offers, history) {
+  if (!Array.isArray(offers) || !Array.isArray(history))
+    throw new Error('invalid_candidate_lists');
+  const rank = new Map(history.map((item, i) =>
+    [item.sourceId + '\\u0000' + item.variantId, i]));
+  return offers.filter(item =>
+    item && item.approved === true && item.healthy === true &&
+    SOURCE_ID.test(item.sourceId ?? '') &&
+    VARIANT_ID.test(item.variantId ?? '')
+  ).map((item, i) => ({
+    item, i,
+    rank:rank.get(item.sourceId + '\\u0000' + item.variantId) ?? Number.MAX_SAFE_INTEGER,
+  })).sort((a,b) => a.rank - b.rank || a.i - b.i)
+    .map(entry => entry.item);
+}
