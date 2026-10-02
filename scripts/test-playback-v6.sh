@@ -41,4 +41,9 @@ kotlinc -cp "$COROUTINES" EA-FB/src/main/kotlin/com/eafb/Domain.kt \
   EA-FB/src/main/kotlin/com/eafb/PlaybackQuery.kt \
   core-tests/PlaybackQueryTest.kt -include-runtime -d "$TMP/playback-query.jar"
 java -cp "$TMP/playback-query.jar:$COROUTINES" com.eafb.PlaybackQueryTestKt
+# Exact-episode source filtering must reject wrong/missing TMDb IDs.
+kotlinc -cp "$COROUTINES" EA-FB/src/main/kotlin/com/eafb/Domain.kt \
+  EA-FB/src/main/kotlin/com/eafb/SourceEngine.kt \
+  core-tests/SourceEngineTest.kt -include-runtime -d "$TMP/playback-engine.jar"
+java -cp "$TMP/playback-engine.jar:$COROUTINES" com.eafb.SourceEngineTestKt
 echo "== Offline playback checks complete =="
