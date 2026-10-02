@@ -44,7 +44,8 @@ test("history prioritizes only healthy, rights-reviewed registry sources", async
   let readCount=0;
   const result=await orderPlaybackOffers({
     db,media,offers,nowMs:1000,
-    approvedSourceIds:[...new Set(offers.map(x=>x.sourceId))],
+    approvedSourceIds:[...new Set(offers.map(x=>x.sourceId))]
+      .filter(id => !id.startsWith("fixture-")),
     readRegistry:async()=>[
       record("source-a"),record("source-b"),
       record("source-disabled",{config:{enabled:false}}),
@@ -79,4 +80,18 @@ test("invalid arguments and duplicate rights IDs are rejected", async () => {
   await assert.rejects(orderPlaybackOffers({
     db,media,offers:[],nowMs:-1,approvedSourceIds:["source-a"],
   }),/invalid_playback_lookup/);
+});
+
+test("malformed media keys and fixture grants are rejected before registry access", async () => {
+  let reads=0;
+  const readRegistry=async()=>{reads++;return [];};
+  await assert.rejects(orderPlaybackOffers({
+    db,media:{kind:"series",tmdbId:42,season:3,episode:0},
+    offers:[],nowMs:1000,approvedSourceIds:["source-a"],readRegistry,
+  }),/invalid_playback_key/);
+  await assert.rejects(orderPlaybackOffers({
+    db,media,offers:[],nowMs:1000,
+    approvedSourceIds:["fixture-demo"],readRegistry,
+  }),/invalid_playback_lookup/);
+  assert.equal(reads,0);
 });
