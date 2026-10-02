@@ -139,7 +139,8 @@ class MultiSourceEngine(
         val installed = adapters.associateBy { it.id }
         val rank = preferredProviderIds.withIndex().associate { it.value to it.index }
         val ordered = offers.filter { offer ->
-            installed.containsKey(offer.providerId) && sameContent(query, offer)
+            installed.containsKey(offer.providerId) &&
+                offer.pageUrl.startsWith("https://") && sameContent(query, offer)
         }.sortedWith(compareBy<MediaOffer> {
             rank[it.providerId] ?: Int.MAX_VALUE
         }).distinctBy { it.providerId to it.pageUrl }.take(32)
