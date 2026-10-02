@@ -72,9 +72,15 @@ kotlinc -cp "$COROUTINES" EA-FB/src/main/kotlin/com/eafb/Domain.kt \
   EA-FB/src/main/kotlin/com/eafb/PlaybackData.kt \
   EA-FB/src/main/kotlin/com/eafb/PlaybackQuery.kt \
   EA-FB/src/main/kotlin/com/eafb/PlaybackSourceGate.kt \
+  EA-FB/src/main/kotlin/com/eafb/PlaybackSourceHealth.kt \
   EA-FB/src/main/kotlin/com/eafb/PlaybackLinkBridge.kt \
   core-tests/PlaybackLinkBridgeTest.kt -include-runtime -d "$TMP/playback-link-bridge.jar"
 java -cp "$TMP/playback-link-bridge.jar:$COROUTINES" com.eafb.PlaybackLinkBridgeTestKt
+
+echo "== EA-FB V6 expiring source health: offline Kotlin =="
+kotlinc EA-FB/src/main/kotlin/com/eafb/PlaybackSourceHealth.kt \
+  core-tests/PlaybackSourceHealthTest.kt -include-runtime -d "$TMP/playback-health.jar"
+java -jar "$TMP/playback-health.jar"
 
 echo "== EA-FB V6 playback resolution handoff: offline Kotlin =="
 kotlinc -cp "$COROUTINES" EA-FB/src/main/kotlin/com/eafb/Domain.kt \
