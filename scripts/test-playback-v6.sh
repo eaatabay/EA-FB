@@ -57,4 +57,11 @@ kotlinc -cp "$COROUTINES" EA-FB/src/main/kotlin/com/eafb/Domain.kt \
   EA-FB/src/main/kotlin/com/eafb/SourceEngine.kt \
   core-tests/SourceEngineTest.kt -include-runtime -d "$TMP/playback-engine.jar"
 java -cp "$TMP/playback-engine.jar:$COROUTINES" com.eafb.SourceEngineTestKt
+echo "== EA-FB V6 future episode selection: offline Kotlin =="
+kotlinc EA-FB/src/main/kotlin/com/eafb/EpisodeAirPolicy.kt \
+  core-tests/EpisodeAirPolicyTest.kt -include-runtime -d "$TMP/episode-air-policy.jar"
+java -jar "$TMP/episode-air-policy.jar"
+
+echo "== EA-FB V6 detail wiring: offline Node =="
+node --test source-watchdog/test/next-air-detail-wiring.test.mjs
 echo "== Offline playback checks complete =="
