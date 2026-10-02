@@ -41,6 +41,9 @@ migration is authorized by this document.
 - No production D1 binding, migration or live Worker publication.
 - No rights-reviewed third-party playback adapters bundled in this release.
 - No completed Android build or Mi Box real-playback acceptance test.
+- Newly committed Node and Kotlin regression suites have not yet been
+  executed end-to-end against the current RED branch; code presence is not
+  a passing test result.
 
 ## Before enabling central shared success
 
