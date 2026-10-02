@@ -57,10 +57,15 @@ fun main() = runBlocking {
         MediaKind.SERIES, "https://a.test/tv/42/s3e2", 42, 3, 2)
     val otherEpisode = exactEpisode.copy(episode = 3,
         pageUrl = "https://a.test/tv/42/s3e3")
+    val noTmdb = exactEpisode.copy(tmdbId = null,
+        pageUrl = "https://a.test/tv/unknown/s3e2")
+    val wrongTmdb = exactEpisode.copy(tmdbId = 99,
+        pageUrl = "https://a.test/tv/99/s3e2")
     val showOnly = exactEpisode.copy(season = null, episode = null,
         pageUrl = "https://a.test/tv/42")
     val episodeEngine = MultiSourceEngine(listOf(
-        TestAdapter("alpha", listOf(exactEpisode, otherEpisode, showOnly))))
+        TestAdapter("alpha", listOf(exactEpisode, otherEpisode, showOnly,
+            noTmdb, wrongTmdb))))
     check(episodeEngine.find(epQuery) == listOf(exactEpisode))
     check(runCatching {
         MediaQuery("İsyan", 2026, MediaKind.SERIES, 42, 3, null)
