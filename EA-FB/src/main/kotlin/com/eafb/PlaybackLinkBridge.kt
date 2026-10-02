@@ -16,6 +16,24 @@ class PlaybackSourceRuntime(
         require(installedAdapters.none { it.id.isBlank() })
     }
 
+    companion object {
+        /**
+         * A fresh health snapshot is required when assembling a runtime.
+         * A healthy observation never grants rights or enables a source.
+         */
+        fun fromHealthObservations(
+            installedAdapters: List<MediaSourceAdapter>,
+            releaseApprovedIds: Set<String>,
+            userEnabledIds: Set<String>,
+            observations: List<SourceHealthObservation>,
+            nowMillis: Long,
+            ttlMillis: Long = 15 * 60 * 1000L
+        ): PlaybackSourceRuntime = PlaybackSourceRuntime(
+            installedAdapters, releaseApprovedIds, userEnabledIds,
+            PlaybackSourceHealth.healthyIds(observations, nowMillis, ttlMillis)
+        )
+    }
+
     private fun permitted(): List<MediaSourceAdapter> =
         PlaybackSourceGate.permitted(
             installedAdapters, releaseApprovedIds, userEnabledIds, healthyIds
