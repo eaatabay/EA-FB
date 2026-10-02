@@ -912,6 +912,25 @@ class EAProvider : MainAPI() {
             }
             return streams.isNotEmpty()
         }
+        if (PlaybackLinkBridge.isCatalogIdentity(data)) {
+            // V49 UI and existing demonstration/live playback paths stay intact.
+            // Without separately approved live adapters the bridge returns no
+            // links and performs no metadata or third-party network requests.
+            val links = PlaybackLinkBridge.alternatives(
+                data, "", null, System.currentTimeMillis()
+            )
+            links.forEach { source ->
+                callback(newExtractorLink(
+                    source.provider, source.provider, source.url,
+                    type = if (source.url.substringBefore('?').endsWith(".m3u8", true))
+                        ExtractorLinkType.M3U8 else ExtractorLinkType.VIDEO
+                ) {
+                    quality = source.quality ?: 0
+                    referer = ""
+                })
+            }
+            return links.isNotEmpty()
+        }
         return false
     }
 }
