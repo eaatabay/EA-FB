@@ -21,7 +21,7 @@ test("red V6 staging build overlays only the two Android relay references", () =
   assert.match(overlay,/config\/backend\.v6-staging\.json/);
   assert.match(overlay,/BUILD\.write_text/);
   assert.ok(overlay.includes("STAGING_VERSION not in (46, 47)"));
-  assert.match(overlay,/BUILD\.write_text\(re\.sub\(/);
+  assert.match(overlay,/BUILD\.write_text\(\s*re\.sub\(/);
   assert.match(script,/cp "\$tmp\/build\.gradle\.kts" "\$buildfile"/);
   assert.doesNotMatch(script,/wrangler deploy|git push|gh release/);
 });
