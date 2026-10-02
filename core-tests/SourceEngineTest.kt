@@ -51,6 +51,7 @@ fun main() = runBlocking {
     check(links.first() == hd)
     check(engine.resolve(offers, nowMillis = 1000, maxQuality = 2160)
         .any { it.url == tooLarge.url })
+    check(engine.resolve(offers, nowMillis = 1000, maxQuality = 720).isEmpty())
     check(Identity.mediaKey(MediaKind.MOVIE, "İSYAN", 2026) == Identity.mediaKey(MediaKind.MOVIE, "Isyan", 2026))
     check(Identity.mediaKey(MediaKind.MOVIE, "İsyan", 2025) != Identity.mediaKey(MediaKind.MOVIE, "İsyan", 2026))
     check(SourcePicker.preferred(listOf(tooLarge, hd), 1000).first() == hd)
