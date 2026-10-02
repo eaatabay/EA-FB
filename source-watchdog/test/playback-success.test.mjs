@@ -68,7 +68,7 @@ test('failed candidate expires only the matching source and episode', async () =
   assert.deepEqual(result,{expired:true});
   assert.match(sql,/UPDATE playback_success/);
   assert.match(sql,/source_id = \?/);
-  assert.deepEqual(args,[2000,'series',44,3,2,'source-a','tr-1080',2000]);
+  assert.deepEqual(args,[2000,'series',44,3,2,'source-a','tr-1080',2000,2000]);
 });
 
 test('prioritization respects registry approval, health and exact variant', () => {
