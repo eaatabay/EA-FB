@@ -122,7 +122,9 @@ fun main() = runBlocking {
     check(fallbackEngine.resolve(
         listOf(insecureOffer), 1000).isEmpty())
     check(fallbackEngine.resolve(
-        listOf(insecureOffer, fallbackOffers.first()), 1000).isEmpty())
+        listOf(insecureOffer, fallbackOffers.first()), 1000) == listOf(
+            SourceLink("source-b", "https://licensed.example/episode.m3u8",
+                1080, "tr", null)))
     check(runCatching {
         fallbackEngine.resolveFirstAvailable(epQuery, fallbackOffers, -1)
     }.isFailure)
