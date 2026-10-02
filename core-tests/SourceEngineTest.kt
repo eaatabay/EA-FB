@@ -52,5 +52,22 @@ fun main() = runBlocking {
     check(SourcePicker.preferred(listOf(tooLarge, hd), 1000).first() == hd)
     check(runCatching { MultiSourceEngine(listOf(adapterA, adapterA)) }.isFailure)
     check(runCatching { MultiSourceEngine(listOf(adapterA), maxConcurrent = 0) }.isFailure)
-    println("PASS: 11/11 source-engine assertions")
+    val epQuery = MediaQuery("İsyan", 2026, MediaKind.SERIES, 42, 3, 2)
+    val exactEpisode = MediaOffer("alpha", "A", "İsyan", 2026,
+        MediaKind.SERIES, "https://a.test/tv/42/s3e2", 42, 3, 2)
+    val otherEpisode = exactEpisode.copy(episode = 3,
+        pageUrl = "https://a.test/tv/42/s3e3")
+    val showOnly = exactEpisode.copy(season = null, episode = null,
+        pageUrl = "https://a.test/tv/42")
+    val episodeEngine = MultiSourceEngine(listOf(
+        TestAdapter("alpha", listOf(exactEpisode, otherEpisode, showOnly))))
+    check(episodeEngine.find(epQuery) == listOf(exactEpisode))
+    check(runCatching {
+        MediaQuery("İsyan", 2026, MediaKind.SERIES, 42, 3, null)
+    }.isFailure)
+    check(runCatching {
+        MediaOffer("alpha", "A", "İsyan", 2026,
+            MediaKind.MOVIE, "https://a.test/movie/42", 42, 3, 2)
+    }.isFailure)
+    println("PASS: source-engine + exact-episode assertions")
 }
