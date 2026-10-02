@@ -28,7 +28,8 @@ internal object DetailMetaRow {
         val imdb: Double?,
         val tmdb: Double?,
         val genres: List<String>,
-        val nextEpisode: String? = null
+        val nextEpisode: String? = null,
+        val nextEpisodeUntilMillis: Long? = null
     )
 
     private const val PROVIDER = "EA-FB V6 STAGING"
@@ -60,8 +61,11 @@ internal object DetailMetaRow {
         attach(context as? Activity)
     }
 
-    fun publish(url: String, imdb: Double?, tmdb: Double?, genres: List<String>, nextEpisode: String? = null) {
-        entries[url] = Meta(imdb, tmdb, genres, nextEpisode)
+    fun publish(
+        url: String, imdb: Double?, tmdb: Double?, genres: List<String>,
+        nextEpisode: String? = null, nextEpisodeUntilMillis: Long? = null
+    ) {
+        entries[url] = Meta(imdb, tmdb, genres, nextEpisode, nextEpisodeUntilMillis)
         // V38: load() can spend longer than the fragment's first lifecycle window
         // collecting season metadata. Keep retries bounded and cheap, but let the
         // host bind its result views before the last passes.
@@ -217,7 +221,11 @@ internal object DetailMetaRow {
         val nextId = activity.resources.getIdentifier("result_next_airing", "id", activity.packageName)
         val timeId = activity.resources.getIdentifier("result_next_airing_time", "id", activity.packageName)
         if (holderId == 0 || nextId == 0 || timeId == 0) return
-        val label = meta.nextEpisode
+        val label = meta.nextEpisode?.takeIf {
+            meta.nextEpisodeUntilMillis?.let { until ->
+                System.currentTimeMillis() < until
+            } == true
+        }
         if (label == null) {
             // A recycled CloudStream detail fragment may still display a
             // previous next-air label. This provider has no future airing:
