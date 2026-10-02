@@ -74,5 +74,28 @@ fun main() = runBlocking {
         MediaOffer("alpha", "A", "İsyan", 2026,
             MediaKind.MOVIE, "https://a.test/movie/42", 42, 3, 2)
     }.isFailure)
+    val fallbackA = TestAdapter("source-a", listOf(
+        exactEpisode.copy(providerId = "source-a")), links = emptyList())
+    val fallbackB = TestAdapter("source-b", listOf(
+        exactEpisode.copy(providerId = "source-b")), links = listOf(
+        SourceLink("source-b", "https://licensed.example/episode.m3u8",
+            1080, "tr", null)))
+    val fallbackEngine = MultiSourceEngine(listOf(fallbackA, fallbackB))
+    val fallbackOffers = listOf(
+        exactEpisode.copy(providerId = "source-b"),
+        exactEpisode.copy(providerId = "source-a"))
+    check(fallbackEngine.resolveFirstAvailable(epQuery, fallbackOffers, 1000,
+        listOf("source-a", "source-b")).single().provider == "source-b")
+    check(fallbackEngine.resolveFirstAvailable(epQuery, fallbackOffers, 1000,
+        listOf("source-b", "source-a")).single().provider == "source-b")
+    check(fallbackEngine.resolveFirstAvailable(epQuery,
+        listOf(otherEpisode.copy(providerId = "source-b")), 1000,
+        listOf("source-b")).isEmpty())
+    check(fallbackEngine.resolveFirstAvailable(epQuery,
+        listOf(exactEpisode.copy(providerId = "unknown")), 1000,
+        listOf("unknown")).isEmpty())
+    check(runCatching {
+        fallbackEngine.resolveFirstAvailable(epQuery, fallbackOffers, -1)
+    }.isFailure)
     println("PASS: source-engine + exact-episode assertions")
 }
