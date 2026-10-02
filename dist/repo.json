@@ -4,6 +4,6 @@
   "description": "Tek eklentide film, dizi ve izinli canlı TV",
   "manifestVersion": 1,
   "pluginLists": [
-    "https://raw.githubusercontent.com/eaatabay/EA-FB/main/dist/plugins.json"
+    "https://raw.githubusercontent.com/eaatabay/EA-FB/fix/season-title-refresh-v48/dist/plugins.json"
   ]
 }
