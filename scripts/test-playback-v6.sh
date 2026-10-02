@@ -29,9 +29,18 @@ kotlinc EA-FB/src/main/kotlin/com/eafb/PlaybackData.kt \
 java -jar "$TMP/playback-data.jar"
 
 # The exact episode query also depends on the existing coroutine-based engine.
-KOTLIN_HOME_REAL="$(cd "$(dirname "$(command -v kotlinc)")/.." && pwd)"
-COROUTINES="$KOTLIN_HOME_REAL/lib/kotlinx-coroutines-core-jvm.jar"
-if [ ! -f "$COROUTINES" ]; then
+KOTLINC_REAL="$(readlink -f "$(command -v kotlinc)" || command -v kotlinc)"
+KOTLIN_HOME_REAL="$(cd "$(dirname "$KOTLINC_REAL")/.." && pwd)"
+COROUTINES=""
+for candidate in "${KOTLIN_HOME:-}/lib/kotlinx-coroutines-core-jvm.jar" \
+  "$KOTLIN_HOME_REAL/lib/kotlinx-coroutines-core-jvm.jar"; do
+  if [ -f "$candidate" ]; then COROUTINES="$candidate"; break; fi
+done
+if [ -z "$COROUTINES" ]; then
+  COROUTINES="$(find "$HOME/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlinx/kotlinx-coroutines-core-jvm" \
+    -name 'kotlinx-coroutines-core-jvm-1.9.0.jar' -type f -print -quit 2>/dev/null || true)"
+fi
+if [ -z "$COROUTINES" ]; then
   echo "Coroutines jar unavailable: exact episode query test not run" >&2
   exit 2
 fi
