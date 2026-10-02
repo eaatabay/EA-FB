@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {playbackKey,recordPlaybackSuccess,findPlaybackCandidates,\n  expirePlaybackCandidate,prioritizeApprovedOffers}
+import {playbackKey,recordPlaybackSuccess,findPlaybackCandidates,
+  expirePlaybackCandidate,prioritizeApprovedOffers}
   from '../src/playback-success.mjs';
 
 test('movie and episode keys are separate and validated', () => {
