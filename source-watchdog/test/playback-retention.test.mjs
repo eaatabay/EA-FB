@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {pruneExpiredPlaybackCandidates} from "../src/playback-retention.mjs";
+import {pruneExpiredPlaybackCandidates,pruneExpiredObserverReceipts} from "../src/playback-retention.mjs";
 
 test("expiry maintenance deletes at most a bounded batch",async()=>{
   let sql,args;
@@ -21,4 +21,17 @@ test("retention is private, requires D1 and bounded valid clock",async()=>{
     [{prepare(){}},NaN,250],
   ]) await assert.rejects(pruneExpiredPlaybackCandidates(...args),
     /invalid_playback_retention/);
+});
+
+test("expired observer receipts have bounded cleanup and no identity fields",async()=>{
+  let sql,args;
+  const db={prepare(query){sql=query;return {bind(...params){args=params;
+    return {async run(){return {meta:{changes:3}};}};}};}};
+  assert.deepEqual(await pruneExpiredObserverReceipts(db,5000,10),
+    {deleted:3});
+  assert.match(sql,/DELETE FROM playback_observer_receipts/);
+  assert.match(sql,/expires_at_ms < \?/);
+  assert.deepEqual(args,[5000,10]);
+  await assert.rejects(pruneExpiredObserverReceipts(db,5000,1001),
+    /invalid_observer_retention/);
 });
