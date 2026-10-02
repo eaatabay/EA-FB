@@ -1,0 +1,8 @@
+{
+  "name": "EA-FB V45 FROZEN",
+  "description": "Frozen V45 archive",
+  "manifestVersion": 1,
+  "pluginLists": [
+    "https://raw.githubusercontent.com/eaatabay/EA-FB/archive/frozen-v45-20261002/archive/v45/plugins.json"
+  ]
+}
