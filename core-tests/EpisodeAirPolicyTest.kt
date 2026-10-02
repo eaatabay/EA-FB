@@ -16,5 +16,20 @@ fun main() {
     check(EpisodeAirPolicy.parse("2026-09-20", now) == null)
     check(EpisodeAirPolicy.parse("2026-02-30", now) == null)
     check(EpisodeAirPolicy.parse("not-a-date", now) == null)
-    println("PASS: 8/8 episode air-date assertions")
+    val oct2 = SimpleDateFormat("yyyy-MM-dd", Locale.ROOT)
+        .parse("2026-10-02")!!.time
+    // Reported Cennetin Doğusu case: episode aired on October 1, but the
+    // detail screen still claimed it was the next upcoming episode on Oct 2.
+    check(EpisodeAirPolicy.nextAirDateLabel(
+        "2026-10-01", 1, 7, oct2) == null)
+    check(EpisodeAirPolicy.nextAirDateLabel(
+        "2026-10-02", 1, 8, oct2) == null)
+    val future = EpisodeAirPolicy.nextAirDateLabel(
+        "2026-10-03", 1, 9, oct2)
+    check(future != null && future.startsWith("Sonraki bölüm (S1 B9): 3 Ekim 2026"))
+    check(EpisodeAirPolicy.nextAirDateLabel(
+        "2026-02-30", 1, 10, oct2) == null)
+    check(EpisodeAirPolicy.nextAirDateLabel(
+        "", 1, 10, oct2) == null)
+    println("PASS: episode air-date and stale detail label assertions")
 }
