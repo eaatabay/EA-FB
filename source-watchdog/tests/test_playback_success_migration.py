@@ -72,6 +72,21 @@ class PlaybackSuccessMigrationTests(unittest.TestCase):
                 self.insert(*values)
             self.db.rollback()
 
+    def test_equal_timestamp_replay_does_not_double_count(self):
+        self.insert()
+        sql = """INSERT INTO playback_success
+          (media_kind,tmdb_id,season,episode,source_id,variant_id,
+           audio_language,quality,confirmed_count,last_confirmed_at_ms,expires_at_ms)
+          VALUES ('series',123,3,2,'source-a','tr-1080','tr',1080,1,1000,2000)
+          ON CONFLICT(media_kind,tmdb_id,season,episode,source_id,variant_id)
+          DO UPDATE SET confirmed_count=playback_success.confirmed_count+1,
+            last_confirmed_at_ms=excluded.last_confirmed_at_ms,
+            expires_at_ms=excluded.expires_at_ms
+          WHERE excluded.last_confirmed_at_ms > playback_success.last_confirmed_at_ms"""
+        self.assertEqual(self.db.execute(sql).rowcount, 0)
+        self.assertEqual(self.db.execute(
+            "SELECT confirmed_count FROM playback_success").fetchone()[0], 1)
+
     def test_invalid_ttl_and_duplicate_rejected(self):
         self.insert()
         with self.assertRaises(sqlite3.IntegrityError):
