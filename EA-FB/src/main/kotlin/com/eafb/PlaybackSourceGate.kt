@@ -23,6 +23,32 @@ object PlaybackSourceGate {
         }.distinctBy { it.id }
     }
 
+    /**
+     * Produce alternate links for the player's manual source selector.
+     * Each link is freshly resolved by an independently permitted adapter.
+     * Unlike resolve(), this does not stop at the first successful source.
+     */
+    suspend fun alternatives(
+        data: String,
+        title: String,
+        year: Int?,
+        installed: List<MediaSourceAdapter>,
+        releaseApprovedIds: Set<String>,
+        userEnabledIds: Set<String>,
+        healthyIds: Set<String>,
+        nowMillis: Long,
+        preferredLanguage: String = "tr",
+        maxQuality: Int = 1080
+    ): List<SourceLink> {
+        val media = query(data, title, year) ?: return emptyList()
+        val approved = permitted(installed, releaseApprovedIds, userEnabledIds, healthyIds)
+        if (approved.isEmpty()) return emptyList()
+        val engine = MultiSourceEngine(approved)
+        val offers = engine.find(media)
+        if (offers.isEmpty()) return emptyList()
+        return engine.resolve(offers, nowMillis, preferredLanguage, maxQuality)
+    }
+
     fun query(data: String, title: String, year: Int?): MediaQuery? =
         PlaybackQuery.fromData(data, title, year)
 
