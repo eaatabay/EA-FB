@@ -38,6 +38,18 @@ fun main() = runBlocking {
         .canResolve("ea-fb:movie:42"))
     check(!runtime(setOf("licensed"), setOf("licensed"), emptySet())
         .canResolve("ea-fb:movie:42"))
+    val freshRuntime = PlaybackSourceRuntime.fromHealthObservations(
+        listOf(adapter), setOf("licensed"), setOf("licensed"),
+        listOf(SourceHealthObservation("licensed", true, 1000)), 1050, 100)
+    check(freshRuntime.canResolve("ea-fb:movie:42"))
+    val expiredRuntime = PlaybackSourceRuntime.fromHealthObservations(
+        listOf(adapter), setOf("licensed"), setOf("licensed"),
+        listOf(SourceHealthObservation("licensed", true, 1000)), 1100, 100)
+    check(!expiredRuntime.canResolve("ea-fb:movie:42"))
+    val revokedRuntime = PlaybackSourceRuntime.fromHealthObservations(
+        listOf(adapter), emptySet(), setOf("licensed"),
+        listOf(SourceHealthObservation("licensed", true, 1000)), 1050, 100)
+    check(!revokedRuntime.canResolve("ea-fb:movie:42"))
     check(runCatching {
         PlaybackSourceRuntime(listOf(adapter, adapter), setOf("licensed"),
             setOf("licensed"), setOf("licensed"))
