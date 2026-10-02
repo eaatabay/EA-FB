@@ -31,5 +31,15 @@ fun main() {
         "2026-02-30", 1, 10, oct2) == null)
     check(EpisodeAirPolicy.nextAirDateLabel(
         "", 1, 10, oct2) == null)
+    // Air-date is calendar-local: the same past-date rejection must hold on
+    // a Mi Box in Türkiye, not only in the UTC CI fixture.
+    TimeZone.setDefault(TimeZone.getTimeZone("Europe/Istanbul"))
+    val istanbulOct2 = SimpleDateFormat("yyyy-MM-dd", Locale.ROOT)
+        .parse("2026-10-02")!!.time
+    check(EpisodeAirPolicy.nextAirDateLabel(
+        "2026-10-01", 1, 7, istanbulOct2) == null)
+    check(EpisodeAirPolicy.nextAirDateLabel(
+        "2026-10-02", 1, 8, istanbulOct2) == null)
+    TimeZone.setDefault(TimeZone.getTimeZone("UTC"))
     println("PASS: episode air-date and stale detail label assertions")
 }
