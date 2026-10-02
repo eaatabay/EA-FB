@@ -4,11 +4,13 @@ import unittest
 from pathlib import Path
 
 MIGRATION = Path(__file__).resolve().parents[1] / "migrations" / "0003_playback_success.sql"
+RETENTION = Path(__file__).resolve().parents[1] / "migrations" / "0004_playback_retention.sql"
 
 class PlaybackSuccessMigrationTests(unittest.TestCase):
     def setUp(self):
         self.db = sqlite3.connect(":memory:")
         self.db.executescript(MIGRATION.read_text(encoding="utf-8"))
+        self.db.executescript(RETENTION.read_text(encoding="utf-8"))
 
     def tearDown(self):
         self.db.close()
@@ -35,6 +37,21 @@ class PlaybackSuccessMigrationTests(unittest.TestCase):
         self.assertEqual(self.db.execute("""SELECT COUNT(*) FROM playback_success
           WHERE media_kind='series' AND tmdb_id=123 AND season=3
           AND episode=2 AND expires_at_ms>2000""").fetchone()[0],0)
+
+    def test_bounded_retention_keeps_unexpired_candidates(self):
+        self.insert(episode=2, expires=2000)
+        self.insert(episode=3, expires=3000)
+        self.insert(episode=4, expires=9000)
+        cleanup = """DELETE FROM playback_success WHERE
+          (media_kind,tmdb_id,season,episode,source_id,variant_id) IN
+          (SELECT media_kind,tmdb_id,season,episode,source_id,variant_id
+           FROM playback_success WHERE expires_at_ms<=?
+           ORDER BY expires_at_ms ASC LIMIT ?)"""
+        self.assertEqual(self.db.execute(cleanup, (4000, 1)).rowcount, 1)
+        self.assertEqual(self.db.execute(cleanup, (4000, 1)).rowcount, 1)
+        self.assertEqual(self.db.execute(cleanup, (4000, 1)).rowcount, 0)
+        self.assertEqual(self.db.execute(
+            "SELECT episode FROM playback_success").fetchone()[0], 4)
 
     def test_invalid_media_keys_rejected(self):
         for values in [
