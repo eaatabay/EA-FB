@@ -94,6 +94,7 @@ test("untrusted source IDs are escaped in editable controls",()=>{
   source.revision=3;
   const html=renderAdminDashboard(summarizeSources([source],1800000000000),
     {editable:true,nonce:"safe"});
-  assert.doesNotMatch(html,/\sonclick\s*=/);
+  assert.doesNotMatch(html,/\sonclick\s*=\s*[\x27\x22]/);
+  assert.match(html,/data-source=\x27x&#39; onclick=&#39;alert\(1\)\x27/);
   assert.match(html,/&#39;/);
 });
