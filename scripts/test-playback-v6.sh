@@ -6,7 +6,8 @@ echo "== EA-FB V6 central playback: offline Node tests =="
 node --test source-watchdog/test/playback-success.test.mjs \
   source-watchdog/test/playback-candidate-service.test.mjs \
   source-watchdog/test/trusted-playback-recorder.test.mjs \
-  source-watchdog/test/playback-public-surface.test.mjs
+  source-watchdog/test/playback-public-surface.test.mjs \
+  source-watchdog/test/playback-retention.test.mjs
 
 echo "== EA-FB V6 central playback: isolated SQLite migration tests =="
 python3 -m unittest discover -s source-watchdog/tests \
