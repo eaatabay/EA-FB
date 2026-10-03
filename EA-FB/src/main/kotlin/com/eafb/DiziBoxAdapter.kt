@@ -117,7 +117,9 @@ class DiziBoxAdapter(private val origin: String = "https://www.dizibox.live") : 
      * page, not an HLS URL; never synthesize /embed/sheila/... from its ID.
      * Fail closed if the page does not expose a real playlist.
      */
-    private suspend fun resolvePlayer(iframe: String, referer: String): List<SourceLink> {
+    private suspend fun resolvePlayer(iframe: String, referer: String, depth: Int = 0): List<SourceLink> {
+        // Bound nested player redirects even if each hop has a different URL.
+        if (depth >= 4) return emptyList()
         val uri = try { URI(iframe) } catch (_: Exception) { return emptyList() }
         if (uri.scheme != "https" || uri.userInfo != null || uri.host.isNullOrBlank())
             return emptyList()
@@ -134,7 +136,7 @@ class DiziBoxAdapter(private val origin: String = "https://www.dizibox.live") : 
                 ?: king.selectFirst("iframe")?.absUrl("src")
                 ?: return emptyList()
             if (nested == iframe || nested == kingUrl) return emptyList()
-            return resolvePlayer(nested, kingUrl)
+            return resolvePlayer(nested, kingUrl, depth + 1)
         }
         if (uri.host == root.host && uri.path.contains("/player/moly/moly.php")) {
             val playerUrl = iframe.replace("moly.php?h=", "moly.php?wmode=opaque&h=")
@@ -145,7 +147,7 @@ class DiziBoxAdapter(private val origin: String = "https://www.dizibox.live") : 
                 ?: player.selectFirst("div#Player iframe")?.absUrl("src")
                 ?: return emptyList()
             if (nested == iframe || nested == playerUrl) return emptyList()
-            return resolvePlayer(nested, playerUrl)
+            return resolvePlayer(nested, playerUrl, depth + 1)
         }
         if (uri.host != "dbx.molystream.org" || !uri.path.startsWith("/embed/"))
             return emptyList()
