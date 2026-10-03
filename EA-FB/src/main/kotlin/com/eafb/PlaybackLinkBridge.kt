@@ -7,12 +7,10 @@ package com.eafb
  */
 class PlaybackSourceRuntime(
     installedAdapters: List<MediaSourceAdapter>,
-    releaseApprovedIds: Set<String>,
     userEnabledIds: Set<String>,
     healthyIds: Set<String>
 ) {
     private val installedAdapters = installedAdapters.toList()
-    private val releaseApprovedIds = releaseApprovedIds.toSet()
     private val userEnabledIds = userEnabledIds.toSet()
     private val healthyIds = healthyIds.toSet()
 
@@ -28,20 +26,19 @@ class PlaybackSourceRuntime(
          */
         fun fromHealthObservations(
             installedAdapters: List<MediaSourceAdapter>,
-            releaseApprovedIds: Set<String>,
-            userEnabledIds: Set<String>,
+                    userEnabledIds: Set<String>,
             observations: List<SourceHealthObservation>,
             nowMillis: Long,
             ttlMillis: Long = 15 * 60 * 1000L
         ): PlaybackSourceRuntime = PlaybackSourceRuntime(
-            installedAdapters, releaseApprovedIds, userEnabledIds,
+            installedAdapters, userEnabledIds,
             PlaybackSourceHealth.healthyIds(observations, nowMillis, ttlMillis)
         )
     }
 
     private fun permitted(): List<MediaSourceAdapter> =
         PlaybackSourceGate.permitted(
-            installedAdapters, releaseApprovedIds, userEnabledIds, healthyIds
+            installedAdapters, userEnabledIds, healthyIds
         )
 
     fun canResolve(data: String): Boolean =
@@ -55,7 +52,7 @@ class PlaybackSourceRuntime(
     ): List<SourceLink> {
         if (!canResolve(data)) return emptyList()
         return PlaybackSourceGate.alternatives(
-            data, title, year, permitted(), releaseApprovedIds,
+            data, title, year, permitted(),
             userEnabledIds, healthyIds, nowMillis
         )
     }
@@ -78,7 +75,6 @@ class PlaybackSourceRuntime(
 object PlaybackLinkBridge {
     private val runtime = PlaybackSourceRuntime(
         installedAdapters = listOf(DiziYouAdapter(), DiziBoxAdapter()),
-        releaseApprovedIds = emptySet(),
         userEnabledIds = emptySet(),
         healthyIds = emptySet()
     )
