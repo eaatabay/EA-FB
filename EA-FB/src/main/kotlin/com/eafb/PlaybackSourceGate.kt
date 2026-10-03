@@ -12,9 +12,10 @@ object PlaybackSourceGate {
         userEnabledIds: Set<String>,
         healthyIds: Set<String>
     ): List<MediaSourceAdapter> {
-        if (userEnabledIds.isEmpty() || healthyIds.isEmpty())
+        if (releaseApprovedIds.isEmpty() || userEnabledIds.isEmpty() || healthyIds.isEmpty())
             return emptyList()
         return installed.filter { adapter ->
+                adapter.id in releaseApprovedIds &&
                 adapter.id in userEnabledIds &&
                 adapter.id in healthyIds &&
                 !adapter.id.startsWith("fixture-")
