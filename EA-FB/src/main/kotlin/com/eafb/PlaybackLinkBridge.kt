@@ -72,12 +72,12 @@ class PlaybackSourceRuntime(
 }
 
 /**
- * V49-compatible default: no unreviewed sources, no network discovery,
+ * V49-compatible default: DiziYou candidate installed but not release-approved,
  * no credential sharing. Wiring a reviewed runtime is a separate release step.
  */
 object PlaybackLinkBridge {
     private val runtime = PlaybackSourceRuntime(
-        installedAdapters = emptyList(),
+        installedAdapters = listOf(DiziYouAdapter()),
         releaseApprovedIds = emptySet(),
         userEnabledIds = emptySet(),
         healthyIds = emptySet()
