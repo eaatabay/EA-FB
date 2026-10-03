@@ -43,3 +43,10 @@ References:
 
 ## Status
 **Step 6 remains OPEN.** API candidates are documented; no source's content rights or live playable endpoint have been verified, and no adapter has been registered. Do not report real film/episode playback as complete.
+
+## DiziMom — decompiled PLT-KOD audit (2026-10-03)
+- The supplied decompiled `DiziMomExtractor.java` includes `searchWithAjax`, `searchWithPage` and an `extract` method. Previous shorthand that DiziMom's extraction path was independently validated was **incorrect**: JADX output includes tangled coroutine state-machine control flow, so method presence does not prove executable correctness or a reproducible host resolver.
+- `searchWithPage` references `div.single-item`, `div.categorytitle a`, `div.cat-img a` and a `Yapım Yılı` pattern. These are observations from decompiled PLT, **not** verified against the current live site.
+- The current EA-FB `DiziMomAdapter` is a separately written, inactive candidate. It returns no `SourceLink`; no approved playback endpoint, item rights, live network contract, or Mi Box result exists.
+- Do not infer that PLT's use of Cloudflare interception, Ajax nonce or embedded host player grants authorization to reproduce those methods. No such bypass is part of the EA-FB candidate.
+- Next acceptance prerequisite: a documented permitted playback API and an item with verifiable playback rights; then implement and test an independent resolver. Until then keep `PlaybackLinkBridge` empty and step 6 OPEN.
