@@ -59,6 +59,16 @@ class PlaybackSourceRuntime(
             userEnabledIds, healthyIds, nowMillis
         )
     }
+
+    /** One entry per normal provider; ClipBox remains one final entry. */
+    suspend fun sourceGroups(
+        data: String,
+        title: String,
+        year: Int?,
+        nowMillis: Long
+    ): List<PlaybackSourceList.Entry> = PlaybackSourceList.group(
+        alternatives(data, title, year, nowMillis), nowMillis
+    )
 }
 
 /**
@@ -83,4 +93,11 @@ object PlaybackLinkBridge {
         year: Int?,
         nowMillis: Long
     ): List<SourceLink> = runtime.alternatives(data, title, year, nowMillis)
+
+    suspend fun sourceGroups(
+        data: String,
+        title: String,
+        year: Int?,
+        nowMillis: Long
+    ): List<PlaybackSourceList.Entry> = runtime.sourceGroups(data, title, year, nowMillis)
 }
