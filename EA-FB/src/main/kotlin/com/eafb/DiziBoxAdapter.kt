@@ -155,7 +155,7 @@ class DiziBoxAdapter(private val origin: String = "https://www.dizibox.live") : 
           catch (_: Exception) { return emptyList() }
         // Only trust URLs explicitly advertised by the player document.
         val candidates = Regex(
-            """(?:file|src|source)\s*[:=]\s*[\'"](https://[^\'"]+\.m3u8(?:\?[^\'"]*)?)[\'"]""",
+            """(?:file|src|source)\s*[:=]\s*['"](https://[^'"]+\.m3u8(?:\?[^'"]*)?)['"]""",
             RegexOption.IGNORE_CASE
         ).findAll(html).map { it.groupValues[1].replace("&amp;", "&") }.distinct().take(5)
         for (candidate in candidates) {
