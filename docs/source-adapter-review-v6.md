@@ -55,3 +55,8 @@ References:
 - Inspected `PLT-KOD/sources/com/pltmustafa/pltstream/extractors/sites/DiziMomExtractor$extract$2$1$1.java`, not just the outer `DiziMomExtractor.java`.
 - The nested `invokeSuspend` contains a JADX `JadxOverflowException`, `Method dump skipped, instruction units count: 3504`, and ends in `UnsupportedOperationException("Method not decompiled...")`. The outer `extract` method existing is **not** evidence that the video resolver has been recovered.
 - The current independent DiziMom candidate has no resolved streams and must remain unregistered. Recovering the nested logic would require a separate source/bytecode analysis and lawful, documented endpoint and media rights review; never treat a decompiler stub as functioning extraction.
+
+## DiziMom supported-media correction
+- The supplied decompiled `DiziMomExtractor.java` declares `supportedTypes = {TvType.TvSeries, TvType.Movie}` (near source line 86). The existing EA-FB candidate's movie-only search guard is **an intentional conservative limitation**, not a faithful statement that the PLT adapter supports only movies.
+- Its nested episode resolver includes season, episode, iframe, embedded HTML, and HLS-related local variable names in Kotlin debug metadata, but the method body is not decompiled. Debug metadata cannot establish which paths work or which URL is playable.
+- Do not broaden EA-FB to series merely by changing the kind guard: `MediaOffer` requires exact season+episode and `MultiSourceEngine.sameContent` rejects unverifiable episode identities.
