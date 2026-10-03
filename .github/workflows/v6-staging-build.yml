@@ -4,6 +4,9 @@ name: EA-FB V6 staging CS3 build
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - test/dizibox-king-mibox
 
 permissions:
   contents: read
