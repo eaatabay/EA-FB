@@ -246,21 +246,34 @@ object EASettingsDialog {
                         "Çalışmayan aç/kapat seçenekleri gösterilmiyor.", 14f, MUTED),
                     margin(ctx, 0, 14))
             } else {
-                section(ctx, content, "FİLM VE DİZİ KAYNAKLARI")
-                content.addView(text(ctx,
-                    "EA-FB'ye henüz doğrulanmış harici film/dizi oynatma kaynağı bağlanmadı. " +
-                        "Başka eklentilerdeki kaynaklar otomatik olarak burada çalışmaz.", 16f),
-                    margin(ctx, 0, 16))
-                val empty = text(ctx, "BAĞLI KAYNAK: 0", 17f, YELLOW, true).apply {
-                    gravity = Gravity.CENTER
-                    background = shape(ctx, PANEL)
-                    setPadding(dp(ctx, 16), dp(ctx, 26), dp(ctx, 16), dp(ctx, 26))
+                section(ctx, content, "FİLM VE DİZİ KAYNAKLARI",
+                    "Kaynakları ayrı ayrı açıp kapatabilirsiniz. Açık olması, bağlantının çalıştığı anlamına gelmez.")
+                for ((id, label) in listOf("dizibox" to "DiziBox (deneme)",
+                        "diziyou" to "DiziYou (deneme)")) {
+                    val row = horizontal(ctx).apply {
+                        background = shape(ctx, PANEL)
+                        setPadding(dp(ctx, 16), dp(ctx, 8), dp(ctx, 16), dp(ctx, 8))
+                        isFocusable = true
+                        isClickable = true
+                    }
+                    row.addView(text(ctx, label, 16f), LinearLayout.LayoutParams(
+                        0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+                    val toggle = Switch(ctx).apply {
+                        isChecked = EASettings.sourceEnabled(id)
+                        showText = false
+                        setOnCheckedChangeListener { _, enabled ->
+                            EASettings.setSourceEnabled(id, enabled)
+                            dirty = true
+                        }
+                    }
+                    row.addView(toggle)
+                    row.setOnClickListener { toggle.isChecked = !toggle.isChecked }
+                    content.addView(row, margin(ctx, 0, 5))
                 }
-                content.addView(empty, margin(ctx, 0, 16))
                 content.addView(text(ctx,
-                    "Doğrulanıp izin verilen kaynaklar eklendikçe bu sayfada ayrı " +
-                        "açma/kapatma düğmeleri olacak. Canlı TV bu listenin dışında tutulur.",
-                    14f, MUTED), margin(ctx, 0, 16))
+                    "Sağlık kontrolünden geçmeyen kaynak oynatıcıya eklenmez. " +
+                        "Bu anahtarlar yalnızca kullanıcı tercihini kaydeder.", 14f, MUTED),
+                    margin(ctx, 10, 16))
             }
         }
         // CloudStream exposes a first-party force-home-reload event. Use it on
