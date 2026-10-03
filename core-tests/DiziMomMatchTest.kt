@@ -11,5 +11,5 @@ fun main() {
     check(DiziMomMatch.cleanTitle("War Final") == "War")
     check(DiziMomMatch.cleanTitle("The Final") == "The")
     check(DiziMomMatch.cleanTitle("Final") == "Final")
-    println("DiziMomMatch: 9 checks passed")
+    println("DiziMomMatch: 10 checks passed")
 }
