@@ -43,7 +43,7 @@ class DiziMomAdapter(private val origin: String) : MediaSourceAdapter {
                 if (query.year != null && publishedYear != query.year)
                     return@mapNotNull null
                 if (url.isBlank() || !sameOrigin(url) ||
-                    Identity.normalize(label) != Identity.normalize(query.title))
+                    Identity.normalize(cleanSearchTitle(label)) != Identity.normalize(query.title))
                     return@mapNotNull null
                 MediaOffer(
                     providerId = id, providerTitle = "DiziMom", title = query.title,
@@ -58,6 +58,17 @@ class DiziMomAdapter(private val origin: String) : MediaSourceAdapter {
         // Never emit an iframe, HTML page, or unknown player as a playable link.
         // A reviewed per-host resolver must be implemented before activation.
         return emptyList()
+    }
+
+    // Remove only trailing site labels; never strip words from the movie title itself.
+    private fun cleanSearchTitle(raw: String): String {
+        var title = raw.trim()
+        val suffix = Regex(
+            """\\s+(?:Türkçe Dublaj|Türkçe Altyazılı|Son Bölüm|izle|Final)\\s*$""",
+            RegexOption.IGNORE_CASE
+        )
+        repeat(3) { title = title.replace(suffix, "").trim() }
+        return title
     }
 
     private fun sameOrigin(value: String): Boolean = try {
