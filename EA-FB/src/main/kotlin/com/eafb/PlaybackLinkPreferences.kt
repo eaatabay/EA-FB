@@ -65,7 +65,9 @@ object PlaybackSourceList {
             .filterNot { it.equals(clipBoxProviderId, ignoreCase = true) }
             .sortedWith(String.CASE_INSENSITIVE_ORDER)
             .map { Entry(it, groups.getValue(it)) } +
-            groups.entries.filter { it.key.equals(clipBoxProviderId, ignoreCase = true) }
-                .take(1).map { Entry(it.key, it.value) }
+            valid.filter { it.provider.equals(clipBoxProviderId, ignoreCase = true) }
+                .takeIf { it.isNotEmpty() }
+                ?.let { listOf(Entry(clipBoxProviderId, it)) }
+                .orEmpty()
     }
 }
