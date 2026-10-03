@@ -19,7 +19,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: feature/detail-dual-ratings-v6
+          ref: test/dizibox-king-mibox
           persist-credentials: false
 
       - uses: actions/setup-java@v4
