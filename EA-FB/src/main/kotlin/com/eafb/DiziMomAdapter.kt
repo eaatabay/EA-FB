@@ -24,7 +24,8 @@ class DiziMomAdapter(private val origin: String) : MediaSourceAdapter {
     private val base = origin.trimEnd('/')
 
     override suspend fun search(query: MediaQuery): List<MediaOffer> {
-        if (query.title.isBlank() || query.kind == MediaKind.LIVE ||\n            query.season != null || query.episode != null) return emptyList()
+        if (query.title.isBlank() || query.kind == MediaKind.LIVE ||
+            query.season != null || query.episode != null) return emptyList()
         val encoded = URLEncoder.encode(query.title.trim(), "UTF-8")
         val page = try { app.get("$base/?s=$encoded").text }
             catch (_: Exception) { return emptyList() }
