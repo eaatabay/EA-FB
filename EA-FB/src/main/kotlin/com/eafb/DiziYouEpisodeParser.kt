@@ -12,10 +12,12 @@ object DiziYouEpisodeParser {
         season.find(heading)?.groupValues?.get(1)?.toIntOrNull() == expectedSeason &&
             episode.find(heading)?.groupValues?.get(1)?.toIntOrNull() == expectedEpisode
 
-    fun playerId(iframeUrl: String, expectedHost: String): String? = try {
+    fun playerId(iframeUrl: String, expectedHost: String): String? {
+        return try {
         val uri = URI(iframeUrl)
         if (uri.scheme != "https" || !uri.host.equals(expectedHost, ignoreCase = true) ||
-            uri.userInfo != null || uri.query != null || uri.fragment != null) return null
+            uri.userInfo != null || uri.query != null || uri.fragment != null) null
+        else {
         val name = uri.path.substringAfterLast('/')
         if (!name.endsWith(".html")) return null
         name.removeSuffix(".html").takeIf { itemId.matches(it) }
