@@ -24,12 +24,12 @@ class DiziMomAdapter(private val origin: String) : MediaSourceAdapter {
     private val base = origin.trimEnd('/')
 
     override suspend fun search(query: MediaQuery): List<MediaOffer> {
-        if (query.title.isBlank() || query.kind == MediaKind.LIVE) return emptyList()
+        if (query.title.isBlank() || query.kind == MediaKind.LIVE ||\n            query.season != null || query.episode != null) return emptyList()
         val encoded = URLEncoder.encode(query.title.trim(), "UTF-8")
         val page = try { app.get("$base/?s=$encoded").text }
             catch (_: Exception) { return emptyList() }
         val doc = Jsoup.parse(page, base)
-        return doc.select("article a[href], .result-item a[href], .search-item a[href]")
+        return doc.select("div.single-item")\n            .mapNotNull { card ->\n                val title = card.selectFirst("div.categorytitle a")?.text()?.trim()\n                    ?: return@mapNotNull null\n                val href = card.selectFirst("div.cat-img a")?.absUrl("href")\n                    ?: return@mapNotNull null\n                title to href\n            }
             .mapNotNull { anchor ->
                 val url = anchor.absUrl("href")
                 val label = anchor.attr("title").ifBlank { anchor.text() }.trim()
