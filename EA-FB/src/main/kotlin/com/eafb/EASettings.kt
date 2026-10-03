@@ -11,11 +11,20 @@ object EASettings {
     private const val STORE = "ea_fb_catalog_settings_v6_staging"
     private const val CATEGORY_PREFIX = "category_"
     private const val SORT_KEY = "catalog_sort"
+    private const val SOURCE_PREFIX = "source_enabled_"
 
     @Volatile private var preferences: SharedPreferences? = null
 
     fun initialize(context: Context) {
         preferences = context.applicationContext.getSharedPreferences(STORE, Context.MODE_PRIVATE)
+    }
+
+    /** External playback sources are opt-in and remain disabled by default. */
+    fun sourceEnabled(id: String): Boolean =
+        preferences?.getBoolean(SOURCE_PREFIX + id, false) ?: false
+
+    fun setSourceEnabled(id: String, enabled: Boolean) {
+        preferences?.edit()?.putBoolean(SOURCE_PREFIX + id, enabled)?.apply()
     }
 
     fun categoryEnabled(id: String): Boolean =
