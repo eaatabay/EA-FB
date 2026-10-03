@@ -3,8 +3,7 @@ package com.eafb
 /**
  * A fail-closed boundary between catalog playback identities and source discovery.
  * It is deliberately independent of CloudStream UI, network and D1.
- * A user-enabled source alone does not authorize an adapter: both release rights
- * and current health must independently permit it.
+ * Only installed, user-enabled, healthy sources participate in discovery.
  */
 object PlaybackSourceGate {
     fun permitted(
@@ -13,10 +12,9 @@ object PlaybackSourceGate {
         userEnabledIds: Set<String>,
         healthyIds: Set<String>
     ): List<MediaSourceAdapter> {
-        if (releaseApprovedIds.isEmpty() || userEnabledIds.isEmpty() || healthyIds.isEmpty())
+        if (userEnabledIds.isEmpty() || healthyIds.isEmpty())
             return emptyList()
         return installed.filter { adapter ->
-            adapter.id in releaseApprovedIds &&
                 adapter.id in userEnabledIds &&
                 adapter.id in healthyIds &&
                 !adapter.id.startsWith("fixture-")
@@ -53,8 +51,7 @@ object PlaybackSourceGate {
         PlaybackQuery.fromData(data, title, year)
 
     /**
-     * Discovery and resolution remain inactive without all three independent
-     * permissions. This pure orchestration layer does not change V49's UI,
+     * Discovery and resolution require user-enabled, healthy installed sources. This pure orchestration layer does not change V49's UI,
      * register adapters, grant rights, persist URLs or attest playback.
      */
     suspend fun resolve(
