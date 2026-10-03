@@ -42,3 +42,30 @@ object PlaybackLinkSelector {
             .toList()
     }
 }
+
+/**
+ * PLT-style single-provider source list: ordinary adapters first, ClipBox once
+ * at the end. ClipBox's internal playback choices are intentionally not expanded
+ * into the top-level list. This is presentation-only; it does not authorize,
+ * discover, or claim that any stream plays.
+ */
+object PlaybackSourceList {
+    data class Entry(val providerId: String, val links: List<SourceLink>)
+
+    fun group(
+        links: List<SourceLink>,
+        nowMillis: Long,
+        clipBoxProviderId: String = "clipbox"
+    ): List<Entry> {
+        require(nowMillis >= 0)
+        require(clipBoxProviderId.isNotBlank())
+        val valid = PlaybackLinkSelector.select(links, PlaybackLinkPreferences(), nowMillis)
+        val groups = valid.groupBy { it.provider }
+        return groups.keys
+            .filterNot { it.equals(clipBoxProviderId, ignoreCase = true) }
+            .sortedWith(String.CASE_INSENSITIVE_ORDER)
+            .map { Entry(it, groups.getValue(it)) } +
+            groups.entries.filter { it.key.equals(clipBoxProviderId, ignoreCase = true) }
+                .take(1).map { Entry(it.key, it.value) }
+    }
+}
