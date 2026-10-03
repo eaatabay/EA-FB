@@ -8,14 +8,12 @@ package com.eafb
 object PlaybackSourceGate {
     fun permitted(
         installed: List<MediaSourceAdapter>,
-        releaseApprovedIds: Set<String>,
         userEnabledIds: Set<String>,
         healthyIds: Set<String>
     ): List<MediaSourceAdapter> {
-        if (releaseApprovedIds.isEmpty() || userEnabledIds.isEmpty() || healthyIds.isEmpty())
+        if (userEnabledIds.isEmpty() || healthyIds.isEmpty())
             return emptyList()
         return installed.filter { adapter ->
-                adapter.id in releaseApprovedIds &&
                 adapter.id in userEnabledIds &&
                 adapter.id in healthyIds &&
                 !adapter.id.startsWith("fixture-")
@@ -32,7 +30,6 @@ object PlaybackSourceGate {
         title: String,
         year: Int?,
         installed: List<MediaSourceAdapter>,
-        releaseApprovedIds: Set<String>,
         userEnabledIds: Set<String>,
         healthyIds: Set<String>,
         nowMillis: Long,
@@ -40,7 +37,7 @@ object PlaybackSourceGate {
         maxQuality: Int = 1080
     ): List<SourceLink> {
         val media = query(data, title, year) ?: return emptyList()
-        val approved = permitted(installed, releaseApprovedIds, userEnabledIds, healthyIds)
+        val approved = permitted(installed, userEnabledIds, healthyIds)
         if (approved.isEmpty()) return emptyList()
         val engine = MultiSourceEngine(approved)
         val offers = engine.find(media)
@@ -60,7 +57,6 @@ object PlaybackSourceGate {
         title: String,
         year: Int?,
         installed: List<MediaSourceAdapter>,
-        releaseApprovedIds: Set<String>,
         userEnabledIds: Set<String>,
         healthyIds: Set<String>,
         nowMillis: Long,
@@ -69,7 +65,7 @@ object PlaybackSourceGate {
         maxQuality: Int = 1080
     ): List<SourceLink> {
         val media = query(data, title, year) ?: return emptyList()
-        val approved = permitted(installed, releaseApprovedIds, userEnabledIds, healthyIds)
+        val approved = permitted(installed, userEnabledIds, healthyIds)
         if (approved.isEmpty()) return emptyList()
         val engine = MultiSourceEngine(approved)
         val offers = engine.find(media)
