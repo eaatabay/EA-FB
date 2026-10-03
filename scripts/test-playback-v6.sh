@@ -57,6 +57,12 @@ kotlinc -cp "$COROUTINES" EA-FB/src/main/kotlin/com/eafb/Domain.kt \
   EA-FB/src/main/kotlin/com/eafb/SourceEngine.kt \
   core-tests/SourceEngineTest.kt -include-runtime -d "$TMP/playback-engine.jar"
 java -cp "$TMP/playback-engine.jar:$COROUTINES" com.eafb.SourceEngineTestKt
+echo "== EA-FB DiziMom catalog identity: offline Kotlin =="
+kotlinc EA-FB/src/main/kotlin/com/eafb/Domain.kt \
+  EA-FB/src/main/kotlin/com/eafb/DiziMomMatch.kt \
+  core-tests/DiziMomMatchTest.kt -include-runtime -d "$TMP/dizimom-match.jar"
+java -jar "$TMP/dizimom-match.jar"
+
 echo "== EA-FB V6 fail-closed source gate: offline Kotlin =="
 kotlinc -cp "$COROUTINES" EA-FB/src/main/kotlin/com/eafb/Domain.kt \
   EA-FB/src/main/kotlin/com/eafb/SourceEngine.kt \
