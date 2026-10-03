@@ -29,16 +29,18 @@ class DiziMomAdapter(private val origin: String) : MediaSourceAdapter {
         val page = try { app.get("$base/?s=$encoded").text }
             catch (_: Exception) { return emptyList() }
         val doc = Jsoup.parse(page, base)
-        return doc.select("div.single-item")\n            .mapNotNull { card ->\n                val title = card.selectFirst("div.categorytitle a")?.text()?.trim()\n                    ?: return@mapNotNull null\n                val href = card.selectFirst("div.cat-img a")?.absUrl("href")\n                    ?: return@mapNotNull null\n                title to href\n            }
-            .mapNotNull { anchor ->
-                val url = anchor.absUrl("href")
-                val label = anchor.attr("title").ifBlank { anchor.text() }.trim()
+        return doc.select("div.single-item")
+            .mapNotNull { card ->
+                val label = card.selectFirst("div.categorytitle a")?.text()?.trim()
+                    ?: return@mapNotNull null
+                val url = card.selectFirst("div.cat-img a")?.absUrl("href")
+                    ?: return@mapNotNull null
                 if (url.isBlank() || !sameOrigin(url) ||
-                    Identity.normalize(label) != Identity.normalize(query.title)) return@mapNotNull null
+                    Identity.normalize(label) != Identity.normalize(query.title))
+                    return@mapNotNull null
                 MediaOffer(
                     providerId = id, providerTitle = "DiziMom", title = query.title,
-                    year = query.year, kind = query.kind, pageUrl = url,
-                    tmdbId = query.tmdbId, season = query.season, episode = query.episode
+                    year = null, kind = query.kind, pageUrl = url
                 )
             }.distinctBy { it.pageUrl }.take(10)
     }
