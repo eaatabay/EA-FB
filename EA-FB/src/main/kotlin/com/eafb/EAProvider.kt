@@ -933,20 +933,27 @@ class EAProvider : MainAPI() {
             if (title.isBlank()) return false
             val year = mediaYear(metadata,
                 if (identity is PlaybackData.Movie) MediaKind.MOVIE else MediaKind.SERIES)
-            val links = PlaybackLinkBridge.alternatives(
+            val groups = PlaybackLinkBridge.sourceGroups(
                 data, title, year, System.currentTimeMillis()
             )
-            links.forEach { source ->
-                callback(newExtractorLink(
-                    source.provider, source.provider, source.url,
-                    type = if (source.url.substringBefore('?').endsWith(".m3u8", true))
-                        ExtractorLinkType.M3U8 else ExtractorLinkType.VIDEO
-                ) {
-                    quality = source.quality ?: 0
-                    referer = ""
-                })
+            groups.forEach { group ->
+                // Ordinary providers retain selectable qualities. ClipBox is
+                // represented by a single top-level entry until its own
+                // in-player choice UI is implemented and device-tested.
+                val choices = if (group.providerId.equals("clipbox", ignoreCase = true))
+                    group.links.take(1) else group.links
+                choices.forEach { source ->
+                    callback(newExtractorLink(
+                        group.providerId, group.providerId, source.url,
+                        type = if (source.url.substringBefore('?').endsWith(".m3u8", true))
+                            ExtractorLinkType.M3U8 else ExtractorLinkType.VIDEO
+                    ) {
+                        quality = source.quality ?: 0
+                        referer = ""
+                    })
+                }
             }
-            return links.isNotEmpty()
+            return groups.isNotEmpty()
         }
         return false
     }
