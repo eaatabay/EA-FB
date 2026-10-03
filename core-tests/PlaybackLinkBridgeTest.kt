@@ -67,5 +67,17 @@ fun main() = runBlocking {
         PlaybackSourceRuntime(listOf(adapter, adapter), setOf("licensed"),
             setOf("licensed"), setOf("licensed"))
     }.isFailure)
+    // PLT-style list: one row per site, ClipBox is always the final row.
+    val ordinary = SourceLink("dizibox", "https://example.org/a.m3u8", 720, "tr", null)
+    val clipA = SourceLink("clipbox", "https://example.org/clip-a.m3u8", 1080, "tr", null)
+    val clipB = SourceLink("clipbox", "https://example.org/clip-b.m3u8", 720, "tr", null)
+    val grouped = PlaybackSourceList.group(listOf(clipA, ordinary, clipB), 1000)
+    check(grouped.map { it.providerId } == listOf("dizibox", "clipbox"))
+    check(grouped.last().links.size == 2)
+    check(PlaybackSourceList.group(listOf(ordinary, ordinary), 1000).size == 1)
+    check(allowed.sourceGroups("ea-fb:movie:42", "İsyan", 2026, 1000)
+        .map { it.providerId } == listOf("licensed"))
+    check(PlaybackLinkBridge.sourceGroups("ea-fb:movie:42", "İsyan", 2026, 1000)
+        .isEmpty())
     println("PASS: V49 catalog bridge fails closed without live grants")
 }
