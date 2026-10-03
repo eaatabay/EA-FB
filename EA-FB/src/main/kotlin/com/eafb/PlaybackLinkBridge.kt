@@ -77,7 +77,7 @@ class PlaybackSourceRuntime(
  */
 object PlaybackLinkBridge {
     private val runtime = PlaybackSourceRuntime(
-        installedAdapters = listOf(DiziYouAdapter()),
+        installedAdapters = listOf(DiziYouAdapter(), DiziBoxAdapter()),
         releaseApprovedIds = emptySet(),
         userEnabledIds = emptySet(),
         healthyIds = emptySet()
