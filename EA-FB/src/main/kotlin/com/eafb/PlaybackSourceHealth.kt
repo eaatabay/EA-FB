@@ -3,7 +3,7 @@ package com.eafb
 /**
  * Explicit health observations, not an authorization source. A source is
  * eligible only while its latest observation is healthy and unexpired.
- * Health can never override release rights or user opt-in.
+ * Health can never override user opt-in.
  */
 data class SourceHealthObservation(
     val sourceId: String,
