@@ -60,14 +60,13 @@ object PlaybackSourceList {
         require(nowMillis >= 0)
         require(clipBoxProviderId.isNotBlank())
         val valid = PlaybackLinkSelector.select(links, PlaybackLinkPreferences(), nowMillis)
-        val groups = valid.groupBy { it.provider }
-        return groups.keys
-            .filterNot { it.equals(clipBoxProviderId, ignoreCase = true) }
-            .sortedWith(String.CASE_INSENSITIVE_ORDER)
-            .map { Entry(it, groups.getValue(it)) } +
-            valid.filter { it.provider.equals(clipBoxProviderId, ignoreCase = true) }
-                .takeIf { it.isNotEmpty() }
-                ?.let { listOf(Entry(clipBoxProviderId, it)) }
-                .orEmpty()
+        val ordinary = valid.filterNot {
+            it.provider.equals(clipBoxProviderId, ignoreCase = true)
+        }.groupBy { it.provider.lowercase(java.util.Locale.ROOT) }
+        val clipBox = valid.filter {
+            it.provider.equals(clipBoxProviderId, ignoreCase = true)
+        }
+        return ordinary.keys.sorted().map { Entry(it, ordinary.getValue(it)) } +
+            if (clipBox.isEmpty()) emptyList() else listOf(Entry(clipBoxProviderId, clipBox))
     }
 }
