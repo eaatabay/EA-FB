@@ -73,27 +73,35 @@ class PlaybackSourceRuntime(
  * enabled through settings; no credentials are shared.
  */
 object PlaybackLinkBridge {
-    private val runtime = PlaybackSourceRuntime(
-        installedAdapters = listOf(DiziYouAdapter(), DiziBoxAdapter()),
-        userEnabledIds = emptySet(),
-        healthyIds = emptySet()
-    )
+    private val installedAdapters: List<MediaSourceAdapter> =
+        listOf(DiziYouAdapter(), DiziBoxAdapter())
+
+    /** Re-read persisted switches for each playback request. A fresh health
+     * observation is still required; an enabled switch alone is not health. */
+    private fun runtime(nowMillis: Long): PlaybackSourceRuntime =
+        PlaybackSourceRuntime.fromHealthObservations(
+            installedAdapters = installedAdapters,
+            userEnabledIds = installedAdapters.map { it.id }
+                .filter { EASettings.sourceEnabled(it) }.toSet(),
+            observations = emptyList(),
+            nowMillis = nowMillis
+        )
 
     fun isCatalogIdentity(data: String): Boolean = PlaybackData.parse(data) != null
 
-    fun canResolve(data: String): Boolean = runtime.canResolve(data)
+    fun canResolve(data: String): Boolean = runtime(System.currentTimeMillis()).canResolve(data)
 
     suspend fun alternatives(
         data: String,
         title: String,
         year: Int?,
         nowMillis: Long
-    ): List<SourceLink> = runtime.alternatives(data, title, year, nowMillis)
+    ): List<SourceLink> = runtime(nowMillis).alternatives(data, title, year, nowMillis)
 
     suspend fun sourceGroups(
         data: String,
         title: String,
         year: Int?,
         nowMillis: Long
-    ): List<PlaybackSourceList.Entry> = runtime.sourceGroups(data, title, year, nowMillis)
+    ): List<PlaybackSourceList.Entry> = runtime(nowMillis).sourceGroups(data, title, year, nowMillis)
 }
