@@ -82,7 +82,7 @@ object PlaybackLinkBridge {
         PlaybackSourceRuntime.fromHealthObservations(
             installedAdapters = installedAdapters,
             userEnabledIds = installedAdapters.map { it.id }
-                .filter { EASettings.sourceEnabled(it) }.toSet(),
+                .filter { EASettings.sourceEnabled(it.id) }.toSet(),
             observations = emptyList(),
             nowMillis = nowMillis
         )
