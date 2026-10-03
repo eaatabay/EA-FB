@@ -37,11 +37,13 @@ jobs:
 
       - name: Install Android SDK API 35
         uses: android-actions/setup-android@v3
+        with:
+          packages: "platforms;android-35 platform-tools"
 
-      - name: Accept SDK licenses and install platform
+      - name: Check Android SDK installation
         run: |
-          yes | sdkmanager --licenses >/dev/null || true
-          sdkmanager "platforms;android-35" "platform-tools"
+          test -f "$ANDROID_HOME/platforms/android-35/android.jar"
+          echo "PASS: Android API 35 available at $ANDROID_HOME"
 
       - name: Build isolated red V6 package
         env:
