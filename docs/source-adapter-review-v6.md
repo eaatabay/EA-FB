@@ -50,3 +50,8 @@ References:
 - The current EA-FB `DiziMomAdapter` is a separately written, inactive candidate. It returns no `SourceLink`; no approved playback endpoint, item rights, live network contract, or Mi Box result exists.
 - Do not infer that PLT's use of Cloudflare interception, Ajax nonce or embedded host player grants authorization to reproduce those methods. No such bypass is part of the EA-FB candidate.
 - Next acceptance prerequisite: a documented permitted playback API and an item with verifiable playback rights; then implement and test an independent resolver. Until then keep `PlaybackLinkBridge` empty and step 6 OPEN.
+
+## Decompiled nested resolver finding (2026-10-03)
+- Inspected `PLT-KOD/sources/com/pltmustafa/pltstream/extractors/sites/DiziMomExtractor$extract$2$1$1.java`, not just the outer `DiziMomExtractor.java`.
+- The nested `invokeSuspend` contains a JADX `JadxOverflowException`, `Method dump skipped, instruction units count: 3504`, and ends in `UnsupportedOperationException("Method not decompiled...")`. The outer `extract` method existing is **not** evidence that the video resolver has been recovered.
+- The current independent DiziMom candidate has no resolved streams and must remain unregistered. Recovering the nested logic would require a separate source/bytecode analysis and lawful, documented endpoint and media rights review; never treat a decompiler stub as functioning extraction.
