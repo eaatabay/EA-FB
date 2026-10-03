@@ -73,6 +73,7 @@ kotlinc -cp "$COROUTINES" EA-FB/src/main/kotlin/com/eafb/Domain.kt \
   EA-FB/src/main/kotlin/com/eafb/PlaybackQuery.kt \
   EA-FB/src/main/kotlin/com/eafb/PlaybackSourceGate.kt \
   EA-FB/src/main/kotlin/com/eafb/PlaybackSourceHealth.kt \
+  EA-FB/src/main/kotlin/com/eafb/PlaybackLinkPreferences.kt \
   EA-FB/src/main/kotlin/com/eafb/PlaybackLinkBridge.kt \
   core-tests/PlaybackLinkBridgeTest.kt -include-runtime -d "$TMP/playback-link-bridge.jar"
 java -cp "$TMP/playback-link-bridge.jar:$COROUTINES" com.eafb.PlaybackLinkBridgeTestKt
