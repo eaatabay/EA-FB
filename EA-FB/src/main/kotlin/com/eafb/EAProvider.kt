@@ -914,12 +914,12 @@ class EAProvider : MainAPI() {
         }
         if (PlaybackLinkBridge.isCatalogIdentity(data)) {
             // V49 UI and existing demonstration/live playback paths stay intact.
-            // Without separately approved live adapters the bridge returns no
+            // Without an enabled, healthy bundled adapter the bridge returns no
             // links and performs no metadata or third-party network requests.
             if (!PlaybackLinkBridge.canResolve(data)) return false
             // The stable playback ID is not a title. Resolve the matching
             // TMDb metadata through the existing credential-free catalog relay
-            // only after at least one independently permitted adapter exists.
+            // only after at least one enabled, healthy adapter exists.
             val identity = PlaybackData.parse(data) ?: return false
             val kind = if (identity is PlaybackData.Movie) "movie" else "tv"
             val id = when (identity) {
@@ -936,6 +936,7 @@ class EAProvider : MainAPI() {
             val groups = PlaybackLinkBridge.sourceGroups(
                 data, title, year, System.currentTimeMillis()
             )
+            var emittedLinks = 0
             groups.forEach { group ->
                 // Ordinary providers retain selectable qualities. ClipBox is
                 // represented by a single top-level entry until its own
@@ -951,9 +952,10 @@ class EAProvider : MainAPI() {
                         quality = source.quality ?: 0
                         referer = ""
                     })
+                    emittedLinks++
                 }
             }
-            return groups.isNotEmpty()
+            return emittedLinks > 0
         }
         return false
     }
