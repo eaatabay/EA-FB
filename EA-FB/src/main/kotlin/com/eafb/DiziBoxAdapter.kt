@@ -96,7 +96,7 @@ class DiziBoxAdapter(private val origin: String = "https://www.dizibox.live") : 
                     }) return@firstNotNullOfOrNull null
                     val a = card.selectFirst("div.post-title a, h2 a, a")
                         ?: return@firstNotNullOfOrNull null
-                    val num = Regex("""(\\d+)\\.\\s*Bölüm""", RegexOption.IGNORE_CASE)
+                    val num = Regex("""(\d+)\.\s*Bölüm""", RegexOption.IGNORE_CASE)
                         .find(a.text())?.groupValues?.get(1)?.toIntOrNull()
                     if (num == episode) siteUrl(a.attr("href")) else null
                 } ?: return emptyList()
@@ -122,6 +122,17 @@ class DiziBoxAdapter(private val origin: String = "https://www.dizibox.live") : 
         if (uri.scheme != "https" || uri.host.isNullOrBlank()) return emptyList()
         if (uri.path.endsWith(".m3u8", ignoreCase = true))
             return listOf(SourceLink(id, iframe, null, null, null))
+        if (uri.path.contains("/player/king/king.php")) {
+            val kingUrl = iframe.replace("king.php?v=", "king.php?wmode=opaque&v=")
+            val king = try { app.get(kingUrl, referer = referer).document }
+                catch (cancel: CancellationException) { throw cancel }
+                catch (_: Exception) { return emptyList() }
+            val nested = king.selectFirst("div#Player iframe")?.absUrl("src")
+                ?: king.selectFirst("iframe")?.absUrl("src")
+                ?: return emptyList()
+            if (nested == iframe || nested == kingUrl) return emptyList()
+            return resolvePlayer(nested, kingUrl)
+        }
         if (!uri.path.contains("/player/moly/moly.php")) return emptyList()
         val playerUrl = iframe.replace("moly.php?h=", "moly.php?wmode=opaque&h=")
         val player = try { app.get(playerUrl, referer = referer).document }
@@ -136,7 +147,7 @@ class DiziBoxAdapter(private val origin: String = "https://www.dizibox.live") : 
         val html = try { app.get(nested, referer = base + "/").text }
             catch (cancel: CancellationException) { throw cancel }
             catch (_: Exception) { return emptyList() }
-        val playlist = Regex("""file:\\s*['"](https://[^'"]+master\\.m3u8[^'"]*)['"]""")
+        val playlist = Regex("""file:\s*['"](https://[^'"]+master\.m3u8[^'"]*)['"]""")
             .find(html)?.groupValues?.get(1) ?: return emptyList()
         return listOf(SourceLink(id, playlist, null, null, null))
     }
