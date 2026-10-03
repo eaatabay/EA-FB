@@ -78,7 +78,29 @@ class DiziBoxAdapter(private val origin: String = "https://www.dizibox.live") : 
                 val seasonMatches = a.attr("href").contains("$season-sezon") ||
                     a.parents().any { it.text().contains("$season. Sezon") }
                 if (ep == episode && seasonMatches) siteUrl(a.attr("href")) else null
-            } ?: return emptyList()
+            } ?: run {
+                // Claude fallback: navigate the season tab, then match its episode card.
+                val tab = series.select("div#seasons-list a").firstOrNull {
+                    it.text().contains("$season. Sezon")
+                }?.absUrl("href")?.let(::siteUrl) ?: return emptyList()
+                val seasonDoc = try { app.get(tab).document }
+                    catch (cancel: CancellationException) { throw cancel }
+                    catch (_: Exception) { return emptyList() }
+                seasonDoc.select(
+                    "main article.grid-box, div#archive-content article.grid-box, " +
+                    "div#episodes-list article.grid-box, div.episodes-list article.grid-box, " +
+                    "div.site-content article.grid-box"
+                ).firstNotNullOfOrNull { card ->
+                    if (card.parents().any {
+                        it.tagName() == "aside" || it.hasClass("widget") || it.id() == "sidebar"
+                    }) return@firstNotNullOfOrNull null
+                    val a = card.selectFirst("div.post-title a, h2 a, a")
+                        ?: return@firstNotNullOfOrNull null
+                    val num = Regex("""(\\d+)\\.\\s*Bölüm""", RegexOption.IGNORE_CASE)
+                        .find(a.text())?.groupValues?.get(1)?.toIntOrNull()
+                    if (num == episode) siteUrl(a.attr("href")) else null
+                } ?: return emptyList()
+            }
         } else offer.pageUrl
         val doc = if (episodeUrl == offer.pageUrl) series else try {
             app.get(episodeUrl).document
