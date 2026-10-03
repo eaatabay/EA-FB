@@ -2,8 +2,8 @@ package com.eafb
 
 /**
  * Explicit, immutable playback adapter configuration. No UI setting or
- * remotely supplied flag can add an adapter or grant distribution rights.
- * Only adapters included in a reviewed release can enter installedAdapters.
+ * remotely supplied flag can install an adapter.
+ * Only bundled adapters can enter installedAdapters.
  */
 class PlaybackSourceRuntime(
     installedAdapters: List<MediaSourceAdapter>,
@@ -22,11 +22,11 @@ class PlaybackSourceRuntime(
     companion object {
         /**
          * A fresh health snapshot is required when assembling a runtime.
-         * A healthy observation never grants rights or enables a source.
+         * A healthy observation never enables a source by itself.
          */
         fun fromHealthObservations(
             installedAdapters: List<MediaSourceAdapter>,
-                    userEnabledIds: Set<String>,
+            userEnabledIds: Set<String>,
             observations: List<SourceHealthObservation>,
             nowMillis: Long,
             ttlMillis: Long = 15 * 60 * 1000L
@@ -69,8 +69,8 @@ class PlaybackSourceRuntime(
 }
 
 /**
- * V49-compatible default: DiziYou candidate installed but not release-approved,
- * no credential sharing. Wiring a reviewed runtime is a separate release step.
+ * Test-branch default: candidates are bundled but remain user-disabled until
+ * enabled through settings; no credentials are shared.
  */
 object PlaybackLinkBridge {
     private val runtime = PlaybackSourceRuntime(
