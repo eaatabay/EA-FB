@@ -36,22 +36,8 @@ p=Path('build/v6-staging-artifacts/EA-FB-V6-STAGING.cs3')
 assert p.is_file() and zipfile.is_zipfile(p)
 print(f'PASS: isolated red V6 staging test package: {p} ({p.stat().st_size} bytes)')
 PY
-python3 - <<'PY'
-import json
-from pathlib import Path
-p=Path("build/v6-staging-artifacts/plugins.json")
-entries=json.loads(p.read_text(encoding="utf-8"))
-assert isinstance(entries,list) and len(entries)==1
-e=entries[0]
-e["name"]="EA-FB V6 STAGING"
-e["url"]="https://raw.githubusercontent.com/eaatabay/EA-FB/test/dizibox-king-mibox/dist-v6-staging/EA-FB-V6-STAGING.cs3"
-p.write_text(json.dumps(entries,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
-Path("build/v6-staging-artifacts/repo.json").write_text(json.dumps({
-  "name":"EA-FB STREAM",
-  "description":"EA-FB V6 staging test repository",
-  "manifestVersion":1,
-  "pluginLists":["https://raw.githubusercontent.com/eaatabay/EA-FB/test/dizibox-king-mibox/dist-v6-staging/plugins.json"]
-},ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
-print("PASS: V6 web repository manifests prepared")
-PY
+# This is a CI artifact, not a published GitHub Pages/raw repository.
+# Never advertise dist-v6-staging URLs before those files actually exist.
+rm -f build/v6-staging-artifacts/plugins.json build/v6-staging-artifacts/repo.json
+echo "PASS: CS3 artifact prepared; no unverified public repository URL advertised."
 echo "NOT published. Isolated test branch only."
