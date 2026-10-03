@@ -14,12 +14,14 @@ object DiziYouEpisodeParser {
 
     fun playerId(iframeUrl: String, expectedHost: String): String? {
         return try {
-        val uri = URI(iframeUrl)
-        if (uri.scheme != "https" || !uri.host.equals(expectedHost, ignoreCase = true) ||
-            uri.userInfo != null || uri.query != null || uri.fragment != null) null
-        else {
-        val name = uri.path.substringAfterLast('/')
-        if (!name.endsWith(".html")) return null
-        name.removeSuffix(".html").takeIf { itemId.matches(it) }
-    } catch (_: Exception) { null }
+            val uri = URI(iframeUrl)
+            if (uri.scheme != "https" || !uri.host.equals(expectedHost, ignoreCase = true) ||
+                uri.userInfo != null || uri.query != null || uri.fragment != null) null
+            else {
+                val name = uri.path.substringAfterLast('/')
+                if (!name.endsWith(".html")) null
+                else name.removeSuffix(".html").takeIf { itemId.matches(it) }
+            }
+        } catch (_: Exception) { null }
+    }
 }
