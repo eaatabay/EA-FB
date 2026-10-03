@@ -113,16 +113,19 @@ class DiziBoxAdapter(private val origin: String = "https://www.dizibox.live") : 
     }
 
     /**
-     * Adapted from Claude's iframeDecode: follow Moly's nested iframe and
-     * extract an explicit master playlist. Never invent a storage URL.
-     * King encrypted payload handling remains unimplemented.
+     * Follow only explicit HTTPS player links. A Molystream embed is a player
+     * page, not an HLS URL; never synthesize /embed/sheila/... from its ID.
+     * Fail closed if the page does not expose a real playlist.
      */
     private suspend fun resolvePlayer(iframe: String, referer: String): List<SourceLink> {
         val uri = try { URI(iframe) } catch (_: Exception) { return emptyList() }
-        if (uri.scheme != "https" || uri.host.isNullOrBlank()) return emptyList()
-        if (uri.path.endsWith(".m3u8", ignoreCase = true))
-            return listOf(SourceLink(id, iframe, null, null, null))
-        if (uri.path.contains("/player/king/king.php")) {
+        if (uri.scheme != "https" || uri.userInfo != null || uri.host.isNullOrBlank())
+            return emptyList()
+        if (uri.path.endsWith(".m3u8", ignoreCase = true)) {
+            if (uri.host != "dbx.molystream.org") return emptyList()
+            return verifiedPlaylist(iframe, referer)
+        }
+        if (uri.host == root.host && uri.path.contains("/player/king/king.php")) {
             val kingUrl = iframe.replace("king.php?v=", "king.php?wmode=opaque&v=")
             val king = try { app.get(kingUrl, referer = referer).document }
                 catch (cancel: CancellationException) { throw cancel }
@@ -133,22 +136,45 @@ class DiziBoxAdapter(private val origin: String = "https://www.dizibox.live") : 
             if (nested == iframe || nested == kingUrl) return emptyList()
             return resolvePlayer(nested, kingUrl)
         }
-        if (!uri.path.contains("/player/moly/moly.php")) return emptyList()
-        val playerUrl = iframe.replace("moly.php?h=", "moly.php?wmode=opaque&h=")
-        val player = try { app.get(playerUrl, referer = referer).document }
-            catch (cancel: CancellationException) { throw cancel }
-            catch (_: Exception) { return emptyList() }
-        val nested = player.selectFirst("iframe")?.absUrl("src")
-            ?: player.selectFirst("div#Player iframe")?.absUrl("src")
-            ?: return emptyList()
-        val nestedUri = try { URI(nested) } catch (_: Exception) { return emptyList() }
-        if (nestedUri.scheme != "https" || nestedUri.host.isNullOrBlank())
+        if (uri.host == root.host && uri.path.contains("/player/moly/moly.php")) {
+            val playerUrl = iframe.replace("moly.php?h=", "moly.php?wmode=opaque&h=")
+            val player = try { app.get(playerUrl, referer = referer).document }
+                catch (cancel: CancellationException) { throw cancel }
+                catch (_: Exception) { return emptyList() }
+            val nested = player.selectFirst("iframe")?.absUrl("src")
+                ?: player.selectFirst("div#Player iframe")?.absUrl("src")
+                ?: return emptyList()
+            if (nested == iframe || nested == playerUrl) return emptyList()
+            return resolvePlayer(nested, playerUrl)
+        }
+        if (uri.host != "dbx.molystream.org" || !uri.path.startsWith("/embed/"))
             return emptyList()
-        val html = try { app.get(nested, referer = base + "/").text }
-            catch (cancel: CancellationException) { throw cancel }
-            catch (_: Exception) { return emptyList() }
-        val playlist = Regex("""file:\s*['"](https://[^'"]+master\.m3u8[^'"]*)['"]""")
-            .find(html)?.groupValues?.get(1) ?: return emptyList()
-        return listOf(SourceLink(id, playlist, null, null, null))
+        val html = try {
+            app.get(iframe, referer = referer).text
+        } catch (cancel: CancellationException) { throw cancel }
+          catch (_: Exception) { return emptyList() }
+        // Only trust URLs explicitly advertised by the player document.
+        val candidates = Regex(
+            """(?:file|src|source)\\s*[:=]\\s*['"](https://[^'"]+\\.m3u8(?:\\?[^'"]*)?)['"]""",
+            RegexOption.IGNORE_CASE
+        ).findAll(html).map { it.groupValues[1].replace("&amp;", "&") }.distinct().take(5)
+        for (candidate in candidates) {
+            val found = verifiedPlaylist(candidate, iframe)
+            if (found.isNotEmpty()) return found
+        }
+        return emptyList()
+    }
+
+    private suspend fun verifiedPlaylist(url: String, referer: String): List<SourceLink> {
+        val uri = try { URI(url) } catch (_: Exception) { return emptyList() }
+        if (uri.scheme != "https" || uri.host != "dbx.molystream.org" ||
+            !uri.path.endsWith(".m3u8", ignoreCase = true)) return emptyList()
+        val response = try {
+            app.get(url, referer = referer,
+                headers = mapOf("Origin" to "https://dbx.molystream.org")).text
+        } catch (cancel: CancellationException) { throw cancel }
+          catch (_: Exception) { return emptyList() }
+        if (!response.trimStart().startsWith("#EXTM3U")) return emptyList()
+        return listOf(SourceLink(id, url, null, null, null))
     }
 }
