@@ -107,13 +107,37 @@ class DiziBoxAdapter(private val origin: String = "https://www.dizibox.live") : 
         } catch (cancel: CancellationException) { throw cancel }
           catch (_: Exception) { return emptyList() }
         val iframe = doc.selectFirst("div#video-area iframe")?.absUrl("src")
+            ?: doc.selectFirst("iframe")?.absUrl("src")
             ?: return emptyList()
-        // Never return an iframe/player page as an HLS video. Until the
-        // reconstructed player branches are integrated and tested, only a
-        // direct HTTPS .m3u8 iframe can be returned.
-        val parsed = try { URI(iframe) } catch (_: Exception) { return emptyList() }
-        if (parsed.scheme != "https" || !parsed.path.endsWith(".m3u8"))
+        return resolvePlayer(iframe, episodeUrl)
+    }
+
+    /**
+     * Adapted from Claude's iframeDecode: follow Moly's nested iframe and
+     * extract an explicit master playlist. Never invent a storage URL.
+     * King encrypted payload handling remains unimplemented.
+     */
+    private suspend fun resolvePlayer(iframe: String, referer: String): List<SourceLink> {
+        val uri = try { URI(iframe) } catch (_: Exception) { return emptyList() }
+        if (uri.scheme != "https" || uri.host.isNullOrBlank()) return emptyList()
+        if (uri.path.endsWith(".m3u8", ignoreCase = true))
+            return listOf(SourceLink(id, iframe, null, null, null))
+        if (!uri.path.contains("/player/moly/moly.php")) return emptyList()
+        val playerUrl = iframe.replace("moly.php?h=", "moly.php?wmode=opaque&h=")
+        val player = try { app.get(playerUrl, referer = referer).document }
+            catch (cancel: CancellationException) { throw cancel }
+            catch (_: Exception) { return emptyList() }
+        val nested = player.selectFirst("iframe")?.absUrl("src")
+            ?: player.selectFirst("div#Player iframe")?.absUrl("src")
+            ?: return emptyList()
+        val nestedUri = try { URI(nested) } catch (_: Exception) { return emptyList() }
+        if (nestedUri.scheme != "https" || nestedUri.host.isNullOrBlank())
             return emptyList()
-        return listOf(SourceLink(id, iframe, null, null, null))
+        val html = try { app.get(nested, referer = base + "/").text }
+            catch (cancel: CancellationException) { throw cancel }
+            catch (_: Exception) { return emptyList() }
+        val playlist = Regex("""file:\\s*['"](https://[^'"]+master\\.m3u8[^'"]*)['"]""")
+            .find(html)?.groupValues?.get(1) ?: return emptyList()
+        return listOf(SourceLink(id, playlist, null, null, null))
     }
 }
