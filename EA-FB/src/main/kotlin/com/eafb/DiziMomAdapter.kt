@@ -2,6 +2,7 @@ package com.eafb
 
 import java.net.URLEncoder
 import java.net.URI
+import java.util.concurrent.CancellationException
 import com.lagradost.cloudstream3.app
 import org.jsoup.Jsoup
 
@@ -28,6 +29,7 @@ class DiziMomAdapter(private val origin: String) : MediaSourceAdapter {
             query.season != null || query.episode != null) return emptyList()
         val encoded = URLEncoder.encode(query.title.trim(), "UTF-8")
         val page = try { app.get("$base/?s=$encoded").text }
+            catch (cancel: CancellationException) { throw cancel }
             catch (_: Exception) { return emptyList() }
         val doc = Jsoup.parse(page, base)
         return doc.select("div.single-item")
@@ -36,12 +38,16 @@ class DiziMomAdapter(private val origin: String) : MediaSourceAdapter {
                     ?: return@mapNotNull null
                 val url = card.selectFirst("div.cat-img a")?.absUrl("href")
                     ?: return@mapNotNull null
+                val publishedYear = Regex("""Yapım Yılı\\s*:\\s*(\\d{4})""")
+                    .find(card.text())?.groupValues?.get(1)?.toIntOrNull()
+                if (query.year != null && publishedYear != query.year)
+                    return@mapNotNull null
                 if (url.isBlank() || !sameOrigin(url) ||
                     Identity.normalize(label) != Identity.normalize(query.title))
                     return@mapNotNull null
                 MediaOffer(
                     providerId = id, providerTitle = "DiziMom", title = query.title,
-                    year = null, kind = query.kind, pageUrl = url
+                    year = publishedYear, kind = query.kind, pageUrl = url
                 )
             }.distinctBy { it.pageUrl }.take(10)
     }
