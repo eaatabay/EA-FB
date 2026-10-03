@@ -58,7 +58,11 @@ jobs:
           import zipfile
           p=Path("build/v6-staging-artifacts/EA-FB-V6-STAGING.cs3")
           assert p.is_file() and zipfile.is_zipfile(p)
-          print("PASS", p, p.stat().st_size)
+          with zipfile.ZipFile(p) as archive:
+              names=set(archive.namelist())
+              assert {"classes.dex", "manifest.json"} <= names, names
+              assert archive.testzip() is None, "Corrupt CS3 ZIP member"
+          print("PASS: verified CS3 dex, manifest and ZIP integrity", p, p.stat().st_size)
           PY
 
       - name: Upload red V6 CS3
