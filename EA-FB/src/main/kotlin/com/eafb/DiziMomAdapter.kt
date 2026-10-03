@@ -25,8 +25,8 @@ class DiziMomAdapter(private val origin: String) : MediaSourceAdapter {
     private val base = origin.trimEnd('/')
 
     override suspend fun search(query: MediaQuery): List<MediaOffer> {
-        if (query.title.isBlank() || query.kind == MediaKind.LIVE ||
-            query.kind != MediaKind.MOVIE ||\n            query.season != null || query.episode != null) return emptyList()
+        if (query.title.isBlank() || query.kind != MediaKind.MOVIE ||
+            query.season != null || query.episode != null) return emptyList()
         val encoded = URLEncoder.encode(query.title.trim(), "UTF-8")
         val page = try { app.get("$base/?s=$encoded").text }
             catch (cancel: CancellationException) { throw cancel }
@@ -50,7 +50,8 @@ class DiziMomAdapter(private val origin: String) : MediaSourceAdapter {
     }
 
     override suspend fun resolve(offer: MediaOffer): List<SourceLink> {
-        if (offer.providerId != id || offer.kind != MediaKind.MOVIE ||\n            !sameOrigin(offer.pageUrl)) return emptyList()
+        if (offer.providerId != id || offer.kind != MediaKind.MOVIE ||
+            !sameOrigin(offer.pageUrl)) return emptyList()
         // Search results are metadata, not verified episode or stream URLs.
         // Never emit an iframe, HTML page, or unknown player as a playable link.
         // A reviewed per-host resolver must be implemented before activation.
