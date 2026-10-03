@@ -1,0 +1,11 @@
+package com.eafb
+
+fun main() {
+    check(DiziYouEpisodeParser.exactEpisode("1. Sezon 7. Bölüm", 1, 7))
+    check(!DiziYouEpisodeParser.exactEpisode("1. Sezon 7. Bölüm", 1, 8))
+    check(!DiziYouEpisodeParser.exactEpisode("1. Sezon 7. Bölüm", 2, 7))
+    check(DiziYouEpisodeParser.playerId("https://www.diziyou.one/player/abc-123.html", "www.diziyou.one") == "abc-123")
+    check(DiziYouEpisodeParser.playerId("https://evil.example/player/abc.html", "www.diziyou.one") == null)
+    check(DiziYouEpisodeParser.playerId("https://www.diziyou.one/player/abc.html?x=1", "www.diziyou.one") == null)
+    println("DiziYou parser: 6/6 PASS")
+}
