@@ -5,6 +5,7 @@ import java.net.URI
 import java.net.URLEncoder
 import java.util.concurrent.CancellationException
 import org.jsoup.Jsoup
+import android.util.Log
 
 /**
  * Experimental DiziBox staging adapter.
@@ -15,6 +16,7 @@ class DiziBoxAdapter(private val origin: String = "https://www.dizibox.live") : 
     override val id: String = "dizibox"
     private val root = URI(origin)
     private val base = origin.trimEnd('/')
+    private fun trace(stage: String, detail: String) = Log.i("EA-FB-DiziBox", "$stage: $detail")
 
     init {
         require(root.scheme == "https" && root.host == "www.dizibox.live" &&
@@ -42,6 +44,7 @@ class DiziBoxAdapter(private val origin: String = "https://www.dizibox.live") : 
                     "dbxu" to System.currentTimeMillis().toString())).text
         } catch (cancel: CancellationException) { throw cancel }
           catch (_: Exception) { return emptyList() }
+        trace("search-response", "bytes=${text.length}, json=${text.trimStart().startsWith("{")}, title=${query.title}")
         val doc = Jsoup.parse(text)
         // Search responses may contain HTML or JSON; only accept explicit
         // title/permalink pairs, never guess unrelated series identities.
@@ -61,6 +64,7 @@ class DiziBoxAdapter(private val origin: String = "https://www.dizibox.live") : 
                     siteUrl(a.attr("href")) else null
             }
         }.distinct().take(5)
+        trace("search-matches", "count=${items.size}")
         return items.map { seriesUrl ->
             MediaOffer(id, "DiziBox", query.title, query.year, query.kind,
                 seriesUrl, query.tmdbId, query.season, query.episode)
@@ -75,6 +79,7 @@ class DiziBoxAdapter(private val origin: String = "https://www.dizibox.live") : 
         val series = try { app.get(offer.pageUrl).document }
             catch (cancel: CancellationException) { throw cancel }
             catch (_: Exception) { return emptyList() }
+        trace("series-page", "loaded; kind=${offer.kind}, season=${offer.season}, episode=${offer.episode}")
         val episodeUrl = if (offer.kind == MediaKind.SERIES) {
             val season = offer.season ?: return emptyList()
             val episode = offer.episode ?: return emptyList()
@@ -113,9 +118,11 @@ class DiziBoxAdapter(private val origin: String = "https://www.dizibox.live") : 
             app.get(episodeUrl).document
         } catch (cancel: CancellationException) { throw cancel }
           catch (_: Exception) { return emptyList() }
+        trace("episode-page", "loaded; iframeCount=${doc.select("iframe").size}")
         val iframe = doc.selectFirst("div#video-area iframe")?.absUrl("src")
             ?: doc.selectFirst("iframe")?.absUrl("src")
             ?: return emptyList()
+        trace("player-entry", "host=${runCatching { URI(iframe).host }.getOrNull()}")
         return resolvePlayer(iframe, episodeUrl)
     }
 
@@ -126,8 +133,9 @@ class DiziBoxAdapter(private val origin: String = "https://www.dizibox.live") : 
      */
     private suspend fun resolvePlayer(iframe: String, referer: String, depth: Int = 0): List<SourceLink> {
         // Bound nested player redirects even if each hop has a different URL.
-        if (depth >= 4) return emptyList()
+        if (depth >= 4) { trace("player", "depth-limit"); return emptyList() }
         val uri = try { URI(iframe) } catch (_: Exception) { return emptyList() }
+        trace("player-hop", "host=${uri.host}, depth=$depth")
         if (uri.scheme != "https" || uri.userInfo != null || uri.host.isNullOrBlank())
             return emptyList()
         if (uri.path.endsWith(".m3u8", ignoreCase = true)) {
@@ -189,7 +197,8 @@ class DiziBoxAdapter(private val origin: String = "https://www.dizibox.live") : 
             app.get(url, referer = referer).text
         } catch (cancel: CancellationException) { throw cancel }
           catch (_: Exception) { return emptyList() }
-        if (!response.trimStart().startsWith("#EXTM3U")) return emptyList()
+        if (!response.trimStart().startsWith("#EXTM3U")) { trace("playlist", "not-m3u8; bytes=${response.length}"); return emptyList() }
+        trace("playlist", "verified")
         return listOf(SourceLink(id, url, null, null, null,
             referer = referer, isHls = true))
     }
