@@ -20,7 +20,7 @@ class DiziMomAdapter(private val origin: String) : MediaSourceAdapter {
         val uri = URI(origin)
         require(uri.scheme == "https" && uri.host != null &&
             uri.userInfo == null && uri.query == null && uri.fragment == null &&
-            (uri.path.isNullOrEmpty() || uri.path == "/")
+            (uri.path.isNullOrEmpty() || uri.path == "/"))
     }
 
     private val base = origin.trimEnd('/')
