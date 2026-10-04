@@ -387,7 +387,7 @@ class DiziBoxAdapter(private val origin: String = "https://www.dizibox.live") : 
     }.getOrNull()
 
     private fun decodeUnescaped(html: String): String? {
-        val enc = Regex("unescape\\(\"([^\"]+)\"\\)").find(html)?.groupValues?.get(1) ?: return null
+        val enc = Regex("""unescape\s*\(\s*(['"])(.*?)\1\s*\)""").find(html)?.groupValues?.get(2) ?: return null
         return decodeBase64Param(enc)
     }
 
