@@ -196,7 +196,7 @@ class DiziBoxAdapter(private val origin: String = "https://www.dizibox.live") : 
         //       each alternative is its own page whose div#video-area iframe is decoded the same way.
         //       V51 only followed the first iframe.
         val entries = LinkedHashSet<String>()
-        (doc.selectFirst("div#video-area iframe") ?: doc.selectFirst("iframe"))
+        (doc.select("div#video-area iframe").firstOrNull() ?: doc.select("iframe").firstOrNull())
             ?.let { playerUrl(it.attr("src"), episodeUrl) }?.let { entries.add(it) }
         val alternatives = doc.select("div.video-toolbar option[value]")
             .mapNotNull { siteUrl(it.attr("value")) }.filter { it != episodeUrl }.distinct().take(6)
@@ -204,7 +204,7 @@ class DiziBoxAdapter(private val origin: String = "https://www.dizibox.live") : 
         for (alt in alternatives) {
             val f = fetch(alt, referer = episodeUrl, site = true) ?: continue
             val d = Jsoup.parse(f.text, alt)
-            (d.selectFirst("div#video-area iframe") ?: d.selectFirst("iframe"))
+            (d.select("div#video-area iframe").firstOrNull() ?: d.select("iframe").firstOrNull())
                 ?.let { playerUrl(it.attr("src"), alt) }?.let { entries.add(it) }
         }
         trace("player-entry", "hosts=${entries.map { runCatching { URI(it).host }.getOrNull() }}")
