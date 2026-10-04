@@ -73,7 +73,7 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
-      - name: Publish V56 to existing red staging repository
+      - name: Publish V57 to existing red staging repository
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -87,27 +87,27 @@ jobs:
           target=Path("/tmp/eafb-red-publish/dist-v6-staging")
           old=json.JSONDecoder().raw_decode((target/"plugins.json").read_text())[0]
           assert len(old)==1 and old[0]["internalName"]=="EA-FB"
-          assert old[0]["version"]<56, "Refusing to overwrite an equal or newer red release"
+          assert old[0]["version"]<57, "Refusing to overwrite an equal or newer red release"
           with zipfile.ZipFile(package) as z:
               assert z.testzip() is None
               m=json.loads(z.read("manifest.json"))
-              assert m.get("version")==56, m
+              assert m.get("version")==57, m
           target.mkdir(parents=True,exist_ok=True)
           shutil.copyfile(package,target/"EA-FB-V6-STAGING.cs3")
           item=old[0]
-          item["version"]=56
+          item["version"]=57
           item["fileSize"]=package.stat().st_size
           item["fileHash"]="sha256-"+hashlib.sha256(package.read_bytes()).hexdigest()
           item["url"]="https://raw.githubusercontent.com/eaatabay/EA-FB/feature/detail-dual-ratings-v6/dist-v6-staging/EA-FB-V6-STAGING.cs3"
           (target/"plugins.json").write_text(json.dumps(old,ensure_ascii=False,indent=2)+"\n")
           repo=json.loads((target/"repo.json").read_text())
           assert repo["pluginLists"]==["https://raw.githubusercontent.com/eaatabay/EA-FB/feature/detail-dual-ratings-v6/dist-v6-staging/plugins.json"]
-          print("PASS: V56 package and manifest staged at existing red update URL")
+          print("PASS: V57 package and manifest staged at existing red update URL")
           PY
           cd /tmp/eafb-red-publish
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add dist-v6-staging/EA-FB-V6-STAGING.cs3 dist-v6-staging/plugins.json
           git diff --cached --quiet && { echo "Nothing to publish"; exit 1; }
-          git commit -m "release(red): publish V56 test CS3 for existing Mi Box auto-update"
+          git commit -m "release(red): publish V57 test CS3 for existing Mi Box auto-update"
           git push origin HEAD:feature/detail-dual-ratings-v6
