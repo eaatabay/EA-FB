@@ -946,11 +946,12 @@ class EAProvider : MainAPI() {
                 choices.forEach { source ->
                     callback(newExtractorLink(
                         group.providerId, group.providerId, source.url,
-                        type = if (source.url.substringBefore('?').endsWith(".m3u8", true))
+                        type = if (source.isHls || source.url.substringBefore('?').endsWith(".m3u8", true))
                             ExtractorLinkType.M3U8 else ExtractorLinkType.VIDEO
                     ) {
                         quality = source.quality ?: 0
-                        referer = ""
+                        referer = source.referer
+                        if (source.referer.isNotBlank()) headers = mapOf("Referer" to source.referer)
                     })
                     emittedLinks++
                 }
