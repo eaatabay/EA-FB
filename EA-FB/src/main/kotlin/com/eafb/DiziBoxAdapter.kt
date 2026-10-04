@@ -386,8 +386,11 @@ class DiziBoxAdapter(private val origin: String = "https://www.dizibox.live") : 
         val candidates = LinkedHashMap<String, String>() // url -> how it was found
         val page = fetch(embedUrl, referer = "$base/")?.text.orEmpty()
 
-        val data = Regex("CryptoJS\\.AES\\.decrypt\\(\"([^\"\\r\\n]+)\",").find(page)?.groupValues?.get(1)
-        val pass = Regex("\",\"(.*)\"\\);").find(page)?.groupValues?.get(1)
+        // Match ciphertext and password from the SAME CryptoJS call. The old greedy
+        // password regex could capture unrelated JavaScript up to a later ");".
+        val crypto = Regex("""CryptoJS\\.AES\\.decrypt\\(\\s*["']([^"'\\r\\n]+)["']\\s*,\\s*["']([^"'\\r\\n]+)["']\\s*\\)""").find(page)
+        val data = crypto?.groupValues?.get(1)
+        val pass = crypto?.groupValues?.get(2)
         val decrypted = if (data != null && pass != null) openSslAesDecrypt(pass, data) else null
         trace("molystream-page", "host=$host, bytes=${page.length}, crypto=${data != null && pass != null}, decrypted=${decrypted != null}")
         decrypted?.let { Regex("file:\\s*'([^']+)'").find(it)?.groupValues?.get(1) }
