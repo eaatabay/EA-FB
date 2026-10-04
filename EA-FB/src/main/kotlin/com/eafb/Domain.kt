@@ -68,7 +68,9 @@ data class SourceLink(
     val audioLanguage: String?,
     val subtitleLanguage: String?,
     val expiresAtMillis: Long? = null,
-    val requiresPrivateSession: Boolean = false
+    val requiresPrivateSession: Boolean = false,
+    val referer: String = "",
+    val isHls: Boolean = false
 )
 
 /** Do not store user-specific links in a shared cache. Cache implementation is postponed. */
