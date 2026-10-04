@@ -85,7 +85,7 @@ jobs:
           from pathlib import Path
           package=Path("build/v6-staging-artifacts/EA-FB-V6-STAGING.cs3")
           target=Path("/tmp/eafb-red-publish/dist-v6-staging")
-          old=json.loads((target/"plugins.json").read_text().strip().removesuffix(r"\\n"))
+          old=json.loads((target/"plugins.json").read_text().split("]",1)[0]+"]")
           assert len(old)==1 and old[0]["internalName"]=="EA-FB"
           assert old[0]["version"]<51, "Refusing to overwrite an equal or newer red release"
           with zipfile.ZipFile(package) as z:
