@@ -36,7 +36,10 @@ class DiziBoxAdapter(private val origin: String = "https://www.dizibox.live") : 
             URLEncoder.encode(query.title, "UTF-8") + "&action=dwls_search"
         val text = try {
             app.get(url, referer = "$base/",
-                headers = mapOf("X-Requested-With" to "XMLHttpRequest")).text
+                headers = mapOf("X-Requested-With" to "XMLHttpRequest",
+                    "Accept" to "application/json, text/javascript, */*; q=0.01"),
+                cookies = mapOf("isTrustedUser" to "true",
+                    "dbxu" to System.currentTimeMillis().toString())).text
         } catch (cancel: CancellationException) { throw cancel }
           catch (_: Exception) { return emptyList() }
         val doc = Jsoup.parse(text)
@@ -179,8 +182,7 @@ class DiziBoxAdapter(private val origin: String = "https://www.dizibox.live") : 
             !(uri.path.endsWith(".m3u8", ignoreCase = true) ||
                 uri.path.matches(Regex("/embed/sheila/[a-zA-Z0-9-]+")))) return emptyList()
         val response = try {
-            app.get(url, referer = referer,
-                headers = mapOf("Origin" to "https://dbx.molystream.org")).text
+            app.get(url, referer = referer).text
         } catch (cancel: CancellationException) { throw cancel }
           catch (_: Exception) { return emptyList() }
         if (!response.trimStart().startsWith("#EXTM3U")) return emptyList()
