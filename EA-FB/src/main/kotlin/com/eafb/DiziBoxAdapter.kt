@@ -45,13 +45,17 @@ class DiziBoxAdapter(private val origin: String = "https://www.dizibox.live") : 
         val doc = Jsoup.parse(text)
         // Search responses may contain HTML or JSON; only accept explicit
         // title/permalink pairs, never guess unrelated series identities.
-        val items = Regex(
-            """\{[^{}]*"post_title"\s*:\s*"([^"]+)"[^{}]*"permalink"\s*:\s*"([^"]+)"[^{}]*}"""
-        ).findAll(text).mapNotNull { match ->
-            val title = match.groupValues[1].replace("\\/", "/")
-            if (Identity.normalize(title) != Identity.normalize(query.title)) return@mapNotNull null
-            siteUrl(match.groupValues[2].replace("\\/", "/"))
-        }.toList().ifEmpty {
+        val items = runCatching {
+            val root = org.json.JSONObject(text)
+            val results = root.optJSONArray("results") ?: org.json.JSONArray()
+            (0 until results.length()).mapNotNull { index ->
+                val item = results.optJSONObject(index) ?: return@mapNotNull null
+                val candidate = item.optString("post_title")
+                if (Identity.normalize(candidate) != Identity.normalize(query.title))
+                    return@mapNotNull null
+                siteUrl(item.optString("permalink"))
+            }
+        }.getOrDefault(emptyList()).ifEmpty {
             doc.select("a[href]").mapNotNull { a ->
                 if (Identity.normalize(a.text()) == Identity.normalize(query.title))
                     siteUrl(a.attr("href")) else null
