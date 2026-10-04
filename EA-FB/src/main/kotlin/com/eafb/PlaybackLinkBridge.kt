@@ -76,32 +76,44 @@ object PlaybackLinkBridge {
     private val installedAdapters: List<MediaSourceAdapter> =
         listOf(DiziYouAdapter(), DiziBoxAdapter())
 
-    /** Re-read persisted switches for each playback request. A fresh health
-     * observation is still required; an enabled switch alone is not health. */
-    private fun runtime(nowMillis: Long): PlaybackSourceRuntime =
-        PlaybackSourceRuntime.fromHealthObservations(
-            installedAdapters = installedAdapters,
-            userEnabledIds = installedAdapters.map { it.id }
-                .filter { EASettings.sourceEnabled(it.id) }.toSet(),
-            observations = emptyList(),
-            nowMillis = nowMillis
-        )
+    private fun enabledAdapters(): List<MediaSourceAdapter> =
+        installedAdapters.filter { EASettings.sourceEnabled(it.id) }
 
     fun isCatalogIdentity(data: String): Boolean = PlaybackData.parse(data) != null
 
-    fun canResolve(data: String): Boolean = runtime(System.currentTimeMillis()).canResolve(data)
+    // This is a preflight eligibility check, not a claim of source health.
+    // Actual health is determined by fresh successful resolution below.
+    fun canResolve(data: String): Boolean =
+        isCatalogIdentity(data) && enabledAdapters().isNotEmpty()
 
     suspend fun alternatives(
         data: String,
         title: String,
         year: Int?,
         nowMillis: Long
-    ): List<SourceLink> = runtime(nowMillis).alternatives(data, title, year, nowMillis)
+    ): List<SourceLink> {
+        val query = PlaybackQuery.fromData(data, title, year) ?: return emptyList()
+        val enabled = enabledAdapters()
+        if (enabled.isEmpty()) return emptyList()
+        val engine = MultiSourceEngine(enabled)
+        val offers = engine.find(query)
+        if (offers.isEmpty()) return emptyList()
+        // Freshly resolved, non-expired HTTPS links are the positive health
+        // observation. Failed searches or resolutions never become healthy.
+        val resolved = engine.resolve(offers, nowMillis)
+        val observations = enabled.map { adapter ->
+            SourceHealthObservation(adapter.id,
+                resolved.any { it.provider == adapter.id }, nowMillis)
+        }
+        val healthy = PlaybackSourceHealth.healthyIds(observations, nowMillis)
+        return resolved.filter { it.provider in healthy }
+    }
 
     suspend fun sourceGroups(
         data: String,
         title: String,
         year: Int?,
         nowMillis: Long
-    ): List<PlaybackSourceList.Entry> = runtime(nowMillis).sourceGroups(data, title, year, nowMillis)
+    ): List<PlaybackSourceList.Entry> =
+        PlaybackSourceList.group(alternatives(data, title, year, nowMillis), nowMillis)
 }
