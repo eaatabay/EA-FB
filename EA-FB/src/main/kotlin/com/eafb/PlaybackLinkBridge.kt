@@ -76,8 +76,10 @@ object PlaybackLinkBridge {
     private val installedAdapters: List<MediaSourceAdapter> =
         listOf(DiziYouAdapter(), DiziBoxAdapter())
 
+    // DiziBox is a bundled automatic playback source. It must be searched
+    // without requiring a separate settings toggle; other adapters retain opt-in.
     private fun enabledAdapters(): List<MediaSourceAdapter> =
-        installedAdapters.filter { EASettings.sourceEnabled(it.id) }
+        installedAdapters.filter { it.id == "dizibox" || EASettings.sourceEnabled(it.id) }
 
     fun isCatalogIdentity(data: String): Boolean = PlaybackData.parse(data) != null
 
