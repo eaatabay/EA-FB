@@ -151,6 +151,12 @@ class DiziBoxAdapter(private val origin: String = "https://www.dizibox.live") : 
         }
         if (uri.host != "dbx.molystream.org" || !uri.path.startsWith("/embed/"))
             return emptyList()
+        val embedId = uri.path.removePrefix("/embed/").trim('/')
+        if (embedId.matches(Regex("[a-zA-Z0-9-]+"))) {
+            val master = "https://dbx.molystream.org/embed/sheila/$embedId"
+            val verified = verifiedPlaylist(master, "https://dbx.molystream.org/")
+            if (verified.isNotEmpty()) return verified
+        }
         val html = try {
             app.get(iframe, referer = referer).text
         } catch (cancel: CancellationException) { throw cancel }
@@ -170,13 +176,15 @@ class DiziBoxAdapter(private val origin: String = "https://www.dizibox.live") : 
     private suspend fun verifiedPlaylist(url: String, referer: String): List<SourceLink> {
         val uri = try { URI(url) } catch (_: Exception) { return emptyList() }
         if (uri.scheme != "https" || uri.host != "dbx.molystream.org" ||
-            !uri.path.endsWith(".m3u8", ignoreCase = true)) return emptyList()
+            !(uri.path.endsWith(".m3u8", ignoreCase = true) ||
+                uri.path.matches(Regex("/embed/sheila/[a-zA-Z0-9-]+")))) return emptyList()
         val response = try {
             app.get(url, referer = referer,
                 headers = mapOf("Origin" to "https://dbx.molystream.org")).text
         } catch (cancel: CancellationException) { throw cancel }
           catch (_: Exception) { return emptyList() }
         if (!response.trimStart().startsWith("#EXTM3U")) return emptyList()
-        return listOf(SourceLink(id, url, null, null, null))
+        return listOf(SourceLink(id, url, null, null, null,
+            referer = referer, isHls = true))
     }
 }
