@@ -28,7 +28,6 @@ python3 scripts/prepare-v6-staging-overlay.py --verify
 EA_FB_V6_STAGING_BUILD=1 bash scripts/build-codespace.sh
 mkdir -p build/v6-staging-artifacts
 cp dist/EA-FB.cs3 build/v6-staging-artifacts/EA-FB-V6-STAGING.cs3
-cp dist/plugins.json build/v6-staging-artifacts/plugins.json
 python3 - <<'PY'
 from pathlib import Path
 import zipfile
@@ -38,6 +37,5 @@ print(f'PASS: isolated red V6 staging test package: {p} ({p.stat().st_size} byte
 PY
 # This is a CI artifact, not a published GitHub Pages/raw repository.
 # Never advertise dist-v6-staging URLs before those files actually exist.
-rm -f build/v6-staging-artifacts/plugins.json build/v6-staging-artifacts/repo.json
-echo "PASS: CS3 artifact prepared; no unverified public repository URL advertised."
+echo "PASS: CS3 artifact prepared without unverified public repository manifests."
 echo "NOT published. Isolated test branch only."
