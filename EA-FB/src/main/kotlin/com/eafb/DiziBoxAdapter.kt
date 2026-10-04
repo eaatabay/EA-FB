@@ -3,6 +3,7 @@ package com.eafb
 import android.util.Base64
 import android.util.Log
 import com.lagradost.cloudstream3.app
+import com.lagradost.cloudstream3.utils.loadExtractor
 import java.net.URI
 import java.net.URLDecoder
 import java.net.URLEncoder
@@ -291,8 +292,27 @@ class DiziBoxAdapter(private val origin: String = "https://www.dizibox.live") : 
             }
         }
         if (isMolyHost(uri.host)) return resolveMolystream(iframe)
-        trace("player", "unsupported-host=${uri.host}")
-        return emptyList()
+        trace("player", "cloudstream-extractor-host=${uri.host}")
+        return cloudstreamExtract(iframe, referer)
+    }
+
+    /** Reuse CloudStream's bundled extractor registry for third-party player hosts. */
+    private suspend fun cloudstreamExtract(url: String, referer: String): List<SourceLink> {
+        val result = mutableListOf<SourceLink>()
+        try {
+            loadExtractor(url, referer, {}, { link ->
+                val uri = runCatching { URI(link.url) }.getOrNull()
+                if (uri?.scheme == "https" && uri.host != null && uri.userInfo == null) {
+                    val hls = uri.path.orEmpty().endsWith(".m3u8", ignoreCase = true) ||
+                        uri.path.orEmpty().startsWith("/embed/sheila/")
+                    result.add(SourceLink(id, link.url, null, null, null,
+                        referer = link.referer, isHls = hls))
+                }
+            })
+        } catch (cancel: CancellationException) { throw cancel }
+          catch (error: Exception) { trace("extractor-error", error.javaClass.simpleName) }
+        trace("cloudstream-extractor", "links=${result.size}")
+        return result.distinctBy { it.url }
     }
 
     private fun firstIframe(html: String, pageUrl: String): String? {
