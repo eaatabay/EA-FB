@@ -322,13 +322,34 @@ class DiziBoxAdapter(private val origin: String = "https://www.dizibox.live") : 
     }
 
     private suspend fun viaKing(iframe: String, referer: String, depth: Int): List<SourceLink> {
-        // [v28] king.php?v= -> king.php?wmode=opaque&v= ; [obs] works without it too, kept for parity.
         val kingUrl = iframe.replace("king.php?v=", "king.php?wmode=opaque&v=")
         val f = fetch(kingUrl, referer = referer) ?: return emptyList()
         val nested = firstIframe(f.text, kingUrl)
-        if (nested == null) { trace("king", "no-nested-iframe, bytes=${f.text.length}"); return emptyList() }
-        if (nested == iframe || nested == kingUrl) return emptyList()
-        return resolvePlayer(nested, kingUrl, depth + 1)
+        if (nested != null && nested != iframe && nested != kingUrl) {
+            val links = resolvePlayer(nested, kingUrl, depth + 1)
+            if (links.isNotEmpty()) return links
+        }
+
+        // King may render an encrypted playlist directly, without a nested iframe.
+        // Only accept a verified HTTPS Molystream HLS master; never return arbitrary JS URLs.
+        val crypto = Regex("""CryptoJS\.AES\.decrypt\(\s*["']([^"'\r\n]+)["']\s*,\s*["']([^"'\r\n]+)["']\s*\)""").find(f.text)
+        val decrypted = crypto?.let {
+            openSslAesDecrypt(it.groupValues[2], it.groupValues[1])
+        }
+        val candidates = listOfNotNull(decrypted, f.text).flatMap { body ->
+            Regex("""(?:file|src|source)\s*[:=]\s*["'](https://[^"']+)["']""",
+                RegexOption.IGNORE_CASE).findAll(body).take(8)
+                .map { it.groupValues[1].replace("&amp;", "&") }.toList()
+        }.distinct()
+        trace("king", "nested=${nested != null}, aes=${crypto != null}, decrypted=${decrypted != null}, candidates=${candidates.size}")
+        for (candidate in candidates) {
+            val uri = runCatching { URI(candidate) }.getOrNull() ?: continue
+            if (isMolyHost(uri.host)) {
+                val links = verifiedPlaylist(candidate, "https://${uri.host}/")
+                if (links.isNotEmpty()) return links
+            }
+        }
+        return emptyList()
     }
 
     private suspend fun viaMoly(iframe: String, referer: String, depth: Int): List<SourceLink> {
