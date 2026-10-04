@@ -19,7 +19,8 @@ class DiziMomAdapter(private val origin: String) : MediaSourceAdapter {
     init {
         val uri = URI(origin)
         require(uri.scheme == "https" && uri.host != null &&
-            uri.userInfo == null && uri.query == null && uri.fragment == null &&\n            (uri.path.isNullOrEmpty() || uri.path == "/")
+            uri.userInfo == null && uri.query == null && uri.fragment == null &&
+            (uri.path.isNullOrEmpty() || uri.path == "/")
     }
 
     private val base = origin.trimEnd('/')
@@ -62,6 +63,7 @@ class DiziMomAdapter(private val origin: String) : MediaSourceAdapter {
         val candidate = URI(value)
         val root = URI(base)
         candidate.scheme == "https" && candidate.host.equals(root.host, true) &&
-            candidate.port == root.port && candidate.userInfo == null &&\n            candidate.fragment == null
+            candidate.port == root.port && candidate.userInfo == null &&
+            candidate.fragment == null
     } catch (_: Exception) { false }
 }
