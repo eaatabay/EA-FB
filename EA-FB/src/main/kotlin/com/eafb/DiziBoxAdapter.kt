@@ -388,7 +388,7 @@ class DiziBoxAdapter(private val origin: String = "https://www.dizibox.live") : 
 
         // Match ciphertext and password from the SAME CryptoJS call. The old greedy
         // password regex could capture unrelated JavaScript up to a later ");".
-        val crypto = Regex("""CryptoJS\\.AES\\.decrypt\\(\\s*["']([^"'\\r\\n]+)["']\\s*,\\s*["']([^"'\\r\\n]+)["']\\s*\\)""").find(page)
+        val crypto = Regex("""CryptoJS\.AES\.decrypt\(\s*["']([^"'\r\n]+)["']\s*,\s*["']([^"'\r\n]+)["']\s*\)""").find(page)
         val data = crypto?.groupValues?.get(1)
         val pass = crypto?.groupValues?.get(2)
         val decrypted = if (data != null && pass != null) openSslAesDecrypt(pass, data) else null
