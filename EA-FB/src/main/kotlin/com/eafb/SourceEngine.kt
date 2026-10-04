@@ -1,5 +1,6 @@
 package com.eafb
 
+import android.util.Log
 import java.util.concurrent.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.TimeoutCancellationException
@@ -50,7 +51,7 @@ interface MediaSourceAdapter {
 class MultiSourceEngine(
     adapters: List<MediaSourceAdapter>,
     private val maxConcurrent: Int = 4,
-    private val perAdapterTimeoutMs: Long = 8_000
+    private val perAdapterTimeoutMs: Long = 20_000
 ) {
     private val adapters = adapters.toList()
 
@@ -68,12 +69,14 @@ class MultiSourceEngine(
                     try {
                         withTimeout(perAdapterTimeoutMs) {
                             adapter.search(query)
+                                .also { Log.i("EA-FB-Source", "search provider=${adapter.id} offers=${it.size}") }
                                 .asSequence()
                                 .filter { it.providerId == adapter.id && it.pageUrl.startsWith("https://") && sameContent(query, it) }
                                 .take(30)
                                 .toList()
                         }
                     } catch (_: TimeoutCancellationException) {
+                        Log.w("EA-FB-Source", "search timeout provider=${adapter.id}")
                         emptyList()
                     } catch (cancel: CancellationException) {
                         throw cancel
@@ -108,10 +111,11 @@ class MultiSourceEngine(
                     guard.withPermit {
                         try {
                             withTimeout(perAdapterTimeoutMs) {
-                                adapter.resolve(offer).filter { it.provider == adapter.id && it.url.startsWith("https://") &&
+                                adapter.resolve(offer).also { Log.i("EA-FB-Source", "resolve provider=${adapter.id} links=${it.size}") }.filter { it.provider == adapter.id && it.url.startsWith("https://") &&
                                     !it.requiresPrivateSession }
                             }
                         } catch (_: TimeoutCancellationException) {
+                            Log.w("EA-FB-Source", "resolve timeout provider=${adapter.id}")
                             emptyList()
                         } catch (cancel: CancellationException) {
                             throw cancel
