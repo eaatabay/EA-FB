@@ -2,7 +2,7 @@
 # Build an isolated red V6 test package. Never publish to main/dist or production.
 set -euo pipefail
 cd "$(dirname "$0")/.."
-[[ "$(git branch --show-current)" == "test/dizibox-king-mibox" ]] || {
+[[ "${GITHUB_REF_NAME:-$(git branch --show-current)}" == "test/dizibox-king-mibox" ]] || {
   echo "BLOCKED: wrong branch" >&2; exit 2;
 }
 [[ -z "$(git status --porcelain --untracked-files=no)" ]] || {
