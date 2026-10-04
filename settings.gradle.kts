@@ -1,3 +1,11 @@
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        mavenCentral()
+        google()
+    }
+}
+
 rootProject.name = "EA-FB"
 
 // CloudStream's JitPack binary is not reliably available. Include its pinned
