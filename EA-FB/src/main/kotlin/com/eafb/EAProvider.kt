@@ -952,13 +952,19 @@ class EAProvider : MainAPI() {
                     val languageLabel = when {
                         source.audioLanguage.equals("tr", ignoreCase = true) -> "Türkçe Dublaj"
                         source.audioLanguage.equals("en", ignoreCase = true) -> "Orijinal"
+                        source.audioLanguage.equals("original", ignoreCase = true) -> "Orijinal"
                         source.subtitleLanguage.equals("tr", ignoreCase = true) -> "Türkçe Altyazı"
                         source.subtitleLanguage.equals("en", ignoreCase = true) -> "İngilizce Altyazı"
                         else -> null
                     }
                     val qualityLabel = source.quality?.takeIf { it > 0 }?.let { "${it}p" }
-                    val displayName = listOfNotNull(providerLabel, qualityLabel, languageLabel)
-                        .joinToString(" • ")
+                    val displayName = source.displayName?.let { baseName ->
+                        if (qualityLabel != null && !baseName.contains(qualityLabel, ignoreCase = true))
+                            "$baseName • $qualityLabel" else baseName
+                    } ?: listOfNotNull(providerLabel, qualityLabel, languageLabel).joinToString(" • ")
+                    source.subtitles.distinctBy { it.language to it.url }.forEach { subtitle ->
+                        subtitleCallback(SubtitleFile(subtitle.language, subtitle.url))
+                    }
                     callback(newExtractorLink(
                         providerLabel, displayName, source.url,
                         type = if (source.isHls || source.url.substringBefore('?').endsWith(".m3u8", true))
