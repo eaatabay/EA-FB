@@ -944,8 +944,23 @@ class EAProvider : MainAPI() {
                 val choices = if (group.providerId.equals("clipbox", ignoreCase = true))
                     group.links.take(1) else group.links
                 choices.forEach { source ->
+                    val providerLabel = when (group.providerId.lowercase(Locale.ROOT)) {
+                        "dizibox" -> "DiziBox"
+                        "diziyou" -> "DiziYou"
+                        else -> group.providerId
+                    }
+                    val languageLabel = when {
+                        source.audioLanguage.equals("tr", ignoreCase = true) -> "Türkçe Dublaj"
+                        source.audioLanguage.equals("en", ignoreCase = true) -> "Orijinal"
+                        source.subtitleLanguage.equals("tr", ignoreCase = true) -> "Türkçe Altyazı"
+                        source.subtitleLanguage.equals("en", ignoreCase = true) -> "İngilizce Altyazı"
+                        else -> null
+                    }
+                    val qualityLabel = source.quality?.takeIf { it > 0 }?.let { "${it}p" }
+                    val displayName = listOfNotNull(providerLabel, qualityLabel, languageLabel)
+                        .joinToString(" • ")
                     callback(newExtractorLink(
-                        group.providerId, group.providerId, source.url,
+                        providerLabel, displayName, source.url,
                         type = if (source.isHls || source.url.substringBefore('?').endsWith(".m3u8", true))
                             ExtractorLinkType.M3U8 else ExtractorLinkType.VIDEO
                     ) {
