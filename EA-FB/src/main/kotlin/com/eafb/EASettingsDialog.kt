@@ -268,6 +268,9 @@ object EASettingsDialog {
                     }
                     row.addView(toggle)
                     row.setOnClickListener { toggle.isChecked = !toggle.isChecked }
+                    row.setOnFocusChangeListener { _, focused ->
+                        row.background = shape(ctx, if (focused) ROW else PANEL, if (focused) YELLOW else BORDER)
+                    }
                     content.addView(row, margin(ctx, 0, 5))
                 }
                 content.addView(text(ctx,
