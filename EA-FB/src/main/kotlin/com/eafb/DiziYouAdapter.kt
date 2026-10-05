@@ -1,5 +1,6 @@
 package com.eafb
 
+import android.util.Log
 import com.lagradost.cloudstream3.app
 import java.net.URI
 import java.util.concurrent.CancellationException
@@ -16,6 +17,7 @@ class DiziYouAdapter(private val origin: String = "https://www.diziyou.one") : M
     }
     private val base = origin.trimEnd('/')
     private val storage = "https://storage.diziyou.one"
+    private fun trace(stage: String, detail: String) = Log.i("EA-FB-DiziYou", "$stage: $detail")
 
     private fun siteUrl(raw: String): String? = try {
         val uri = root.resolve(raw)
@@ -70,20 +72,31 @@ class DiziYouAdapter(private val origin: String = "https://www.diziyou.one") : M
             catch (cancel: CancellationException) { throw cancel }
             catch (_: Exception) { return emptyList() }
         val iframe = doc.selectFirst("iframe#diziyouPlayer")?.absUrl("src")
-            ?: return emptyList()
+        if (iframe.isNullOrBlank()) {
+            trace("resolve", "iframe=false")
+            return emptyList()
+        }
         val itemId = DiziYouEpisodeParser.playerId(iframe, root.host)
-            ?: return emptyList()
-        val options = doc.select("span.diziyouOption").map { it.id() }.toSet()
-        return buildList {
+        if (itemId == null) {
+            trace("resolve", "iframe=true itemId=false host=" +
+                runCatching { URI(iframe).host }.getOrNull())
+            return emptyList()
+        }
+        val options = doc.select("span.diziyouOption").map { it.id() }.filter { it.isNotBlank() }.toSet()
+        val links = buildList {
+            // Match the working DiziYou provider contract: generated storage
+            // playlists are HLS and require the DiziYou site as referer.
             if ("turkceAltyazili" in options)
                 add(SourceLink(id, storage + "/episodes/" + itemId + "/play.m3u8",
-                    null, null, "tr"))
+                    null, null, "tr", referer = "$base/", isHls = true))
             if ("ingilizceAltyazili" in options)
                 add(SourceLink(id, storage + "/episodes/" + itemId + "/play.m3u8",
-                    null, null, "en"))
+                    null, null, "en", referer = "$base/", isHls = true))
             if ("turkceDublaj" in options)
                 add(SourceLink(id, storage + "/episodes/" + itemId + "_tr/play.m3u8",
-                    null, "tr", null))
-        }
+                    null, "tr", null, referer = "$base/", isHls = true))
+        }.distinctBy { Triple(it.url, it.audioLanguage, it.subtitleLanguage) }
+        trace("resolve", "iframe=true itemId=true options=${options.sorted()} links=${links.size}")
+        return links
     }
 }
