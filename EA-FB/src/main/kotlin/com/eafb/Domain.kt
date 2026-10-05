@@ -70,7 +70,14 @@ data class SourceLink(
     val expiresAtMillis: Long? = null,
     val requiresPrivateSession: Boolean = false,
     val referer: String = "",
-    val isHls: Boolean = false
+    val isHls: Boolean = false,
+    val displayName: String? = null,
+    val subtitles: List<SourceSubtitle> = emptyList()
+)
+
+data class SourceSubtitle(
+    val language: String,
+    val url: String
 )
 
 /** Do not store user-specific links in a shared cache. Cache implementation is postponed. */
