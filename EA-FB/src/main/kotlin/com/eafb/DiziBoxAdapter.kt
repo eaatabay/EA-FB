@@ -327,7 +327,7 @@ class DiziBoxAdapter(private val origin: String = "https://www.dizibox.live") : 
 
     private suspend fun viaKing(iframe: String, referer: String, depth: Int): List<SourceLink> {
         val kingUrl = iframe.replace("king.php?v=", "king.php?wmode=opaque&v=")
-        val f = fetch(kingUrl, referer = referer) ?: return emptyList()
+        val f = fetch(kingUrl, referer = referer, site = true) ?: return emptyList()
         trace("king-response", "status=${f.code} bytes=${f.text.length} iframe=${Jsoup.parse(f.text).select("iframe").size} script=${Jsoup.parse(f.text).select("script").size} unescape=${f.text.contains("unescape(")}")
         val nested = firstIframe(f.text, kingUrl)
         if (nested != null && nested != iframe && nested != kingUrl) {
@@ -360,7 +360,7 @@ class DiziBoxAdapter(private val origin: String = "https://www.dizibox.live") : 
     private suspend fun viaMoly(iframe: String, referer: String, depth: Int): List<SourceLink> {
         // [v28] moly.php?h= -> moly.php?wmode=opaque&h= ; body holds unescape("<urlencoded base64 html>").
         val playerUrl = iframe.replace("moly.php?h=", "moly.php?wmode=opaque&h=")
-        val f = fetch(playerUrl, referer = referer) ?: return emptyList()
+        val f = fetch(playerUrl, referer = referer, site = true) ?: return emptyList()
         val decoded = decodeUnescaped(f.text)
         trace("moly-response", "status=${f.code} bytes=${f.text.length} iframe=${Jsoup.parse(f.text).select("iframe").size} unescape=${f.text.contains("unescape(")} decoded=${decoded != null}")
         val nested = firstIframe(decoded ?: f.text, playerUrl)
