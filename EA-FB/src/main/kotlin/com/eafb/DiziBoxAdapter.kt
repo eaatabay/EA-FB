@@ -299,19 +299,23 @@ class DiziBoxAdapter(private val origin: String = "https://www.dizibox.live") : 
     /** Reuse CloudStream's bundled extractor registry for third-party player hosts. */
     private suspend fun cloudstreamExtract(url: String, referer: String): List<SourceLink> {
         val result = mutableListOf<SourceLink>()
+        var rawCount = 0
+        var rejectedCount = 0
+        var extractorMatched = false
         try {
-            loadExtractor(url, referer, {}, { link ->
+            extractorMatched = loadExtractor(url, referer, {}, { link ->
+                rawCount++
                 val uri = runCatching { URI(link.url) }.getOrNull()
                 if (uri?.scheme == "https" && uri.host != null && uri.userInfo == null) {
                     val hls = uri.path.orEmpty().endsWith(".m3u8", ignoreCase = true) ||
                         uri.path.orEmpty().startsWith("/embed/sheila/")
                     result.add(SourceLink(id, link.url, null, null, null,
                         referer = link.referer, isHls = hls))
-                }
+                } else rejectedCount++
             })
         } catch (cancel: CancellationException) { throw cancel }
           catch (error: Exception) { trace("extractor-error", error.javaClass.simpleName) }
-        trace("cloudstream-extractor", "links=${result.size}")
+        trace("cloudstream-extractor", "host=${runCatching { URI(url).host }.getOrNull()} matched=$extractorMatched raw=$rawCount rejected=$rejectedCount accepted=${result.size}")
         return result.distinctBy { it.url }
     }
 
@@ -324,6 +328,7 @@ class DiziBoxAdapter(private val origin: String = "https://www.dizibox.live") : 
     private suspend fun viaKing(iframe: String, referer: String, depth: Int): List<SourceLink> {
         val kingUrl = iframe.replace("king.php?v=", "king.php?wmode=opaque&v=")
         val f = fetch(kingUrl, referer = referer) ?: return emptyList()
+        trace("king-response", "status=${f.code} bytes=${f.text.length} iframe=${Jsoup.parse(f.text).select("iframe").size} script=${Jsoup.parse(f.text).select("script").size} unescape=${f.text.contains("unescape(")}")
         val nested = firstIframe(f.text, kingUrl)
         if (nested != null && nested != iframe && nested != kingUrl) {
             val links = resolvePlayer(nested, kingUrl, depth + 1)
@@ -356,7 +361,9 @@ class DiziBoxAdapter(private val origin: String = "https://www.dizibox.live") : 
         // [v28] moly.php?h= -> moly.php?wmode=opaque&h= ; body holds unescape("<urlencoded base64 html>").
         val playerUrl = iframe.replace("moly.php?h=", "moly.php?wmode=opaque&h=")
         val f = fetch(playerUrl, referer = referer) ?: return emptyList()
-        val nested = firstIframe(decodeUnescaped(f.text) ?: f.text, playerUrl)
+        val decoded = decodeUnescaped(f.text)
+        trace("moly-response", "status=${f.code} bytes=${f.text.length} iframe=${Jsoup.parse(f.text).select("iframe").size} unescape=${f.text.contains("unescape(")} decoded=${decoded != null}")
+        val nested = firstIframe(decoded ?: f.text, playerUrl)
         if (nested == null) { trace("moly", "no-nested-iframe, bytes=${f.text.length}"); return emptyList() }
         if (nested == iframe || nested == playerUrl) return emptyList()
         return resolvePlayer(nested, playerUrl, depth + 1)
