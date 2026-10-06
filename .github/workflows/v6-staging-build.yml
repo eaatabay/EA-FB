@@ -73,7 +73,7 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
-      - name: Publish V72 DiziYou diagnostics to existing red staging repository
+      - name: Publish V73 DiziYou diagnostics to existing red staging repository
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -88,22 +88,22 @@ jobs:
           old=json.JSONDecoder().raw_decode((target/"plugins.json").read_text())[0]
           assert len(old)==1 and old[0]["internalName"]=="EA-FB"
           current_version=old[0]["version"]
-          assert current_version in (71,72), f"Refusing unexpected red release version {current_version}"
+          assert current_version in (72,73), f"Refusing unexpected red release version {current_version}"
           with zipfile.ZipFile(package) as z:
               assert z.testzip() is None
               m=json.loads(z.read("manifest.json"))
-              assert m.get("version")==72, m
+              assert m.get("version")==73, m
           target.mkdir(parents=True,exist_ok=True)
           item=old[0]
           package_hash="sha256-"+hashlib.sha256(package.read_bytes()).hexdigest()
-          if current_version == 72:
+          if current_version == 73:
               published=target/"EA-FB-V6-STAGING.cs3"
-              assert published.is_file(), "Published V72 CS3 is missing"
+              assert published.is_file(), "Published V73 CS3 is missing"
               published_hash="sha256-"+hashlib.sha256(published.read_bytes()).hexdigest()
-              assert published_hash == package_hash, "Refusing to overwrite a different V72 package"
-              assert item.get("fileHash") == package_hash, "V72 metadata hash does not match published package"
-              assert item.get("fileSize") == package.stat().st_size, "V72 metadata size mismatch"
-              print("PASS: identical V72 is already published; no release change required")
+              assert published_hash == package_hash, "Refusing to overwrite a different V73 package"
+              assert item.get("fileHash") == package_hash, "V73 metadata hash does not match published package"
+              assert item.get("fileSize") == package.stat().st_size, "V73 metadata size mismatch"
+              print("PASS: identical V73 is already published; no release change required")
           else:
               shutil.copyfile(package,target/"EA-FB-V6-STAGING.cs3")
               item["version"]=72
@@ -113,15 +113,15 @@ jobs:
               (target/"plugins.json").write_text(json.dumps(old,ensure_ascii=False,indent=2)+"\n")
           repo=json.loads((target/"repo.json").read_text())
           assert repo["pluginLists"]==["https://raw.githubusercontent.com/eaatabay/EA-FB/feature/detail-dual-ratings-v6/dist-v6-staging/plugins.json"]
-          print("PASS: V72 package and manifest staged at existing red update URL")
+          print("PASS: V73 package and manifest staged at existing red update URL")
           PY
           cd /tmp/eafb-red-publish
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add dist-v6-staging/EA-FB-V6-STAGING.cs3 dist-v6-staging/plugins.json
           if git diff --cached --quiet; then
-            echo "PASS: identical V72 already present; publish is idempotent"
+            echo "PASS: identical V73 already present; publish is idempotent"
           else
-            git commit -m "release(red): publish V72 DiziYou diagnostic CS3 for existing Mi Box auto-update"
+            git commit -m "release(red): publish V73 DiziYou diagnostic CS3 for existing Mi Box auto-update"
             git push origin HEAD:feature/detail-dual-ratings-v6
           fi

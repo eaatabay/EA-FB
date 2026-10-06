@@ -46,12 +46,12 @@ open class HDFilmCehennemiAdapter(
             .getOrElse { trace("search", "invalid-json=" + it.javaClass.simpleName); return emptyList() }
         val offers = mutableListOf<MediaOffer>()
         val documents = if (land) {
-            Jsoup.parse(text, base + "/").select("article.item, div.poster, #content-holder article, #content-holder div.poster, a[href*=\u0027/film/\u0027], a[href*=\u0027/dizi/\u0027]").map { it }
+            Jsoup.parse(text, base + "/").select("div.result-item article, #results article, .film-list article, article.item, div.poster, #content-holder article, #content-holder div.poster, a[href*=\u0027/film/\u0027], a[href*=\u0027/dizi/\u0027]").map { it }
         } else (0 until (results?.length() ?: 0)).map { Jsoup.parse(results!!.optString(it), base + "/") }
         for (doc in documents) {
-            val a = doc.selectFirst("a.search-result, a[href]") ?: if (doc.tagName() == "a") doc else continue
+            val a = doc.selectFirst(".image a, .poster a, .details .title a, h2 a, h3 a, a[href*=\u0027/film/\u0027], a[href*=\u0027/dizi/\u0027], a[href]") ?: if (doc.tagName() == "a") doc else continue
             val href = siteUrl(a.attr("href")) ?: continue
-            val foundTitle = (doc.selectFirst("h4.title, .title, h2, h3, .poster-title")?.text()?.trim()
+            val foundTitle = (doc.selectFirst(".h2.flbaslik, .details .title a, h4.title, .title, h2, h3, .poster-title")?.text()?.trim()
                 ?: a.attr("title").ifBlank { a.attr("aria-label") }.trim())
             if (foundTitle.isBlank()) continue
             val normalizedTitle = Identity.normalize(foundTitle)
@@ -66,7 +66,7 @@ open class HDFilmCehennemiAdapter(
             offers += MediaOffer(id, sourceTitle, query.title, query.year, query.kind, href,
                 query.tmdbId, query.season, query.episode)
         }
-        trace("search", "matches=" + offers.size + " parsed=" + documents.size)
+        trace("search", "matches=" + offers.size + " parsed=" + documents.size + " titled=" + documents.count { it.selectFirst(".h2.flbaslik, .details .title a, h4.title, .title, h2, h3, .poster-title") != null })
         return offers.distinctBy { it.pageUrl }.take(5)
     }
 
@@ -79,7 +79,7 @@ open class HDFilmCehennemiAdapter(
             catch (cancel: CancellationException) { throw cancel }
             catch (e: Exception) { trace("local", "request-failed=" + e.javaClass.simpleName); return emptyList() }
         val doc = response.document
-        val script = doc.select("script").firstOrNull { it.data().contains("sources:") }?.data()
+        val script = doc.select("script").firstOrNull { it.data().contains("sources:") || it.data().contains("file_link") }?.data()
             ?: run { trace("local", "missing-sources-script"); return emptyList() }
         val unpacked = runCatching { getAndUnpack(script) }.getOrNull().orEmpty()
         trace("local", "unpacked length=" + unpacked.length)
@@ -186,7 +186,8 @@ open class HDFilmCehennemiAdapter(
                     )
                 })
             } catch (cancel: CancellationException) { throw cancel }
-              catch (_: Exception) { }
+              catch (e: Exception) { trace("extractor", "failed=" + e.javaClass.simpleName) }
+            trace("extractor", "host=" + (runCatching { URI(url).host }.getOrNull() ?: "unknown") + " links=" + out.size)
         }
         trace("resolve", "candidates=" + candidates.size + " links=" + out.size)
         return out.distinctBy { it.url to it.displayName }
