@@ -67,7 +67,7 @@ class DiziYouAdapter(private val origin: String = "https://www.diziyou.one") : M
     private suspend fun playlistQuality(url: String): Int? = try {
         val body = app.get(url, referer = "$base/").text
         if (!body.trimStart().startsWith("#EXTM3U")) null
-        else Regex("""RESOLUTION=\\d+x(\\d+)""", RegexOption.IGNORE_CASE)
+        else Regex("""RESOLUTION=\d+x(\d+)""", RegexOption.IGNORE_CASE)
             .findAll(body).mapNotNull { it.groupValues[1].toIntOrNull() }.maxOrNull()
     } catch (cancel: CancellationException) { throw cancel }
       catch (_: Exception) { null }
