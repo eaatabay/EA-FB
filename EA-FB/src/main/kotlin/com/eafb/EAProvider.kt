@@ -957,11 +957,9 @@ class EAProvider : MainAPI() {
                         source.subtitleLanguage.equals("en", ignoreCase = true) -> "İngilizce Altyazı"
                         else -> null
                     }
-                    val qualityLabel = source.quality?.takeIf { it > 0 }?.let { "${it}p" }
-                    val displayName = source.displayName?.let { baseName ->
-                        if (qualityLabel != null && !baseName.contains(qualityLabel, ignoreCase = true))
-                            "$baseName • $qualityLabel" else baseName
-                    } ?: listOfNotNull(providerLabel, qualityLabel, languageLabel).joinToString(" • ")
+                    // CloudStream appends the quality automatically in its source menu.
+                    val displayName = source.displayName
+                        ?: listOfNotNull(providerLabel, languageLabel).joinToString(" • ")
                     source.subtitles.distinctBy { it.language to it.url }.forEach { subtitle ->
                         subtitleCallback(SubtitleFile(subtitle.language, subtitle.url))
                     }
