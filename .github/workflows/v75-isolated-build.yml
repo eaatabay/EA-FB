@@ -19,7 +19,7 @@ jobs:
       - uses: android-actions/setup-android@v3
       - uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-version: '8.10.2'
+          gradle-version: '8.12'
       - name: Prepare pinned CloudStream plugin
         run: bash scripts/prepare-cloudstream-gradle.sh
       - name: Compile isolated V75
