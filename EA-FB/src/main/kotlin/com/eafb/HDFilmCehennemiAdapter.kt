@@ -52,13 +52,14 @@ open class HDFilmCehennemiAdapter(
             val a = doc.selectFirst(".image a, .poster a, .details .title a, h2 a, h3 a, a[href*=\u0027/film/\u0027], a[href*=\u0027/dizi/\u0027], a[href]") ?: if (doc.tagName() == "a") doc else continue
             val href = siteUrl(a.attr("href")) ?: continue
             val foundTitle = (doc.selectFirst(".h2.flbaslik, .details .title a, h4.title, .title, h2, h3, .poster-title")?.text()?.trim()
-                ?: a.attr("title").ifBlank { a.attr("aria-label") }.trim())
+                ?: a.attr("title").ifBlank { a.attr("aria-label") }.ifBlank { doc.selectFirst("img[alt]")?.attr("alt").orEmpty() }.ifBlank { a.text() }.ifBlank { href.substringBefore("?").trimEnd('/').substringAfterLast('/').replace('-', ' ') }.trim())
             if (foundTitle.isBlank()) continue
             val normalizedTitle = Identity.normalize(foundTitle)
             val titleWords = normalizedTitle.split(" ").filter { it.length > 2 }.toSet()
             val wantedWords = wanted.split(" ").filter { it.length > 2 }.toSet()
             val overlap = titleWords.intersect(wantedWords).size
-            val strongMatch = normalizedTitle == wanted ||
+            val slugMatch = Identity.normalize(href.substringBefore("?").trimEnd('/').substringAfterLast('/').replace('-', ' ')).contains(wanted)
+            val strongMatch = slugMatch || normalizedTitle == wanted ||
                 normalizedTitle.contains(wanted) || wanted.contains(normalizedTitle) ||
                 (wantedWords.size >= 2 && overlap >= 2 &&
                     overlap * 2 >= wantedWords.size && overlap * 2 >= titleWords.size)
@@ -79,15 +80,18 @@ open class HDFilmCehennemiAdapter(
             catch (cancel: CancellationException) { throw cancel }
             catch (e: Exception) { trace("local", "request-failed=" + e.javaClass.simpleName); return emptyList() }
         val doc = response.document
-        val script = doc.select("script").firstOrNull { it.data().contains("sources:") || it.data().contains("file_link") }?.data()
+        val script = doc.select("script").firstOrNull { it.data().contains("sources:") || it.data().contains("file_link") || it.data().contains("sources") || it.data().contains("eval(function(p,a,c,k,e") }?.data()
             ?: run { trace("local", "missing-sources-script"); return emptyList() }
         val unpacked = runCatching { getAndUnpack(script) }.getOrNull().orEmpty()
         trace("local", "unpacked length=" + unpacked.length)
-        val encoded = Regex("""file_link\s*[:=]\s*["']([^"']+)""")
-            .find(unpacked)?.groupValues?.get(1) ?: run { trace("local", "missing-file-link"); return emptyList() }
-        val stream = runCatching {
-            String(Base64.decode(encoded, Base64.DEFAULT), Charsets.UTF_8)
-        }.getOrNull()?.takeIf { it.startsWith("https://") } ?: run { trace("local", "invalid-decoded-stream"); return emptyList() }
+        val combined = script + "\n" + unpacked
+        val encoded = Regex("""file_link\s*[:=]\s*["\x27]([^"\x27]+)["\x27]""")
+            .find(combined)?.groupValues?.get(1)
+        val decoded = encoded?.let { runCatching { String(Base64.decode(it, Base64.DEFAULT), Charsets.UTF_8) }.getOrNull() }
+        val direct = Regex("""(?:file|src|source|url)\s*[:=]\s*["\x27](https://[^"\x27\s]+(?:\.m3u8|\.mp4)(?:\?[^"\x27]*)?)["\x27]""", RegexOption.IGNORE_CASE)
+            .find(combined)?.groupValues?.get(1)
+        val stream = listOfNotNull(decoded, direct).firstOrNull { it.startsWith("https://") }
+            ?: run { trace("local", "missing-stream-url"); return emptyList() }
         val tracks = Regex("""tracks\s*:\s*\[([\s\S]*?)]""")
             .find(script)?.groupValues?.get(1).orEmpty()
         val subtitles = Regex("""\{[^{}]*?file\s*:\s*["']([^"']+)["'][^{}]*?label\s*:\s*["']([^"']+)["'][^{}]*?kind\s*:\s*["']captions["'][^{}]*?}""", RegexOption.IGNORE_CASE)
