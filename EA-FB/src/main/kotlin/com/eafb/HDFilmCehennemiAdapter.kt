@@ -31,6 +31,7 @@ open class HDFilmCehennemiAdapter(
     override suspend fun search(query: MediaQuery): List<MediaOffer> {
         if (query.title.isBlank()) return emptyList()
         val wanted = Identity.normalize(query.title)
+        trace("search", "title=" + query.title.take(70))
         val encoded = URLEncoder.encode(query.title, "UTF-8")
         val text = try {
             app.get(base + "/search?q=" + encoded, headers = headers + mapOf(
@@ -69,6 +70,7 @@ open class HDFilmCehennemiAdapter(
         val script = doc.select("script").firstOrNull { it.data().contains("sources:") }?.data()
             ?: return emptyList()
         val unpacked = runCatching { getAndUnpack(script) }.getOrNull().orEmpty()
+        trace("local", "unpacked length=" + unpacked.length)
         val encoded = Regex("""file_link\s*=\s*["']([^"']+)""")
             .find(unpacked)?.groupValues?.get(1) ?: return emptyList()
         val stream = runCatching {
@@ -111,6 +113,7 @@ open class HDFilmCehennemiAdapter(
             catch (cancel: CancellationException) { throw cancel }
             catch (_: Exception) { return emptyList() }
         val candidates = LinkedHashMap<String, String>()
+        trace("resolve", "alternative groups=" + doc.select("div.alternative-links").size)
         doc.select("iframe").forEach { frame ->
             val raw = frame.attr("data-src").ifBlank { frame.attr("src") }
             runCatching { URI(contentUrl).resolve(raw).toString() }.getOrNull()
@@ -130,6 +133,7 @@ open class HDFilmCehennemiAdapter(
                   catch (_: Exception) { continue }
                 val unescaped = apiText.replace("\\\\", "\\").replace("\\\"", "\"")
                 val frames = Jsoup.parse(unescaped, contentUrl).select("iframe")
+                trace("video", "frames=" + frames.size)
                 if (frames.isEmpty()) continue
                 val dataSrc: String = frames[0].attr("data-src")
                 val src: String = frames[0].attr("src")
