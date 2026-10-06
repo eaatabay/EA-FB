@@ -28,5 +28,28 @@ jobs:
           gradle-version: '8.12'
       - name: Prepare pinned CloudStream plugin
         run: bash scripts/prepare-cloudstream-gradle.sh
-      - name: Compile isolated V75
-        run: gradle :EA-FB:assembleDebug --no-daemon --stacktrace
+      - name: Compile isolated V75 CS3
+        run: gradle :EA-FB:make --no-daemon --stacktrace
+      - name: Verify V75 CS3 manifest and isolate test artifact
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json, zipfile
+          from pathlib import Path
+          cs3 = list(Path("EA-FB/build").glob("*.cs3"))
+          assert len(cs3) == 1, f"Expected 1 CS3, found: {cs3}"
+          with zipfile.ZipFile(cs3[0]) as z:
+              manifest = json.loads(z.read("manifest.json"))
+          assert manifest.get("version") == 75, manifest
+          target = Path("build/v75-isolated")
+          target.mkdir(parents=True, exist_ok=True)
+          (target / "EA-FB-V75-NL-LAND-TEST.cs3").write_bytes(cs3[0].read_bytes())
+          print("CS3 manifest verified v75, isolated test package prepared")
+          PY
+      - name: Upload V75 isolated test CS3
+        uses: actions/upload-artifact@v4
+        with:
+          name: EA-FB-V75-NL-LAND-TEST
+          path: build/v75-isolated/EA-FB-V75-NL-LAND-TEST.cs3
+          if-no-files-found: error
+          retention-days: 14
