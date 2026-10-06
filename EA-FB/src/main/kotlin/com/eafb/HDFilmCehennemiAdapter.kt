@@ -93,8 +93,7 @@ open class HDFilmCehennemiAdapter(
                     ), referer = contentUrl).text
                 } catch (cancel: CancellationException) { throw cancel }
                   catch (_: Exception) { continue }
-                val raw = Regex("""data-src=\\?["']([^"'\\]+)""").find(apiText)?.groupValues?.get(1)
-                    ?.replace("\\\/", "/") ?: continue
+                val raw = Regex("""data-src=[^"']*["']([^"']+)""").find(apiText)?.groupValues?.get(1) ?: continue
                 val iframe = runCatching { URI(contentUrl).resolve(raw).toString() }.getOrNull() ?: continue
                 val label = listOf(sourceTitle, button.text().trim(), lang).filter { it.isNotBlank() }.joinToString(" • ")
                 candidates.putIfAbsent(iframe, label)
