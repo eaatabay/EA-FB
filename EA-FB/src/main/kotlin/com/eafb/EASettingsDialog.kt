@@ -249,7 +249,9 @@ object EASettingsDialog {
                 section(ctx, content, "FİLM VE DİZİ KAYNAKLARI",
                     "Kaynakları ayrı ayrı açıp kapatabilirsiniz. Açık olması, bağlantının çalıştığı anlamına gelmez.")
                 for ((id, label) in listOf("dizibox" to "DiziBox (deneme)",
-                        "diziyou" to "DiziYou (deneme)")) {
+                        "diziyou" to "DiziYou (deneme)",
+                        "hdfilmcehennemi-nl" to "HDFilmCehennemi NL (deneme)",
+                        "hdfilmcehennemi-land" to "HDFilmCehennemi LAND (deneme)")) {
                     val row = horizontal(ctx).apply {
                         background = shape(ctx, PANEL)
                         setPadding(dp(ctx, 16), dp(ctx, 8), dp(ctx, 16), dp(ctx, 8))
