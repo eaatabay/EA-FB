@@ -38,9 +38,10 @@ open class HDFilmCehennemiAdapter(
                 "X-Requested-With" to "fetch", "Content-Type" to "application/json"
             ), referer = base + "/").text
         } catch (cancel: CancellationException) { throw cancel }
-          catch (_: Exception) { return emptyList() }
+          catch (e: Exception) { trace("search", "request-failed=" + e.javaClass.simpleName); return emptyList() }
+        trace("search", "response-length=" + text.length + " json=" + text.trimStart().startsWith("{"))
         val results = runCatching { org.json.JSONObject(text).optJSONArray("results") ?: org.json.JSONArray() }
-            .getOrElse { return emptyList() }
+            .getOrElse { trace("search", "invalid-json=" + it.javaClass.simpleName); return emptyList() }
         val offers = mutableListOf<MediaOffer>()
         for (i in 0 until results.length()) {
             val doc = Jsoup.parse(results.optString(i), base + "/")
@@ -72,17 +73,17 @@ open class HDFilmCehennemiAdapter(
     private suspend fun localSource(url: String, label: String): List<SourceLink> {
         val response = try { app.get(url, headers = headers, referer = base + "/") }
             catch (cancel: CancellationException) { throw cancel }
-            catch (_: Exception) { return emptyList() }
+            catch (e: Exception) { trace("local", "request-failed=" + e.javaClass.simpleName); return emptyList() }
         val doc = response.document
         val script = doc.select("script").firstOrNull { it.data().contains("sources:") }?.data()
-            ?: return emptyList()
+            ?: run { trace("local", "missing-sources-script"); return emptyList() }
         val unpacked = runCatching { getAndUnpack(script) }.getOrNull().orEmpty()
         trace("local", "unpacked length=" + unpacked.length)
-        val encoded = Regex("""file_link\s*=\s*["']([^"']+)""")
-            .find(unpacked)?.groupValues?.get(1) ?: return emptyList()
+        val encoded = Regex("""file_link\s*[:=]\s*["']([^"']+)""")
+            .find(unpacked)?.groupValues?.get(1) ?: run { trace("local", "missing-file-link"); return emptyList() }
         val stream = runCatching {
             String(Base64.decode(encoded, Base64.DEFAULT), Charsets.UTF_8)
-        }.getOrNull()?.takeIf { it.startsWith("https://") } ?: return emptyList()
+        }.getOrNull()?.takeIf { it.startsWith("https://") } ?: run { trace("local", "invalid-decoded-stream"); return emptyList() }
         val tracks = Regex("""tracks\s*:\s*\[([\s\S]*?)]""")
             .find(script)?.groupValues?.get(1).orEmpty()
         val subtitles = Regex("""\{[^{}]*?file\s*:\s*["']([^"']+)["'][^{}]*?label\s*:\s*["']([^"']+)["'][^{}]*?kind\s*:\s*["']captions["'][^{}]*?}""", RegexOption.IGNORE_CASE)
@@ -92,6 +93,7 @@ open class HDFilmCehennemiAdapter(
             }.toList()
         val body = try { app.get(stream, referer = base + "/").text } catch (_: Exception) { "" }
         val quality = playlistQuality(body)
+        trace("local", "stream-ready subtitles=" + subtitles.size)
         return listOf(SourceLink(id, stream, quality, null, null,
             referer = base + "/", isHls = stream.substringBefore('?').endsWith(".m3u8", true),
             displayName = label, subtitles = subtitles))
