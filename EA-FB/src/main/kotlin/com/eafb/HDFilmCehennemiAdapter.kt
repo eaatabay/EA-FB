@@ -3,6 +3,8 @@ package com.eafb
 import android.util.Log
 import com.lagradost.cloudstream3.app
 import com.lagradost.cloudstream3.utils.loadExtractor
+import com.lagradost.cloudstream3.utils.getAndUnpack
+import android.util.Base64
 import java.net.URI
 import java.net.URLEncoder
 import java.util.concurrent.CancellationException
@@ -51,6 +53,37 @@ open class HDFilmCehennemiAdapter(
         }
         trace("search", "matches=" + offers.size)
         return offers.distinctBy { it.pageUrl }.take(5)
+    }
+
+    private fun playlistQuality(body: String): Int? =
+        Regex("""RESOLUTION=\d+x(\d+)""", RegexOption.IGNORE_CASE)
+            .findAll(body).mapNotNull { it.groupValues[1].toIntOrNull() }.maxOrNull()
+
+    private suspend fun localSource(url: String, label: String): List<SourceLink> {
+        val response = try { app.get(url, headers = headers, referer = base + "/") }
+            catch (cancel: CancellationException) { throw cancel }
+            catch (_: Exception) { return emptyList() }
+        val doc = response.document
+        val script = doc.select("script").firstOrNull { it.data().contains("sources:") }?.data()
+            ?: return emptyList()
+        val unpacked = runCatching { getAndUnpack(script) }.getOrNull().orEmpty()
+        val encoded = Regex("""file_link\s*=\s*["']([^"']+)""")
+            .find(unpacked)?.groupValues?.get(1) ?: return emptyList()
+        val stream = runCatching {
+            String(Base64.decode(encoded, Base64.DEFAULT), Charsets.UTF_8)
+        }.getOrNull()?.takeIf { it.startsWith("https://") } ?: return emptyList()
+        val tracks = Regex("""tracks\s*:\s*\[([\s\S]*?)]""")
+            .find(script)?.groupValues?.get(1).orEmpty()
+        val subtitles = Regex("""\{[^{}]*?file\s*:\s*["']([^"']+)["'][^{}]*?label\s*:\s*["']([^"']+)["'][^{}]*?kind\s*:\s*["']captions["'][^{}]*?}""", RegexOption.IGNORE_CASE)
+            .findAll(tracks).mapNotNull { m ->
+                val subUrl = runCatching { URI(url).resolve(m.groupValues[1]).toString() }.getOrNull()
+                subUrl?.takeIf { it.startsWith("https://") }?.let { SourceSubtitle(m.groupValues[2], it) }
+            }.toList()
+        val body = try { app.get(stream, referer = base + "/").text } catch (_: Exception) { "" }
+        val quality = playlistQuality(body)
+        return listOf(SourceLink(id, stream, quality, null, null,
+            referer = base + "/", isHls = stream.substringBefore('?').endsWith(".m3u8", true),
+            displayName = label, subtitles = subtitles))
     }
 
     override suspend fun resolve(offer: MediaOffer): List<SourceLink> {
@@ -109,6 +142,11 @@ open class HDFilmCehennemiAdapter(
         }
         val out = mutableListOf<SourceLink>()
         for ((url, label) in candidates) {
+            val local = localSource(url, label)
+            if (local.isNotEmpty()) {
+                out += local
+                continue
+            }
             val subtitles = mutableListOf<SourceSubtitle>()
             try {
                 loadExtractor(url, contentUrl, { sub ->
