@@ -94,9 +94,17 @@ open class HDFilmCehennemiAdapter(
                 } catch (cancel: CancellationException) { throw cancel }
                   catch (_: Exception) { continue }
                 val raw = Jsoup.parse(apiText, contentUrl).selectFirst("iframe")?.let { it.attr("data-src").ifBlank { it.attr("src") } }?.takeIf { it.isNotBlank() } ?: continue
-                val iframe = runCatching { URI(contentUrl).resolve(raw).toString() }.getOrNull() ?: continue
+                val iframe = when {
+                    raw.startsWith("//") -> "https:" + raw
+                    raw.startsWith("http") -> raw
+                    else -> runCatching { URI(contentUrl).resolve(raw).toString() }.getOrNull()
+                } ?: continue
                 val label = listOf(sourceTitle, button.text().trim(), lang).filter { it.isNotBlank() }.joinToString(" • ")
-                candidates.putIfAbsent(iframe, label)
+                val normalized = if (iframe.contains("?rapidrame_id=")) {
+                    val rapidId = iframe.substringAfter("?rapidrame_id=").substringBefore('&')
+                    if (rapidId.isNotBlank()) base + "/playerr/" + rapidId else iframe
+                } else iframe
+                candidates.putIfAbsent(normalized, label)
             }
         }
         val out = mutableListOf<SourceLink>()
