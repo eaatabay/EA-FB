@@ -488,6 +488,6 @@ class DiziBoxAdapter(private val origin: String = "https://www.dizibox.live") : 
         trace("playlist", "verified quality=${quality ?: "adaptive"}")
         return listOf(SourceLink(id, url, quality, null, null,
             referer = referer, isHls = true,
-            displayName = quality?.let { "DiziBox • ${it}p" }))
+            displayName = "DiziBox"))
     }
 }
