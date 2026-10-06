@@ -47,7 +47,9 @@ open class HDFilmCehennemiAdapter(
             val href = siteUrl(a.attr("href")) ?: continue
             val foundTitle = a.selectFirst("h4.title, .title")?.text()?.trim()
                 ?: a.attr("aria-label").trim()
-            if (foundTitle.isBlank() || Identity.normalize(foundTitle) != wanted) continue
+            if (foundTitle.isBlank()) continue
+            val normalizedTitle = Identity.normalize(foundTitle)
+            if (normalizedTitle != wanted && !normalizedTitle.contains(wanted) && !wanted.contains(normalizedTitle)) continue
             offers += MediaOffer(id, sourceTitle, query.title, query.year, query.kind, href,
                 query.tmdbId, query.season, query.episode)
         }
@@ -126,7 +128,8 @@ open class HDFilmCehennemiAdapter(
                     ), referer = contentUrl).text
                 } catch (cancel: CancellationException) { throw cancel }
                   catch (_: Exception) { continue }
-                val frames = Jsoup.parse(apiText, contentUrl).select("iframe")
+                val unescaped = apiText.replace("\\\\", "\\").replace("\\\"", "\"")
+                val frames = Jsoup.parse(unescaped, contentUrl).select("iframe")
                 if (frames.isEmpty()) continue
                 val dataSrc: String = frames[0].attr("data-src")
                 val src: String = frames[0].attr("src")
