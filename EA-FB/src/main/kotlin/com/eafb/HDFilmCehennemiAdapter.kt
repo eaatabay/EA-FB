@@ -126,9 +126,10 @@ open class HDFilmCehennemiAdapter(
                     ), referer = contentUrl).text
                 } catch (cancel: CancellationException) { throw cancel }
                   catch (_: Exception) { continue }
-                val frame = Jsoup.parse(apiText, contentUrl).select("iframe").firstOrNull() ?: continue
-                val dataSrc: String = frame.attr("data-src")
-                val src: String = frame.attr("src")
+                val frames = Jsoup.parse(apiText, contentUrl).select("iframe")
+                if (frames.isEmpty()) continue
+                val dataSrc: String = frames[0].attr("data-src")
+                val src: String = frames[0].attr("src")
                 val raw: String = if (dataSrc.isNotBlank()) dataSrc else src
                 if (raw.isBlank()) continue
                 val iframe = when {
