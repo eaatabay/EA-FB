@@ -482,7 +482,7 @@ class DiziBoxAdapter(private val origin: String = "https://www.dizibox.live") : 
         if (uri.scheme != "https" || uri.userInfo != null || !isMolyHost(uri.host)) return emptyList()
         val response = fetch(url, referer = referer)?.text ?: return emptyList()
         if (!response.trimStart().startsWith("#EXTM3U")) { trace("playlist", "not-m3u8; bytes=${response.length}"); return emptyList() }
-        val heights = Regex("""RESOLUTION=\\d+x(\\d+)""", RegexOption.IGNORE_CASE)
+        val heights = Regex("""RESOLUTION=\d+x(\d+)""", RegexOption.IGNORE_CASE)
             .findAll(response).mapNotNull { it.groupValues[1].toIntOrNull() }.toList()
         val quality = heights.maxOrNull()
         trace("playlist", "verified quality=${quality ?: "adaptive"}")
