@@ -15,9 +15,9 @@ ICON = "https://raw.githubusercontent.com/eaatabay/EA-FB/main/assets/ea-fb-logo.
 
 
 def stage(root=ROOT, staging=False):
-    expected_version = int(os.environ.get("EA_FB_V6_STAGING_VERSION", "65")) if staging else 6
-    if staging and expected_version != 65:
-        raise ValueError("Only V65 isolated staging builds are supported")
+    expected_version = int(os.environ.get("EA_FB_V6_STAGING_VERSION", "66")) if staging else 6
+    if staging and expected_version != 66:
+        raise ValueError("Only V66 isolated staging builds are supported")
     manifest_file = root / "build" / "plugins.json"
     if (root / "build").is_symlink() or manifest_file.is_symlink() or \
             (root / "EA-FB").is_symlink() or (root / "EA-FB" / "build").is_symlink():
@@ -43,7 +43,7 @@ def stage(root=ROOT, staging=False):
         members = archive.namelist()
         infos = archive.infolist()
         if len(infos) > 512 or sum(info.file_size for info in infos) > 128 * 1024 * 1024 or any(
-                info.file_size > 65 * 1024 * 1024 or info.flag_bits & 1 for info in infos):
+                info.file_size > 66 * 1024 * 1024 or info.flag_bits & 1 for info in infos):
             raise ValueError("Oversized or encrypted .cs3 archive")
         if len(members) != len(set(members)):
             raise ValueError("Duplicate .cs3 ZIP members")
