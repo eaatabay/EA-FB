@@ -50,7 +50,14 @@ open class HDFilmCehennemiAdapter(
                 ?: a.attr("aria-label").trim()
             if (foundTitle.isBlank()) continue
             val normalizedTitle = Identity.normalize(foundTitle)
-            if (normalizedTitle != wanted && !normalizedTitle.contains(wanted) && !wanted.contains(normalizedTitle)) continue
+            val titleWords = normalizedTitle.split(" ").filter { it.length > 2 }.toSet()
+            val wantedWords = wanted.split(" ").filter { it.length > 2 }.toSet()
+            val overlap = titleWords.intersect(wantedWords).size
+            val strongMatch = normalizedTitle == wanted ||
+                normalizedTitle.contains(wanted) || wanted.contains(normalizedTitle) ||
+                (wantedWords.size >= 2 && overlap >= 2 &&
+                    overlap * 2 >= wantedWords.size && overlap * 2 >= titleWords.size)
+            if (!strongMatch) continue
             offers += MediaOffer(id, sourceTitle, query.title, query.year, query.kind, href,
                 query.tmdbId, query.season, query.episode)
         }
