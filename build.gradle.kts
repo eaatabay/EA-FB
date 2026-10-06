@@ -57,6 +57,8 @@ subprojects {
         val compileOnly by configurations
         cloudstream("com.lagradost:cloudstream3:pre-release")
         compileOnly("androidx.fragment:fragment:1.8.9")
+        // CloudStream supplies Rhino at runtime; compile against its API only.
+        compileOnly("org.mozilla:rhino:1.7.15")
         implementation(kotlin("stdlib"))
         // CloudStream app.get exposes NiceHttp Requests; required for Kotlin compilation.
         implementation("com.github.Blatzar:NiceHttp:0.4.11")
