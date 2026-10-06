@@ -38,9 +38,9 @@ fi
 if [[ "${EA_FB_V6_STAGING_BUILD:-}" == "1" ]]; then
   python3 scripts/prepare-v6-staging-overlay.py --verify
   # CloudStream's makePluginsJson can reuse the previous release version in its
-  # aggregate metadata even though the freshly compiled CS3 manifest is V68.
+  # aggregate metadata even though the freshly compiled CS3 manifest is V69.
   # Normalize only this isolated staging build, and only after proving the CS3
-  # itself is V68. Production builds never enter this block.
+  # itself is V69. Production builds never enter this block.
   python3 - <<'PY'
 import json, zipfile
 from pathlib import Path
@@ -49,14 +49,14 @@ binaries = list(Path("EA-FB/build").glob("*.cs3"))
 assert len(binaries) == 1, binaries
 with zipfile.ZipFile(binaries[0]) as archive:
     manifest = json.loads(archive.read("manifest.json"))
-assert manifest.get("version") == 68, manifest
+assert manifest.get("version") == 69, manifest
 
 metadata_path = Path("build/plugins.json")
 metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
 assert len(metadata) == 1 and metadata[0].get("internalName") == "EA-FB", metadata
-if metadata[0].get("version") != 68:
-    print(f"Normalizing isolated V68 staging metadata from v{metadata[0].get('version')} to v68")
-    metadata[0]["version"] = 68
+if metadata[0].get("version") != 69:
+    print(f"Normalizing isolated V69 staging metadata from v{metadata[0].get('version')} to v69")
+    metadata[0]["version"] = 69
     metadata_path.write_text(json.dumps(metadata, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 PY
   python3 scripts/stage-release.py --v6-staging
