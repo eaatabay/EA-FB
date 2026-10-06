@@ -33,22 +33,26 @@ open class HDFilmCehennemiAdapter(
         val wanted = Identity.normalize(query.title)
         trace("search", "title=" + query.title.take(70))
         val encoded = URLEncoder.encode(query.title, "UTF-8")
+        val land = id.endsWith("-land")
+        val searchUrl = if (land) base + "/?s=" + encoded else base + "/search?q=" + encoded
         val text = try {
-            app.get(base + "/search?q=" + encoded, headers = headers + mapOf(
+            app.get(searchUrl, headers = headers + mapOf(
                 "X-Requested-With" to "fetch", "Content-Type" to "application/json"
             ), referer = base + "/").text
         } catch (cancel: CancellationException) { throw cancel }
           catch (e: Exception) { trace("search", "request-failed=" + e.javaClass.simpleName); return emptyList() }
         trace("search", "response-length=" + text.length + " json=" + text.trimStart().startsWith("{"))
-        val results = runCatching { org.json.JSONObject(text).optJSONArray("results") ?: org.json.JSONArray() }
+        val results = if (land) null else runCatching { org.json.JSONObject(text).optJSONArray("results") ?: org.json.JSONArray() }
             .getOrElse { trace("search", "invalid-json=" + it.javaClass.simpleName); return emptyList() }
         val offers = mutableListOf<MediaOffer>()
-        for (i in 0 until results.length()) {
-            val doc = Jsoup.parse(results.optString(i), base + "/")
-            val a = doc.selectFirst("a.search-result, a[href]") ?: continue
+        val documents = if (land) {
+            Jsoup.parse(text, base + "/").select("article.item, div.poster, #content-holder article, #content-holder div.poster, a[href*=\u0027/film/\u0027], a[href*=\u0027/dizi/\u0027]").map { it }
+        } else (0 until (results?.length() ?: 0)).map { Jsoup.parse(results!!.optString(it), base + "/") }
+        for (doc in documents) {
+            val a = doc.selectFirst("a.search-result, a[href]") ?: if (doc.tagName() == "a") doc else continue
             val href = siteUrl(a.attr("href")) ?: continue
-            val foundTitle = a.selectFirst("h4.title, .title")?.text()?.trim()
-                ?: a.attr("aria-label").trim()
+            val foundTitle = (doc.selectFirst("h4.title, .title, h2, h3, .poster-title")?.text()?.trim()
+                ?: a.attr("title").ifBlank { a.attr("aria-label") }.trim())
             if (foundTitle.isBlank()) continue
             val normalizedTitle = Identity.normalize(foundTitle)
             val titleWords = normalizedTitle.split(" ").filter { it.length > 2 }.toSet()
@@ -62,7 +66,7 @@ open class HDFilmCehennemiAdapter(
             offers += MediaOffer(id, sourceTitle, query.title, query.year, query.kind, href,
                 query.tmdbId, query.season, query.episode)
         }
-        trace("search", "matches=" + offers.size)
+        trace("search", "matches=" + offers.size + " parsed=" + documents.size)
         return offers.distinctBy { it.pageUrl }.take(5)
     }
 
