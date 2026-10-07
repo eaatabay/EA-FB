@@ -1,4 +1,4 @@
-version = 76
+version = 77
 cloudstream {
     description = "EA-FB: tek arayüzde film, dizi ve izinli canlı TV - gelistirme onizlemesi"
     authors = listOf("EA-FB")
