@@ -5,6 +5,7 @@ on:
       - test/nl-land-v75-isolated
     paths:
       - 'EA-FB/src/main/kotlin/com/eafb/HDFilmCehennemiAdapter.kt'
+      - 'EA-FB/build.gradle.kts'
       - '.github/workflows/v76-red-build.yml'
   workflow_dispatch:
 jobs:
