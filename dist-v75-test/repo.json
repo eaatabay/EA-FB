@@ -1,8 +1,0 @@
-{
-  "name": "EA-FB V75 NL LAND TEST",
-  "description": "Isolated test distribution; does not replace V74",
-  "manifestVersion": 1,
-  "pluginLists": [
-    "https://raw.githubusercontent.com/eaatabay/EA-FB/test/nl-land-v75-isolated/dist-v75-test/plugins.json"
-  ]
-}
