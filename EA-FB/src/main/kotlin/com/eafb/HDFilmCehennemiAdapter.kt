@@ -77,7 +77,7 @@ open class HDFilmCehennemiAdapter(
             .findAll(body).mapNotNull { it.groupValues[1].toIntOrNull() }.maxOrNull()
 
 
-    // NL: Bronze v52 bytecode model: resolve "file: variable" from its JavaScript context.
+    // V77: NL Rhino variable matcher uses single-escaped regex tokens.\n    // NL: Bronze v52 bytecode model: resolve "file: variable" from its JavaScript context.
     private fun decryptPlayerUrl(html: String): String? {
         val scripts = Jsoup.parse(html).select("script").map { it.data() }
         val variable = Regex("""file:\s*([a-zA-Z_$][\w$]*)\s*[,}]""")
