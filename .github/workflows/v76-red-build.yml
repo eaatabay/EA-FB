@@ -1,4 +1,4 @@
-name: V77 isolated compile
+name: V78 isolated compile
 on:
   push:
     branches:
@@ -6,7 +6,7 @@ on:
     paths:
       - 'EA-FB/src/main/kotlin/com/eafb/HDFilmCehennemiAdapter.kt'
       - 'EA-FB/build.gradle.kts'
-      - '.github/workflows/v77-red-build.yml'
+      - '.github/workflows/v78-red-build.yml'
   workflow_dispatch:
 jobs:
   compile:
@@ -32,9 +32,9 @@ jobs:
           gradle-version: '8.12'
       - name: Prepare pinned CloudStream plugin
         run: bash scripts/prepare-cloudstream-gradle.sh
-      - name: Compile isolated V77 CS3
+      - name: Compile isolated V78 CS3
         run: gradle :EA-FB:make --no-daemon --stacktrace
-      - name: Verify V77 CS3 manifest and isolate test artifact
+      - name: Verify V78 CS3 manifest and isolate test artifact
         shell: bash
         run: |
           python3 - <<'PY'
@@ -44,37 +44,37 @@ jobs:
           assert len(cs3) == 1, f"Expected 1 CS3, found: {cs3}"
           with zipfile.ZipFile(cs3[0]) as z:
               manifest = json.loads(z.read("manifest.json"))
-          assert manifest.get("version") == 77, manifest
-          target = Path("build/v77-isolated")
+          assert manifest.get("version") == 78, manifest
+          target = Path("build/v78-isolated")
           target.mkdir(parents=True, exist_ok=True)
-          (target / "EA-FB-V77-NL-LAND-TEST.cs3").write_bytes(cs3[0].read_bytes())
-          print("CS3 manifest verified v77, isolated test package prepared")
+          (target / "EA-FB-V78-NL-LAND-TEST.cs3").write_bytes(cs3[0].read_bytes())
+          print("CS3 manifest verified v78, isolated test package prepared")
           PY
-      - name: Upload V77 isolated test CS3
+      - name: Upload V78 isolated test CS3
         uses: actions/upload-artifact@v4
         with:
-          name: EA-FB-V77-NL-LAND-TEST
-          path: build/v77-isolated/EA-FB-V77-NL-LAND-TEST.cs3
+          name: EA-FB-V78-NL-LAND-TEST
+          path: build/v78-isolated/EA-FB-V78-NL-LAND-TEST.cs3
           if-no-files-found: error
           retention-days: 14
 
-      - name: Publish V77 to existing RED CloudStream auto-update repository
+      - name: Publish V78 to existing RED CloudStream auto-update repository
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
           set -euo pipefail
           git clone --quiet --branch feature/detail-dual-ratings-v6 --single-branch \
-            "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" /tmp/eafb-v77-red
+            "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" /tmp/eafb-v78-red
           python3 - <<'PY'
           import hashlib,json,shutil,zipfile
           from pathlib import Path
-          package=Path("build/v77-isolated/EA-FB-V77-NL-LAND-TEST.cs3")
-          red=Path("/tmp/eafb-v77-red/dist-v6-staging")
+          package=Path("build/v78-isolated/EA-FB-V78-NL-LAND-TEST.cs3")
+          red=Path("/tmp/eafb-v78-red/dist-v6-staging")
           items=json.loads((red/"plugins.json").read_text())
           assert len(items)==1 and items[0]["internalName"]=="EA-FB",items
           item=items[0]
-          assert item["version"] == 77, f"Unexpected current red version {item['version']}"
+          assert item["version"] == 78, f"Unexpected current red version {item['version']}"
           expected="https://raw.githubusercontent.com/eaatabay/EA-FB/feature/detail-dual-ratings-v6/dist-v6-staging/EA-FB-V6-STAGING.cs3"
           assert item["url"]==expected
           assert json.loads((red/"repo.json").read_text())["pluginLists"]==[
@@ -87,7 +87,7 @@ jobs:
           with zipfile.ZipFile(package) as z:
               assert z.testzip() is None
               manifest=json.loads(z.read("manifest.json"))
-              assert manifest["version"]==77,manifest
+              assert manifest["version"]==78,manifest
               assert {"classes.dex","manifest.json"}<=set(z.namelist())
           if item["version"]==75:
               backup=red/"EA-FB-V75-BACKUP.cs3"
@@ -96,13 +96,13 @@ jobs:
               else:
                   shutil.copyfile(current,backup)
           shutil.copyfile(package,current)
-          item["version"]=77
+          item["version"]=78
           item["fileSize"]=package.stat().st_size
           item["fileHash"]="sha256-"+hashlib.sha256(package.read_bytes()).hexdigest()
           (red/"plugins.json").write_text(json.dumps(items,ensure_ascii=False,indent=2)+"\n")
-          print("V77 prepared at EXISTING red update URL; V75 backup preserved")
+          print("V78 prepared at EXISTING red update URL; V75 backup preserved")
           PY
-          cd /tmp/eafb-v77-red
+          cd /tmp/eafb-v78-red
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -f dist-v6-staging/EA-FB-V6-STAGING.cs3 dist-v6-staging/plugins.json
@@ -110,6 +110,6 @@ jobs:
             git add -f dist-v6-staging/EA-FB-V75-BACKUP.cs3
           fi
           if ! git diff --cached --quiet; then
-            git commit -m "release(red): publish V77 to existing Mi Box CloudStream update URL; back up V75"
+            git commit -m "release(red): publish V78 to existing Mi Box CloudStream update URL; back up V75"
             git push origin HEAD:feature/detail-dual-ratings-v6
           fi
