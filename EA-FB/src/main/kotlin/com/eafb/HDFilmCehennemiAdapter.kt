@@ -22,7 +22,11 @@ open class HDFilmCehennemiAdapter(
         "User-Agent" to "Mozilla/5.0 (Linux; Android 13) AppleWebKit/537.36 Chrome/140.0.0.0 Mobile Safari/537.36",
         "Accept-Language" to "tr-TR,tr;q=0.9,en-US;q=0.8,en;q=0.7"
     )
-    private val playerHeaders = headers + mapOf(\n        "User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",\n        "Accept" to "*/*"\n    )\n    init { require(root.scheme == "https" && root.host != null && root.userInfo == null) }
+    private val playerHeaders = headers + mapOf(
+        "User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+        "Accept" to "*/*"
+    )
+    init { require(root.scheme == "https" && root.host != null && root.userInfo == null) }
     private fun trace(stage: String, detail: String) = Log.i("EA-FB-HDFC", id + "/" + stage + ": " + detail)
     private fun siteUrl(raw: String): String? = try {
         val u = root.resolve(raw)
@@ -77,7 +81,8 @@ open class HDFilmCehennemiAdapter(
             .findAll(body).mapNotNull { it.groupValues[1].toIntOrNull() }.maxOrNull()
 
 
-    // V77: NL Rhino variable matcher uses single-escaped regex tokens.\n    // NL: Bronze v52 bytecode model: resolve "file: variable" from its JavaScript context.
+    // V77: NL Rhino variable matcher uses single-escaped regex tokens.
+    // NL: Bronze v52 bytecode model: resolve "file: variable" from its JavaScript context.
     private fun decryptPlayerUrl(html: String): String? {
         val scripts = Jsoup.parse(html).select("script").map { it.data() }
         val variable = Regex("""file:\s*([a-zA-Z_$][\w$]*)\s*[,}]""")
@@ -87,7 +92,8 @@ open class HDFilmCehennemiAdapter(
         // The player variable may be assigned with let/const or without a declaration.
         val declaration = Regex("""(?:\b(?:var|let|const)\s+)?""" + Regex.escape(variable) + """\s*=""")
         val code = candidates.firstOrNull { declaration.containsMatchIn(it) }
-            ?: candidates.joinToString("\n").takeIf { declaration.containsMatchIn(it) }
+            ?: candidates.joinToString("
+").takeIf { declaration.containsMatchIn(it) }
             ?: return null
         return try {
             val context = org.mozilla.javascript.Context.enter()
@@ -143,7 +149,10 @@ open class HDFilmCehennemiAdapter(
                     trace("land-ajax", "setplay-skipped")
                     continue
                 }
-                if (embed.startsWith("https://")) {\n                    trace("land-ajax", "player=" + name + " host=" + (runCatching { URI(embed).host }.getOrNull() ?: "unknown"))\n                    out.add(embed to (sourceTitle + " • " + name))\n                }
+                if (embed.startsWith("https://")) {
+                    trace("land-ajax", "player=" + name + " host=" + (runCatching { URI(embed).host }.getOrNull() ?: "unknown"))
+                    out.add(embed to (sourceTitle + " • " + name))
+                }
             } catch (cancel: CancellationException) { throw cancel }
               catch (e: Exception) { trace("land-ajax", "failed=" + e.javaClass.simpleName) }
         }
@@ -182,9 +191,12 @@ open class HDFilmCehennemiAdapter(
         val html = response.text
         val viaJs = decryptPlayerUrl(html)
         val scripts = Jsoup.parse(html).select("script").map { it.data() }
-        val combined = scripts.joinToString("\n") + "\n" +
+        val combined = scripts.joinToString("
+") + "
+" +
             scripts.filter { it.contains("eval(function(") }
-                .joinToString("\n") { runCatching { getAndUnpack(it) }.getOrNull().orEmpty() }
+                .joinToString("
+") { runCatching { getAndUnpack(it) }.getOrNull().orEmpty() }
         trace("local", "shape scripts=" + scripts.size + " fileVariable=" + (viaJs != null))
         val encoded = Regex("""file_link\s*[:=]\s*["\x27]([^"\x27]+)["\x27]""")
             .find(combined)?.groupValues?.get(1)
