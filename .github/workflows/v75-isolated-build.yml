@@ -155,7 +155,7 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add dist-v6-staging/EA-FB-V6-STAGING.cs3 dist-v6-staging/plugins.json
           if test -f dist-v6-staging/EA-FB-V74-BACKUP.cs3; then
-            git add dist-v6-staging/EA-FB-V74-BACKUP.cs3
+            git add -f dist-v6-staging/EA-FB-V74-BACKUP.cs3
           fi
           if ! git diff --cached --quiet; then
             git commit -m "release(red): publish V75 to existing Mi Box CloudStream update URL; back up V74"
