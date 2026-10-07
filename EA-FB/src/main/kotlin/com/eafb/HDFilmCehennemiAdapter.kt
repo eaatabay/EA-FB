@@ -84,9 +84,11 @@ open class HDFilmCehennemiAdapter(
             .findAll(html).lastOrNull()?.groupValues?.get(1) ?: return null
         val candidates = scripts + scripts.filter { it.contains("eval(function(") }
             .mapNotNull { runCatching { getAndUnpack(it) }.getOrNull() }
-        val code = candidates.firstOrNull {
-            Regex("""\bvar\s+""" + Regex.escape(variable) + """\b""").containsMatchIn(it)
-        } ?: return null
+        // The player variable may be assigned with let/const or without a declaration.
+        val declaration = Regex("""(?:\\b(?:var|let|const)\\s+)?""" + Regex.escape(variable) + """\\s*=""")
+        val code = candidates.firstOrNull { declaration.containsMatchIn(it) }
+            ?: candidates.joinToString("\n").takeIf { declaration.containsMatchIn(it) }
+            ?: return null
         return try {
             val context = org.mozilla.javascript.Context.enter()
             try {
@@ -231,7 +233,7 @@ open class HDFilmCehennemiAdapter(
             catch (cancel: CancellationException) { throw cancel }
             catch (_: Exception) { return emptyList() }
         val candidates = LinkedHashMap<String, String>()
-        trace("resolve", "alternative groups=" + doc.select("div.alternative-links").size)
+        trace("resolve", "alternative groups=" + doc.select("div.alternative-links").size + " iframes=" + doc.select("iframe").size + " scripts=" + doc.select("script").size)
         if (id.endsWith("-land")) landPlayers(doc, contentUrl).forEach { (url, name) -> candidates.putIfAbsent(url, name) }
         doc.select("iframe").forEach { frame ->
             val raw = frame.attr("data-src").ifBlank { frame.attr("src") }
