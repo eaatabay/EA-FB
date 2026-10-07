@@ -92,8 +92,7 @@ open class HDFilmCehennemiAdapter(
         // The player variable may be assigned with let/const or without a declaration.
         val declaration = Regex("""(?:\b(?:var|let|const)\s+)?""" + Regex.escape(variable) + """\s*=""")
         val code = candidates.firstOrNull { declaration.containsMatchIn(it) }
-            ?: candidates.joinToString("
-").takeIf { declaration.containsMatchIn(it) }
+            ?: candidates.joinToString("\\n").takeIf { declaration.containsMatchIn(it) }
             ?: return null
         return try {
             val context = org.mozilla.javascript.Context.enter()
@@ -191,12 +190,9 @@ open class HDFilmCehennemiAdapter(
         val html = response.text
         val viaJs = decryptPlayerUrl(html)
         val scripts = Jsoup.parse(html).select("script").map { it.data() }
-        val combined = scripts.joinToString("
-") + "
-" +
+        val combined = scripts.joinToString("\\n") + "\\n" +
             scripts.filter { it.contains("eval(function(") }
-                .joinToString("
-") { runCatching { getAndUnpack(it) }.getOrNull().orEmpty() }
+                .joinToString("\\n") { runCatching { getAndUnpack(it) }.getOrNull().orEmpty() }
         trace("local", "shape scripts=" + scripts.size + " fileVariable=" + (viaJs != null))
         val encoded = Regex("""file_link\s*[:=]\s*["\x27]([^"\x27]+)["\x27]""")
             .find(combined)?.groupValues?.get(1)
