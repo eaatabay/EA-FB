@@ -85,7 +85,7 @@ open class HDFilmCehennemiAdapter(
         val candidates = scripts + scripts.filter { it.contains("eval(function(") }
             .mapNotNull { runCatching { getAndUnpack(it) }.getOrNull() }
         // The player variable may be assigned with let/const or without a declaration.
-        val declaration = Regex("""(?:\\b(?:var|let|const)\\s+)?""" + Regex.escape(variable) + """\\s*=""")
+        val declaration = Regex("""(?:\b(?:var|let|const)\s+)?""" + Regex.escape(variable) + """\s*=""")
         val code = candidates.firstOrNull { declaration.containsMatchIn(it) }
             ?: candidates.joinToString("\n").takeIf { declaration.containsMatchIn(it) }
             ?: return null
