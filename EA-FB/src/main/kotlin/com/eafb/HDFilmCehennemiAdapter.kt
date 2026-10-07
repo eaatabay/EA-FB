@@ -22,7 +22,7 @@ open class HDFilmCehennemiAdapter(
         "User-Agent" to "Mozilla/5.0 (Linux; Android 13) AppleWebKit/537.36 Chrome/140.0.0.0 Mobile Safari/537.36",
         "Accept-Language" to "tr-TR,tr;q=0.9,en-US;q=0.8,en;q=0.7"
     )
-    init { require(root.scheme == "https" && root.host != null && root.userInfo == null) }
+    private val playerHeaders = headers + mapOf(\n        "User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",\n        "Accept" to "*/*"\n    )\n    init { require(root.scheme == "https" && root.host != null && root.userInfo == null) }
     private fun trace(stage: String, detail: String) = Log.i("EA-FB-HDFC", id + "/" + stage + ": " + detail)
     private fun siteUrl(raw: String): String? = try {
         val u = root.resolve(raw)
@@ -143,7 +143,7 @@ open class HDFilmCehennemiAdapter(
                     trace("land-ajax", "setplay-skipped")
                     continue
                 }
-                if (embed.startsWith("https://")) out.add(embed to (sourceTitle + " • " + name))
+                if (embed.startsWith("https://")) {\n                    trace("land-ajax", "player=" + name + " host=" + (runCatching { URI(embed).host }.getOrNull() ?: "unknown"))\n                    out.add(embed to (sourceTitle + " • " + name))\n                }
             } catch (cancel: CancellationException) { throw cancel }
               catch (e: Exception) { trace("land-ajax", "failed=" + e.javaClass.simpleName) }
         }
@@ -176,7 +176,7 @@ open class HDFilmCehennemiAdapter(
     }
 
     private suspend fun localSource(url: String, label: String): List<SourceLink> {
-        val response = try { app.get(url, headers = headers, referer = base + "/") }
+        val response = try { app.get(url, headers = playerHeaders, referer = base + "/") }
             catch (cancel: CancellationException) { throw cancel }
             catch (e: Exception) { trace("local", "request-failed=" + e.javaClass.simpleName); return emptyList() }
         val html = response.text
@@ -202,11 +202,11 @@ open class HDFilmCehennemiAdapter(
             }.toList()
         val embedReferer = runCatching { URI(url) }.getOrNull()
             ?.let { it.scheme + "://" + it.host + "/" } ?: (base + "/")
-        val body = try { app.get(stream, referer = embedReferer).text } catch (_: Exception) { "" }
+        val body = try { app.get(stream, headers = playerHeaders, referer = url).text } catch (_: Exception) { "" }
         val quality = playlistQuality(body)
         trace("local", "stream-ready subtitles=" + subtitles.size)
         return listOf(SourceLink(id, stream, quality, null, null,
-            referer = embedReferer, isHls = viaJs != null || stream.substringBefore('?').endsWith(".m3u8", true),
+            referer = url, isHls = viaJs != null || stream.substringBefore('?').endsWith(".m3u8", true),
             displayName = label, subtitles = subtitles))
     }
 
