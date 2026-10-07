@@ -99,8 +99,12 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -f dist-v75-test/EA-FB-V75-NL-LAND-TEST.cs3 dist-v75-test/plugins.json dist-v75-test/repo.json
-          git commit -m "Publish isolated V75 NL LAND test repository [skip ci]"
-          git push origin HEAD:test/nl-land-v75-isolated
+          if ! git diff --cached --quiet; then
+            git commit -m "Publish isolated V75 NL LAND test repository [skip ci]"
+            git push origin HEAD:test/nl-land-v75-isolated
+          else
+            echo "PASS: identical isolated V75 package already published"
+          fi
 
       - name: Publish V75 to existing RED CloudStream auto-update repository
         env:
