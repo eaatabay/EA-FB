@@ -101,3 +101,59 @@ jobs:
           git add -f dist-v75-test/EA-FB-V75-NL-LAND-TEST.cs3 dist-v75-test/plugins.json dist-v75-test/repo.json
           git commit -m "Publish isolated V75 NL LAND test repository [skip ci]"
           git push origin HEAD:test/nl-land-v75-isolated
+
+      - name: Publish V75 to existing RED CloudStream auto-update repository
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --quiet --branch feature/detail-dual-ratings-v6 --single-branch \
+            "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" /tmp/eafb-v75-red
+          python3 - <<'PY'
+          import hashlib,json,shutil,zipfile
+          from pathlib import Path
+          package=Path("build/v75-isolated/EA-FB-V75-NL-LAND-TEST.cs3")
+          red=Path("/tmp/eafb-v75-red/dist-v6-staging")
+          items=json.loads((red/"plugins.json").read_text())
+          assert len(items)==1 and items[0]["internalName"]=="EA-FB",items
+          item=items[0]
+          assert item["version"] in (74,75), f"Unexpected current red version {item['version']}"
+          expected="https://raw.githubusercontent.com/eaatabay/EA-FB/feature/detail-dual-ratings-v6/dist-v6-staging/EA-FB-V6-STAGING.cs3"
+          assert item["url"]==expected
+          assert json.loads((red/"repo.json").read_text())["pluginLists"]==[
+              "https://raw.githubusercontent.com/eaatabay/EA-FB/feature/detail-dual-ratings-v6/dist-v6-staging/plugins.json"]
+          current=red/"EA-FB-V6-STAGING.cs3"
+          assert current.is_file()
+          actual_hash="sha256-"+hashlib.sha256(current.read_bytes()).hexdigest()
+          assert item["fileHash"]==actual_hash,"Current red metadata hash mismatch"
+          assert item["fileSize"]==current.stat().st_size,"Current red size mismatch"
+          with zipfile.ZipFile(package) as z:
+              assert z.testzip() is None
+              manifest=json.loads(z.read("manifest.json"))
+              assert manifest["version"]==75,manifest
+              assert {"classes.dex","manifest.json"}<=set(z.namelist())
+          if item["version"]==74:
+              backup=red/"EA-FB-V74-BACKUP.cs3"
+              if backup.exists():
+                  assert backup.read_bytes()==current.read_bytes(),"V74 backup differs"
+              else:
+                  shutil.copyfile(current,backup)
+          shutil.copyfile(package,current)
+          item["version"]=75
+          item["fileSize"]=package.stat().st_size
+          item["fileHash"]="sha256-"+hashlib.sha256(package.read_bytes()).hexdigest()
+          (red/"plugins.json").write_text(json.dumps(items,ensure_ascii=False,indent=2)+"\n")
+          print("V75 prepared at EXISTING red update URL; V74 backup preserved")
+          PY
+          cd /tmp/eafb-v75-red
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add dist-v6-staging/EA-FB-V6-STAGING.cs3 dist-v6-staging/plugins.json
+          if test -f dist-v6-staging/EA-FB-V74-BACKUP.cs3; then
+            git add dist-v6-staging/EA-FB-V74-BACKUP.cs3
+          fi
+          if ! git diff --cached --quiet; then
+            git commit -m "release(red): publish V75 to existing Mi Box CloudStream update URL; back up V74"
+            git push origin HEAD:feature/detail-dual-ratings-v6
+          fi
