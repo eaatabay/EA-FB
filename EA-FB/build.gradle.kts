@@ -7,3 +7,5 @@ cloudstream {
     language = "tr"
     isCrossPlatform = false
 }
+
+// V78 RED publication retry after guarded staging-version fix.
