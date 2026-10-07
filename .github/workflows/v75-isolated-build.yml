@@ -3,13 +3,15 @@ on:
   push:
     branches:
       - test/nl-land-v75-isolated
+    paths-ignore:
+      - 'dist-v75-test/**'
   workflow_dispatch:
 jobs:
   compile:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
-      contents: read
+      contents: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -53,3 +55,49 @@ jobs:
           path: build/v75-isolated/EA-FB-V75-NL-LAND-TEST.cs3
           if-no-files-found: error
           retention-days: 14
+
+      - name: Publish isolated V75 test repository
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json, hashlib, zipfile
+          from pathlib import Path
+          src=Path("build/v75-isolated/EA-FB-V75-NL-LAND-TEST.cs3")
+          assert src.is_file()
+          with zipfile.ZipFile(src) as z:
+              manifest=json.loads(z.read("manifest.json"))
+          assert manifest.get("version")==75, manifest
+          root="https://raw.githubusercontent.com/eaatabay/EA-FB/test/nl-land-v75-isolated/dist-v75-test"
+          out=Path("dist-v75-test")
+          out.mkdir(exist_ok=True)
+          (out/"EA-FB-V75-NL-LAND-TEST.cs3").write_bytes(src.read_bytes())
+          meta={
+              "fileHash":"sha256-"+hashlib.sha256(src.read_bytes()).hexdigest(),
+              "apiVersion":1,
+              "repositoryUrl":"https://github.com/eaatabay/EA-FB",
+              "fileSize":src.stat().st_size,
+              "status":3,
+              "language":"tr",
+              "authors":["EA-FB"],
+              "tvTypes":["Movie","TvSeries","Live"],
+              "version":75,
+              "internalName":"EA-FB",
+              "description":"Isolated NL/LAND V75 Mi Box test; V74 untouched",
+              "url":root+"/EA-FB-V75-NL-LAND-TEST.cs3",
+              "name":"EA-FB V75 NL LAND TEST",
+              "iconUrl":"https://raw.githubusercontent.com/eaatabay/EA-FB/main/assets/ea-fb-logo.png"
+          }
+          (out/"plugins.json").write_text(json.dumps([meta],ensure_ascii=False,indent=2)+"\n")
+          (out/"repo.json").write_text(json.dumps({
+              "name":"EA-FB V75 NL LAND TEST",
+              "description":"Isolated test distribution; does not replace V74",
+              "manifestVersion":1,
+              "pluginLists":[root+"/plugins.json"]
+          },ensure_ascii=False,indent=2)+"\n")
+          print("Prepared isolated V75 repository")
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -f dist-v75-test/EA-FB-V75-NL-LAND-TEST.cs3 dist-v75-test/plugins.json dist-v75-test/repo.json
+          git commit -m "Publish isolated V75 NL LAND test repository [skip ci]"
+          git push origin HEAD:test/nl-land-v75-isolated
