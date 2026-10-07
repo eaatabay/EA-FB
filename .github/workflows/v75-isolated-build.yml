@@ -153,7 +153,7 @@ jobs:
           cd /tmp/eafb-v75-red
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add dist-v6-staging/EA-FB-V6-STAGING.cs3 dist-v6-staging/plugins.json
+          git add -f dist-v6-staging/EA-FB-V6-STAGING.cs3 dist-v6-staging/plugins.json
           if test -f dist-v6-staging/EA-FB-V74-BACKUP.cs3; then
             git add -f dist-v6-staging/EA-FB-V74-BACKUP.cs3
           fi
