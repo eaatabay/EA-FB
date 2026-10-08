@@ -16,9 +16,11 @@ object EpisodeRouteMatcher {
 
     private fun number(value: String, word: String): Int? {
         val normal = clean(value)
-        return Regex("""(?:^|[^0-9])(\d{1,3})[.\s_-]*""" + word)
+        return Regex("""(?:^|[^0-9])(\d{1,3})\.\s*""" + word)
             .find(normal)?.groupValues?.get(1)?.toIntOrNull()
             ?: Regex(word + """[.\s_/-]*(\d{1,3})(?:[^0-9]|$)""")
+                .find(normal)?.groupValues?.get(1)?.toIntOrNull()
+            ?: Regex("""(?:^|[^0-9])(\d{1,3})[\s_-]+""" + word)
                 .find(normal)?.groupValues?.get(1)?.toIntOrNull()
     }
 
