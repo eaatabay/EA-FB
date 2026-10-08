@@ -295,25 +295,32 @@ open class HDFilmCehennemiAdapter(
                     ), referer = contentUrl).text
                 } catch (cancel: CancellationException) { throw cancel }
                   catch (_: Exception) { continue }
-                val unescaped = apiText.replace("\\\\", "\\").replace("\\\"", "\"")
-                val frames = Jsoup.parse(unescaped, contentUrl).select("iframe")
+                val apiHtml = runCatching {
+                    val root = JSONObject(apiText)
+                    root.optJSONObject("data")?.optString("html").orEmpty()
+                        .ifBlank { root.optString("html") }
+                }.getOrNull()?.takeIf { it.isNotBlank() }
+                    ?: apiText.replace("\\\"", "\"")
+                var frames = Jsoup.parse(apiHtml, contentUrl).select("iframe")
+                if (frames.isEmpty()) frames = Jsoup.parse(apiHtml.replace("\\\"", "\""), contentUrl).select("iframe")
                 trace("video", "frames=" + frames.size)
-                if (frames.isEmpty()) continue
-                val dataSrc: String = frames[0].attr("data-src")
-                val src: String = frames[0].attr("src")
-                val raw: String = if (dataSrc.isNotBlank()) dataSrc else src
-                if (raw.isBlank()) continue
-                val iframe = when {
-                    raw.startsWith("//") -> "https:" + raw
-                    raw.startsWith("http") -> raw
-                    else -> runCatching { URI(contentUrl).resolve(raw).toString() }.getOrNull()
-                } ?: continue
-                val label = listOf(sourceTitle, button.text().trim(), lang).filter { it.isNotBlank() }.joinToString(" • ")
-                val normalized = if (iframe.contains("?rapidrame_id=")) {
-                    val rapidId = iframe.substringAfter("?rapidrame_id=").substringBefore('&')
-                    if (rapidId.isNotBlank()) base + "/playerr/" + rapidId else iframe
-                } else iframe
-                candidates.putIfAbsent(normalized, label)
+                for (frame in frames) {
+                    val raw = frame.attr("data-src").ifBlank { frame.attr("src") }
+                    if (raw.isBlank()) continue
+                    val iframe = when {
+                        raw.startsWith("//") -> "https:" + raw
+                        raw.startsWith("http") -> raw
+                        else -> runCatching { URI(contentUrl).resolve(raw).toString() }.getOrNull()
+                    } ?: continue
+                    if (!iframe.startsWith("https://")) continue
+                    val label = listOf(sourceTitle, button.text().trim(), lang).filter { it.isNotBlank() }.joinToString(" • ")
+                    // The Bronze adapter first uses the unchanged original iframe URL.
+                    candidates.putIfAbsent(iframe, label)
+                    if (iframe.contains("rapidrame_id=")) {
+                        val rapidId = iframe.substringAfter("rapidrame_id=").substringBefore('&')
+                        if (rapidId.isNotBlank()) candidates.putIfAbsent(base + "/playerr/" + rapidId, label + " • alternatif")
+                    }
+                }
             }
         }
         val out = mutableListOf<SourceLink>()
@@ -333,7 +340,8 @@ open class HDFilmCehennemiAdapter(
                         audioLanguage = null, subtitleLanguage = null, referer = link.referer,
                         isHls = link.url.substringBefore('?').endsWith(".m3u8", true),
                         displayName = link.name.takeIf { it.isNotBlank() }?.let { label + " • " + it } ?: label,
-                        subtitles = subtitles.distinctBy { it.language to it.url }
+                        subtitles = subtitles.distinctBy { it.language to it.url },
+                        headers = link.headers
                     )
                 })
             } catch (cancel: CancellationException) { throw cancel }
