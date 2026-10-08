@@ -1,0 +1,22 @@
+[
+  {
+    "fileHash": "sha256-6186866cbff30e4c4b6b941a777e45eb00d6b341739107c7c25df737050d82c7",
+    "apiVersion": 1,
+    "repositoryUrl": "https://github.com/eaatabay/EA-FB",
+    "fileSize": 262946,
+    "status": 3,
+    "language": "tr",
+    "authors": [],
+    "tvTypes": [
+      "Movie",
+      "TvSeries",
+      "Live"
+    ],
+    "version": 80,
+    "internalName": "EA-FB-TEST",
+    "description": "Film ve dizi deneme sürümü",
+    "url": "https://raw.githubusercontent.com/eaatabay/EA-FB/test/bronze-direct-integration-v79/dist-v80-test/EA-FB-TEST.cs3",
+    "name": "EA-FB TEST",
+    "iconUrl": "https://raw.githubusercontent.com/eaatabay/EA-FB/main/assets/ea-fb-logo.png"
+  }
+]
