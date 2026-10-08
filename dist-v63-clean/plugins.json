@@ -1,9 +1,9 @@
 [
   {
-    "fileHash": "sha256-e98ee1f1c6f6584b3ea215d7bc605671abf0b985b7520c92b2365eab243d28ea",
+    "fileHash": "sha256-379a085b1864ad44df40e005b9266e01da04957e41530e8e6c5186e1510e5ff6",
     "apiVersion": 1,
     "repositoryUrl": "https://github.com/eaatabay/EA-FB",
-    "fileSize": 232685,
+    "fileSize": 237236,
     "status": 3,
     "language": "tr",
     "authors": [
@@ -14,10 +14,10 @@
       "TvSeries",
       "Live"
     ],
-    "version": 63,
-    "internalName": "EA-FB-V63-CLEAN",
-    "description": "Isolated original V63 baseline with source focus outline fix",
-    "url": "https://raw.githubusercontent.com/eaatabay/EA-FB/test/v63-bronze-cleanroom-20261008/dist-v63-clean/EA-FB-V63-CLEAN.cs3",
-    "name": "EA-FB V63 CLEAN"
+    "version": 64,
+    "internalName": "EA-FB-V64-CLEAN",
+    "description": "V64 clean source metadata and subtitle update",
+    "url": "https://raw.githubusercontent.com/eaatabay/EA-FB/test/v63-bronze-cleanroom-20261008/dist-v63-clean/EA-FB-V64-CLEAN.cs3",
+    "name": "EA-FB V64 CLEAN"
   }
 ]
