@@ -72,7 +72,8 @@ data class SourceLink(
     val referer: String = "",
     val isHls: Boolean = false,
     val displayName: String? = null,
-    val subtitles: List<SourceSubtitle> = emptyList()
+    val subtitles: List<SourceSubtitle> = emptyList(),
+    val headers: Map<String, String> = emptyMap()
 )
 
 data class SourceSubtitle(
