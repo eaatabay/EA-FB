@@ -1,0 +1,13 @@
+{
+  "source_commit": "006d4782a864224f25c8bdc69b312994841c00f5",
+  "version": 63,
+  "sha256": "a7a3018be73549930f6a3c2a965fa4a3d5f409e0d797d433f19cfb08746d0273",
+  "size": 232624,
+  "manifest": {
+    "requiresResources": false,
+    "version": 63,
+    "pluginClassName": "com.eafb.EAPlugin",
+    "name": "EA-FB"
+  },
+  "note": "Rebuilt from frozen V63 sources; device playback not verified"
+}
