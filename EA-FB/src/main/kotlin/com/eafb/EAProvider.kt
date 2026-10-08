@@ -944,14 +944,32 @@ class EAProvider : MainAPI() {
                 val choices = if (group.providerId.equals("clipbox", ignoreCase = true))
                     group.links.take(1) else group.links
                 choices.forEach { source ->
+                    val providerLabel = when (group.providerId.lowercase(Locale.ROOT)) {
+                        "dizibox" -> "DiziBox"
+                        "diziyou" -> "DiziYou"
+                        else -> group.providerId
+                    }
+                    val languageLabel = when {
+                        source.audioLanguage.equals("tr", ignoreCase = true) -> "Türkçe Dublaj"
+                        source.audioLanguage.equals("en", ignoreCase = true) -> "Orijinal"
+                        source.audioLanguage.equals("original", ignoreCase = true) -> "Orijinal"
+                        source.subtitleLanguage.equals("tr", ignoreCase = true) -> "Türkçe Altyazı"
+                        source.subtitleLanguage.equals("en", ignoreCase = true) -> "İngilizce Altyazı"
+                        else -> null
+                    }
+                    val displayName = source.displayName
+                        ?: listOfNotNull(providerLabel, languageLabel).joinToString(" • ")
+                    source.subtitles.distinctBy { it.language to it.url }.forEach { subtitle ->
+                        subtitleCallback(SubtitleFile(subtitle.language, subtitle.url))
+                    }
                     callback(newExtractorLink(
-                        group.providerId, group.providerId, source.url,
+                        providerLabel, displayName, source.url,
                         type = if (source.isHls || source.url.substringBefore('?').endsWith(".m3u8", true))
                             ExtractorLinkType.M3U8 else ExtractorLinkType.VIDEO
                     ) {
                         quality = source.quality ?: 0
                         referer = source.referer
-                        if (source.referer.isNotBlank()) headers = mapOf("Referer" to source.referer)
+                        headers = source.headers + (if (source.referer.isNotBlank()) mapOf("Referer" to source.referer) else emptyMap())
                     })
                     emittedLinks++
                 }
