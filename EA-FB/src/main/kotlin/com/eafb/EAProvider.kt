@@ -970,7 +970,7 @@ class EAProvider : MainAPI() {
                     ) {
                         quality = source.quality ?: 0
                         referer = source.referer
-                        if (source.referer.isNotBlank()) headers = mapOf("Referer" to source.referer)
+                        headers = source.headers + (if (source.referer.isNotBlank()) mapOf("Referer" to source.referer) else emptyMap())
                     })
                     emittedLinks++
                 }
