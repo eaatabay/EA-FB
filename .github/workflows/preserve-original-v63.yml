@@ -1,0 +1,51 @@
+name: Preserve original V63 Actions CS3
+on:
+  push:
+    branches: [archive/recovery-v63-complete-20261008]
+    paths: ['.github/workflows/preserve-original-v63.yml']
+  workflow_dispatch:
+permissions:
+  actions: read
+  contents: write
+jobs:
+  preserve:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download original V63 workflow artifact, do not rebuild
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p /tmp/original-v63
+          gh run download 37383119744 --repo eaatabay/EA-FB --name EA-FB-V6-STAGING --dir /tmp/original-v63
+          find /tmp/original-v63 -type f -maxdepth 5 -printf '%p %s bytes\n'
+      - name: Preserve byte-identical CS3 and audit its internal version
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib,json,shutil,zipfile
+          files=list(Path('/tmp/original-v63').rglob('*.cs3'))
+          assert len(files)==1, [str(p) for p in files]
+          source=files[0]
+          with zipfile.ZipFile(source) as z:
+              assert z.testzip() is None
+              assert {'manifest.json','classes.dex'} <= set(z.namelist())
+              manifest=json.loads(z.read('manifest.json'))
+          assert manifest.get('version')==63,manifest
+          dest=Path('recovery-v63/original-from-actions-37383119744')
+          dest.mkdir(parents=True,exist_ok=True)
+          target=dest/source.name
+          shutil.copyfile(source,target)
+          assert source.read_bytes()==target.read_bytes()
+          audit={'original_run_id':37383119744,'original_artifact_id':11376182411,'original_commit':'006d4782a864224f25c8bdc69b312994841c00f5','file':target.name,'size':target.stat().st_size,'sha256':hashlib.sha256(target.read_bytes()).hexdigest(),'manifest':manifest,'repackaged':False,'rebuilt':False}
+          (dest/'original-verification.json').write_text(json.dumps(audit,indent=2,ensure_ascii=False)+'\n')
+          print('PASS: Original V63 CS3 preserved byte-for-byte',audit['sha256'],target)
+          PY
+      - name: Commit original package to isolated archive
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -f recovery-v63/original-from-actions-37383119744
+          git commit -m 'archive: preserve original V63 CI artifact byte for byte'
+          git push origin HEAD:archive/recovery-v63-complete-20261008
