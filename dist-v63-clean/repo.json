@@ -1,0 +1,8 @@
+{
+  "name": "EA-FB V63 CLEAN",
+  "description": "Isolated V63 baseline, does not replace RED V80",
+  "manifestVersion": 1,
+  "pluginLists": [
+    "https://raw.githubusercontent.com/eaatabay/EA-FB/test/v63-bronze-cleanroom-20261008/dist-v63-clean/plugins.json"
+  ]
+}

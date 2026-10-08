@@ -1,0 +1,23 @@
+[
+  {
+    "fileHash": "sha256-e98ee1f1c6f6584b3ea215d7bc605671abf0b985b7520c92b2365eab243d28ea",
+    "apiVersion": 1,
+    "repositoryUrl": "https://github.com/eaatabay/EA-FB",
+    "fileSize": 232685,
+    "status": 3,
+    "language": "tr",
+    "authors": [
+      "EA-FB"
+    ],
+    "tvTypes": [
+      "Movie",
+      "TvSeries",
+      "Live"
+    ],
+    "version": 63,
+    "internalName": "EA-FB-V63-CLEAN",
+    "description": "Isolated original V63 baseline with source focus outline fix",
+    "url": "https://raw.githubusercontent.com/eaatabay/EA-FB/test/v63-bronze-cleanroom-20261008/dist-v63-clean/EA-FB-V63-CLEAN.cs3",
+    "name": "EA-FB V63 CLEAN"
+  }
+]
