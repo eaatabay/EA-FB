@@ -2,7 +2,13 @@ name: Publish isolated V64 clean
 on:
   push:
     branches: [test/v63-bronze-cleanroom-20261008]
-    paths: ['.github/workflows/publish-v63-clean.yml']
+    paths:
+      - '.github/workflows/publish-v63-clean.yml'
+      - 'EA-FB/src/main/kotlin/com/eafb/Domain.kt'
+      - 'EA-FB/src/main/kotlin/com/eafb/EAProvider.kt'
+      - 'EA-FB/src/main/kotlin/com/eafb/DiziBoxAdapter.kt'
+      - 'EA-FB/src/main/kotlin/com/eafb/DiziYouAdapter.kt'
+      - 'EA-FB/build.gradle.kts'
   workflow_dispatch:
 permissions:
   contents: write
@@ -21,7 +27,7 @@ jobs:
           gradle-version: '8.12'
       - run: bash scripts/prepare-cloudstream-gradle.sh
       - run: gradle :EA-FB:make --no-daemon --stacktrace
-      - name: Package isolated clean V63 repository
+      - name: Package isolated clean V64 repository
         run: |
           python3 - <<'PY'
           import json,hashlib,zipfile
@@ -54,5 +60,5 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -f dist-v63-clean/
-          git commit -m 'release: publish isolated V63 clean baseline'
+          git commit -m 'release: publish isolated V64 clean'
           git push origin HEAD:test/v63-bronze-cleanroom-20261008
