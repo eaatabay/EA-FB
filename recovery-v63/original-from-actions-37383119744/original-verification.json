@@ -1,0 +1,16 @@
+{
+  "original_run_id": 37383119744,
+  "original_artifact_id": 11376182411,
+  "original_commit": "006d4782a864224f25c8bdc69b312994841c00f5",
+  "file": "EA-FB-V6-STAGING.cs3",
+  "size": 232624,
+  "sha256": "a7a3018be73549930f6a3c2a965fa4a3d5f409e0d797d433f19cfb08746d0273",
+  "manifest": {
+    "requiresResources": false,
+    "version": 63,
+    "pluginClassName": "com.eafb.EAPlugin",
+    "name": "EA-FB"
+  },
+  "repackaged": false,
+  "rebuilt": false
+}
