@@ -89,7 +89,7 @@ jobs:
               manifest=json.loads(z.read("manifest.json"))
               assert manifest["version"]==79,manifest
               assert {"classes.dex","manifest.json"}<=set(z.namelist())
-          if item["version"]==79:
+          if item["version"]==78:
               backup=red/"EA-FB-V78-BACKUP.cs3"
               if backup.exists():
                   assert backup.read_bytes()==current.read_bytes(),"V78 backup differs"
