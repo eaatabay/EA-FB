@@ -81,19 +81,29 @@ open class HDFilmCehennemiAdapter(
             .findAll(body).mapNotNull { it.groupValues[1].toIntOrNull() }.maxOrNull()
 
 
-    // V77: NL Rhino variable matcher uses single-escaped regex tokens.
-    // NL: Bronze v52 bytecode model: resolve "file: variable" from its JavaScript context.
+    // Based on the verified Bronze v52 bytecode path, not a guessed direct file URL.
+    // A file: field can refer to a JavaScript identifier, resolved after unpacking.
     private fun decryptPlayerUrl(html: String): String? {
-        val scripts = Jsoup.parse(html).select("script").map { it.data() }
-        val variable = Regex("""file:\s*([a-zA-Z_$][\w$]*)\s*[,}]""")
-            .findAll(html).lastOrNull()?.groupValues?.get(1) ?: return null
-        val candidates = scripts + scripts.filter { it.contains("eval(function(") }
-            .mapNotNull { runCatching { getAndUnpack(it) }.getOrNull() }
-        // The player variable may be assigned with let/const or without a declaration.
-        val declaration = Regex("""(?:\b(?:var|let|const)\s+)?""" + Regex.escape(variable) + """\s*=""")
-        val code = candidates.firstOrNull { declaration.containsMatchIn(it) }
-            ?: candidates.joinToString("\\n").takeIf { declaration.containsMatchIn(it) }
-            ?: return null
+        val scripts = Jsoup.parse(html).select("script").map { it.data() }.filter { it.isNotBlank() }
+        val packed = scripts.filter { it.contains("eval(function(p,a,c,k,e") }
+        val unpacked = packed.mapNotNull { runCatching { getAndUnpack(it) }.getOrNull() }
+        val fileMarker = Regex("""file:\s*([a-zA-Z0-9_$]+)[,\s}]""")
+        val splitVariable = Regex("""var\s+([a-zA-Z0-9_$]+)\s*=\s*[a-zA-Z0-9_$]+\([\s\S]*?\.split\(""")
+        val variable = fileMarker.findAll(html).lastOrNull()?.groupValues?.get(1)
+            ?: unpacked.firstNotNullOfOrNull { splitVariable.find(it)?.groupValues?.get(1) }
+        if (variable.isNullOrBlank()) {
+            trace("local", "decrypt-no-variable scripts=" + scripts.size + " packed=" + packed.size)
+            return null
+        }
+        val declaration = Regex("""\b(?:var|let|const)\s+""" + Regex.escape(variable) + """\b""")
+        val code = scripts.firstOrNull { it.contains("var " + variable) }
+            ?: unpacked.firstOrNull { it.contains("var " + variable) }
+            ?: scripts.firstOrNull { declaration.containsMatchIn(it) }
+            ?: unpacked.firstOrNull { declaration.containsMatchIn(it) }
+        if (code.isNullOrBlank() || code.length > 150_000) {
+            trace("local", "decrypt-no-script scripts=" + scripts.size + " unpacked=" + unpacked.size)
+            return null
+        }
         return try {
             val context = org.mozilla.javascript.Context.enter()
             try {
@@ -102,7 +112,9 @@ open class HDFilmCehennemiAdapter(
                 context.evaluateString(scope, NL_POLYFILLS, "polyfills", 1, null)
                 context.evaluateString(scope, code, "nl-player", 1, null)
                 val value = org.mozilla.javascript.ScriptableObject.getProperty(scope, variable)
-                org.mozilla.javascript.Context.toString(value).takeIf { it.startsWith("https://") }
+                org.mozilla.javascript.Context.toString(value).takeIf {
+                    it.startsWith("https://") || it.startsWith("http://")
+                }.also { trace("local", "decrypt-url=" + (it != null) + " unpacked=" + unpacked.size) }
             } finally {
                 org.mozilla.javascript.Context.exit()
             }
@@ -130,6 +142,7 @@ open class HDFilmCehennemiAdapter(
             val name = el.attr("data-player-name")
             if (pid.isNotBlank() && name.isNotBlank()) players.add(Triple(pid, name, el.attr("data-part-key")))
         }
+        if (players.isEmpty() && !postId.isNullOrBlank()) players.add(Triple(postId, "SetPlay", ""))
         trace("land-dom", "nonce=" + (nonce != null) + " postId=" + (postId != null) + " players=" + players.size)
         if (nonce.isNullOrBlank()) return emptyList()
         val site = runCatching { URI(pageUrl) }.getOrNull()?.let { it.scheme + "://" + it.host } ?: base
@@ -137,17 +150,15 @@ open class HDFilmCehennemiAdapter(
         for ((pid, name, part) in players) {
             try {
                 val result = app.post(site + "/wp-admin/admin-ajax.php",
-                    headers = headers + mapOf("X-Requested-With" to "XMLHttpRequest", "Referer" to pageUrl),
+                    headers = playerHeaders + mapOf("X-Requested-With" to "XMLHttpRequest", "Referer" to pageUrl),
                     data = mapOf("action" to "get_video_url", "nonce" to nonce,
                         "post_id" to pid, "player_name" to name, "part_key" to part))
                 val data = JSONObject(result.text).optJSONObject("data")
                 var embed = data?.optJSONObject("stream")?.optString("url").orEmpty()
                     .ifBlank { data?.optString("url").orEmpty() }
                 if (embed.startsWith("/")) embed = site + embed
-                if (embed.contains("setplay", ignoreCase = true)) {
-                    trace("land-ajax", "setplay-skipped")
-                    continue
-                }
+                if (embed.contains("setplay", ignoreCase = true))
+                    trace("land-ajax", "setplay-standard-extractor-only")
                 if (embed.startsWith("https://")) {
                     trace("land-ajax", "player=" + name + " host=" + (runCatching { URI(embed).host }.getOrNull() ?: "unknown"))
                     out.add(embed to (sourceTitle + " • " + name))
