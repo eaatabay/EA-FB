@@ -259,6 +259,9 @@ object EASettingsDialog {
                     row.addView(text(ctx, label, 16f), LinearLayout.LayoutParams(
                         0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
                     val toggle = Switch(ctx).apply {
+                        // TV kumandası odağı satırda tutar; sarı çerçeve kaybolmaz.
+                        isFocusable = false
+                        isFocusableInTouchMode = false
                         isChecked = EASettings.sourceEnabled(id)
                         showText = false
                         setOnCheckedChangeListener { _, enabled ->
