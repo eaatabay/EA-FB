@@ -302,15 +302,25 @@ class DiziBoxAdapter(private val origin: String = "https://www.dizibox.live") : 
         var rawCount = 0
         var rejectedCount = 0
         var extractorMatched = false
+        val extractedSubtitles = mutableListOf<SourceSubtitle>()
         try {
-            extractorMatched = loadExtractor(url, referer, {}, { link ->
+            extractorMatched = loadExtractor(url, referer, { subtitle ->
+                val subtitleUri = runCatching { URI(subtitle.url) }.getOrNull()
+                if (subtitleUri?.scheme == "https" && subtitleUri.host != null && subtitleUri.userInfo == null) {
+                    extractedSubtitles += SourceSubtitle(subtitle.lang, subtitle.url)
+                }
+            }, { link ->
                 rawCount++
                 val uri = runCatching { URI(link.url) }.getOrNull()
                 if (uri?.scheme == "https" && uri.host != null && uri.userInfo == null) {
                     val hls = uri.path.orEmpty().endsWith(".m3u8", ignoreCase = true) ||
                         uri.path.orEmpty().startsWith("/embed/sheila/")
-                    result.add(SourceLink(id, link.url, null, null, null,
-                        referer = link.referer, isHls = hls))
+                    result.add(SourceLink(
+                        id, link.url, link.quality.takeIf { it > 0 }, null, null,
+                        referer = link.referer, isHls = hls,
+                        displayName = link.name.takeIf { it.isNotBlank() },
+                        subtitles = extractedSubtitles.distinctBy { it.language to it.url }
+                    ))
                 } else rejectedCount++
             })
         } catch (cancel: CancellationException) { throw cancel }
@@ -472,7 +482,12 @@ class DiziBoxAdapter(private val origin: String = "https://www.dizibox.live") : 
         if (uri.scheme != "https" || uri.userInfo != null || !isMolyHost(uri.host)) return emptyList()
         val response = fetch(url, referer = referer)?.text ?: return emptyList()
         if (!response.trimStart().startsWith("#EXTM3U")) { trace("playlist", "not-m3u8; bytes=${response.length}"); return emptyList() }
-        trace("playlist", "verified")
-        return listOf(SourceLink(id, url, null, null, null, referer = referer, isHls = true))
+        val heights = Regex("""RESOLUTION=\d+x(\d+)""", RegexOption.IGNORE_CASE)
+            .findAll(response).mapNotNull { it.groupValues[1].toIntOrNull() }.toList()
+        val quality = heights.maxOrNull()
+        trace("playlist", "verified quality=${quality ?: "adaptive"}")
+        return listOf(SourceLink(id, url, quality, null, null,
+            referer = referer, isHls = true,
+            displayName = "DiziBox"))
     }
 }
