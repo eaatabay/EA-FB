@@ -64,6 +64,14 @@ class DiziYouAdapter(private val origin: String = "https://www.diziyou.one") : M
         return found.distinctBy { it.pageUrl }
     }
 
+    private suspend fun playlistQuality(url: String): Int? = try {
+        val body = app.get(url, referer = "$base/").text
+        if (!body.trimStart().startsWith("#EXTM3U")) null
+        else Regex("""RESOLUTION=\d+x(\d+)""", RegexOption.IGNORE_CASE)
+            .findAll(body).mapNotNull { it.groupValues[1].toIntOrNull() }.maxOrNull()
+    } catch (cancel: CancellationException) { throw cancel }
+      catch (_: Exception) { null }
+
     override suspend fun resolve(offer: MediaOffer): List<SourceLink> {
         if (offer.providerId != id || offer.kind != MediaKind.SERIES ||
             offer.season == null || offer.episode == null ||
@@ -83,18 +91,21 @@ class DiziYouAdapter(private val origin: String = "https://www.diziyou.one") : M
             return emptyList()
         }
         val options = doc.select("span.diziyouOption").map { it.id() }.filter { it.isNotBlank() }.toSet()
+        val originalUrl = storage + "/episodes/" + itemId + "/play.m3u8"
+        val dubbedUrl = storage + "/episodes/" + itemId + "_tr/play.m3u8"
+        val originalQuality = if ("turkceAltyazili" in options || "ingilizceAltyazili" in options)
+            playlistQuality(originalUrl) else null
+        val dubbedQuality = if ("turkceDublaj" in options) playlistQuality(dubbedUrl) else null
         val links = buildList {
-            // Match the working DiziYou provider contract: generated storage
-            // playlists are HLS and require the DiziYou site as referer.
-            if ("turkceAltyazili" in options)
-                add(SourceLink(id, storage + "/episodes/" + itemId + "/play.m3u8",
-                    null, null, "tr", referer = "$base/", isHls = true))
-            if ("ingilizceAltyazili" in options)
-                add(SourceLink(id, storage + "/episodes/" + itemId + "/play.m3u8",
-                    null, null, "en", referer = "$base/", isHls = true))
+            // The non-_tr playlist is the original-audio variant. Site option IDs describe
+            // subtitle availability, but no separate subtitle URL has been proven here;
+            // do not advertise a selectable CloudStream subtitle track until one exists.
+            if ("turkceAltyazili" in options || "ingilizceAltyazili" in options)
+                add(SourceLink(id, originalUrl, originalQuality, "original", null,
+                    referer = "$base/", isHls = true, displayName = "DiziYou • Orijinal"))
             if ("turkceDublaj" in options)
-                add(SourceLink(id, storage + "/episodes/" + itemId + "_tr/play.m3u8",
-                    null, "tr", null, referer = "$base/", isHls = true))
+                add(SourceLink(id, dubbedUrl, dubbedQuality, "tr", null,
+                    referer = "$base/", isHls = true, displayName = "DiziYou • Türkçe Dublaj"))
         }.distinctBy { Triple(it.url, it.audioLanguage, it.subtitleLanguage) }
         trace("resolve", "iframe=true itemId=true options=${options.sorted()} links=${links.size}")
         return links
