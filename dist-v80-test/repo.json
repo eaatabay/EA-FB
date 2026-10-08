@@ -1,0 +1,8 @@
+{
+  "name": "EA-FB TEST",
+  "description": "V80 isolated test repository",
+  "manifestVersion": 1,
+  "pluginLists": [
+    "https://raw.githubusercontent.com/eaatabay/EA-FB/test/bronze-direct-integration-v79/dist-v80-test/plugins.json"
+  ]
+}

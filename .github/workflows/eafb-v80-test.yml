@@ -1,0 +1,109 @@
+name: EA-FB TEST V80 isolated build
+on:
+  push:
+    branches:
+      - test/bronze-direct-integration-v79
+    paths:
+      - 'EA-FB/src/main/kotlin/com/eafb/**'
+      - 'EA-FB/build.gradle.kts'
+      - '.github/workflows/eafb-v80-test.yml'
+      - 'core-tests/EpisodeRouteMatcherTest.kt'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: ea-fb-v80-isolated
+  cancel-in-progress: false
+jobs:
+  compile:
+    if: github.ref == 'refs/heads/test/bronze-direct-integration-v79'
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.12'
+      - name: Verify Android SDK
+        run: test -f "$ANDROID_HOME/platforms/android-35/android.jar"
+      - name: Prepare pinned plugin compiler
+        run: bash scripts/prepare-cloudstream-gradle.sh
+      - name: Test episode routing fixtures
+        run: |
+          kotlinc EA-FB/src/main/kotlin/com/eafb/EpisodeRouteMatcher.kt core-tests/EpisodeRouteMatcherTest.kt -include-runtime -d /tmp/eafb-episode-fixtures.jar
+          java -jar /tmp/eafb-episode-fixtures.jar
+      - name: Compile isolated test CS3
+        run: gradle :EA-FB:make --no-daemon --stacktrace
+      - name: Verify and package independent V80 test release
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import hashlib, json, zipfile
+          from pathlib import Path
+          cs3 = list(Path("EA-FB/build").glob("*.cs3"))
+          assert len(cs3) == 1, cs3
+          dest = Path("dist-v80-test")
+          dest.mkdir(exist_ok=True)
+          package = dest / "EA-FB-TEST.cs3"
+          with zipfile.ZipFile(cs3[0]) as source:
+              assert source.testzip() is None
+              manifest = json.loads(source.read("manifest.json"))
+              assert manifest.get("version") == 80, manifest
+              manifest["name"] = "EA-FB TEST"
+              if "internalName" in manifest:
+                  manifest["internalName"] = "EA-FB-TEST"
+              manifest["authors"] = []
+              with zipfile.ZipFile(package, "w") as target:
+                  for item in source.infolist():
+                      data = (json.dumps(manifest, ensure_ascii=False).encode()
+                              if item.filename == "manifest.json" else source.read(item))
+                      target.writestr(item, data)
+          with zipfile.ZipFile(package) as final:
+              assert final.testzip() is None
+              assert {"classes.dex", "manifest.json"} <= set(final.namelist())
+              assert json.loads(final.read("manifest.json"))["version"] == 80
+          url = "https://raw.githubusercontent.com/eaatabay/EA-FB/test/bronze-direct-integration-v79/dist-v80-test/EA-FB-TEST.cs3"
+          meta = [{
+              "fileHash":"sha256-"+hashlib.sha256(package.read_bytes()).hexdigest(),
+              "apiVersion":1,
+              "repositoryUrl":"https://github.com/eaatabay/EA-FB",
+              "fileSize":package.stat().st_size,
+              "status":3,
+              "language":"tr",
+              "authors":[],
+              "tvTypes":["Movie","TvSeries","Live"],
+              "version":80,
+              "internalName":"EA-FB-TEST",
+              "description":"Film ve dizi deneme sürümü",
+              "url":url,
+              "name":"EA-FB TEST",
+              "iconUrl":"https://raw.githubusercontent.com/eaatabay/EA-FB/main/assets/ea-fb-logo.png"
+          }]
+          (dest/"plugins.json").write_text(json.dumps(meta,ensure_ascii=False,indent=2)+"\n")
+          repo = json.loads((dest/"repo.json").read_text())
+          assert repo["pluginLists"] == [
+              "https://raw.githubusercontent.com/eaatabay/EA-FB/test/bronze-direct-integration-v79/dist-v80-test/plugins.json"]
+          print("PASS: independently named V80 CS3 manifest, integrity and metadata verified")
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: EA-FB-TEST-V80
+          path: dist-v80-test/EA-FB-TEST.cs3
+          if-no-files-found: error
+          retention-days: 14
+      - name: Publish only to isolated test branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF" = "refs/heads/test/bronze-direct-integration-v79"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -f dist-v80-test/EA-FB-TEST.cs3 dist-v80-test/plugins.json
+          if ! git diff --cached --quiet; then
+            git commit -m "test: publish separate V80 CS3 and metadata"
+            git push origin HEAD:test/bronze-direct-integration-v79
+          fi
