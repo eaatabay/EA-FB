@@ -195,38 +195,62 @@ open class HDFilmCehennemiAdapter(
     }
 
     private suspend fun localSource(url: String, label: String): List<SourceLink> {
-        val response = try { app.get(url, headers = playerHeaders, referer = base + "/") }
+        // Bronze v52 requests the embed with the provider referer, not a forced desktop UA.
+        val response = try { app.get(url, referer = base + "/") }
             catch (cancel: CancellationException) { throw cancel }
             catch (e: Exception) { trace("local", "request-failed=" + e.javaClass.simpleName); return emptyList() }
+        if (response.code !in 200..299) {
+            trace("local", "embed-http=" + response.code)
+            return emptyList()
+        }
         val html = response.text
         val viaJs = decryptPlayerUrl(html)
-        val scripts = Jsoup.parse(html).select("script").map { it.data() }
-        val combined = scripts.joinToString("\\n") + "\\n" +
-            scripts.filter { it.contains("eval(function(") }
-                .joinToString("\\n") { runCatching { getAndUnpack(it) }.getOrNull().orEmpty() }
-        trace("local", "shape scripts=" + scripts.size + " fileVariable=" + (viaJs != null))
+        val scripts = Jsoup.parse(html).select("script").map { it.data() }.filter { it.isNotBlank() }
+        val unpacked = scripts.filter { it.contains("eval(function(p,a,c,k,e") }
+            .mapNotNull { runCatching { getAndUnpack(it) }.getOrNull() }
+        val combined = (scripts + unpacked).joinToString("\n")
+        trace("local", "shape scripts=" + scripts.size + " packed=" + unpacked.size +
+            " fileIdent=" + Regex("""file:\s*[A-Za-z0-9_$]+[,\s}]""").containsMatchIn(html) +
+            " decoded=" + (viaJs != null))
         val encoded = Regex("""file_link\s*[:=]\s*["\x27]([^"\x27]+)["\x27]""")
             .find(combined)?.groupValues?.get(1)
         val decoded = encoded?.let { runCatching { String(Base64.decode(it, Base64.DEFAULT), Charsets.UTF_8) }.getOrNull() }
-        val direct = Regex("""(?:file|src|source|url)\s*[:=]\s*["\x27](https://[^"\x27\s]+(?:\.m3u8|\.mp4)(?:\?[^"\x27]*)?)["\x27]""", RegexOption.IGNORE_CASE)
+        val direct = Regex("""(?:file|src|source|url)\s*[:=]\s*["\x27](https?://[^"\x27\s]+(?:\.m3u8|\.mp4)(?:\?[^"\x27]*)?)["\x27]""", RegexOption.IGNORE_CASE)
             .find(combined)?.groupValues?.get(1)
-        val stream = listOfNotNull(viaJs, decoded, direct).firstOrNull { it.startsWith("https://") }
+        val stream = listOfNotNull(viaJs, decoded, direct)
+            .firstOrNull { it.startsWith("https://") || it.startsWith("http://") }
             ?: run { trace("local", "missing-stream-url"); return emptyList() }
-        val tracks = Regex("""tracks\s*:\s*\[([\s\S]*?)]""")
-            .find(combined)?.groupValues?.get(1).orEmpty()
         val subtitles = Regex("""\{[^{}]*?file\s*:\s*["']([^"']+)["'][^{}]*?label\s*:\s*["']([^"']+)["'][^{}]*?kind\s*:\s*["']captions["'][^{}]*?}""", RegexOption.IGNORE_CASE)
-            .findAll(tracks).mapNotNull { m ->
+            .findAll(Regex("""tracks\s*:\s*\[([\s\S]*?)]""").find(combined)?.groupValues?.get(1).orEmpty())
+            .mapNotNull { m ->
                 val subUrl = runCatching { URI(url).resolve(m.groupValues[1]).toString() }.getOrNull()
                 subUrl?.takeIf { it.startsWith("https://") }?.let { SourceSubtitle(m.groupValues[2], it) }
             }.toList()
         val embedReferer = runCatching { URI(url) }.getOrNull()
-            ?.let { it.scheme + "://" + it.host + "/" } ?: (base + "/")
-        val body = try { app.get(stream, headers = playerHeaders, referer = url).text } catch (_: Exception) { "" }
-        val quality = playlistQuality(body)
-        trace("local", "stream-ready subtitles=" + subtitles.size)
+            ?.let { it.scheme + "://" + it.host + "/" }
+            ?.takeIf { !it.contains("null") } ?: (base + "/")
+        val playbackHeaders = mapOf(
+            "User-Agent" to playerHeaders.getValue("User-Agent"),
+            "Accept" to "*/*"
+        )
+        val isHls = viaJs != null || stream.substringBefore('?').endsWith(".m3u8", true)
+        // Never GET a complete MP4 just to determine its quality.
+        val quality = if (isHls) {
+            try {
+                val playlist = app.get(stream, headers = playbackHeaders, referer = embedReferer)
+                trace("local", "manifest-http=" + playlist.code + " hls=" + playlist.text.startsWith("#EXTM3U"))
+                if (playlist.code !in 200..299) return emptyList()
+                playlistQuality(playlist.text)
+            } catch (cancel: CancellationException) { throw cancel }
+              catch (e: Exception) {
+                trace("local", "manifest-failed=" + e.javaClass.simpleName)
+                null
+            }
+        } else null
+        trace("local", "stream-ready subtitles=" + subtitles.size + " isHls=" + isHls)
         return listOf(SourceLink(id, stream, quality, null, null,
-            referer = url, isHls = viaJs != null || stream.substringBefore('?').endsWith(".m3u8", true),
-            displayName = label, subtitles = subtitles))
+            referer = embedReferer, isHls = isHls,
+            displayName = label, subtitles = subtitles, headers = playbackHeaders))
     }
 
     override suspend fun resolve(offer: MediaOffer): List<SourceLink> {
