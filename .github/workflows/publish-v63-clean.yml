@@ -1,0 +1,58 @@
+name: Publish isolated V63 clean baseline
+on:
+  push:
+    branches: [test/v63-bronze-cleanroom-20261008]
+    paths: ['.github/workflows/publish-v63-clean.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.12'
+      - run: bash scripts/prepare-cloudstream-gradle.sh
+      - run: gradle :EA-FB:make --no-daemon --stacktrace
+      - name: Package isolated clean V63 repository
+        run: |
+          python3 - <<'PY'
+          import json,hashlib,zipfile
+          from pathlib import Path
+          src=list(Path('EA-FB/build').glob('*.cs3'))
+          assert len(src)==1,src
+          out=Path('dist-v63-clean')
+          out.mkdir(exist_ok=True)
+          dst=out/'EA-FB-V63-CLEAN.cs3'
+          with zipfile.ZipFile(src[0]) as z:
+              assert z.testzip() is None
+              m=json.loads(z.read('manifest.json'))
+              assert m['version']==63,m
+              m['name']='EA-FB V63 CLEAN'
+              m['internalName']='EA-FB-V63-CLEAN'
+              with zipfile.ZipFile(dst,'w') as w:
+                  for entry in z.infolist():
+                      w.writestr(entry,json.dumps(m,ensure_ascii=False).encode() if entry.filename=='manifest.json' else z.read(entry))
+          with zipfile.ZipFile(dst) as z:
+              assert z.testzip() is None
+              assert json.loads(z.read('manifest.json'))['internalName']=='EA-FB-V63-CLEAN'
+          base='https://raw.githubusercontent.com/eaatabay/EA-FB/test/v63-bronze-cleanroom-20261008/dist-v63-clean/'
+          plugin={'fileHash':'sha256-'+hashlib.sha256(dst.read_bytes()).hexdigest(),'apiVersion':1,'repositoryUrl':'https://github.com/eaatabay/EA-FB','fileSize':dst.stat().st_size,'status':3,'language':'tr','authors':['EA-FB'],'tvTypes':['Movie','TvSeries','Live'],'version':63,'internalName':'EA-FB-V63-CLEAN','description':'Isolated original V63 baseline with source focus outline fix','url':base+dst.name,'name':'EA-FB V63 CLEAN'}
+          (out/'plugins.json').write_text(json.dumps([plugin],indent=2,ensure_ascii=False)+'\n')
+          (out/'repo.json').write_text(json.dumps({'name':'EA-FB V63 CLEAN','description':'Isolated V63 baseline, does not replace RED V80','manifestVersion':1,'pluginLists':[base+'plugins.json']},indent=2)+'\n')
+          print('PASS isolated V63',dst.stat().st_size,plugin['fileHash'])
+          PY
+      - name: Commit only isolated distribution
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -f dist-v63-clean/
+          git commit -m 'release: publish isolated V63 clean baseline'
+          git push origin HEAD:test/v63-bronze-cleanroom-20261008
