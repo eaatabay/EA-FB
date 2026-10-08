@@ -1,0 +1,58 @@
+name: Publish V80 to existing RED channel
+on:
+  push:
+    branches: [test/bronze-direct-integration-v79]
+    paths: ['.github/workflows/publish-v80-red.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: test/bronze-direct-integration-v79
+          fetch-depth: 0
+      - name: Verify V80 and package under existing RED identity
+        run: |
+          set -euo pipefail
+          git fetch origin feature/detail-dual-ratings-v6
+          git worktree add /tmp/eafb-red origin/feature/detail-dual-ratings-v6
+          python3 - <<'PY'
+          import json,zipfile,hashlib
+          from pathlib import Path
+          src=Path('dist-v80-test/EA-FB-TEST.cs3')
+          dst=Path('/tmp/eafb-red/dist-v6-staging/EA-FB-V6-STAGING.cs3')
+          with zipfile.ZipFile(src) as z:
+              assert z.testzip() is None
+              manifest=json.loads(z.read('manifest.json'))
+              assert manifest['version']==80,manifest
+              manifest['name']='EA-FB V6 STAGING'
+              manifest['internalName']='EA-FB'
+              manifest['authors']=['EA-FB']
+              with zipfile.ZipFile(dst,'w') as out:
+                  for info in z.infolist():
+                      data=json.dumps(manifest,ensure_ascii=False).encode() if info.filename=='manifest.json' else z.read(info)
+                      out.writestr(info,data)
+          with zipfile.ZipFile(dst) as z:
+              assert z.testzip() is None
+              assert json.loads(z.read('manifest.json'))['version']==80
+              assert json.loads(z.read('manifest.json'))['internalName']=='EA-FB'
+          meta=Path('/tmp/eafb-red/dist-v6-staging/plugins.json')
+          plugins=json.loads(meta.read_text())
+          assert len(plugins)==1 and plugins[0]['version']==79
+          plugins[0].update(version=80,fileHash='sha256-'+hashlib.sha256(dst.read_bytes()).hexdigest(),fileSize=dst.stat().st_size)
+          meta.write_text(json.dumps(plugins,ensure_ascii=False,indent=2)+'\n')
+          print('Verified RED V80',dst.stat().st_size,plugins[0]['fileHash'])
+          PY
+      - name: Publish only RED distribution files
+        run: |
+          set -euo pipefail
+          cd /tmp/eafb-red
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -f dist-v6-staging/EA-FB-V6-STAGING.cs3 dist-v6-staging/plugins.json
+          git diff --cached --name-only
+          git commit -m 'release(red): publish V80 to existing Mi Box update channel'
+          git push origin HEAD:feature/detail-dual-ratings-v6
