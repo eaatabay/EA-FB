@@ -1,4 +1,4 @@
-version = 78
+version = 79
 cloudstream {
     description = "EA-FB: tek arayüzde film, dizi ve izinli canlı TV - gelistirme onizlemesi"
     authors = listOf("EA-FB")
@@ -8,4 +8,4 @@ cloudstream {
     isCrossPlatform = false
 }
 
-// V78 RED publication retry after guarded staging-version fix.
+// V79 NL/LAND Bronze-aligned playback path; RED staging only.
