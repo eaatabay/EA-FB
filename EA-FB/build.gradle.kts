@@ -1,11 +1,11 @@
-version = 79
+version = 80
 cloudstream {
     description = "EA-FB: tek arayüzde film, dizi ve izinli canlı TV - gelistirme onizlemesi"
-    authors = listOf("EA-FB")
+    authors = emptyList()
     status = 3 // Beta; medya kaynakları tamamlanana dek test sürümü.
     tvTypes = listOf("Movie", "TvSeries", "Live")
     language = "tr"
     isCrossPlatform = false
 }
 
-// V79 NL/LAND Bronze-aligned playback path; RED staging only.
+// Isolated test build; no production or RED publication.

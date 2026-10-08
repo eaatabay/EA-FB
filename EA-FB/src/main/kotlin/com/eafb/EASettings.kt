@@ -8,7 +8,7 @@ import android.content.SharedPreferences
  * Android SharedPreferences preserves category switches and sorting across restarts.
  */
 object EASettings {
-    private const val STORE = "ea_fb_catalog_settings_v6_staging"
+    private const val STORE = "ea_fb_catalog_settings_v80_isolated_test"
     private const val CATEGORY_PREFIX = "category_"
     private const val SORT_KEY = "catalog_sort"
     private const val SOURCE_PREFIX = "source_enabled_"

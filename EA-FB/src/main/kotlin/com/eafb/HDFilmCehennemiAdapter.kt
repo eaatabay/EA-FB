@@ -81,23 +81,23 @@ open class HDFilmCehennemiAdapter(
             .findAll(body).mapNotNull { it.groupValues[1].toIntOrNull() }.maxOrNull()
 
 
-    // Based on the verified Bronze v52 bytecode path, not a guessed direct file URL.
-    // A file: field can refer to a JavaScript identifier, resolved after unpacking.
+    // A file field may reference a calculated JavaScript identifier.
     private fun decryptPlayerUrl(html: String): String? {
         val scripts = Jsoup.parse(html).select("script").map { it.data() }.filter { it.isNotBlank() }
         val packed = scripts.filter { it.contains("eval(function(p,a,c,k,e") }
         val unpacked = packed.mapNotNull { runCatching { getAndUnpack(it) }.getOrNull() }
         val fileMarker = Regex("""file:\s*([a-zA-Z0-9_$]+)[,\s}]""")
         val splitVariable = Regex("""var\s+([a-zA-Z0-9_$]+)\s*=\s*[a-zA-Z0-9_$]+\([\s\S]*?\.split\(""")
-        val variable = fileMarker.findAll(html).lastOrNull()?.groupValues?.get(1)
+        val variable = unpacked.firstNotNullOfOrNull { fileMarker.find(it)?.groupValues?.get(1) }
+            ?: fileMarker.findAll(html).lastOrNull()?.groupValues?.get(1)
             ?: unpacked.firstNotNullOfOrNull { splitVariable.find(it)?.groupValues?.get(1) }
         if (variable.isNullOrBlank()) {
             trace("local", "decrypt-no-variable scripts=" + scripts.size + " packed=" + packed.size)
             return null
         }
         val declaration = Regex("""\b(?:var|let|const)\s+""" + Regex.escape(variable) + """\b""")
-        val code = scripts.firstOrNull { it.contains("var " + variable) }
-            ?: unpacked.firstOrNull { it.contains("var " + variable) }
+        val code = unpacked.firstOrNull { it.contains("var " + variable) }
+            ?: scripts.firstOrNull { it.contains("var " + variable) }
             ?: scripts.firstOrNull { declaration.containsMatchIn(it) }
             ?: unpacked.firstOrNull { declaration.containsMatchIn(it) }
         if (code.isNullOrBlank() || code.length > 150_000) {
@@ -153,10 +153,7 @@ open class HDFilmCehennemiAdapter(
                     headers = playerHeaders + mapOf("X-Requested-With" to "XMLHttpRequest", "Referer" to pageUrl),
                     data = mapOf("action" to "get_video_url", "nonce" to nonce,
                         "post_id" to pid, "player_name" to name, "part_key" to part))
-                val data = JSONObject(result.text).optJSONObject("data")
-                var embed = data?.optJSONObject("stream")?.optString("url").orEmpty()
-                    .ifBlank { data?.optString("url").orEmpty() }
-                if (embed.startsWith("/")) embed = site + embed
+                val embed = LandEmbedParser.find(result.text, site).orEmpty()
                 if (embed.contains("setplay", ignoreCase = true))
                     trace("land-ajax", "setplay-standard-extractor-only")
                 if (embed.startsWith("https://")) {
@@ -195,8 +192,7 @@ open class HDFilmCehennemiAdapter(
     }
 
     private suspend fun localSource(url: String, label: String): List<SourceLink> {
-        // Bronze v52 requests the embed with the provider referer, not a forced desktop UA.
-        val response = try { app.get(url, referer = base + "/") }
+        val response = try { app.get(url, headers = playerHeaders, referer = base + "/") }
             catch (cancel: CancellationException) { throw cancel }
             catch (e: Exception) { trace("local", "request-failed=" + e.javaClass.simpleName); return emptyList() }
         if (response.code !in 200..299) {
@@ -226,9 +222,10 @@ open class HDFilmCehennemiAdapter(
                 val subUrl = runCatching { URI(url).resolve(m.groupValues[1]).toString() }.getOrNull()
                 subUrl?.takeIf { it.startsWith("https://") }?.let { SourceSubtitle(m.groupValues[2], it) }
             }.toList()
-        val embedReferer = runCatching { URI(url) }.getOrNull()
-            ?.let { it.scheme + "://" + it.host + "/" }
-            ?.takeIf { !it.contains("null") } ?: (base + "/")
+        val embedReferer = url.takeIf { runCatching {
+            val parsed = URI(it)
+            parsed.scheme == "https" && parsed.host != null && parsed.userInfo == null
+        }.getOrDefault(false) } ?: (base + "/")
         val playbackHeaders = mapOf(
             "User-Agent" to playerHeaders.getValue("User-Agent"),
             "Accept" to "*/*"
@@ -261,15 +258,14 @@ open class HDFilmCehennemiAdapter(
             val doc = try { app.get(offer.pageUrl, headers = headers).document }
                 catch (cancel: CancellationException) { throw cancel }
                 catch (_: Exception) { return emptyList() }
-            doc.select("div.seasons-tab-content a[href], div.seasons a[href*='bolum'], a[href*='bolum']")
-                .firstNotNullOfOrNull { a ->
-                    val text = (a.selectFirst("h4, .mini-poster-title")?.text() ?: a.text()).trim()
-                    val sm = Regex("""(\d+)\.\s*Sezon""", RegexOption.IGNORE_CASE).find(text)
-                    val em = Regex("""(\d+)\.\s*B[öo]l[üu]m""", RegexOption.IGNORE_CASE).find(text)
-                    val s = sm?.groupValues?.get(1)?.toIntOrNull() ?: 1
-                    val e = em?.groupValues?.get(1)?.toIntOrNull()
-                    if (s == season && e == episode) siteUrl(a.attr("href")) else null
-                } ?: return emptyList()
+            val links = doc.select("div.seasons-tab-content a[href], div.seasons a[href], a[href*='bolum'], a[href*='episode'], a[href*='sezon']")
+            val episodeUrl = links.firstNotNullOfOrNull { anchor ->
+                val text = (anchor.selectFirst("h4, .mini-poster-title")?.text() ?: anchor.text()).trim()
+                val href = siteUrl(anchor.attr("href")) ?: return@firstNotNullOfOrNull null
+                if (EpisodeRouteMatcher.matches(text, href, season, episode)) href else null
+            }
+            episodeUrl ?: offer.pageUrl.takeIf { EpisodeRouteMatcher.matches("", it, season, episode) }
+                ?: run { trace("episode", "not-found season=" + season + " episode=" + episode + " candidates=" + links.size); return emptyList() }
         } else offer.pageUrl
 
         val doc = try { app.get(contentUrl, headers = headers).document }
@@ -314,7 +310,7 @@ open class HDFilmCehennemiAdapter(
                     } ?: continue
                     if (!iframe.startsWith("https://")) continue
                     val label = listOf(sourceTitle, button.text().trim(), lang).filter { it.isNotBlank() }.joinToString(" • ")
-                    // The Bronze adapter first uses the unchanged original iframe URL.
+                    // Prefer the original iframe URL before alternative candidates.
                     candidates.putIfAbsent(iframe, label)
                     if (iframe.contains("rapidrame_id=")) {
                         val rapidId = iframe.substringAfter("rapidrame_id=").substringBefore('&')
