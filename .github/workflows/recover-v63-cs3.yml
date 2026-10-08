@@ -1,0 +1,60 @@
+name: Recover and freeze V63 CS3
+on:
+  push:
+    branches:
+      - archive/recovery-v63-complete-20261008
+    paths:
+      - '.github/workflows/recover-v63-cs3.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  recover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.12'
+      - name: Prepare pinned CloudStream compiler
+        run: bash scripts/prepare-cloudstream-gradle.sh
+      - name: Build V63 from frozen source
+        run: gradle :EA-FB:make --no-daemon --stacktrace
+      - name: Verify and package frozen V63
+        run: |
+          python3 - <<'PY'
+          import json,zipfile,hashlib
+          from pathlib import Path
+          assert 'version = 63' in Path('EA-FB/build.gradle.kts').read_text()
+          found=list(Path('EA-FB/build').glob('*.cs3'))
+          assert len(found)==1,found
+          output=Path('recovery-v63')
+          output.mkdir(exist_ok=True)
+          data=found[0].read_bytes()
+          with zipfile.ZipFile(found[0]) as z:
+              assert z.testzip() is None
+              assert {'classes.dex','manifest.json'} <= set(z.namelist())
+              m=json.loads(z.read('manifest.json'))
+              assert m['version']==63,m
+          (output/'EA-FB-V63-FROZEN.cs3').write_bytes(data)
+          metadata={'source_commit':'006d4782a864224f25c8bdc69b312994841c00f5','version':63,'sha256':hashlib.sha256(data).hexdigest(),'size':len(data),'manifest':m,'note':'Rebuilt from frozen V63 sources; device playback not verified'}
+          (output/'verification.json').write_text(json.dumps(metadata,ensure_ascii=False,indent=2)+'\n')
+          print('V63 CS3 verified',metadata['sha256'])
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: EA-FB-V63-FROZEN-CS3
+          path: recovery-v63/
+          retention-days: 90
+      - name: Commit CS3 and verification to recovery branch
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -f recovery-v63/EA-FB-V63-FROZEN.cs3 recovery-v63/verification.json
+          git commit -m 'archive: preserve rebuilt V63 CS3 with integrity metadata'
+          git push origin HEAD:archive/recovery-v63-complete-20261008
