@@ -51,6 +51,13 @@ fun main() {
     val writes = target.writes
     EASettings.initialize(ctx)
     check(EASettings.sourceEnabled("diziyou") && target.writes == writes)
+    for (id in CleanTestIdentity.sourceIds) {
+        EASettings.setSourceEnabled(id, true)
+        check(EASettings.sourceEnabled(id))
+        EASettings.setSourceEnabled(id, false)
+        check(!EASettings.sourceEnabled(id))
+    }
+    check(old.values == original && old.writes == 0)
     val migrated = MemoryContext()
     migrated.getSharedPreferences(CleanTestIdentity.LEGACY_STORE, 0).values["source_enabled_dizibox"] = true
     EASettings.initialize(migrated)

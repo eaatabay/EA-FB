@@ -5,7 +5,7 @@ import com.lagradost.cloudstream3.utils.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 
-private class BronzeFixture(private val domain: String, private val land: Boolean) : MainAPI() {
+internal open class BronzeFixture(private val domain: String, private val land: Boolean) : MainAPI() {
     val searches = mutableListOf<String>()
     val payloads = mutableListOf<String>()
     var delayed = false
