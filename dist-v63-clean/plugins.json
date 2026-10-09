@@ -1,9 +1,9 @@
 [
   {
-    "fileHash": "sha256-7e972c8e9d389cca3f647ab16498fa123a77e1047971314be0a2548fc5373082",
+    "fileHash": "sha256-00788d06f485bb650fc00aec9d44faf474fb1e44fe8b84bbbe0201602dd8de70",
     "apiVersion": 1,
     "repositoryUrl": "https://github.com/eaatabay/EA-FB",
-    "fileSize": 237277,
+    "fileSize": 266906,
     "status": 3,
     "language": "tr",
     "authors": [
@@ -14,10 +14,10 @@
       "TvSeries",
       "Live"
     ],
-    "version": 64,
-    "internalName": "EA-FB-V64-CLEAN",
-    "description": "V64 clean source metadata and subtitle update",
-    "url": "https://raw.githubusercontent.com/eaatabay/EA-FB/test/v63-bronze-cleanroom-20261008/dist-v63-clean/EA-FB-V64-CLEAN.cs3",
-    "name": "EA-FB V64 CLEAN"
+    "version": 65,
+    "internalName": "EA-FB-V65-LAND-TEST",
+    "description": "V64 layout unchanged; isolated opt-in experimental LAND FastPlay",
+    "url": "https://raw.githubusercontent.com/eaatabay/EA-FB/test/land-fastplay-isolated-20261009/dist-v65-land-test/EA-FB-V65-LAND-TEST.cs3",
+    "name": "EA-FB V65 LAND TEST"
   }
 ]
