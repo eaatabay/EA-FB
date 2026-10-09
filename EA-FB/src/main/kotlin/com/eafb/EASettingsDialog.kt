@@ -133,7 +133,7 @@ object EASettingsDialog {
         }
         header.addView(symbol)
         val brand = vertical(ctx).apply { setPadding(dp(ctx, 12), 0, 0, 0) }
-        brand.addView(text(ctx, "EA-FB  AYARLARI", 23f, WHITE, true))
+        brand.addView(text(ctx, CleanTestIdentity.NAME, 23f, WHITE, true))
         brand.addView(text(ctx, "Film  •  Dizi  •  Canlı TV", 13f, MUTED))
         header.addView(brand)
         root.addView(header, margin(ctx, 0, 18))
@@ -249,7 +249,9 @@ object EASettingsDialog {
                 section(ctx, content, "FİLM VE DİZİ KAYNAKLARI",
                     "Kaynakları ayrı ayrı açıp kapatabilirsiniz. Açık olması, bağlantının çalıştığı anlamına gelmez.")
                 for ((id, label) in listOf("dizibox" to "DiziBox (deneme)",
-                        "diziyou" to "DiziYou (deneme)")) {
+                        "diziyou" to "DiziYou (deneme)",
+                        "hdfilmcehennemi-nl" to "NL (Bronze v52 deneme)",
+                        "hdfilmcehennemi-land" to "LAND (Bronze v4 deneme)")) {
                     val row = horizontal(ctx).apply {
                         background = shape(ctx, PANEL)
                         setPadding(dp(ctx, 16), dp(ctx, 8), dp(ctx, 16), dp(ctx, 8))

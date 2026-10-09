@@ -18,12 +18,12 @@ object EASettings {
     fun initialize(context: Context) {
         val application = context.applicationContext
         val target = application.getSharedPreferences(STORE, Context.MODE_PRIVATE)
-        if (!target.getBoolean("clean_codex_migrated", false)) {
-            // Read legacy CLEAN preferences only. Never write the shared staging store.
+        if (!target.getBoolean("clean_bronze_migrated", false)) {
+            // Read V66 preferences only. Never write the existing V66 store.
             val legacy = application.getSharedPreferences(CleanTestIdentity.LEGACY_STORE, Context.MODE_PRIVATE)
             val editor = target.edit()
             val booleanKeys = HomeCategories.all.map { CATEGORY_PREFIX + it.id } +
-                CleanTestIdentity.sourceIds.map { SOURCE_PREFIX + it }
+                CleanTestIdentity.legacySourceIds.map { SOURCE_PREFIX + it }
             booleanKeys.filter { !target.contains(it) && legacy.contains(it) }.forEach {
                 editor.putBoolean(it, legacy.getBoolean(it, false))
             }
@@ -31,7 +31,7 @@ object EASettings {
                 legacy.getString(SORT_KEY, null)?.let { editor.putString(SORT_KEY, it) }
             }
             // Commit together so a failed write can be retried on the next initialize.
-            editor.putBoolean("clean_codex_migrated", true).commit()
+            editor.putBoolean("clean_bronze_migrated", true).commit()
         }
         preferences = target
     }
