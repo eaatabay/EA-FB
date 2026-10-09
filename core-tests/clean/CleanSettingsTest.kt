@@ -3,7 +3,7 @@ package com.eafb
 import android.content.Context
 import android.content.SharedPreferences
 
-private class MemoryPreferences : SharedPreferences {
+internal class MemoryPreferences : SharedPreferences {
     val values = mutableMapOf<String, Any>()
     var writes = 0
     override fun contains(key: String) = key in values
@@ -22,7 +22,7 @@ private class MemoryPreferences : SharedPreferences {
         override fun apply() { commit() }
     }
 }
-private class MemoryContext : Context() {
+internal class MemoryContext : Context() {
     val stores = mutableMapOf<String, MemoryPreferences>()
     override fun getSharedPreferences(name: String, mode: Int) = stores.getOrPut(name) { MemoryPreferences() }
 }

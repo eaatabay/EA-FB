@@ -106,5 +106,17 @@ fun main() = runBlocking {
         check(result.single().url == "https://molystream.org/master") { "Broken $mode fixture" }
         check(result.single().isAdaptive)
     }
-    println("PASS: real adapters with offline HTML/HLS fixtures; GET/title fallback, exact episode, subtitles, headers/type and main-link timeout retention")
+    // Exercise the real bundled bridge and opt-in setting, including title propagation.
+    val ctx = MemoryContext()
+    EASettings.initialize(ctx)
+    app.handler = htmlHandler
+    app.requests.clear()
+    check(!PlaybackLinkBridge.canResolve("ea-fb:episode:42:1:2"))
+    check(PlaybackLinkBridge.alternatives("ea-fb:episode:42:1:2", query.title, 2026, 1000, query.alternateTitles).isEmpty())
+    check(app.requests.isEmpty())
+    EASettings.setSourceEnabled("diziyou", true)
+    val groups = PlaybackLinkBridge.sourceGroups("ea-fb:episode:42:1:2", query.title, 2026, 1000, query.alternateTitles)
+    check(groups.single().providerId == "diziyou" && groups.single().links.size == 2)
+    check(!EASettings.sourceEnabled("dizibox"))
+    println("PASS: real adapters and bridge with offline fixtures; title/GET fallback, exact episode, subtitles, headers/type and timeout retention")
 }

@@ -21,15 +21,20 @@ class DistributionTests(unittest.TestCase):
             data = buf.getvalue()
             (out / package.FILE).write_bytes(data)
             (out / "plugins.json").write_text(json.dumps([package.entry(data, 66)]))
-            package.verify(out)
+            manifest = json.loads(zipfile.ZipFile(io.BytesIO(data)).read("manifest.json"))
+            package.verify_metadata(data, manifest, json.loads((out / "plugins.json").read_text()))
             modified = package.entry(data, 66)
             modified["fileSize"] -= 42
             (out / "plugins.json").write_text(json.dumps([modified]))
             with self.assertRaises(ValueError):
-                package.verify(out)
+                package.verify_metadata(data, manifest, json.loads((out / "plugins.json").read_text()))
 
     def test_existing_providers_are_not_targeted(self):
         e = package.entry(b"test", 66)
         self.assertEqual(e["internalName"], "EA-FB-CODEX-CLEAN-20261009")
         self.assertIn("test/clean-codex-fix-20261009/dist-clean-codex-fix-20261009/", e["url"])
         self.assertNotIn("dist-v63-clean/", e["url"])
+
+    def test_descriptor_text_is_not_enough_to_claim_compiled_classes(self):
+        with self.assertRaises(ValueError):
+            package.validate_compiled_scope(b"dex\nLcom/eafb/DiziBoxAdapter;")

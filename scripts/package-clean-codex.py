@@ -6,6 +6,8 @@ import json
 from pathlib import Path
 import re
 import subprocess
+import struct
+import zlib
 import zipfile
 
 BRANCH = "test/clean-codex-fix-20261009"
@@ -14,6 +16,31 @@ NAME = "EA-FB CODEX CLEAN TEST"
 ID = "EA-FB-CODEX-CLEAN-20261009"
 FILE = ID + ".cs3"
 BASE = f"https://raw.githubusercontent.com/eaatabay/EA-FB/{BRANCH}/{DIST}/"
+
+
+def compiled_classes(dex):
+    if not dex.startswith(b"dex\n") or len(dex) < 112:
+        raise ValueError("Missing compiled DEX")
+    if hashlib.sha1(dex[32:]).digest() != dex[12:32] or zlib.adler32(dex[12:]) & 0xffffffff != struct.unpack_from("<I", dex, 8)[0]:
+        raise ValueError("DEX integrity failure")
+    def u32(offset):
+        return struct.unpack_from("<I", dex, offset)[0]
+    def string(index):
+        offset = u32(u32(60) + 4 * index)
+        while dex[offset] & 128:
+            offset += 1
+        offset += 1
+        return dex[offset:dex.index(0, offset)].decode("utf-8", errors="replace")
+    return {string(u32(u32(68) + 4 * u32(u32(100) + 32 * i))) for i in range(u32(96))}
+
+
+def validate_compiled_scope(dex):
+    classes = compiled_classes(dex)
+    for name in ["EAPlugin", "EAProvider", "PlaybackLinkBridge", "DiziBoxAdapter", "DiziYouAdapter", "CleanTestIdentity"]:
+        if "Lcom/eafb/" + name + ";" not in classes:
+            raise ValueError("Missing compiled class: " + name)
+    if any("Lcom/eafb/" + name + ";" in classes for name in ["HDFilmCehennemiNlAdapter", "HDFilmCehennemiLandAdapter"]):
+        raise ValueError("Unexpected NL/LAND scope in this CLEAN test")
 
 
 def entry(data, version):
@@ -38,12 +65,7 @@ def package(source, root):
         if manifest["version"] != version or manifest["pluginClassName"] != "com.eafb.EAPlugin":
             raise ValueError("Build manifest does not match this source")
         dex = z.read("classes.dex")
-        if not dex.startswith(b"dex\n"):
-            raise ValueError("Missing compiled DEX")
-        # Required compiled descriptors, in addition to the source registry.
-        for name in ["EAPlugin", "EAProvider", "PlaybackLinkBridge", "DiziBoxAdapter", "DiziYouAdapter", "CleanTestIdentity"]:
-            if ("Lcom/eafb/" + name + ";").encode() not in dex:
-                raise ValueError("Missing compiled class: " + name)
+        validate_compiled_scope(dex)
         manifest.update(name=NAME, internalName=ID, authors=["EA-FB"])
         out = root / DIST
         out.mkdir(exist_ok=True)
@@ -68,6 +90,18 @@ def verify(out):
         if z.testzip() is not None:
             raise ValueError("Corrupt test package")
         manifest = json.loads(z.read("manifest.json"))
+        dex = z.read("classes.dex")
+        validate_compiled_scope(dex)
+    verify_metadata(data, manifest, actual)
+    repo = json.loads((out / "repo.json").read_text())
+    provenance = json.loads((out / "build-info.json").read_text())
+    if repo["pluginLists"] != [BASE + "plugins.json"] or repo["name"] != NAME:
+        raise ValueError("Wrong isolated repository list")
+    if provenance["branch"] != BRANCH or provenance["adapters"] != ["dizibox", "diziyou"] or provenance["dexSha256"] != hashlib.sha256(dex).hexdigest() or not re.fullmatch(r"[0-9a-f]{40}", provenance["sourceCommit"]):
+        raise ValueError("Wrong build provenance")
+
+
+def verify_metadata(data, manifest, actual):
     if actual != [entry(data, manifest["version"])] or manifest.get("internalName") != ID or manifest["name"] != NAME:
         raise ValueError("Distribution mismatch")
     if manifest["pluginClassName"] != "com.eafb.EAPlugin":

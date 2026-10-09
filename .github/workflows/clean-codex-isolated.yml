@@ -1,0 +1,75 @@
+name: CODEX CLEAN isolated test package
+
+on:
+  push:
+    branches: [test/clean-codex-fix-20261009]
+    paths:
+      - 'EA-FB/**'
+      - 'core-tests/**'
+      - 'scripts/test-clean-codex.sh'
+      - 'scripts/package-clean-codex.py'
+      - 'tests/test_clean_codex*.py'
+      - '.github/workflows/clean-codex-isolated.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: clean-codex-fix-20261009
+  cancel-in-progress: false
+
+jobs:
+  test-build-publish:
+    if: github.repository == 'eaatabay/EA-FB' && github.ref == 'refs/heads/test/clean-codex-fix-20261009'
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.12'
+      - name: Install pinned Kotlin compiler for offline fixture tests
+        shell: bash
+        run: |
+          curl --fail --silent --show-error --location --retry 2 https://github.com/JetBrains/kotlin/releases/download/v2.4.0/kotlin-compiler-2.4.0.zip -o "$RUNNER_TEMP/kotlin.zip"
+          printf '%s  %s\n' ba1b9e6eb6ddc3275079224f2e9ea4a2b02eef7d59ce2d38404f04b22613c20a "$RUNNER_TEMP/kotlin.zip" | sha256sum -c -
+          unzip -q "$RUNNER_TEMP/kotlin.zip" -d "$RUNNER_TEMP/clean-kotlin"
+          echo "$RUNNER_TEMP/clean-kotlin/kotlinc/bin" >> "$GITHUB_PATH"
+      - name: Run real adapter fixtures and source engine regressions
+        run: bash scripts/test-clean-codex.sh
+      - name: Build only the isolated Android plugin
+        run: |
+          bash scripts/prepare-cloudstream-gradle.sh
+          gradle :EA-FB:make --no-daemon --console=plain
+      - name: Package and verify isolated identity and exact final bytes
+        run: |
+          python3 scripts/package-clean-codex.py EA-FB/build/EA-FB.cs3
+          python3 scripts/package-clean-codex.py --verify
+      - uses: actions/upload-artifact@v4
+        with:
+          name: EA-FB-CODEX-CLEAN-20261009
+          path: dist-clean-codex-fix-20261009/
+          if-no-files-found: error
+      - name: Publish only the new branch distribution
+        shell: bash
+        run: |
+          test "$(git branch --show-current)" = test/clean-codex-fix-20261009
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -f -- dist-clean-codex-fix-20261009/
+          if git diff --cached --quiet; then exit 0; fi
+          python3 - <<'PY'
+          import subprocess
+          files = subprocess.check_output(['git', 'diff', '--cached', '--name-only'], text=True).splitlines()
+          assert files and all(p.startswith('dist-clean-codex-fix-20261009/') for p in files), files
+          PY
+          git commit -m 'test(clean): publish isolated CODEX CS3 [skip ci]'
+          # Normal push fails on a concurrent update; never force or update another ref.
+          git push origin HEAD:refs/heads/test/clean-codex-fix-20261009
