@@ -42,7 +42,7 @@ import org.json.JSONObject
 
 /** One CloudStream-visible provider. Other modules never register separately. */
 class EAProvider : MainAPI() {
-    override var name = "EA-FB V64 CLEAN"
+    override var name = CleanTestIdentity.NAME
     override var mainUrl = "https://api.themoviedb.org/3"
     override var lang = "tr"
     override val supportedTypes = setOf(TvType.Movie, TvType.TvSeries, TvType.Live)

@@ -39,7 +39,7 @@ internal object FilmSeriesRail {
     )
 
     private const val MARKER = "ea-fb-film-series-row"
-    private const val PROVIDER = "EA-FB V6 STAGING"
+    private const val PROVIDER = CleanTestIdentity.NAME
     private val main = Handler(Looper.getMainLooper())
     private val entries = ConcurrentHashMap<String, List<Card>>()
     private val images = Executors.newFixedThreadPool(2)

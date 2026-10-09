@@ -27,7 +27,7 @@ import java.util.concurrent.ConcurrentHashMap
  * dependency and no global-layout polling.
  */
 internal object EpisodeTitleStyle {
-    private const val PROVIDER = "EA-FB V6 STAGING"
+    private const val PROVIDER = CleanTestIdentity.NAME
     internal data class TitleEpisode(
         val season: Int,
         val episode: Int,

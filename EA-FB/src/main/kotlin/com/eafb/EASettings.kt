@@ -8,7 +8,7 @@ import android.content.SharedPreferences
  * Android SharedPreferences preserves category switches and sorting across restarts.
  */
 object EASettings {
-    private const val STORE = "ea_fb_catalog_settings_v6_staging"
+    private const val STORE = CleanTestIdentity.STORE
     private const val CATEGORY_PREFIX = "category_"
     private const val SORT_KEY = "catalog_sort"
     private const val SOURCE_PREFIX = "source_enabled_"
@@ -16,7 +16,24 @@ object EASettings {
     @Volatile private var preferences: SharedPreferences? = null
 
     fun initialize(context: Context) {
-        preferences = context.applicationContext.getSharedPreferences(STORE, Context.MODE_PRIVATE)
+        val application = context.applicationContext
+        val target = application.getSharedPreferences(STORE, Context.MODE_PRIVATE)
+        if (!target.getBoolean("clean_codex_migrated", false)) {
+            // Read legacy CLEAN preferences only. Never write the shared staging store.
+            val legacy = application.getSharedPreferences(CleanTestIdentity.LEGACY_STORE, Context.MODE_PRIVATE)
+            val editor = target.edit()
+            val booleanKeys = HomeCategories.all.map { CATEGORY_PREFIX + it.id } +
+                CleanTestIdentity.sourceIds.map { SOURCE_PREFIX + it }
+            booleanKeys.filter { !target.contains(it) && legacy.contains(it) }.forEach {
+                editor.putBoolean(it, legacy.getBoolean(it, false))
+            }
+            if (!target.contains(SORT_KEY) && legacy.contains(SORT_KEY)) {
+                legacy.getString(SORT_KEY, null)?.let { editor.putString(SORT_KEY, it) }
+            }
+            // Commit together so a failed write can be retried on the next initialize.
+            editor.putBoolean("clean_codex_migrated", true).commit()
+        }
+        preferences = target
     }
 
     /** External playback sources are opt-in and remain disabled by default. */

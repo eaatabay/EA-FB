@@ -32,7 +32,7 @@ internal object DetailMetaRow {
         val nextEpisodeUntilMillis: Long? = null
     )
 
-    private const val PROVIDER = "EA-FB V6 STAGING"
+    private const val PROVIDER = CleanTestIdentity.NAME
     private const val MARKER_PREFIX = "ea-fb-detail-meta-"
     private const val EPISODE_PANEL_SCALE = 0.90f
     private val main = Handler(Looper.getMainLooper())
