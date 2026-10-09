@@ -1,0 +1,23 @@
+[
+  {
+    "fileHash": "sha256-8daf4413a46a44baee0dce89ec7743e8838cef579e993f344fb5d59c721b1d08",
+    "fileSize": 322134,
+    "apiVersion": 1,
+    "repositoryUrl": "https://github.com/eaatabay/EA-FB",
+    "status": 3,
+    "language": "tr",
+    "authors": [
+      "EA-FB"
+    ],
+    "tvTypes": [
+      "Movie",
+      "TvSeries",
+      "Live"
+    ],
+    "version": 82,
+    "internalName": "EA-FB-V82-TEST",
+    "name": "EA-FB V82 TEST",
+    "description": "EA-FB V82 TEST: DiziBox, DiziYou, HDFilmCehennemi and HDFilmCehennemi LAND; device verification pending",
+    "url": "https://raw.githubusercontent.com/eaatabay/EA-FB/test/ea-fb-v82-name-cleanup/dist-v82-test/EA-FB-V82-TEST.cs3"
+  }
+]

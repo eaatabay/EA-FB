@@ -1,0 +1,8 @@
+{
+  "name": "EA-FB V82 TEST",
+  "description": "EA-FB V82 isolated test repository",
+  "manifestVersion": 1,
+  "pluginLists": [
+    "https://raw.githubusercontent.com/eaatabay/EA-FB/test/ea-fb-v82-name-cleanup/dist-v82-test/plugins.json"
+  ]
+}
