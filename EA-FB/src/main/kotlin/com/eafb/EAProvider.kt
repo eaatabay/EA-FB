@@ -118,7 +118,7 @@ class EAProvider : MainAPI() {
     )
 
     // This public config contains only a relay URL. The TMDb token is server-side.
-    private val catalogConfigUrl = "https://raw.githubusercontent.com/eaatabay/EA-FB/test/land-fastplay-isolated-20261009/config/backend.v6-staging.json"
+    private val catalogConfigUrl = "https://raw.githubusercontent.com/eaatabay/EA-FB/test/land-fastplay-isolated-20261009/config/backend.v65-land-test.json"
     @Volatile private var relayBase: String? = null
     @Volatile private var relayCheckedAt: Long = 0L
 
