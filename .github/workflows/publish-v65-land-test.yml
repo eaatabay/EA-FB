@@ -1,0 +1,74 @@
+name: Publish isolated V65 LAND test
+on:
+  push:
+    branches: [test/land-fastplay-isolated-20261009]
+    paths:
+      - '.github/workflows/publish-v65-land-test.yml'
+      - 'EA-FB/src/main/kotlin/com/eafb/**'
+      - 'EA-FB/build.gradle.kts'
+      - 'core-tests/LandFastPlayCodecTest.kt'
+      - 'scripts/test-land-codec.sh'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: land-fastplay-v65-test
+  cancel-in-progress: false
+jobs:
+  test-build-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.12'
+      - name: LAND offline codec fixtures
+        run: bash scripts/test-land-codec.sh
+      - name: Set up pinned CloudStream Gradle
+        run: bash scripts/prepare-cloudstream-gradle.sh
+      - name: Build isolated V65 CS3
+        run: gradle :EA-FB:make --no-daemon --stacktrace
+      - name: Package V65 LAND TEST separately
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib,json,zipfile
+          source=list(Path('EA-FB/build').glob('*.cs3'))
+          assert len(source)==1,source
+          out=Path('dist-v65-land-test')
+          out.mkdir(exist_ok=True)
+          dst=out/'EA-FB-V65-LAND-TEST.cs3'
+          with zipfile.ZipFile(source[0]) as z:
+              assert z.testzip() is None
+              manifest=json.loads(z.read('manifest.json'))
+              assert manifest['version']==65,manifest
+              manifest['name']='EA-FB V65 LAND TEST'
+              manifest['internalName']='EA-FB-V65-LAND-TEST'
+              with zipfile.ZipFile(dst,'w') as w:
+                  for entry in z.infolist():
+                      w.writestr(entry,json.dumps(manifest,ensure_ascii=False).encode() if entry.filename=='manifest.json' else z.read(entry))
+          with zipfile.ZipFile(dst) as z:
+              assert z.testzip() is None
+              assert json.loads(z.read('manifest.json'))['internalName']=='EA-FB-V65-LAND-TEST'
+          base='https://raw.githubusercontent.com/eaatabay/EA-FB/test/land-fastplay-isolated-20261009/dist-v65-land-test/'
+          plugin={'fileHash':'sha256-'+hashlib.sha256(dst.read_bytes()).hexdigest(),'apiVersion':1,'repositoryUrl':'https://github.com/eaatabay/EA-FB','fileSize':dst.stat().st_size,'status':3,'language':'tr','authors':['EA-FB'],'tvTypes':['Movie','TvSeries','Live'],'version':65,'internalName':'EA-FB-V65-LAND-TEST','description':'V64 layout unchanged; isolated opt-in experimental LAND FastPlay','url':base+dst.name,'name':'EA-FB V65 LAND TEST'}
+          (out/'plugins.json').write_text(json.dumps([plugin],indent=2,ensure_ascii=False)+'\n')
+          (out/'repo.json').write_text(json.dumps({'name':'EA-FB V65 LAND TEST','description':'Only experimental LAND on isolated branch; does not replace V64 CLEAN','manifestVersion':1,'pluginLists':[base+'plugins.json']},indent=2)+'\n')
+          print('PASS isolated V65 LAND',dst.stat().st_size,plugin['fileHash'])
+          PY
+      - name: Commit only V65 LAND test distribution
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -f dist-v65-land-test/
+          if git diff --cached --quiet; then
+            echo 'No changes in V65 distribution'
+          else
+            git commit -m 'release: publish isolated V65 LAND FastPlay test'
+            git push origin HEAD:test/land-fastplay-isolated-20261009
+          fi
