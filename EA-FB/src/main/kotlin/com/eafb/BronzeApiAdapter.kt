@@ -103,9 +103,9 @@ private fun bundledBronze(className: String): MainAPI =
     Class.forName(className, true, BronzeApiAdapter::class.java.classLoader).getDeclaredConstructor().newInstance() as MainAPI
 
 class BronzeNlAdapter(factory: (() -> MainAPI)? = null) : BronzeApiAdapter(
-    "hdfilmcehennemi-nl", "NL (Bronze v52)", "hdfilmcehennemi.nl",
+    "hdfilmcehennemi-nl", "HDFilmCehennemi", "hdfilmcehennemi.nl",
     factory ?: { bundledBronze("com.keyiflerolsun.HDFilmCehennemi") })
 
 class BronzeLandAdapter(factory: (() -> MainAPI)? = null) : BronzeApiAdapter(
-    "hdfilmcehennemi-land", "LAND (Bronze v4)", "hdfilmcehennemi.land",
+    "hdfilmcehennemi-land", "HDFilmCehennemi LAND", "hdfilmcehennemi.land",
     factory ?: { bundledBronze("com.keyiflerolsun.HDFilmcehennemiLand") })

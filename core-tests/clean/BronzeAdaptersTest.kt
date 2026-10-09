@@ -52,6 +52,7 @@ fun main() = runBlocking {
         val links = engine.resolve(offers, 1000)
         check(links.size == 1 && links.single().isHls)
         check(links.single().isLandLoopback == land)
+        check(links.single().displayName == "${if (land) "HDFilmCehennemi LAND" else "HDFilmCehennemi"} • Reference")
         check(links.single().referer == "https://player.example/")
         check(links.single().headers["User-Agent"] == "fixture-UA")
         check(links.single().headers["Origin"]?.startsWith("https://hdfilmcehennemi.") == true)

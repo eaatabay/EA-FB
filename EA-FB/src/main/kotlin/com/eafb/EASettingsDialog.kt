@@ -250,8 +250,8 @@ object EASettingsDialog {
                     "Kaynakları ayrı ayrı açıp kapatabilirsiniz. Açık olması, bağlantının çalıştığı anlamına gelmez.")
                 for ((id, label) in listOf("dizibox" to "DiziBox (deneme)",
                         "diziyou" to "DiziYou (deneme)",
-                        "hdfilmcehennemi-nl" to "NL (Bronze v52 deneme)",
-                        "hdfilmcehennemi-land" to "LAND (Bronze v4 deneme)")) {
+                        "hdfilmcehennemi-nl" to "HDFilmCehennemi",
+                        "hdfilmcehennemi-land" to "HDFilmCehennemi LAND")) {
                     val row = horizontal(ctx).apply {
                         background = shape(ctx, PANEL)
                         setPadding(dp(ctx, 16), dp(ctx, 8), dp(ctx, 16), dp(ctx, 8))

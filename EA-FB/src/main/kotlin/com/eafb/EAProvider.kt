@@ -948,8 +948,8 @@ class EAProvider : MainAPI() {
                     val providerLabel = when (group.providerId.lowercase(Locale.ROOT)) {
                         "dizibox" -> "DiziBox"
                         "diziyou" -> "DiziYou"
-                        "hdfilmcehennemi-nl" -> "NL"
-                        "hdfilmcehennemi-land" -> "LAND"
+                        "hdfilmcehennemi-nl" -> "HDFilmCehennemi"
+                        "hdfilmcehennemi-land" -> "HDFilmCehennemi LAND"
                         else -> group.providerId
                     }
                     val languageLabel = when {
