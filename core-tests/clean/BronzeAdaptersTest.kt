@@ -10,6 +10,7 @@ internal open class BronzeFixture(private val domain: String, private val land: 
     val payloads = mutableListOf<String>()
     var delayed = false
     var broken = false
+    var resolveBroken = false
     override suspend fun search(query: String): List<SearchResponse> {
         searches += query
         if (broken) throw NoClassDefFoundError("fixture runtime dependency")
@@ -26,6 +27,7 @@ internal open class BronzeFixture(private val domain: String, private val land: 
         Episode("opaque-correct-data", 1, 2)))
     override suspend fun loadLinks(data: String, isCasting: Boolean,
         subtitleCallback: (SubtitleFile) -> Unit, callback: (ExtractorLink) -> Unit): Boolean {
+        if (resolveBroken) throw NoClassDefFoundError("fixture resolver dependency")
         payloads += data
         check(!isCasting && data in listOf("opaque-correct-data", "opaque-film-data"))
         val url = if (land) "http://127.0.0.1:43127/master_fixture_dublaj.m3u8" else "https://cdn.example/extensionless"
@@ -63,9 +65,16 @@ fun main() = runBlocking {
         check(engine.resolve(film, 1000).size == 1)
         check(adapter.search(query.copy(year = 1990)).isEmpty())
         check(adapter.search(query.copy(season = 9)).isEmpty())
+        fixture.resolveBroken = true
+        check(engine.resolve(film, 1000).isEmpty())
         fixture.broken = true
         check(adapter.search(query).isEmpty())
+        println("PASS: ${if (land) "LAND" else "NL"} separate wrapper regressions")
     }
+    val unavailable = BronzeFixture("hdfilmcehennemi.nl", false).apply { broken = true }
+    val available = BronzeFixture("hdfilmcehennemi.land", true)
+    val mixed = MultiSourceEngine(listOf(BronzeNlAdapter { unavailable }, BronzeLandAdapter { available }))
+    check(mixed.resolve(mixed.find(query), 1000).single().provider == "hdfilmcehennemi-land")
     val accepted = SourceLink("hdfilmcehennemi-land", "http://127.0.0.1:43127/master_test.m3u8", null, null, null,
         isHls = true, isLandLoopback = true)
     check(SourceLinkPolicy.isPlaybackUrl(accepted))
