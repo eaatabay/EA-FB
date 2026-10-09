@@ -934,7 +934,8 @@ class EAProvider : MainAPI() {
             val year = mediaYear(metadata,
                 if (identity is PlaybackData.Movie) MediaKind.MOVIE else MediaKind.SERIES)
             val groups = PlaybackLinkBridge.sourceGroups(
-                data, title, year, System.currentTimeMillis()
+                data, title, year, System.currentTimeMillis(),
+                listOf(metadata.optString(if (identity is PlaybackData.Movie) "original_title" else "original_name"))
             )
             var emittedLinks = 0
             groups.forEach { group ->

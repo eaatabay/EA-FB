@@ -7,15 +7,15 @@ package com.eafb
  * separate playback paths.
  */
 object PlaybackQuery {
-    fun fromData(data: String, title: String, year: Int?): MediaQuery? {
+    fun fromData(data: String, title: String, year: Int?, alternateTitles: List<String> = emptyList()): MediaQuery? {
         if (title.isBlank()) return null
         return when (val identity = PlaybackData.parse(data)) {
             is PlaybackData.Movie -> MediaQuery(
-                title, year, MediaKind.MOVIE, identity.tmdbId
+                title, year, MediaKind.MOVIE, identity.tmdbId, alternateTitles = alternateTitles
             )
             is PlaybackData.Episode -> MediaQuery(
                 title, year, MediaKind.SERIES, identity.tmdbId,
-                identity.season, identity.episode
+                identity.season, identity.episode, alternateTitles
             )
             null -> null
         }

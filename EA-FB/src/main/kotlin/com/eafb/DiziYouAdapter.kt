@@ -3,6 +3,7 @@ package com.eafb
 import android.util.Log
 import com.lagradost.cloudstream3.app
 import java.net.URI
+import java.net.URLEncoder
 import java.util.concurrent.CancellationException
 import org.jsoup.Jsoup
 
@@ -28,49 +29,63 @@ class DiziYouAdapter(private val origin: String = "https://www.diziyou.one") : M
     } catch (_: Exception) { null }
 
     override suspend fun search(query: MediaQuery): List<MediaOffer> {
-        if (query.kind != MediaKind.SERIES || query.season == null ||
-            query.episode == null || query.title.isBlank()) return emptyList()
-        val html = try {
-            app.post(
-                "$base/wp-admin/admin-ajax.php",
-                data = mapOf("action" to "data_fetch", "keyword" to query.title)
-            ).text
-        } catch (cancel: CancellationException) { throw cancel }
-          catch (_: Exception) { return emptyList() }
-        val candidates = Jsoup.parse(html, base).select("div#searchelement")
-        val matches = candidates.mapNotNull { result ->
-            val anchors = result.select("a")
-            val title = anchors.lastOrNull()?.text()?.trim() ?: return@mapNotNull null
-            if (Identity.normalize(title) != Identity.normalize(query.title)) return@mapNotNull null
-            siteUrl(anchors.firstOrNull()?.attr("href") ?: "")
-        }.distinct().take(5)
+        if (query.kind != MediaKind.SERIES || query.season == null || query.episode == null) return emptyList()
+        for (title in SourceSearchTitles.candidates(query)) {
+            val ajax = try {
+                app.post("$base/wp-admin/admin-ajax.php",
+                    data = mapOf("action" to "data_fetch", "keyword" to title)).text
+            } catch (cancel: CancellationException) { throw cancel }
+              catch (_: Exception) { "" }
+            val wanted = Identity.normalize(title)
+            val matches = Jsoup.parse(ajax, base).select("div#searchelement").mapNotNull { result ->
+                val anchors = result.select("a")
+                val found = anchors.lastOrNull()?.text()?.trim().orEmpty()
+                if (Identity.normalize(found) != wanted) null
+                else siteUrl(anchors.firstOrNull()?.attr("href").orEmpty())
+            }.distinct().take(5)
+            val ajaxOffers = episodeOffers(query, matches)
+            if (ajaxOffers.isNotEmpty()) return ajaxOffers
+            // Bronze v27's GET search is the fallback when AJAX returns no usable episode.
+            val html = try { app.get("$base/?s=" + URLEncoder.encode(title, "UTF-8")).text }
+                catch (cancel: CancellationException) { throw cancel }
+                catch (_: Exception) { continue }
+            val doc = Jsoup.parse(html, base)
+            val links = doc.select("div.incontent div#list-series, div#list-series, div#list-series-main")
+                .select("div.cat-title-main a, div#categorytitle a, a")
+                .mapNotNull { anchor ->
+                    val names = listOf(anchor.text(), anchor.attr("title"))
+                    if (names.none { it.isNotBlank() && Identity.normalize(it) == wanted }) null
+                    else siteUrl(anchor.attr("href"))
+                }.distinct().take(5)
+            val offers = episodeOffers(query, links)
+            if (offers.isNotEmpty()) return offers
+        }
+        return emptyList()
+    }
+
+    private suspend fun episodeOffers(query: MediaQuery, matches: List<String>): List<MediaOffer> {
+        val season = query.season ?: return emptyList()
+        val episode = query.episode ?: return emptyList()
         val found = mutableListOf<MediaOffer>()
         for (seriesUrl in matches) {
             val doc = try { app.get(seriesUrl).document }
                 catch (cancel: CancellationException) { throw cancel }
                 catch (_: Exception) { continue }
             val epUrl = doc.select("div.bolumust").firstNotNullOfOrNull { card ->
-                val heading = card.selectFirst("div.baslik")?.ownText()?.trim()
-                    ?: return@firstNotNullOfOrNull null
-                if (!DiziYouEpisodeParser.exactEpisode(heading, query.season, query.episode))
-                    return@firstNotNullOfOrNull null
+                val heading = card.selectFirst("div.baslik")?.ownText()?.trim() ?: return@firstNotNullOfOrNull null
+                if (!DiziYouEpisodeParser.exactEpisode(heading, season, episode)) return@firstNotNullOfOrNull null
                 siteUrl(card.closest("a")?.attr("href") ?: "")
             } ?: continue
-            found += MediaOffer(
-                id, "DiziYou", query.title, query.year, query.kind, epUrl,
-                query.tmdbId, query.season, query.episode
-            )
+            found += MediaOffer(id, "DiziYou", query.title, query.year, query.kind, epUrl,
+                query.tmdbId, season, episode)
         }
         return found.distinctBy { it.pageUrl }
     }
 
-    private suspend fun playlistQuality(url: String): Int? = try {
-        val body = app.get(url, referer = "$base/").text
-        if (!body.trimStart().startsWith("#EXTM3U")) null
-        else Regex("""RESOLUTION=\d+x(\d+)""", RegexOption.IGNORE_CASE)
-            .findAll(body).mapNotNull { it.groupValues[1].toIntOrNull() }.maxOrNull()
+    private suspend fun playlistInfo(url: String): HlsPlaylistInfo = try {
+        HlsPlaylistInfo.parse(app.get(url, referer = "$base/").text)
     } catch (cancel: CancellationException) { throw cancel }
-      catch (_: Exception) { null }
+      catch (_: Exception) { HlsPlaylistInfo(null, false) }
 
     override suspend fun resolve(offer: MediaOffer): List<SourceLink> {
         if (offer.providerId != id || offer.kind != MediaKind.SERIES ||
@@ -93,19 +108,20 @@ class DiziYouAdapter(private val origin: String = "https://www.diziyou.one") : M
         val options = doc.select("span.diziyouOption").map { it.id() }.filter { it.isNotBlank() }.toSet()
         val originalUrl = storage + "/episodes/" + itemId + "/play.m3u8"
         val dubbedUrl = storage + "/episodes/" + itemId + "_tr/play.m3u8"
-        val originalQuality = if ("turkceAltyazili" in options || "ingilizceAltyazili" in options)
-            playlistQuality(originalUrl) else null
-        val dubbedQuality = if ("turkceDublaj" in options) playlistQuality(dubbedUrl) else null
+        val originalInfo = if ("turkceAltyazili" in options || "ingilizceAltyazili" in options)
+            playlistInfo(originalUrl) else HlsPlaylistInfo(null, false)
+        val dubbedInfo = if ("turkceDublaj" in options) playlistInfo(dubbedUrl) else HlsPlaylistInfo(null, false)
         val links = buildList {
-            // The non-_tr playlist is the original-audio variant. Site option IDs describe
-            // subtitle availability, but no separate subtitle URL has been proven here;
-            // do not advertise a selectable CloudStream subtitle track until one exists.
+            val subtitles = buildList {
+                if ("turkceAltyazili" in options) add(SourceSubtitle("Türkçe", "$storage/subtitles/$itemId/tr.vtt"))
+                if ("ingilizceAltyazili" in options) add(SourceSubtitle("English", "$storage/subtitles/$itemId/en.vtt"))
+            }
             if ("turkceAltyazili" in options || "ingilizceAltyazili" in options)
-                add(SourceLink(id, originalUrl, originalQuality, "original", null,
-                    referer = "$base/", isHls = true, displayName = "DiziYou • Orijinal"))
+                add(SourceLink(id, originalUrl, originalInfo.quality, "original", null,
+                    referer = "$base/", isHls = true, displayName = "DiziYou • Orijinal", subtitles = subtitles, isAdaptive = originalInfo.adaptive))
             if ("turkceDublaj" in options)
-                add(SourceLink(id, dubbedUrl, dubbedQuality, "tr", null,
-                    referer = "$base/", isHls = true, displayName = "DiziYou • Türkçe Dublaj"))
+                add(SourceLink(id, dubbedUrl, dubbedInfo.quality, "tr", null,
+                    referer = "$base/", isHls = true, displayName = "DiziYou • Türkçe Dublaj", isAdaptive = dubbedInfo.adaptive))
         }.distinctBy { Triple(it.url, it.audioLanguage, it.subtitleLanguage) }
         trace("resolve", "iframe=true itemId=true options=${options.sorted()} links=${links.size}")
         return links

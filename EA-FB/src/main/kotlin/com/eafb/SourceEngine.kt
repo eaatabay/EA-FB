@@ -33,7 +33,8 @@ data class MediaQuery(
     val kind: MediaKind,
     val tmdbId: Int? = null,
     val season: Int? = null,
-    val episode: Int? = null
+    val episode: Int? = null,
+    val alternateTitles: List<String> = emptyList()
 ) {
     init { require((season == null && episode == null) ||
         (kind == MediaKind.SERIES && season != null && season >= 0 &&

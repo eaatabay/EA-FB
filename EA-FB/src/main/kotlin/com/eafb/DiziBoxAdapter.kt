@@ -4,6 +4,7 @@ import android.util.Base64
 import android.util.Log
 import com.lagradost.cloudstream3.app
 import com.lagradost.cloudstream3.utils.loadExtractor
+import com.lagradost.cloudstream3.utils.ExtractorLinkType
 import java.net.URI
 import java.net.URLDecoder
 import java.net.URLEncoder
@@ -17,7 +18,7 @@ import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 
 /**
- * PROPOSED revision of the V51 DiziBox adapter. NOT compiled, NOT run on a device.
+ * Bronze v28-based adapter; physical Mi Box playback remains unverified.
  *
  * Evidence levels used in the comments below:
  *  [v28]  read from the bytecode of the working DiziBox_v28.cs3 package
@@ -29,7 +30,7 @@ import org.jsoup.nodes.Element
  * body (the host answers its own error page with HTTP 200 [obs]). That check proves the master playlist
  * only; it does not prove ExoPlayer plays the media segments.
  */
-class DiziBoxAdapter(private val origin: String = "https://www.dizibox.live") : MediaSourceAdapter {
+class DiziBoxAdapter(private val origin: String = "https://www.dizibox.live") : ProgressiveMediaSourceAdapter {
     override val id: String = "dizibox"
     private val root = URI(origin)
     private val base = origin.trimEnd('/')
@@ -99,9 +100,16 @@ class DiziBoxAdapter(private val origin: String = "https://www.dizibox.live") : 
     // ------------------------------------------------------------------ search
 
     override suspend fun search(query: MediaQuery): List<MediaOffer> {
-        if (query.title.isBlank()) return emptyList()
-        val wanted = Identity.normalize(query.title)
-        val encoded = URLEncoder.encode(query.title, "UTF-8")
+        for (title in SourceSearchTitles.candidates(query)) {
+            val offers = searchTitle(query, title)
+            if (offers.isNotEmpty()) return offers
+        }
+        return emptyList()
+    }
+
+    private suspend fun searchTitle(query: MediaQuery, title: String): List<MediaOffer> {
+        val wanted = Identity.normalize(title)
+        val encoded = URLEncoder.encode(title, "UTF-8")
         val urls = LinkedHashSet<String>()
 
         // 1) dwls_search JSON (V51 path). [obs] it returned exactly 5 results for two different
@@ -133,7 +141,7 @@ class DiziBoxAdapter(private val origin: String = "https://www.dizibox.live") : 
         // 3) Direct series page, accepted only if the page's own <h1> equals the requested title.
         //    [obs] /diziler/game-of-thrones/ answered 200 although search returned nothing.
         if (urls.isEmpty()) {
-            urls.addAll(directSeries(query.title, wanted))
+            urls.addAll(directSeries(title, wanted))
             trace("search-direct", "matches=${urls.size}")
         }
         return urls.take(5).map { seriesUrl ->
@@ -172,49 +180,33 @@ class DiziBoxAdapter(private val origin: String = "https://www.dizibox.live") : 
 
     // ----------------------------------------------------------------- resolve
 
-    override suspend fun resolve(offer: MediaOffer): List<SourceLink> {
-        if (offer.providerId != id || siteUrl(offer.pageUrl) != offer.pageUrl)
-            return emptyList()
-        val seriesFetch = fetch(offer.pageUrl, site = true)
-        if (seriesFetch == null) { trace("series-page", "fetch-failed"); return emptyList() }
+    override suspend fun resolveIncrementally(offer: MediaOffer, emit: (SourceLink) -> Unit) {
+        if (offer.providerId != id || siteUrl(offer.pageUrl) != offer.pageUrl) return
+        val seriesFetch = fetch(offer.pageUrl, site = true) ?: return
         val series = Jsoup.parse(seriesFetch.text, offer.pageUrl)
-        trace("series-page", "code=${seriesFetch.code}; kind=${offer.kind}, season=${offer.season}, episode=${offer.episode}")
-
         val episodeUrl = if (offer.kind == MediaKind.SERIES) {
-            val season = offer.season ?: return emptyList()
-            val episode = offer.episode ?: return emptyList()
-            findEpisodeUrl(offer.pageUrl, series, season, episode)
-                ?: run { trace("episode-url", "not-found"); return emptyList() }
+            val season = offer.season ?: return
+            val episode = offer.episode ?: return
+            findEpisodeUrl(offer.pageUrl, series, season, episode) ?: return
         } else offer.pageUrl
-
         val epFetch = if (episodeUrl == offer.pageUrl) seriesFetch
-            else fetch(episodeUrl, referer = offer.pageUrl, site = true)
-        if (epFetch == null) { trace("episode-page", "fetch-failed"); return emptyList() }
+            else fetch(episodeUrl, referer = offer.pageUrl, site = true) ?: return
         val doc = Jsoup.parse(epFetch.text, episodeUrl)
-
-        // [v28] main source = div#video-area iframe; alternatives = div.video-toolbar option[value],
-        //       each alternative is its own page whose div#video-area iframe is decoded the same way.
-        //       V51 only followed the first iframe.
-        val entries = LinkedHashSet<String>()
-        (doc.select("div#video-area iframe").firstOrNull() ?: doc.select("iframe").firstOrNull())
-            ?.let { playerUrl(it.attr("src"), episodeUrl) }?.let { entries.add(it) }
+        val seen = linkedSetOf<String>()
+        suspend fun emitPage(document: Document, pageUrl: String) {
+            val frame = document.selectFirst("div#video-area iframe") ?: document.selectFirst("iframe") ?: return
+            val entry = playerUrl(frame.attr("src"), pageUrl) ?: return
+            if (seen.add(entry)) resolvePlayer(entry, pageUrl).forEach(emit)
+        }
+        // Deliver the main player before fetching optional alternate pages.
+        emitPage(doc, episodeUrl)
         val alternatives = doc.select("div.video-toolbar option[value]")
             .mapNotNull { siteUrl(it.attr("value")) }.filter { it != episodeUrl }.distinct().take(6)
-        trace("episode-page", "iframeCount=${doc.select("iframe").size}, main=${entries.size}, alternatives=${alternatives.size}")
         for (alt in alternatives) {
-            val f = fetch(alt, referer = episodeUrl, site = true) ?: continue
-            val d = Jsoup.parse(f.text, alt)
-            (d.select("div#video-area iframe").firstOrNull() ?: d.select("iframe").firstOrNull())
-                ?.let { playerUrl(it.attr("src"), alt) }?.let { entries.add(it) }
+            val fetched = fetch(alt, referer = episodeUrl, site = true) ?: continue
+            emitPage(Jsoup.parse(fetched.text, alt), alt)
         }
-        trace("player-entry", "hosts=${entries.map { runCatching { URI(it).host }.getOrNull() }}")
-
-        // SourceLink's field names are not visible from this file, so no de-duplication by URL here;
-        // entries are already a set of distinct player URLs.
-        val out = ArrayList<SourceLink>()
-        for (entry in entries) out.addAll(resolvePlayer(entry, episodeUrl))
-        trace("resolve", "links=${out.size}")
-        return out
+        trace("resolve", "players=" + seen.size)
     }
 
     private suspend fun findEpisodeUrl(seriesUrl: String, series: Document, season: Int, episode: Int): String? {
@@ -273,8 +265,7 @@ class DiziBoxAdapter(private val origin: String = "https://www.dizibox.live") : 
 
     /**
      * Supported chains: dizibox king.php / moly.php / haydi.php -> Molystream embed -> HLS master.
-     * v28 hands every other host to Cloudstream's loadExtractor(); this adapter has no equivalent,
-     * so unknown hosts are traced ("unsupported-host") and skipped. That is the main remaining gap.
+     * Other hosts use CloudStream's extractor registry. Preserve its playback metadata.
      */
     private suspend fun resolvePlayer(iframe: String, referer: String, depth: Int = 0): List<SourceLink> {
         if (depth >= 4) { trace("player", "depth-limit"); return emptyList() }
@@ -313,20 +304,23 @@ class DiziBoxAdapter(private val origin: String = "https://www.dizibox.live") : 
                 rawCount++
                 val uri = runCatching { URI(link.url) }.getOrNull()
                 if (uri?.scheme == "https" && uri.host != null && uri.userInfo == null) {
-                    val hls = uri.path.orEmpty().endsWith(".m3u8", ignoreCase = true) ||
+                    val hls = link.type == ExtractorLinkType.M3U8 || uri.path.orEmpty().endsWith(".m3u8", ignoreCase = true) ||
                         uri.path.orEmpty().startsWith("/embed/sheila/")
                     result.add(SourceLink(
                         id, link.url, link.quality.takeIf { it > 0 }, null, null,
                         referer = link.referer, isHls = hls,
                         displayName = link.name.takeIf { it.isNotBlank() },
-                        subtitles = extractedSubtitles.distinctBy { it.language to it.url }
+                        subtitles = extractedSubtitles.distinctBy { it.language to it.url },
+                        headers = link.headers
                     ))
                 } else rejectedCount++
             })
         } catch (cancel: CancellationException) { throw cancel }
           catch (error: Exception) { trace("extractor-error", error.javaClass.simpleName) }
         trace("cloudstream-extractor", "host=${runCatching { URI(url).host }.getOrNull()} matched=$extractorMatched raw=$rawCount rejected=$rejectedCount accepted=${result.size}")
-        return result.distinctBy { it.url }
+        // Extractors may deliver subtitle callbacks after a link callback.
+        return result.map { it.copy(subtitles = extractedSubtitles.distinctBy { sub -> sub.language to sub.url }) }
+            .distinctBy { it.url }
     }
 
     private fun firstIframe(html: String, pageUrl: String): String? {
@@ -482,12 +476,11 @@ class DiziBoxAdapter(private val origin: String = "https://www.dizibox.live") : 
         if (uri.scheme != "https" || uri.userInfo != null || !isMolyHost(uri.host)) return emptyList()
         val response = fetch(url, referer = referer)?.text ?: return emptyList()
         if (!response.trimStart().startsWith("#EXTM3U")) { trace("playlist", "not-m3u8; bytes=${response.length}"); return emptyList() }
-        val heights = Regex("""RESOLUTION=\d+x(\d+)""", RegexOption.IGNORE_CASE)
-            .findAll(response).mapNotNull { it.groupValues[1].toIntOrNull() }.toList()
-        val quality = heights.maxOrNull()
+        val info = HlsPlaylistInfo.parse(response)
+        val quality = info.quality
         trace("playlist", "verified quality=${quality ?: "adaptive"}")
         return listOf(SourceLink(id, url, quality, null, null,
             referer = referer, isHls = true,
-            displayName = "DiziBox"))
+            displayName = "DiziBox", isAdaptive = info.adaptive))
     }
 }
