@@ -81,52 +81,6 @@ open class HDFilmCehennemiAdapter(
             .findAll(body).mapNotNull { it.groupValues[1].toIntOrNull() }.maxOrNull()
 
 
-    // A file field may reference a calculated JavaScript identifier.
-    private fun decryptPlayerUrl(html: String): String? {
-        val scripts = Jsoup.parse(html).select("script").map { it.data() }.filter { it.isNotBlank() }
-        val packed = scripts.filter { it.contains("eval(function(p,a,c,k,e") }
-        val unpacked = packed.mapNotNull { runCatching { getAndUnpack(it) }.getOrNull() }
-        val fileMarker = Regex("""file:\s*([a-zA-Z0-9_$]+)[,\s}]""")
-        val splitVariable = Regex("""var\s+([a-zA-Z0-9_$]+)\s*=\s*[a-zA-Z0-9_$]+\([\s\S]*?\.split\(""")
-        val variable = unpacked.firstNotNullOfOrNull { fileMarker.find(it)?.groupValues?.get(1) }
-            ?: fileMarker.findAll(html).lastOrNull()?.groupValues?.get(1)
-            ?: unpacked.firstNotNullOfOrNull { splitVariable.find(it)?.groupValues?.get(1) }
-        if (variable.isNullOrBlank()) {
-            trace("local", "decrypt-no-variable scripts=" + scripts.size + " packed=" + packed.size)
-            return null
-        }
-        val declaration = Regex("""\b(?:var|let|const)\s+""" + Regex.escape(variable) + """\b""")
-        val code = unpacked.firstOrNull { it.contains("var " + variable) }
-            ?: scripts.firstOrNull { it.contains("var " + variable) }
-            ?: scripts.firstOrNull { declaration.containsMatchIn(it) }
-            ?: unpacked.firstOrNull { declaration.containsMatchIn(it) }
-        if (code.isNullOrBlank() || code.length > 150_000) {
-            trace("local", "decrypt-no-script scripts=" + scripts.size + " unpacked=" + unpacked.size)
-            return null
-        }
-        return try {
-            val context = org.mozilla.javascript.Context.enter()
-            try {
-                context.optimizationLevel = -1
-                val scope = context.initSafeStandardObjects()
-                context.evaluateString(scope, NL_POLYFILLS, "polyfills", 1, null)
-                context.evaluateString(scope, code, "nl-player", 1, null)
-                val value = org.mozilla.javascript.ScriptableObject.getProperty(scope, variable)
-                org.mozilla.javascript.Context.toString(value).takeIf {
-                    it.startsWith("https://") || it.startsWith("http://")
-                }.also { trace("local", "decrypt-url=" + (it != null) + " unpacked=" + unpacked.size) }
-            } finally {
-                org.mozilla.javascript.Context.exit()
-            }
-        } catch (e: Exception) {
-            trace("local", "decrypt-failed=" + e.javaClass.simpleName)
-            null
-        } catch (e: LinkageError) {
-            trace("local", "rhino-unavailable=" + e.javaClass.simpleName)
-            null
-        }
-    }
-
     private suspend fun landPlayers(doc: org.jsoup.nodes.Document, pageUrl: String): List<Pair<String, String>> {
         val html = doc.outerHtml()
         val nonce = listOf(
@@ -166,31 +120,6 @@ open class HDFilmCehennemiAdapter(
         return out
     }
 
-    companion object {
-        private val NL_POLYFILLS = """
-            var b64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
-            function atob(input) {
-                var str = String(input).replace(/=+$/, ''), output = '';
-                for (var bc=0, bs, buffer, idx=0; buffer=str.charAt(idx++);
-                    ~buffer && (bs=bc%4 ? bs*64+buffer : buffer, bc++%4) ?
-                    output+=String.fromCharCode(255 & bs >> (-2*bc & 6)) : 0) {
-                    buffer=b64.indexOf(buffer);
-                }
-                return output;
-            }
-            function btoa(input) {
-                var str=String(input), output='';
-                for (var block, charCode, idx=0, map=b64;
-                    str.charAt(idx | 0) || (map='=', idx%1);
-                    output+=map.charAt(63 & block >> 8-idx%1*8)) {
-                    charCode=str.charCodeAt(idx+=3/4);
-                    block=block<<8 | charCode;
-                }
-                return output;
-            }
-        """
-    }
-
     private suspend fun localSource(url: String, label: String): List<SourceLink> {
         val response = try { app.get(url, headers = playerHeaders, referer = base + "/") }
             catch (cancel: CancellationException) { throw cancel }
@@ -200,20 +129,19 @@ open class HDFilmCehennemiAdapter(
             return emptyList()
         }
         val html = response.text
-        val viaJs = decryptPlayerUrl(html)
         val scripts = Jsoup.parse(html).select("script").map { it.data() }.filter { it.isNotBlank() }
         val unpacked = scripts.filter { it.contains("eval(function(p,a,c,k,e") }
             .mapNotNull { runCatching { getAndUnpack(it) }.getOrNull() }
         val combined = (scripts + unpacked).joinToString("\n")
         trace("local", "shape scripts=" + scripts.size + " packed=" + unpacked.size +
             " fileIdent=" + Regex("""file:\s*[A-Za-z0-9_$]+[,\s}]""").containsMatchIn(html) +
-            " decoded=" + (viaJs != null))
+            " directCandidates=" + (scripts.size + unpacked.size))
         val encoded = Regex("""file_link\s*[:=]\s*["\x27]([^"\x27]+)["\x27]""")
             .find(combined)?.groupValues?.get(1)
         val decoded = encoded?.let { runCatching { String(Base64.decode(it, Base64.DEFAULT), Charsets.UTF_8) }.getOrNull() }
         val direct = Regex("""(?:file|src|source|url)\s*[:=]\s*["\x27](https?://[^"\x27\s]+(?:\.m3u8|\.mp4)(?:\?[^"\x27]*)?)["\x27]""", RegexOption.IGNORE_CASE)
             .find(combined)?.groupValues?.get(1)
-        val stream = listOfNotNull(viaJs, decoded, direct)
+        val stream = listOfNotNull(decoded, direct)
             .firstOrNull { it.startsWith("https://") || it.startsWith("http://") }
             ?: run { trace("local", "missing-stream-url"); return emptyList() }
         val subtitles = Regex("""\{[^{}]*?file\s*:\s*["']([^"']+)["'][^{}]*?label\s*:\s*["']([^"']+)["'][^{}]*?kind\s*:\s*["']captions["'][^{}]*?}""", RegexOption.IGNORE_CASE)
@@ -230,7 +158,7 @@ open class HDFilmCehennemiAdapter(
             "User-Agent" to playerHeaders.getValue("User-Agent"),
             "Accept" to "*/*"
         )
-        val isHls = viaJs != null || stream.substringBefore('?').endsWith(".m3u8", true)
+        val isHls = stream.substringBefore('?').endsWith(".m3u8", true)
         // Never GET a complete MP4 just to determine its quality.
         val quality = if (isHls) {
             try {
