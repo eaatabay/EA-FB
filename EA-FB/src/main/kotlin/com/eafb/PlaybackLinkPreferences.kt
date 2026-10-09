@@ -28,7 +28,7 @@ object PlaybackLinkSelector {
         require(nowMillis >= 0)
         return SourcePicker.unique(links)
             .asSequence()
-            .filter { it.url.startsWith("https://") && !it.requiresPrivateSession }
+            .filter { SourceLinkPolicy.isPlaybackUrl(it) && !it.requiresPrivateSession }
             .filter { it.expiresAtMillis == null || it.expiresAtMillis > nowMillis }
             .filter { preferences.providerId == null || it.provider == preferences.providerId }
             .filter { preferences.audioLanguage == null ||

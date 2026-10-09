@@ -20,7 +20,8 @@ data class MediaOffer(
     val pageUrl: String,
     val tmdbId: Int? = null,
     val season: Int? = null,
-    val episode: Int? = null
+    val episode: Int? = null,
+    val playbackData: String? = null
 ) {
     init { require((season == null && episode == null) ||
         (kind == MediaKind.SERIES && season != null && season >= 0 &&
@@ -94,7 +95,7 @@ class MultiSourceEngine(
                     }
                 }
             }
-        }.awaitAll().flatten().distinctBy { it.providerId to it.pageUrl }
+        }.awaitAll().flatten().distinctBy { Triple(it.providerId, it.pageUrl, it.playbackData) }
     }
 
     suspend fun resolve(
@@ -111,7 +112,7 @@ class MultiSourceEngine(
         require(maxQuality > 0)
         val links = offers.asSequence()
             .filter { it.pageUrl.startsWith("https://") }
-            .distinctBy { it.providerId to it.pageUrl }
+            .distinctBy { Triple(it.providerId, it.pageUrl, it.playbackData) }
             .take(32)
             .mapNotNull { offer -> lookup[offer.providerId]?.let { it to offer } }
             .toList()
@@ -151,7 +152,7 @@ class MultiSourceEngine(
                 offer.pageUrl.startsWith("https://") && sameContent(query, offer)
         }.sortedWith(compareBy<MediaOffer> {
             rank[it.providerId] ?: Int.MAX_VALUE
-        }).distinctBy { it.providerId to it.pageUrl }.take(32)
+        }).distinctBy { Triple(it.providerId, it.pageUrl, it.playbackData) }.take(32)
         for (offer in ordered) {
             val adapter = installed[offer.providerId] ?: continue
             val links = resolveAdapter(adapter, offer)
@@ -167,8 +168,8 @@ class MultiSourceEngine(
     private suspend fun resolveAdapter(adapter: MediaSourceAdapter, offer: MediaOffer): List<SourceLink> {
         val accepted = mutableListOf<SourceLink>()
         fun accept(link: SourceLink) {
-            if (link.provider == adapter.id && link.url.startsWith("https://") && !link.requiresPrivateSession)
-                accepted += link
+            if (link.provider == adapter.id && SourceLinkPolicy.isPlaybackUrl(link) && !link.requiresPrivateSession)
+                synchronized(accepted) { accepted += link }
         }
         try {
             withTimeout(perAdapterTimeoutMs) {
@@ -183,7 +184,7 @@ class MultiSourceEngine(
             Log.w("EA-FB-Source", "resolve failed provider=${adapter.id} error=${error.javaClass.simpleName} retained=${accepted.size}")
         }
         Log.i("EA-FB-Source", "resolve provider=${adapter.id} links=${accepted.size}")
-        return accepted.toList()
+        return synchronized(accepted) { accepted.toList() }
     }
 
     private fun sameContent(query: MediaQuery, offer: MediaOffer): Boolean {

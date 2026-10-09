@@ -75,12 +75,14 @@ data class SourceLink(
     val subtitles: List<SourceSubtitle> = emptyList(),
     val headers: Map<String, String> = emptyMap(),
     // True only after seeing variant entries in an HLS master, never just by extension.
-    val isAdaptive: Boolean = false
+    val isAdaptive: Boolean = false,
+    val isLandLoopback: Boolean = false
 )
 
 data class SourceSubtitle(
     val language: String,
-    val url: String
+    val url: String,
+    val headers: Map<String, String> = emptyMap()
 )
 
 /** Do not store user-specific links in a shared cache. Cache implementation is postponed. */
@@ -115,6 +117,18 @@ object ChannelMerger {
 }
 
 object SourceLinkPolicy {
+    fun isPlaybackUrl(link: SourceLink): Boolean = link.url.startsWith("https://") ||
+        (link.provider == "hdfilmcehennemi-land" && link.isLandLoopback && link.isHls && isLandLoopback(link.url))
+
+    /** Only the pinned Bronze LAND local playlist server, never arbitrary HTTP. */
+    fun isLandLoopback(raw: String, subtitle: Boolean = false): Boolean = runCatching {
+        val uri = java.net.URI(raw)
+        val path = if (subtitle) Regex("""/[A-Za-z0-9_-]+\.(?:vtt|srt)""")
+            else Regex("""/master_[A-Za-z0-9_-]+\.m3u8""")
+        uri.scheme == "http" && uri.host == "127.0.0.1" && uri.port in 1..65535 &&
+            uri.userInfo == null && uri.query == null && uri.fragment == null && path.matches(uri.path.orEmpty())
+    }.getOrDefault(false)
+
     fun compatibleQuality(link: SourceLink, maxQuality: Int): Boolean =
         link.quality == null || link.quality in 1..maxQuality || (link.isHls && link.isAdaptive)
 }

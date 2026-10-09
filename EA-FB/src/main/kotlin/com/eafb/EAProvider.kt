@@ -948,6 +948,8 @@ class EAProvider : MainAPI() {
                     val providerLabel = when (group.providerId.lowercase(Locale.ROOT)) {
                         "dizibox" -> "DiziBox"
                         "diziyou" -> "DiziYou"
+                        "hdfilmcehennemi-nl" -> "NL"
+                        "hdfilmcehennemi-land" -> "LAND"
                         else -> group.providerId
                     }
                     val languageLabel = when {
@@ -961,7 +963,9 @@ class EAProvider : MainAPI() {
                     val displayName = source.displayName
                         ?: listOfNotNull(providerLabel, languageLabel).joinToString(" • ")
                     source.subtitles.distinctBy { it.language to it.url }.forEach { subtitle ->
-                        subtitleCallback(SubtitleFile(subtitle.language, subtitle.url))
+                        subtitleCallback(SubtitleFile(subtitle.language, subtitle.url).apply {
+                            headers = subtitle.headers.takeIf { it.isNotEmpty() }
+                        })
                     }
                     callback(newExtractorLink(
                         providerLabel, displayName, source.url,

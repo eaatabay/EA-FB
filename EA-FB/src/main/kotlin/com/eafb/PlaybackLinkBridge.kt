@@ -74,7 +74,7 @@ class PlaybackSourceRuntime(
  */
 object PlaybackLinkBridge {
     private val installedAdapters: List<MediaSourceAdapter> =
-        listOf(DiziYouAdapter(), DiziBoxAdapter())
+        listOf(DiziYouAdapter(), DiziBoxAdapter(), BronzeNlAdapter(), BronzeLandAdapter())
 
     private fun enabledAdapters(): List<MediaSourceAdapter> =
         installedAdapters.filter { EASettings.sourceEnabled(it.id) }
