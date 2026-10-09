@@ -25,7 +25,7 @@ import java.util.concurrent.ConcurrentHashMap
 
 /** TV-only styling for future EA-FB episodes; movie details are never registered. */
 internal object EpisodeUpcomingStyle {
-    private const val PROVIDER = "EA-FB V6 STAGING"
+    private const val PROVIDER = "EA-FB V65 LAND TEST"
     private const val BADGE_TAG = "ea-fb-upcoming-badge"
     private const val DATE_TAG = "ea-fb-upcoming-date" // V30
     private val main = Handler(Looper.getMainLooper())
