@@ -6,6 +6,7 @@ on:
       - '.github/workflows/publish-v65-land-test.yml'
       - 'EA-FB/src/main/kotlin/com/eafb/**'
       - 'EA-FB/build.gradle.kts'
+      - 'config/backend.v65-land-test.json'
       - 'core-tests/LandFastPlayCodecTest.kt'
       - 'scripts/test-land-codec.sh'
   workflow_dispatch:
