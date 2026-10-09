@@ -40,3 +40,4 @@ for suite in DomainTest SourceEngineTest PlaybackDataTest PlaybackQueryTest Dizi
 done
 
 python3 -m unittest discover -s tests -p 'test_bronze*.py' -v
+python3 -m unittest discover -s tests -p 'test_clean_codex*.py' -v

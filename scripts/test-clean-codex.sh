@@ -23,7 +23,7 @@ test -f "$coroutines"
 classpath="$coroutines:$test_cache/jsoup-1.18.3.jar:$test_cache/json-20240303.jar"
 source_dir=EA-FB/src/main/kotlin/com/eafb
 sources=()
-for name in Domain CatalogSortPolicy CleanTestIdentity EASettings SourceEngine SourceSearchTitles HlsPlaylistInfo DiziBoxAdapter DiziYouAdapter DiziYouEpisodeParser PlaybackData PlaybackQuery PlaybackSourceGate PlaybackSourceHealth PlaybackLinkPreferences PlaybackLinkBridge; do
+for name in Domain CatalogSortPolicy CleanTestIdentity EASettings SourceEngine SourceSearchTitles HlsPlaylistInfo DiziBoxAdapter DiziYouAdapter BronzeApiAdapter DiziYouEpisodeParser PlaybackData PlaybackQuery PlaybackSourceGate PlaybackSourceHealth PlaybackLinkPreferences PlaybackLinkBridge; do
   sources+=("$source_dir/$name.kt")
 done
 kotlinc -cp "$classpath" "${sources[@]}" \
