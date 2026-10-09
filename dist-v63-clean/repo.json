@@ -1,6 +1,6 @@
 {
-  "name": "EA-FB V64 CLEAN",
-  "description": "Isolated V64 clean, does not replace RED V80",
+  "name": "EA-FB V65 LAND TEST",
+  "description": "Existing V64 CLEAN repository updated to V65 LAND TEST; exact V64 snapshot remains frozen in archive/frozen-v64-complete-20261009",
   "manifestVersion": 1,
   "pluginLists": [
     "https://raw.githubusercontent.com/eaatabay/EA-FB/test/v63-bronze-cleanroom-20261008/dist-v63-clean/plugins.json"
