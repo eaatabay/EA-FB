@@ -1,0 +1,23 @@
+[
+  {
+    "fileHash": "sha256-89dfc4ac1d5f737364e1cbc21e62a2846e8cf6b5cc563df89c9e54c166be9480",
+    "fileSize": 244782,
+    "apiVersion": 1,
+    "repositoryUrl": "https://github.com/eaatabay/EA-FB",
+    "status": 3,
+    "language": "tr",
+    "authors": [
+      "EA-FB"
+    ],
+    "tvTypes": [
+      "Movie",
+      "TvSeries",
+      "Live"
+    ],
+    "version": 66,
+    "internalName": "EA-FB-CODEX-CLEAN-20261009",
+    "name": "EA-FB CODEX CLEAN TEST",
+    "description": "Isolated CODEX CLEAN test: DiziBox and DiziYou only; Mi Box playback unverified",
+    "url": "https://raw.githubusercontent.com/eaatabay/EA-FB/test/clean-codex-fix-20261009/dist-clean-codex-fix-20261009/EA-FB-CODEX-CLEAN-20261009.cs3"
+  }
+]

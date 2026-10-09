@@ -1,0 +1,8 @@
+{
+  "name": "EA-FB CODEX CLEAN TEST",
+  "description": "Isolated CODEX test; does not update CLEAN, RED or BLUE",
+  "manifestVersion": 1,
+  "pluginLists": [
+    "https://raw.githubusercontent.com/eaatabay/EA-FB/test/clean-codex-fix-20261009/dist-clean-codex-fix-20261009/plugins.json"
+  ]
+}

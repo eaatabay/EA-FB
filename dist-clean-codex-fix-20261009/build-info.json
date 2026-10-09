@@ -1,0 +1,9 @@
+{
+  "sourceCommit": "483543764fd4784b1e18479e36c78da6dae1d7ff",
+  "branch": "test/clean-codex-fix-20261009",
+  "adapters": [
+    "dizibox",
+    "diziyou"
+  ],
+  "dexSha256": "920f3b140c576b170ebd8c20e92bc2ddd41075230d5396e0f789d968d8d51bb9"
+}
