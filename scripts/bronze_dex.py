@@ -71,4 +71,3 @@ class Dex:
    print('METHOD',self.methods[idx],'source',sf,'code_offset',hex(code))
    for p,op,arg,raw in self.instructions(idx):
     if arg or detail:print(hex(p),hex(op),arg,raw if detail else '')
-
