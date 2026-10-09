@@ -47,6 +47,14 @@ interface MediaSourceAdapter {
     suspend fun resolve(offer: MediaOffer): List<SourceLink>
 }
 
+/** Optional incremental delivery; implementations call emit sequentially in this coroutine. */
+interface ProgressiveMediaSourceAdapter : MediaSourceAdapter {
+    suspend fun resolveIncrementally(offer: MediaOffer, emit: (SourceLink) -> Unit)
+    override suspend fun resolve(offer: MediaOffer): List<SourceLink> = buildList {
+        resolveIncrementally(offer) { add(it) }
+    }
+}
+
 /** Concurrent independent source resolution. No DRM bypass and no shared cache. */
 class MultiSourceEngine(
     adapters: List<MediaSourceAdapter>,
@@ -109,24 +117,12 @@ class MultiSourceEngine(
             .map { (adapter, offer) ->
                 async(Dispatchers.IO) {
                     guard.withPermit {
-                        try {
-                            withTimeout(perAdapterTimeoutMs) {
-                                adapter.resolve(offer).also { Log.i("EA-FB-Source", "resolve provider=${adapter.id} links=${it.size}") }.filter { it.provider == adapter.id && it.url.startsWith("https://") &&
-                                    !it.requiresPrivateSession }
-                            }
-                        } catch (_: TimeoutCancellationException) {
-                            Log.w("EA-FB-Source", "resolve timeout provider=${adapter.id}")
-                            emptyList()
-                        } catch (cancel: CancellationException) {
-                            throw cancel
-                        } catch (_: Exception) {
-                            emptyList()
-                        }
+                        resolveAdapter(adapter, offer)
                     }
                 }
             }.awaitAll().flatten()
         SourcePicker.preferred(links, nowMillis, preferredLanguage, maxQuality)
-            .filter { it.quality == null || it.quality in 1..maxQuality }
+            .filter { SourceLinkPolicy.compatibleQuality(it, maxQuality) }
     }
 
     /**
@@ -157,27 +153,36 @@ class MultiSourceEngine(
         }).distinctBy { it.providerId to it.pageUrl }.take(32)
         for (offer in ordered) {
             val adapter = installed[offer.providerId] ?: continue
-            val links = try {
-                withTimeout(perAdapterTimeoutMs) {
-                    adapter.resolve(offer).filter { link ->
-                        link.provider == adapter.id && link.url.startsWith("https://") &&
-                            !link.requiresPrivateSession
-                    }
-                }
-            } catch (_: TimeoutCancellationException) {
-                emptyList()
-            } catch (cancel: CancellationException) {
-                throw cancel
-            } catch (_: Exception) {
-                emptyList()
-            }
+            val links = resolveAdapter(adapter, offer)
             val selected = SourcePicker.preferred(
                 links, nowMillis, preferredLanguage, maxQuality
             )
-            val compatible = selected.filter { it.quality == null || it.quality in 1..maxQuality }
+            val compatible = selected.filter { SourceLinkPolicy.compatibleQuality(it, maxQuality) }
             if (compatible.isNotEmpty()) return compatible
         }
         return emptyList()
+    }
+
+    private suspend fun resolveAdapter(adapter: MediaSourceAdapter, offer: MediaOffer): List<SourceLink> {
+        val accepted = mutableListOf<SourceLink>()
+        fun accept(link: SourceLink) {
+            if (link.provider == adapter.id && link.url.startsWith("https://") && !link.requiresPrivateSession)
+                accepted += link
+        }
+        try {
+            withTimeout(perAdapterTimeoutMs) {
+                if (adapter is ProgressiveMediaSourceAdapter) adapter.resolveIncrementally(offer, ::accept)
+                else adapter.resolve(offer).forEach(::accept)
+            }
+        } catch (_: TimeoutCancellationException) {
+            Log.w("EA-FB-Source", "resolve timeout provider=${adapter.id} retained=${accepted.size}")
+        } catch (cancel: CancellationException) {
+            throw cancel
+        } catch (error: Exception) {
+            Log.w("EA-FB-Source", "resolve failed provider=${adapter.id} error=${error.javaClass.simpleName} retained=${accepted.size}")
+        }
+        Log.i("EA-FB-Source", "resolve provider=${adapter.id} links=${accepted.size}")
+        return accepted.toList()
     }
 
     private fun sameContent(query: MediaQuery, offer: MediaOffer): Boolean {

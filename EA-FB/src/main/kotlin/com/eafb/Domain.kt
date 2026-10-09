@@ -73,7 +73,9 @@ data class SourceLink(
     val isHls: Boolean = false,
     val displayName: String? = null,
     val subtitles: List<SourceSubtitle> = emptyList(),
-    val headers: Map<String, String> = emptyMap()
+    val headers: Map<String, String> = emptyMap(),
+    // True only after seeing variant entries in an HLS master, never just by extension.
+    val isAdaptive: Boolean = false
 )
 
 data class SourceSubtitle(
@@ -110,4 +112,9 @@ object ChannelMerger {
                 links = SourcePicker.unique(variants.flatMap { it.links })
             )
         }
+}
+
+object SourceLinkPolicy {
+    fun compatibleQuality(link: SourceLink, maxQuality: Int): Boolean =
+        link.quality == null || link.quality in 1..maxQuality || (link.isHls && link.isAdaptive)
 }
