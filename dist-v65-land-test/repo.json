@@ -1,0 +1,8 @@
+{
+  "name": "EA-FB V65 LAND TEST",
+  "description": "Only experimental LAND on isolated branch; does not replace V64 CLEAN",
+  "manifestVersion": 1,
+  "pluginLists": [
+    "https://raw.githubusercontent.com/eaatabay/EA-FB/test/land-fastplay-isolated-20261009/dist-v65-land-test/plugins.json"
+  ]
+}

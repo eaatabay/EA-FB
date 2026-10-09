@@ -1,0 +1,23 @@
+[
+  {
+    "fileHash": "sha256-00788d06f485bb650fc00aec9d44faf474fb1e44fe8b84bbbe0201602dd8de70",
+    "apiVersion": 1,
+    "repositoryUrl": "https://github.com/eaatabay/EA-FB",
+    "fileSize": 266906,
+    "status": 3,
+    "language": "tr",
+    "authors": [
+      "EA-FB"
+    ],
+    "tvTypes": [
+      "Movie",
+      "TvSeries",
+      "Live"
+    ],
+    "version": 65,
+    "internalName": "EA-FB-V65-LAND-TEST",
+    "description": "V64 layout unchanged; isolated opt-in experimental LAND FastPlay",
+    "url": "https://raw.githubusercontent.com/eaatabay/EA-FB/test/land-fastplay-isolated-20261009/dist-v65-land-test/EA-FB-V65-LAND-TEST.cs3",
+    "name": "EA-FB V65 LAND TEST"
+  }
+]
