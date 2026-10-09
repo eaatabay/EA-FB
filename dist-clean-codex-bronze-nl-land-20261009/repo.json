@@ -1,0 +1,8 @@
+{
+  "name": "EA-FB CODEX BRONZE NL LAND TEST",
+  "description": "Isolated CODEX test; does not update CLEAN, RED or BLUE",
+  "manifestVersion": 1,
+  "pluginLists": [
+    "https://raw.githubusercontent.com/eaatabay/EA-FB/test/clean-codex-bronze-nl-land-20261009/dist-clean-codex-bronze-nl-land-20261009/plugins.json"
+  ]
+}

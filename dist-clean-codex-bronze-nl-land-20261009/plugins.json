@@ -1,0 +1,23 @@
+[
+  {
+    "fileHash": "sha256-e9ebd976fa0f083752689d76735330a4e50892bc8a828479c46b78bb32bd9942",
+    "fileSize": 322124,
+    "apiVersion": 1,
+    "repositoryUrl": "https://github.com/eaatabay/EA-FB",
+    "status": 3,
+    "language": "tr",
+    "authors": [
+      "EA-FB"
+    ],
+    "tvTypes": [
+      "Movie",
+      "TvSeries",
+      "Live"
+    ],
+    "version": 81,
+    "internalName": "EA-FB-CODEX-BRONZE-NL-LAND-20261009",
+    "name": "EA-FB CODEX BRONZE NL LAND TEST",
+    "description": "Isolated CODEX Bronze integration test: DiziBox, DiziYou, Bronze NL v52 and LAND v4; new integration playback unverified",
+    "url": "https://raw.githubusercontent.com/eaatabay/EA-FB/test/clean-codex-bronze-nl-land-20261009/dist-clean-codex-bronze-nl-land-20261009/EA-FB-CODEX-BRONZE-NL-LAND-20261009.cs3"
+  }
+]
