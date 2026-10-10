@@ -30,12 +30,12 @@ kotlinc -cp "$classpath" "${sources[@]}" \
   core-tests/clean/android/content/Context.kt core-tests/clean/android/util/*.kt \
   core-tests/clean/com/lagradost/cloudstream3/Fixtures.kt \
   core-tests/clean/com/lagradost/cloudstream3/utils/Extractors.kt \
-  core-tests/clean/Clean*Test.kt core-tests/clean/BronzeAdaptersTest.kt core-tests/clean/BronzeBridgeTest.kt core-tests/clean/BundledBronzeFixtures.kt \
+  core-tests/clean/Clean*Test.kt core-tests/clean/BronzeAdaptersTest.kt core-tests/clean/BronzeFilmSearchTest.kt core-tests/clean/BronzeBridgeTest.kt core-tests/clean/BundledBronzeFixtures.kt \
   core-tests/DomainTest.kt core-tests/SourceEngineTest.kt core-tests/PlaybackDataTest.kt \
   core-tests/PlaybackQueryTest.kt core-tests/DiziYouEpisodeParserTest.kt \
   core-tests/PlaybackSourceHealthTest.kt \
   -include-runtime -d "$task_tmp/clean-tests.jar"
-for suite in DomainTest SourceEngineTest PlaybackDataTest PlaybackQueryTest DiziYouEpisodeParserTest PlaybackSourceHealthTest CleanSettingsTest CleanEngineTest CleanAdaptersTest BronzeAdaptersTest BronzeBridgeTest; do
+for suite in DomainTest SourceEngineTest PlaybackDataTest PlaybackQueryTest DiziYouEpisodeParserTest PlaybackSourceHealthTest CleanSettingsTest CleanEngineTest CleanAdaptersTest BronzeAdaptersTest BronzeFilmSearchTest BronzeBridgeTest; do
   java -cp "$task_tmp/clean-tests.jar:$classpath" "com.eafb.${suite}Kt"
 done
 
