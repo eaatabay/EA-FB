@@ -1,0 +1,84 @@
+name: EA-FB V83 isolated test package
+
+on:
+  push:
+    branches: [test/ea-fb-v83-bronze-search-fix]
+    paths:
+      - 'EA-FB/**'
+      - 'core-tests/**'
+      - 'scripts/test-bronze-nl-land.sh'
+      - 'scripts/package-v83.py'
+      - 'scripts/bronze_dex.py'
+      - 'docs/v83/SOURCE*'
+      - 'tests/test_bronze*.py'
+      - 'tests/test_v83*.py'
+      - '.github/workflows/v83-test.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ea-fb-v83-bronze-search-fix
+  cancel-in-progress: false
+
+jobs:
+  test-build-publish:
+    if: github.repository == 'eaatabay/EA-FB' && github.ref == 'refs/heads/test/ea-fb-v83-bronze-search-fix'
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+          fetch-depth: 0
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.12'
+      - name: Install pinned Kotlin compiler for offline fixture tests
+        shell: bash
+        run: |
+          curl --fail --silent --show-error --location --retry 2 https://github.com/JetBrains/kotlin/releases/download/v2.4.0/kotlin-compiler-2.4.0.zip -o "$RUNNER_TEMP/kotlin.zip"
+          printf '%s  %s\n' ba1b9e6eb6ddc3275079224f2e9ea4a2b02eef7d59ce2d38404f04b22613c20a "$RUNNER_TEMP/kotlin.zip" | sha256sum -c -
+          unzip -q "$RUNNER_TEMP/kotlin.zip" -d "$RUNNER_TEMP/clean-kotlin"
+          echo "$RUNNER_TEMP/clean-kotlin/kotlinc/bin" >> "$GITHUB_PATH"
+      - name: Run real adapter fixtures and source engine regressions
+        run: |
+          bash scripts/test-bronze-nl-land.sh
+          PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p "test_v83*.py" -v
+      - name: Install pinned D8 merge tool
+        run: |
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "build-tools;35.0.0"
+      - name: Build only the isolated Android plugin
+        run: |
+          bash scripts/prepare-cloudstream-gradle.sh
+          gradle :EA-FB:make --no-daemon --console=plain
+      - name: Package and verify isolated identity and exact final bytes
+        run: |
+          python3 scripts/package-v83.py EA-FB/build/EA-FB.cs3
+          python3 scripts/package-v83.py --verify
+      - uses: actions/upload-artifact@v4
+        with:
+          name: EA-FB-V83-TEST
+          path: dist-v83-test/
+          if-no-files-found: error
+      - name: Publish only the new branch distribution
+        shell: bash
+        run: |
+          test "$(git branch --show-current)" = test/ea-fb-v83-bronze-search-fix
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -f -- dist-v83-test/
+          if git diff --cached --quiet; then exit 0; fi
+          python3 - <<'PY'
+          import subprocess
+          files = subprocess.check_output(['git', 'diff', '--cached', '--name-only'], text=True).splitlines()
+          assert files and all(p.startswith('dist-v83-test/') for p in files), files
+          PY
+          git commit -m 'release(v83): publish isolated test CS3 [skip ci]'
+          # Normal push fails on a concurrent update; never force or update another ref.
+          git push origin HEAD:refs/heads/test/ea-fb-v83-bronze-search-fix

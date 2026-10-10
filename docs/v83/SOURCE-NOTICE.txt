@@ -1,0 +1,16 @@
+EA-FB V83 TEST: original binary input attribution follows.
+V83 wrappers/build: https://github.com/eaatabay/EA-FB/tree/test/ea-fb-v83-bronze-search-fix
+The V81 input notice below is historical provenance; V83 device playback has not been tested.
+
+Bronze runtime attribution and provenance
+Upstream: https://github.com/dr-octagon/Cloudstream-BronzeCloud
+Provided master archive: edab1db4cb275e3706b4749fbdb4ab1eb222b9f0
+Provided builds archive / pinned binaries: 7f680cd5ef2ad8be2dc579b1e46b53ba3e28d4cd
+NL: HDFilmCehennemi_v52.cs3, SHA256 62069a271af4837d84131a11c274ee5248b5ff4329f86855a7c15168feca501a
+LAND: HDFilmcehennemiLand_v4.cs3, SHA256 3342b06358b64b32a6c5f8b463958d2d40faa4f69359447eb1d88d05b38b8c80
+The supplied master archive contains GPL-3.0 license text, but no adapter Kotlin sources.
+This test package merges the original compiled Bronze runtime classes. It does not claim to supply recovered original Kotlin source or verify upstream source/binary correspondence.
+EA-FB wrappers and build scripts are available on test/clean-codex-bronze-nl-land-20261009.
+Bronze plugin entrypoints are not invoked; the EA-FB test provider delegates only the two MainAPI implementations.
+Original method instruction sequences are verified after DEX table relocation.
+No NL/LAND device playback or licensed live stream test has been completed for this integration.
