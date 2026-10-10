@@ -1,0 +1,8 @@
+{
+  "name": "EA-FB V83 TEST",
+  "description": "EA-FB V83 isolated test repository",
+  "manifestVersion": 1,
+  "pluginLists": [
+    "https://raw.githubusercontent.com/eaatabay/EA-FB/test/ea-fb-v83-bronze-search-fix/dist-v83-test/plugins.json"
+  ]
+}

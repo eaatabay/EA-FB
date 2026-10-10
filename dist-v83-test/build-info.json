@@ -1,0 +1,22 @@
+{
+  "sourceCommit": "f014f4e544d14f9d33593edf26bd438a9ee06058",
+  "branch": "test/ea-fb-v83-bronze-search-fix",
+  "bronzeRef": "7f680cd5ef2ad8be2dc579b1e46b53ba3e28d4cd",
+  "bronzeInputs": {
+    "HDFilmCehennemi_v52.cs3": [
+      52,
+      "62069a271af4837d84131a11c274ee5248b5ff4329f86855a7c15168feca501a"
+    ],
+    "HDFilmcehennemiLand_v4.cs3": [
+      4,
+      "3342b06358b64b32a6c5f8b463958d2d40faa4f69359447eb1d88d05b38b8c80"
+    ]
+  },
+  "adapters": [
+    "dizibox",
+    "diziyou",
+    "hdfilmcehennemi-nl",
+    "hdfilmcehennemi-land"
+  ],
+  "dexSha256": "6299ab457279aebe3c48093ce2ffb51d3d6e7765276c2ab8061a1caac04e28fd"
+}
