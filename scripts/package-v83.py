@@ -166,15 +166,32 @@ def verify_runtime(dex, root):
     current = {final.methods[i]: i for i in final.code}
     checked = 0
     for name, index in previous.items():
-        if name.startswith("Lcom/eafb/BronzeApiAdapter;.search(") or name.startswith("Lcom/eafb/BronzeApiAdapter$search$1;") or name == "Lcom/eafb/CleanTestIdentity;.<clinit>()V":
+        if name.startswith(("Lcom/eafb/BronzeApiAdapter;.search(", "Lcom/eafb/BronzeApiAdapter;.search$suspendImpl(", "Lcom/eafb/BronzeApiAdapter$search$1;")) or name == "Lcom/eafb/CleanTestIdentity;.<clinit>()V":
             continue
         if name not in current:
             raise ValueError("Protected runtime method missing: " + name)
         expected = [list(row) for row in instruction_fingerprint(baseline, index)]
         actual = [list(row) for row in instruction_fingerprint(final, current[name])]
+        identity_strings = {
+            "Lcom/eafb/EAProvider;.<init>()V": {"EA-FB V82 TEST": NAME},
+            "Lcom/eafb/DetailMetaRow;.renderFragment(Landroidx/fragment/app/Fragment;)V": {"EA-FB V82 TEST": NAME},
+            "Lcom/eafb/DetailMetaRow;.renderNextEpisodeOnly(Landroidx/fragment/app/Fragment;)V": {"EA-FB V82 TEST": NAME},
+            "Lcom/eafb/EASettingsDialog;.show(Landroid/content/Context;)V": {"EA-FB V82 TEST": NAME},
+            "Lcom/eafb/EpisodeTitleStyle;.renderFragment(Landroidx/fragment/app/Fragment;)V": {"EA-FB V82 TEST": NAME},
+            "Lcom/eafb/EpisodeUpcomingStyle;.renderFragment(Landroidx/fragment/app/Fragment;)V": {"EA-FB V82 TEST": NAME},
+            "Lcom/eafb/FilmSeriesRail;.renderFragment(Landroidx/fragment/app/Fragment;)V": {"EA-FB V82 TEST": NAME},
+            "Lcom/eafb/FilmSeriesRail;.makeRail$lambda$3$0$1(Landroidx/fragment/app/FragmentActivity;Lcom/eafb/FilmSeriesRail$Card;Landroid/view/View;)V": {"EA-FB V82 TEST": NAME},
+            "Lcom/eafb/EASettings;.initialize(Landroid/content/Context;)V": {
+                "ea_fb_v82_test": "ea_fb_v83_test",
+                "ea_fb_clean_bronze_nl_land_20261009": "ea_fb_v82_test",
+            },
+        }.get(name, {})
         for row in expected:
             if row[1] in [0x1a, 0x1b]:
-                row[2] = row[2].replace(repr("EA-FB V82 TEST"), repr(NAME))
+                for old, new in identity_strings.items():
+                    if repr(old) in row[2]:
+                        row[2] = row[2].replace(repr(old), repr(new))
+                        break  # Simultaneous migration: never rewrite a replacement twice.
         if expected != actual:
             raise ValueError("Protected runtime instructions changed: " + name)
         checked += 1
