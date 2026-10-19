@@ -1,0 +1,11 @@
+{
+  "sourceCommit": "1129fc0939888e4cf86a7c414103f487948e4712",
+  "baseline": "16396702470eb1f81cc6dac4360e6b0ff84927d1",
+  "branch": "test/ea-fb-series-name-codex-20261019",
+  "version": 8503,
+  "protectedV83RuntimeMethods": 2029,
+  "dexSha256": "2f976e9d2006e8aac080cac0a2bfe57e4d610e860922c4d9f7cbe27578f924a9",
+  "packageSha256": "bac0424172d77a182ddd19ff3c4dae671012182369f28c0a5d714fac23acde77",
+  "loadingMode": "standard-cloudstream-plugin",
+  "miBoxPlaybackVerified": false
+}

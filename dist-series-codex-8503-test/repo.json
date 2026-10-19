@@ -1,0 +1,8 @@
+{
+  "name": "EA-FB SERIES CODEX 8503 TEST",
+  "description": "Blue CloudStream STABLE test; replace the old Bunny EA-FB plugin",
+  "manifestVersion": 1,
+  "pluginLists": [
+    "https://raw.githubusercontent.com/eaatabay/EA-FB/test/ea-fb-series-name-codex-20261019/dist-series-codex-8503-test/plugins.json"
+  ]
+}

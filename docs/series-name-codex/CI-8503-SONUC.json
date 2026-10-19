@@ -1,0 +1,85 @@
+{
+  "runId": 39326027642,
+  "url": "https://github.com/eaatabay/EA-FB/actions/runs/39326027642",
+  "sourceCommit": "1129fc0939888e4cf86a7c414103f487948e4712",
+  "conclusion": "success",
+  "packageSha256": "bac0424172d77a182ddd19ff3c4dae671012182369f28c0a5d714fac23acde77",
+  "ciLogShaMatchesLocalBytes": true,
+  "ciArtifactBinaryDownloaded": false,
+  "logsZipSha256": "25e8fa5a692e4f4e624187fd1270dae03e05505d4f37a531e854d543f3c8e5f5",
+  "nonfatalMetadataRewritingWarnings": 207,
+  "loadingMode": "standard-cloudstream-plugin",
+  "miBoxPlaybackVerified": false,
+  "jobs": [
+    {
+      "name": "diagnose",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-java@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run gradle/actions/setup-gradle@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Install checksum-verified Kotlin test compiler",
+          "conclusion": "success"
+        },
+        {
+          "name": "Preserve V83 sources, UI, old workflows and packages",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run film regressions and confirmed series safety checks",
+          "conclusion": "success"
+        },
+        {
+          "name": "Install required Android tools",
+          "conclusion": "success"
+        },
+        {
+          "name": "Compile series test runtime - no staging or publication",
+          "conclusion": "success"
+        },
+        {
+          "name": "Package standard test CS3 and verify V83 DEX protection",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/upload-artifact@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/upload-artifact@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run gradle/actions/setup-gradle@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/setup-java@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    }
+  ]
+}

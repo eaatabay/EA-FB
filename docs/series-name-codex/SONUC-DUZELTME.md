@@ -1,3 +1,13 @@
+# Güncel ek: 8503 / normal CloudStream eklentisi
+
+Kullanıcının son talimatıyla 8502'deki ADB/Python/--arm, UID/process/dataDir, profil, marker ve envanter yükleme kapıları tamamen kaldırıldı. SeriesTestIsolation ve policy silindi; normal EAPlugin.load özgün akışına döndü. Yeni kimlik ve ayar alanı 8503'tür; 8502 dosyaları değişmedi. Organize İşler isim düzeltmesi, dört kaynak, UI ve oynatma sistemi korunur.
+
+Kurulum: yalnız mavi STABLE → eski Bunny EA-FB ve deposunu kaldır → maviyi yeniden aç → yeni 8503 deposunu ekle → eklentiyi yükle → oynatmayı dene. Kırmızı BETA V83'e işlem yok. Geri alma yalnız mavideki test eklentisini kaldırmaktır. Mi Box oynatması kullanıcı testine kadar doğrulanmamıştır. Güncel adımlar TEST-KURULUMU.md; eski 8502/8501 bölümleri tarihsel kayıttır.
+
+Final CI: https://github.com/eaatabay/EA-FB/actions/runs/39326027642 (success). Paket SHA256: bac0424172d77a182ddd19ff3c4dae671012182369f28c0a5d714fac23acde77. 2029 V83 runtime metodu (EAPlugin.load dahil) ve 250 Bronze metodu korundu. UI/oynatma algoritması değişmedi. 8502 altı dağıtım dosyası hash ile korunur. Mi Box oynatması kullanıcı testine kadar doğrulanmadı.
+
+---
+
 # Güncel ek: MAVİ CloudStream / 8502
 
 8501 raporu aşağıda tarihsel kayıttır. Kullanıcı düzeltmesiyle mavi uygulamanın eski Bunny sürümü içerdiği anlaşıldı; V83 diğer kurulumda korunur. 8502 ayrı paket/UID/dataDir/süreç OS kontrolü ve açık ADB izin kaydıyla primary kullanıcıda koşullu test yolunu ekler. Kayıtsız veya eksik bilgili ana profil engellidir. Aynı hostta başka EA-FB yüklenmez. TEST-KURULUMU.md ve MAVI-8502-IZOLASYON.md güncel talimatlardır; 8501 ayrı-kullanıcı talimatını 8502'ye uygulamayın. Cihaz izolasyonu/UI/oynatma henüz doğrulanmadı. Nihai CI ve yayın hash kanıtları CI-8502-SONUC.json ve YAYIN-8502-DOGRULAMA.json dosyalarında tutuluyor.

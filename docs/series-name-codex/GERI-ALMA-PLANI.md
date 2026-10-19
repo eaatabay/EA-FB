@@ -1,7 +1,7 @@
 <!--CURRENT-SERIES-STATUS-->
 ## Güncel uygulama aşaması
-CI'den silinen ADB/profil testleri çıkarıldı, paketleyicide runtime gate istisnası kaldırıldı: EAPlugin.load da özgün V83 talimatlarıyla karşılaştırılır. 8503 manifest/update path/ayar kimliği ayrıdır. Runtime kaldırma commit'i bir önceki tam SHA ile kaydedildi.
-Önceki tam SHA: 267322d9a5e66d30b571581e9c441821d5b2622a
+Final CI 39326027642 kaynak 1129fc0939888e4cf86a7c414103f487948e4712 için başarılı. CI paket hash'i bac0424172d77a182ddd19ff3c4dae671012182369f28c0a5d714fac23acde77 yerel dosyayla aynı. Yalnız yeni 8503 dağıtımı ve belgeler yayımlanır. 8502 ve kırmızı BETA V83 değişmedi. Mi Box oynatması kullanıcı testini bekler.
+Önceki tam SHA: 1129fc0939888e4cf86a7c414103f487948e4712
 Son kayıt commit’inin kendi SHA’sı `git log -1` ile bulunur; sonraki kayıt envantere ekler.
 
 | SHA | İşlem | Bağlantı |
@@ -32,7 +32,9 @@ Son kayıt commit’inin kendi SHA’sı `git log -1` ile bulunur; sonraki kayı
 | `f435587065da49e83e4feae21de5c23f3759dd69` | release(series-test): publish CI-verified app-isolated 8502 test package | [commit](https://github.com/eaatabay/EA-FB/commit/f435587065da49e83e4feae21de5c23f3759dd69) |
 | `259e5b186fd4b3ef9be24a7c971f2210117aa58d` | docs(series-test): record published 8502 hashes and pending Mi Box acceptance | [commit](https://github.com/eaatabay/EA-FB/commit/259e5b186fd4b3ef9be24a7c971f2210117aa58d) |
 | `267322d9a5e66d30b571581e9c441821d5b2622a` | fix(series-test): remove device verification gates for standard 8503 loading | [commit](https://github.com/eaatabay/EA-FB/commit/267322d9a5e66d30b571581e9c441821d5b2622a) |
+| `1129fc0939888e4cf86a7c414103f487948e4712` | build(series-test): package standard 8503 plugin and retain regression coverage | [commit](https://github.com/eaatabay/EA-FB/commit/1129fc0939888e4cf86a7c414103f487948e4712) |
 <!--END-CURRENT-SERIES-STATUS-->
+
 
 
 # Güncel geri alma: 8503
