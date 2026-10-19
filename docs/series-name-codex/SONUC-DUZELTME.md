@@ -98,4 +98,3 @@ Son dağıtım/sonuç belgeleri ve yeni dist-series-codex-8501-test dosyaları y
 | `bb0dc17706c29ac3e3ac037253983553036d6493` | fix(series-test): detect renamed EA-FB plugins before initialization | [commit](https://github.com/eaatabay/EA-FB/commit/bb0dc17706c29ac3e3ac037253983553036d6493) |
 | `9aa829f1b494498762e02c16e5e6ad0f6c7de297` | build(series-test): verify isolated CS3 bytes and protected V83 DEX | [commit](https://github.com/eaatabay/EA-FB/commit/9aa829f1b494498762e02c16e5e6ad0f6c7de297) |
 | `eba59a87802695772750582c505b5fe0abf6d0c6` | release(series-test): stage verified isolated 8501 package | [commit](https://github.com/eaatabay/EA-FB/commit/eba59a87802695772750582c505b5fe0abf6d0c6) |
-

@@ -44,3 +44,5 @@
 | `eba59a87802695772750582c505b5fe0abf6d0c6` | release(series-test): stage verified isolated 8501 package | [commit](https://github.com/eaatabay/EA-FB/commit/eba59a87802695772750582c505b5fe0abf6d0c6) |
 
 Bu son doküman kaydı için `git log -1 --format=%H`; kendi SHA'sını kendi içeriğine gömmek mümkün değildir. Sonuç mesajındaki kesin SHA kullanılabilir.
+
+Nihai yayın/geri alma raporu GitHub commit’i: [b0e18e62adb3a101daef65ae5235f8047e918325](https://github.com/eaatabay/EA-FB/commit/b0e18e62adb3a101daef65ae5235f8047e918325). Bu son belge biçim düzeltmesi uygulama veya paket içeriğini değiştirmez.
