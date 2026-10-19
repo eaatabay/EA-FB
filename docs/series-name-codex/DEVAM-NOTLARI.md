@@ -32,3 +32,18 @@ Eski başarısız test/organize-isler-season-title-20261019 dalı artık silindi
 Bu belgeyi kaydeden commit için git log -1 -- docs/series-name-codex; sonraki aşamada tam SHA eklenir.
 
 Güncel yerel kimlik tanısı: **53/53 PASS**, dört adaptör; 312 korunan V83 dosyası byte-identical. UI/iki eklenti izolasyonu henüz kanıtlanmadı; yayın yok.
+
+## Güncel aşama 7
+UI-HOOK-RISKI.md ve DEX kayıtları eklendi; UI/runtimeda değişiklik yok. Risk çözülmüş sayılmıyor, yeni paket ve staging yayını yok.
+
+Son mantıksal test commit'i: efb5fe86b2e0c0edfcc0f6140356d35fa004a7b4. Kimlik tanısı 53/53 yerel PASS. Yeni CI run **39310538425**: https://github.com/eaatabay/EA-FB/actions/runs/39310538425 — son sorguda queued, başarı iddiası yok. Önceki 39309504108 success; ayrıntılı log erişimi hâlâ proxy 403. EA-FB katalog doğrulaması aynı ağ engeli nedeniyle bekliyor.
+
+### Güncel tam SHA envanteri
+- `45956ae74fdc512fa838ed6e99112a41baba9187` — docs(series): record V83 baseline and rollback boundaries — https://github.com/eaatabay/EA-FB/commit/45956ae74fdc512fa838ed6e99112a41baba9187
+- `069824f8433792f8f5dee2b7079390ee1f9e0374` — test(series): isolate V83 title rejection across four adapters — https://github.com/eaatabay/EA-FB/commit/069824f8433792f8f5dee2b7079390ee1f9e0374
+- `36a4820a4a3c2a43e83b87e5b4b1ef0d217f56b6` — test(series): enforce byte-level V83 baseline preservation — https://github.com/eaatabay/EA-FB/commit/36a4820a4a3c2a43e83b87e5b4b1ef0d217f56b6
+- `fb16e9ced070f1fe0c6d6cf93aaa863f79745099` — ci(series): add branch-scoped diagnostics without publication — https://github.com/eaatabay/EA-FB/commit/fb16e9ced070f1fe0c6d6cf93aaa863f79745099
+- `87344068c46877c720e8f1afa53084cc06400fab` — docs(series): record verified season alias and obsolete branch cleanup — https://github.com/eaatabay/EA-FB/commit/87344068c46877c720e8f1afa53084cc06400fab
+- `efb5fe86b2e0c0edfcc0f6140356d35fa004a7b4` — test(series): track researched TV identity separately from films — https://github.com/eaatabay/EA-FB/commit/efb5fe86b2e0c0edfcc0f6140356d35fa004a7b4
+
+Bu doküman kayıt commit'inin SHA'sı git log -1 -- docs/series-name-codex ile bulunur; sonraki aşamada envantere eklenir.

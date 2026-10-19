@@ -1,0 +1,60 @@
+{
+  "source": "checksum-verified protected V83 CS3 classes.dex",
+  "observations": [
+    {
+      "method": "Lcom/eafb/DetailMetaRow;.renderFragment(Landroidx/fragment/app/Fragment;)V",
+      "references": [
+        "const-string v3 'apiName'"
+      ]
+    },
+    {
+      "method": "Lcom/eafb/DetailMetaRow;.renderNextEpisodeOnly(Landroidx/fragment/app/Fragment;)V",
+      "references": [
+        "const-string v2 'apiName'"
+      ]
+    },
+    {
+      "method": "Lcom/eafb/DetailMetaRow;.install(Landroid/content/Context;)V",
+      "references": [
+        "invoke Landroid/app/Application;.registerActivityLifecycleCallbacks(Landroid/app/Application$ActivityLifecycleCallbacks;)V"
+      ]
+    },
+    {
+      "method": "Lcom/eafb/EpisodeTitleStyle;.renderFragment(Landroidx/fragment/app/Fragment;)V",
+      "references": [
+        "const-string v1 'apiName'"
+      ]
+    },
+    {
+      "method": "Lcom/eafb/EpisodeTitleStyle;.install(Landroid/content/Context;)V",
+      "references": [
+        "invoke Landroid/app/Application;.registerActivityLifecycleCallbacks(Landroid/app/Application$ActivityLifecycleCallbacks;)V"
+      ]
+    },
+    {
+      "method": "Lcom/eafb/EpisodeUpcomingStyle;.renderFragment(Landroidx/fragment/app/Fragment;)V",
+      "references": [
+        "const-string v1 'apiName'"
+      ]
+    },
+    {
+      "method": "Lcom/eafb/EpisodeUpcomingStyle;.install(Landroid/content/Context;)V",
+      "references": [
+        "invoke Landroid/app/Application;.registerActivityLifecycleCallbacks(Landroid/app/Application$ActivityLifecycleCallbacks;)V"
+      ]
+    },
+    {
+      "method": "Lcom/eafb/FilmSeriesRail;.renderFragment(Landroidx/fragment/app/Fragment;)V",
+      "references": [
+        "const-string v2 'apiName'"
+      ]
+    },
+    {
+      "method": "Lcom/eafb/FilmSeriesRail;.install(Landroid/content/Context;)V",
+      "references": [
+        "invoke Landroid/app/Application;.registerActivityLifecycleCallbacks(Landroid/app/Application$ActivityLifecycleCallbacks;)V"
+      ]
+    }
+  ],
+  "conclusion": "Application-scoped callback registration and provider-name gates observed. No co-installation/unload isolation proof; no new runtime package published. This does not establish the cause of V84 failure."
+}
