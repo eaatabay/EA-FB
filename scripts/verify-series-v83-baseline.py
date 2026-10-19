@@ -10,6 +10,15 @@ PACKAGE = "dist-v83-test/EA-FB-V83-TEST.cs3"
 PACKAGE_SHA256 = "40fd24acb41dc69fa869ceb69ee6661e5136c1dff39434eb8bd3227f955f3b66"
 # Exact new paths only. Future implementation requires a reviewed, narrow guard update.
 ALLOWED_NEW = {
+    "dist-series-codex-8501-test/SOURCE-NOTICE.txt",
+    "dist-series-codex-8501-test/SOURCE-LICENSE",
+    "dist-series-codex-8501-test/build-info.json",
+    "dist-series-codex-8501-test/repo.json",
+    "dist-series-codex-8501-test/plugins.json",
+    "dist-series-codex-8501-test/EA-FB-SERIES-CODEX-8501-TEST.cs3",
+    "scripts/package-series-codex.py",
+    "tests/test_series_package.py",
+    "core-tests/clean/SeriesLiveLookupTest.kt",
     "EA-FB/src/main/kotlin/com/eafb/SeriesTestIsolation.kt",
     "core-tests/clean/SeriesIsolationTest.kt",
     "core-tests/clean/SeriesAliasSafetyTest.kt",
@@ -23,11 +32,11 @@ ALLOWED_NEW = {
     "tests/test_series_v83_baseline.py",
     ".github/workflows/series-name-diagnostics.yml",
 }
-NEW_RUNTIME = {"EA-FB/src/main/kotlin/com/eafb/SeriesTestIsolation.kt": "29ea10cd10e238977f2cf484fc5e6be4d8fb6b3f81f4ded83a761ccd8e50bd4d"}
+NEW_RUNTIME = {'EA-FB/src/main/kotlin/com/eafb/SeriesTestIsolation.kt': '180c701fd64d145f914d48df29f891fbe0b8df379922fb2777f0cf407cd55c95'}
 DOCS = "docs/series-name-codex/"
 
 # Exact reviewed bytes; changing any other method or later bytes fails closed.
-APPROVED_RUNTIME = {'EA-FB/src/main/kotlin/com/eafb/SourceSearchTitles.kt': '770804a1e14f96f0ac2924d04c86c3ac5ceaf998f6558c852a2a4203de018201', 'EA-FB/src/main/kotlin/com/eafb/BronzeApiAdapter.kt': '845c61d08689f0a9ca304740fc96dfa86390d2fdfc08015cc1d193f0bc8305ad', 'EA-FB/src/main/kotlin/com/eafb/DiziBoxAdapter.kt': '14ae40efb4a1a6616aeb8f067cd704206c430655b9bc2781d3721e2edf4a947a', 'EA-FB/src/main/kotlin/com/eafb/DiziYouAdapter.kt': 'c8cdde24c494776dbb25d8ce3a426af9843bfa37b7c3e6fe6859dd9554f5b7c7', 'EA-FB/src/main/kotlin/com/eafb/CleanTestIdentity.kt': 'f70211825c5f09d872223996a703512e83b6c1e55a2ec8f7071750dd7a902c2b', 'EA-FB/src/main/kotlin/com/eafb/EAPlugin.kt': '5161dc410b04904901eb258b46db1d1694b10917736d15803e7f48e0ff13b567', 'EA-FB/build.gradle.kts': '6e91ae750204e91d5418ca3c077db3e7af608a3000810d4e5c31baa0ed418e19'}
+APPROVED_RUNTIME = {'EA-FB/src/main/kotlin/com/eafb/SourceSearchTitles.kt': '770804a1e14f96f0ac2924d04c86c3ac5ceaf998f6558c852a2a4203de018201', 'EA-FB/src/main/kotlin/com/eafb/BronzeApiAdapter.kt': '845c61d08689f0a9ca304740fc96dfa86390d2fdfc08015cc1d193f0bc8305ad', 'EA-FB/src/main/kotlin/com/eafb/DiziBoxAdapter.kt': '14ae40efb4a1a6616aeb8f067cd704206c430655b9bc2781d3721e2edf4a947a', 'EA-FB/src/main/kotlin/com/eafb/DiziYouAdapter.kt': 'c8cdde24c494776dbb25d8ce3a426af9843bfa37b7c3e6fe6859dd9554f5b7c7', 'EA-FB/src/main/kotlin/com/eafb/CleanTestIdentity.kt': 'e689bdc91fc05053cc7038dd9959fb8fb23167a2fbadf4caf4607ef7004d6f20', 'EA-FB/src/main/kotlin/com/eafb/EAPlugin.kt': '5161dc410b04904901eb258b46db1d1694b10917736d15803e7f48e0ff13b567', 'EA-FB/build.gradle.kts': '6e91ae750204e91d5418ca3c077db3e7af608a3000810d4e5c31baa0ed418e19'}
 METHOD_REGIONS = {
     "EA-FB/src/main/kotlin/com/eafb/BronzeApiAdapter.kt": ("    override suspend fun search(query:", "    // Film matching only:"),
     "EA-FB/src/main/kotlin/com/eafb/DiziBoxAdapter.kt": ("    private suspend fun searchTitle(", "    private suspend fun searchHtml("),

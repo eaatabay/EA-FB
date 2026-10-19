@@ -12,6 +12,10 @@ object CleanTestIdentity {
 
 /** Android's per-user UID range provides process/data isolation from the primary profile. */
 internal object SeriesTestIsolationPolicy {
+    fun inventoryName(name: String, entryPoint: String): String =
+        if (name == CleanTestIdentity.INTERNAL_NAME && entryPoint == "com.eafb.EAPlugin") name
+        else if (name == CleanTestIdentity.INTERNAL_NAME || entryPoint.startsWith("com.eafb.")) "EA-FB-CONFLICT"
+        else name
     fun canLoad(uid: Int, installedNames: List<String>): Boolean {
         if (uid < 100000 || uid % 100000 !in 10000..99999) return false
         if (installedNames.count { it == CleanTestIdentity.INTERNAL_NAME } != 1) return false

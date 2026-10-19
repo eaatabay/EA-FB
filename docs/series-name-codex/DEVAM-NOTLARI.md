@@ -1,7 +1,7 @@
 <!--CURRENT-SERIES-STATUS-->
 ## Güncel uygulama aşaması
-Bilinen 24 dal ucu tarandı; 8501 kullanılmıyor (en büyük mevcut sürüm 83). Yeni internalName EA-FB-SERIES-CODEX-8501-TEST, provider adı EA-FB SERIES CODEX 8501 TEST, store ea_fb_series_codex_8501_test; V83/V82’den tercih aktarımı yok (ayrı boş seed alanı). EAPlugin.load ilk iş olarak UID ve kurulu eklenti envanterini doğrular; ana Android profili, aynı profilde başka EA-FB, bilinmeyen veya çift kendi kaydı reddedilir. Kontrol preferences/UI callbacks/provider kayıtlarından önce. UI dosyaları hiç değişmedi. Bu sürüm normal ana Mi Box profiline kurulmaz; ayrı profil yeteneği cihazda henüz doğrulanmadı.
-Önceki tam SHA: 9846add14a62fd118ccbfb874131d46fd6eb4c70
+Profil kapısı yalnız eklenti görünen adına güvenmiyor: host envanterindeki CS3 manifest entry point’i de okunuyor. com.eafb girişli başka bir eklenti yeniden adlandırılsa bile çakışma sayılıyor. UID/kurulum doğrulaması hâlâ UI/preferences/provider öncesinde; ayrı Android profili zorunlu. Gerçek DiziYou araması dört HTTP isteğiyle doğrulanmış tek S1E8 teklifi döndürdü; extractor/video isteği yapılmadı.
+Önceki tam SHA: b0094da7a3daab69c45894ad2da4776678fd75eb
 Son kayıt commit’inin kendi SHA’sı `git log -1` ile bulunur; sonraki kayıt envantere ekler.
 
 | SHA | İşlem | Bağlantı |
@@ -20,7 +20,9 @@ Son kayıt commit’inin kendi SHA’sı `git log -1` ile bulunur; sonraki kayı
 | `732d4613854042587a9fd0526cfd11163f6451c4` | test(series): reproduce missing confirmed season alias before correction | [commit](https://github.com/eaatabay/EA-FB/commit/732d4613854042587a9fd0526cfd11163f6451c4) |
 | `1ac4de36b50b28c5313ea3c3d71e2b802f7e051a` | fix(series): add corroborated alias only for confirmed Organize Isler season | [commit](https://github.com/eaatabay/EA-FB/commit/1ac4de36b50b28c5313ea3c3d71e2b802f7e051a) |
 | `9846add14a62fd118ccbfb874131d46fd6eb4c70` | test(series): reject ambiguous or uncorroborated alias source pages | [commit](https://github.com/eaatabay/EA-FB/commit/9846add14a62fd118ccbfb874131d46fd6eb4c70) |
+| `b0094da7a3daab69c45894ad2da4776678fd75eb` | feat(series-test): isolate version 8501 and reject primary-profile loading | [commit](https://github.com/eaatabay/EA-FB/commit/b0094da7a3daab69c45894ad2da4776678fd75eb) |
 <!--END-CURRENT-SERIES-STATUS-->
+
 
 
 

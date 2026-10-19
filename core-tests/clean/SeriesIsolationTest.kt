@@ -18,6 +18,11 @@ fun main() {
         verify(!SeriesTestIsolationPolicy.canLoad(uid, emptyList()))
         verify(!SeriesTestIsolationPolicy.canLoad(uid, listOf(own, own)))
     }
+    verify(SeriesTestIsolationPolicy.inventoryName("renamed-plugin", "com.eafb.EAPlugin") == "EA-FB-CONFLICT")
+    verify(SeriesTestIsolationPolicy.inventoryName(own, "org.other.Plugin") == "EA-FB-CONFLICT")
+    verify(SeriesTestIsolationPolicy.inventoryName(own, "com.eafb.EAPlugin") == own)
+    verify(!SeriesTestIsolationPolicy.canLoad(110001, listOf(own,
+        SeriesTestIsolationPolicy.inventoryName("renamed-plugin", "com.eafb.EAPlugin"))))
     verify(CleanTestIdentity.STORE !in listOf("ea_fb_v83_test", "ea_fb_v82_test"))
     verify(CleanTestIdentity.LEGACY_STORE !in listOf("ea_fb_v83_test", "ea_fb_v82_test"))
     println("PASS: $count profile/inventory isolation assertions; primary profile, V83 in either order, unknown/duplicate inventory blocked")

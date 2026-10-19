@@ -1,0 +1,15 @@
+{
+  "httpStatuses": [
+    200,
+    200,
+    200,
+    200
+  ],
+  "offers": 1,
+  "tmdbId": 320754,
+  "season": 1,
+  "episode": 8,
+  "source": "diziyou",
+  "requests": 4,
+  "streamOrExtractorTested": false
+}
