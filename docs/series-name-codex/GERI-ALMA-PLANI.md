@@ -1,7 +1,7 @@
 <!--CURRENT-SERIES-STATUS-->
 ## Güncel uygulama aşaması
-Kullanıcı düzeltmeye devam yetkisi verdi. Yalnız TV 320754 / 2026 / S1 E1..8 için doğrulanmış tam alternatif aday eklendi. Diğer dizi/film adayları aynı. Yeni HTML kabullerinde TVSeries+başlık+yıl+sayfa URL’si doğrulanıyor; yanlış/eksik metadata ve belirsiz sayfalar reddediliyor. Bronze yeni alias için TV türü, pozitif yıl ve tek tam episode payload istiyor. UI/film/extractor/resolve kodu korunuyor. Paket henüz yok; ayrı profil koruması sonraki aşamada.
-Önceki tam SHA: 732d4613854042587a9fd0526cfd11163f6451c4
+Dört kaynak için yeni alias kabulüne özel 36 pozitif/negatif kontrol eklendi. Eksik/yanlış yıl, Movie türü, yanlış sezon/bölüm, ilgisiz ad, iki uygun sayfa ve iki farklı episode payload reddediliyor. Mevcut film ve normal dizi araması korunuyor; UI/oynatma zinciri değişmedi.
+Önceki tam SHA: 1ac4de36b50b28c5313ea3c3d71e2b802f7e051a
 Son kayıt commit’inin kendi SHA’sı `git log -1` ile bulunur; sonraki kayıt envantere ekler.
 
 | SHA | İşlem | Bağlantı |
@@ -18,7 +18,9 @@ Son kayıt commit’inin kendi SHA’sı `git log -1` ile bulunur; sonraki kayı
 | `1aa79597420845beb18afa58849c917a9499beab` | docs(series): finalize confirmed diagnosis and authentication handoff | [commit](https://github.com/eaatabay/EA-FB/commit/1aa79597420845beb18afa58849c917a9499beab) |
 | `f0abf3b1d800b344984167a5ffd77d6cc65fcb99` | docs(series): confirm restored access and successful final CI | [commit](https://github.com/eaatabay/EA-FB/commit/f0abf3b1d800b344984167a5ffd77d6cc65fcb99) |
 | `732d4613854042587a9fd0526cfd11163f6451c4` | test(series): reproduce missing confirmed season alias before correction | [commit](https://github.com/eaatabay/EA-FB/commit/732d4613854042587a9fd0526cfd11163f6451c4) |
+| `1ac4de36b50b28c5313ea3c3d71e2b802f7e051a` | fix(series): add corroborated alias only for confirmed Organize Isler season | [commit](https://github.com/eaatabay/EA-FB/commit/1ac4de36b50b28c5313ea3c3d71e2b802f7e051a) |
 <!--END-CURRENT-SERIES-STATUS-->
+
 
 # Geri alma planı — güncel test/teşhis aşaması
 

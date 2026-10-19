@@ -1,7 +1,7 @@
 <!--CURRENT-SERIES-STATUS-->
 ## Güncel uygulama aşaması
-Kullanıcı düzeltmeye devam yetkisi verdi. Yalnız TV 320754 / 2026 / S1 E1..8 için doğrulanmış tam alternatif aday eklendi. Diğer dizi/film adayları aynı. Yeni HTML kabullerinde TVSeries+başlık+yıl+sayfa URL’si doğrulanıyor; yanlış/eksik metadata ve belirsiz sayfalar reddediliyor. Bronze yeni alias için TV türü, pozitif yıl ve tek tam episode payload istiyor. UI/film/extractor/resolve kodu korunuyor. Paket henüz yok; ayrı profil koruması sonraki aşamada.
-Önceki tam SHA: 732d4613854042587a9fd0526cfd11163f6451c4
+Dört kaynak için yeni alias kabulüne özel 36 pozitif/negatif kontrol eklendi. Eksik/yanlış yıl, Movie türü, yanlış sezon/bölüm, ilgisiz ad, iki uygun sayfa ve iki farklı episode payload reddediliyor. Mevcut film ve normal dizi araması korunuyor; UI/oynatma zinciri değişmedi.
+Önceki tam SHA: 1ac4de36b50b28c5313ea3c3d71e2b802f7e051a
 Son kayıt commit’inin kendi SHA’sı `git log -1` ile bulunur; sonraki kayıt envantere ekler.
 
 | SHA | İşlem | Bağlantı |
@@ -18,7 +18,9 @@ Son kayıt commit’inin kendi SHA’sı `git log -1` ile bulunur; sonraki kayı
 | `1aa79597420845beb18afa58849c917a9499beab` | docs(series): finalize confirmed diagnosis and authentication handoff | [commit](https://github.com/eaatabay/EA-FB/commit/1aa79597420845beb18afa58849c917a9499beab) |
 | `f0abf3b1d800b344984167a5ffd77d6cc65fcb99` | docs(series): confirm restored access and successful final CI | [commit](https://github.com/eaatabay/EA-FB/commit/f0abf3b1d800b344984167a5ffd77d6cc65fcb99) |
 | `732d4613854042587a9fd0526cfd11163f6451c4` | test(series): reproduce missing confirmed season alias before correction | [commit](https://github.com/eaatabay/EA-FB/commit/732d4613854042587a9fd0526cfd11163f6451c4) |
+| `1ac4de36b50b28c5313ea3c3d71e2b802f7e051a` | fix(series): add corroborated alias only for confirmed Organize Isler season | [commit](https://github.com/eaatabay/EA-FB/commit/1ac4de36b50b28c5313ea3c3d71e2b802f7e051a) |
 <!--END-CURRENT-SERIES-STATUS-->
+
 
 # Değişiklik defteri
 
@@ -247,4 +249,11 @@ Geri alma: yalnızca bu yeni test/izin listesi/doküman commit'ini yeni dalda re
 - Dosyalar: SourceSearchTitles.kt, BronzeApiAdapter.kt search, DiziYouAdapter.kt search/episodeOffers, DiziBoxAdapter.kt searchTitle; SeriesNameDiagnosisTest.kt, SeriesAliasContractTest.kt, yeni test runner/workflow ve dar kaynak koruması; üç kayıt dosyası
 - Gerekçe / etki: Kullanıcı düzeltmeye devam yetkisi verdi. Yalnız TV 320754 / 2026 / S1 E1..8 için doğrulanmış tam alternatif aday eklendi. Diğer dizi/film adayları aynı. Yeni HTML kabullerinde TVSeries+başlık+yıl+sayfa URL’si doğrulanıyor; yanlış/eksik metadata ve belirsiz sayfalar reddediliyor. Bronze yeni alias için TV türü, pozitif yıl ve tek tam episode payload istiyor. UI/film/extractor/resolve kodu korunuyor. Paket henüz yok; ayrı profil koruması sonraki aşamada.
 - Test / sonuç: Yeni alias sözleşmesi PASS; düzeltilmiş 59 replay assertion PASS; 12 eski Kotlin programı ve 7 bağımsız paket testi PASS; iki koruma testi PASS. Kaynak koruması: 308 V83 dosyası aynı, dört değişmiş dosyada tam hash ve izinli search metot sınırları doğrulandı. Eski V83 scope testi korunarak baseline arşivinde çalıştırılacak; yeni runtime için eski kapsam testi gevşetilmedi.
+- Geri alma: yalnızca bu commit’i yeni test dalında git revert; V83/main/arşivlere dokunma.
+
+## 14 — Yeni alternatif yolun güvenlik regresyonları
+- Önceki SHA: 1ac4de36b50b28c5313ea3c3d71e2b802f7e051a; yeni SHA bu aşamanın commit’i.
+- Dosyalar: core-tests/clean/SeriesAliasSafetyTest.kt, yeni test runner ve dar yeni dosya izin listesi; üç kayıt dosyası
+- Gerekçe / etki: Dört kaynak için yeni alias kabulüne özel 36 pozitif/negatif kontrol eklendi. Eksik/yanlış yıl, Movie türü, yanlış sezon/bölüm, ilgisiz ad, iki uygun sayfa ve iki farklı episode payload reddediliyor. Mevcut film ve normal dizi araması korunuyor; UI/oynatma zinciri değişmedi.
+- Test / sonuç: 36/36 yeni güvenlik assertion’ı PASS; 59/59 replay assertion ve alias kimlik sözleşmesi PASS. Korunan V83 arşivinde eski 7 paket/scope testi değişmeden PASS; baseline testi gevşetilmedi.
 - Geri alma: yalnızca bu commit’i yeni test dalında git revert; V83/main/arşivlere dokunma.
