@@ -1,0 +1,20 @@
+{
+  "releaseCommit": "eba59a87802695772750582c505b5fe0abf6d0c6",
+  "ciRun": 39316844187,
+  "sourceCommit": "9aa829f1b494498762e02c16e5e6ad0f6c7de297",
+  "repositoryUrl": "https://raw.githubusercontent.com/eaatabay/EA-FB/test/ea-fb-series-name-codex-20261019/dist-series-codex-8501-test/repo.json",
+  "downloadedFiles": [
+    "EA-FB-SERIES-CODEX-8501-TEST.cs3",
+    "repo.json",
+    "plugins.json",
+    "build-info.json",
+    "SOURCE-LICENSE",
+    "SOURCE-NOTICE.txt"
+  ],
+  "packageBytes": 332876,
+  "sha256": "f2b2d28a8a6adf5fbdfe8eae91fb70f36c346f658c3dbf7bcc91aae55fe12a3b",
+  "rawDownloadedAndVerified": true,
+  "retainedBranchHeadsUnchanged": 23,
+  "miBoxPlaybackVerified": false,
+  "primaryProfileBlocked": true
+}

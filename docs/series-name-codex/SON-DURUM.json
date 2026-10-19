@@ -1,22 +1,29 @@
 {
+  "status": "software-fix-tests-package-and-staging-complete",
   "branch": "test/ea-fb-series-name-codex-20261019",
-  "base": "16396702470eb1f81cc6dac4360e6b0ff84927d1",
-  "lastSuccessfulPush": "1aa79597420845beb18afa58849c917a9499beab",
-  "apiAfterPush": 401,
-  "nativeGitAfterPush": "authentication-unavailable",
-  "confirmedCiRuns": [
-    39309504108,
-    39310538425,
-    39311299938,
-    39311300009,
-    39311839830
+  "baseline": "16396702470eb1f81cc6dac4360e6b0ff84927d1",
+  "sourceCommit": "9aa829f1b494498762e02c16e5e6ad0f6c7de297",
+  "releaseCommit": "eba59a87802695772750582c505b5fe0abf6d0c6",
+  "finalCiRun": 39316844187,
+  "ciConclusion": "success",
+  "packageVersion": 8501,
+  "internalName": "EA-FB-SERIES-CODEX-8501-TEST",
+  "packageSha256": "f2b2d28a8a6adf5fbdfe8eae91fb70f36c346f658c3dbf7bcc91aae55fe12a3b",
+  "packageBytes": 332876,
+  "repoUrl": "https://raw.githubusercontent.com/eaatabay/EA-FB/test/ea-fb-series-name-codex-20261019/dist-series-codex-8501-test/repo.json",
+  "rawPublicationVerified": true,
+  "runtimeChanges": [
+    "confirmed TV/season alias only",
+    "new alias source identity validation",
+    "isolated test identity and startup gate"
   ],
-  "lastObservedInProgressRun": null,
-  "latest59AssertionRun": 39311839830,
-  "runtimeChanges": false,
-  "packagePublished": false,
-  "uiCoInstallationVerified": false,
-  "apiAfterRefresh": "working",
-  "nativeGitAfterRefresh": "working",
-  "logReview": "latest two complete archives reviewed; 59 assertions and Android build successful; 206 D8 metadata warnings recorded"
+  "uiSourceChanged": false,
+  "protectedV83RuntimeMethods": 2028,
+  "originalBronzeMethods": 250,
+  "existingRemoteBranchesUnchanged": 23,
+  "primaryAndroidProfileBlocked": true,
+  "sameProfileCoexistenceSupported": false,
+  "miBoxProfileSupportVerified": false,
+  "miBoxPlaybackVerified": false,
+  "remainingCloudBlockers": []
 }

@@ -1,7 +1,7 @@
 <!--CURRENT-SERIES-STATUS-->
 ## Güncel uygulama aşaması
-Son CI 39316844187 (source 9aa829f1b494498762e02c16e5e6ad0f6c7de297) test/derleme/paketleme/koruma adımlarının tamamında success. Tam log arşivi incelendi. Artifact ikili indirme yönlendirmesi Azure blob hostunda engellendi; güvenli alternatif olarak yerel yeniden üretilen paket CI logundaki iki bağımsız SHA-256 satırıyla eşleştirildi. CS3 332876 byte, SHA f2b2d28a8a6adf5fbdfe8eae91fb70f36c346f658c3dbf7bcc91aae55fe12a3b. Yeni dist-series-codex-8501-test dağıtımı yalnız yeni dala kaydediliyor. Ana Android profilinde çalışmaz; ayrı profil test paketi, Mi Box oynatması doğrulanmadı.
-Önceki tam SHA: 9aa829f1b494498762e02c16e5e6ad0f6c7de297
+Yayın commit’i eba59a87802695772750582c505b5fe0abf6d0c6. GitHub raw üzerinden CS3, repo/plugins/build-info ve iki atıf dosyası indirildi. Paket/manifest/DEX tekrar doğrulandı; 332876 byte ve SHA-256 f2b2d28a8a6adf5fbdfe8eae91fb70f36c346f658c3dbf7bcc91aae55fe12a3b CI ile aynı. Diğer 23 uzak dal HEAD’i aynı, V83 dalı/CS3 korunuyor. Kod, test, bağımsız paketleme ve kontrollü test yayını tamamlandı. Yalnız ayrı Android profili desteklenir; ana profil engellenir. Mi Box profil desteği ve gerçek video/menü davranışı kullanıcı cihazında doğrulanmadı; aynı profilde iki EA-FB’nin güvenle birlikte çalıştığı iddia edilmiyor.
+Önceki tam SHA: eba59a87802695772750582c505b5fe0abf6d0c6
 Son kayıt commit’inin kendi SHA’sı `git log -1` ile bulunur; sonraki kayıt envantere ekler.
 
 | SHA | İşlem | Bağlantı |
@@ -23,7 +23,9 @@ Son kayıt commit’inin kendi SHA’sı `git log -1` ile bulunur; sonraki kayı
 | `b0094da7a3daab69c45894ad2da4776678fd75eb` | feat(series-test): isolate version 8501 and reject primary-profile loading | [commit](https://github.com/eaatabay/EA-FB/commit/b0094da7a3daab69c45894ad2da4776678fd75eb) |
 | `bb0dc17706c29ac3e3ac037253983553036d6493` | fix(series-test): detect renamed EA-FB plugins before initialization | [commit](https://github.com/eaatabay/EA-FB/commit/bb0dc17706c29ac3e3ac037253983553036d6493) |
 | `9aa829f1b494498762e02c16e5e6ad0f6c7de297` | build(series-test): verify isolated CS3 bytes and protected V83 DEX | [commit](https://github.com/eaatabay/EA-FB/commit/9aa829f1b494498762e02c16e5e6ad0f6c7de297) |
+| `eba59a87802695772750582c505b5fe0abf6d0c6` | release(series-test): stage verified isolated 8501 package | [commit](https://github.com/eaatabay/EA-FB/commit/eba59a87802695772750582c505b5fe0abf6d0c6) |
 <!--END-CURRENT-SERIES-STATUS-->
+
 
 
 
@@ -292,4 +294,11 @@ Geri alma: yalnızca bu yeni test/izin listesi/doküman commit'ini yeni dalda re
 - Dosyalar: dist-series-codex-8501-test/ altındaki CS3, repo.json, plugins.json, build-info.json ve iki kaynak atıf dosyası; CI-8501-SONUC.json, HOST-ISOLASYON-KANITI.json, SONUC-DUZELTME.md ve üç takip dosyası
 - Gerekçe / etki: Son CI 39316844187 (source 9aa829f1b494498762e02c16e5e6ad0f6c7de297) test/derleme/paketleme/koruma adımlarının tamamında success. Tam log arşivi incelendi. Artifact ikili indirme yönlendirmesi Azure blob hostunda engellendi; güvenli alternatif olarak yerel yeniden üretilen paket CI logundaki iki bağımsız SHA-256 satırıyla eşleştirildi. CS3 332876 byte, SHA f2b2d28a8a6adf5fbdfe8eae91fb70f36c346f658c3dbf7bcc91aae55fe12a3b. Yeni dist-series-codex-8501-test dağıtımı yalnız yeni dala kaydediliyor. Ana Android profilinde çalışmaz; ayrı profil test paketi, Mi Box oynatması doğrulanmadı.
 - Test / sonuç: CI success: 37 profil + 36 kaynak güvenliği + 59 replay assertion, alias sözleşmesi; mevcut 12 Kotlin programı ve tüm ilgili paket testleri. 2028 V83 runtime ve 250 Bronze method koruması PASS; geçerli checksumlu UI talimat mutasyonu reddedildi. Paket meta/hash tekrar PASS; 209 nonfatal D8 metadata uyarısı raporlandı. Yayın sonrası gerçek raw dosya hash’i ayrıca doğrulanacak.
+- Geri alma: yalnızca bu commit’i yeni test dalında git revert; V83/main/arşivlere dokunma.
+
+## 19 — Yayın sonrası dosya/hash ve korunan ref doğrulaması
+- Önceki SHA: eba59a87802695772750582c505b5fe0abf6d0c6; yeni SHA bu aşamanın commit’i.
+- Dosyalar: YAYIN-DOGRULAMA.json, güncel uzak ref envanteri, sonuç raporu/SON-DURUM ve üç kalıcı takip belgesi
+- Gerekçe / etki: Yayın commit’i eba59a87802695772750582c505b5fe0abf6d0c6. GitHub raw üzerinden CS3, repo/plugins/build-info ve iki atıf dosyası indirildi. Paket/manifest/DEX tekrar doğrulandı; 332876 byte ve SHA-256 f2b2d28a8a6adf5fbdfe8eae91fb70f36c346f658c3dbf7bcc91aae55fe12a3b CI ile aynı. Diğer 23 uzak dal HEAD’i aynı, V83 dalı/CS3 korunuyor. Kod, test, bağımsız paketleme ve kontrollü test yayını tamamlandı. Yalnız ayrı Android profili desteklenir; ana profil engellenir. Mi Box profil desteği ve gerçek video/menü davranışı kullanıcı cihazında doğrulanmadı; aynı profilde iki EA-FB’nin güvenle birlikte çalıştığı iddia edilmiyor.
+- Test / sonuç: Son CI 39316844187 success ve tam logları incelendi. 37 profil + 36 kaynak güvenliği + 59 replay, alias sözleşmesi, mevcut 12 Kotlin programı/14 Python baseline testi ve üç yeni paket testi PASS. 2028 V83 +250 Bronze metodu korunuyor. Geçici Python doğrulama importlarının oluşturduğu dört pyc dosyası guard tarafından reddedildi; yalnız kendi üretilen cache dosyaları temizlenip raw paket doğrulaması PASS oldu; koruma gevşetilmedi.
 - Geri alma: yalnızca bu commit’i yeni test dalında git revert; V83/main/arşivlere dokunma.
