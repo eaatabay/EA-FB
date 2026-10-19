@@ -44,6 +44,9 @@ open class BronzeApiAdapter(
                     val loaded = api.load(result.url) ?: continue
                     if (nameKey(loaded.name) !in wanted ||
                         (query.year != null && loaded.year != null && query.year != loaded.year)) continue
+                    val confirmedAlias = ConfirmedSeriesAlias.matches(query, result.name) ||
+                        ConfirmedSeriesAlias.matches(query, loaded.name)
+                    if (confirmedAlias && (loaded !is TvSeriesLoadResponse || loaded.year != query.year)) continue
                     val payloads = when (loaded) {
                         is MovieLoadResponse -> if (query.kind == MediaKind.MOVIE) listOf(loaded.dataUrl) else emptyList()
                         is TvSeriesLoadResponse -> if (query.kind == MediaKind.SERIES && query.season != null && query.episode != null)
@@ -51,9 +54,14 @@ open class BronzeApiAdapter(
                             else emptyList()
                         else -> emptyList()
                     }
+                    if (confirmedAlias && payloads.distinct().filter { it.isNotBlank() }.size != 1) continue
                     for (data in payloads.distinct().filter { it.isNotBlank() }) {
                         offers += MediaOffer(id, label, query.title, loaded.year ?: query.year, query.kind,
                             result.url, query.tmdbId, query.season, query.episode, data)
+                    }
+                    if (ConfirmedSeriesAlias.applies(query) && offers.map { it.pageUrl }.distinct().size > 1) {
+                        Log.i("EA-FB-Bronze", "series reject provider=$id tmdb=${query.tmdbId} season=${query.season} episode=${query.episode} reason=ambiguous-pages")
+                        return emptyList()
                     }
                     if (offers.size >= 5) break
                 }

@@ -6,8 +6,8 @@ fun main() {
     val alias = "Organize İşler: Karun Hazinesi"
     check(alias in SourceSearchTitles.candidates(query)) { "Confirmed S1 alias is missing" }
     for (invalid in listOf(query.copy(tmdbId = 30634), query.copy(tmdbId = 577990),
-        query.copy(kind = MediaKind.MOVIE), query.copy(year = 2005), query.copy(year = null),
-        query.copy(season = 0), query.copy(season = 2), query.copy(episode = 0),
+        query.copy(kind = MediaKind.MOVIE, season = null, episode = null), query.copy(year = 2005), query.copy(year = null),
+        query.copy(season = 0), query.copy(season = 2), query.copy(season = null, episode = null),
         query.copy(episode = 9), query.copy(title = "Organize İşler: Sazan Sarmalı"),
         query.copy(title = "Unrelated"))) {
         check(alias !in SourceSearchTitles.candidates(invalid)) { "Alias leaked to a different identity: $invalid" }

@@ -1,3 +1,25 @@
+<!--CURRENT-SERIES-STATUS-->
+## Güncel uygulama aşaması
+Kullanıcı düzeltmeye devam yetkisi verdi. Yalnız TV 320754 / 2026 / S1 E1..8 için doğrulanmış tam alternatif aday eklendi. Diğer dizi/film adayları aynı. Yeni HTML kabullerinde TVSeries+başlık+yıl+sayfa URL’si doğrulanıyor; yanlış/eksik metadata ve belirsiz sayfalar reddediliyor. Bronze yeni alias için TV türü, pozitif yıl ve tek tam episode payload istiyor. UI/film/extractor/resolve kodu korunuyor. Paket henüz yok; ayrı profil koruması sonraki aşamada.
+Önceki tam SHA: 732d4613854042587a9fd0526cfd11163f6451c4
+Son kayıt commit’inin kendi SHA’sı `git log -1` ile bulunur; sonraki kayıt envantere ekler.
+
+| SHA | İşlem | Bağlantı |
+|---|---|---|
+| `45956ae74fdc512fa838ed6e99112a41baba9187` | docs(series): record V83 baseline and rollback boundaries | [commit](https://github.com/eaatabay/EA-FB/commit/45956ae74fdc512fa838ed6e99112a41baba9187) |
+| `069824f8433792f8f5dee2b7079390ee1f9e0374` | test(series): isolate V83 title rejection across four adapters | [commit](https://github.com/eaatabay/EA-FB/commit/069824f8433792f8f5dee2b7079390ee1f9e0374) |
+| `36a4820a4a3c2a43e83b87e5b4b1ef0d217f56b6` | test(series): enforce byte-level V83 baseline preservation | [commit](https://github.com/eaatabay/EA-FB/commit/36a4820a4a3c2a43e83b87e5b4b1ef0d217f56b6) |
+| `fb16e9ced070f1fe0c6d6cf93aaa863f79745099` | ci(series): add branch-scoped diagnostics without publication | [commit](https://github.com/eaatabay/EA-FB/commit/fb16e9ced070f1fe0c6d6cf93aaa863f79745099) |
+| `87344068c46877c720e8f1afa53084cc06400fab` | docs(series): record verified season alias and obsolete branch cleanup | [commit](https://github.com/eaatabay/EA-FB/commit/87344068c46877c720e8f1afa53084cc06400fab) |
+| `efb5fe86b2e0c0edfcc0f6140356d35fa004a7b4` | test(series): track researched TV identity separately from films | [commit](https://github.com/eaatabay/EA-FB/commit/efb5fe86b2e0c0edfcc0f6140356d35fa004a7b4) |
+| `63782dbd89fc52d4382a973c82fac67ca442ad75` | docs(series): audit V83 UI hooks and preserve diagnostic handoff | [commit](https://github.com/eaatabay/EA-FB/commit/63782dbd89fc52d4382a973c82fac67ca442ad75) |
+| `22922df2f887c6c14cf687bb63bd13118476bb22` | test(series): probe approved catalogue identity from read-only CI | [commit](https://github.com/eaatabay/EA-FB/commit/22922df2f887c6c14cf687bb63bd13118476bb22) |
+| `6433b1fcf5a88de40412bbe852112eb15bd90950` | test(series): replay confirmed catalogue identity through V83 title gates | [commit](https://github.com/eaatabay/EA-FB/commit/6433b1fcf5a88de40412bbe852112eb15bd90950) |
+| `1aa79597420845beb18afa58849c917a9499beab` | docs(series): finalize confirmed diagnosis and authentication handoff | [commit](https://github.com/eaatabay/EA-FB/commit/1aa79597420845beb18afa58849c917a9499beab) |
+| `f0abf3b1d800b344984167a5ffd77d6cc65fcb99` | docs(series): confirm restored access and successful final CI | [commit](https://github.com/eaatabay/EA-FB/commit/f0abf3b1d800b344984167a5ffd77d6cc65fcb99) |
+| `732d4613854042587a9fd0526cfd11163f6451c4` | test(series): reproduce missing confirmed season alias before correction | [commit](https://github.com/eaatabay/EA-FB/commit/732d4613854042587a9fd0526cfd11163f6451c4) |
+<!--END-CURRENT-SERIES-STATUS-->
+
 # Değişiklik defteri
 
 Tarih: 2026-10-19 (Europe/Istanbul). Temel: `16396702470eb1f81cc6dac4360e6b0ff84927d1`. Dal: `test/ea-fb-series-name-codex-20261019`.
@@ -219,3 +241,10 @@ Bu kayıt commit’i kendi SHA’sını içeremez; güncel kayıt SHA’sı git 
 Önceki SHA f0abf3b1d800b344984167a5ffd77d6cc65fcb99. Kullanıcı düzeltme/derleme/sonuç raporu için devam yetkisi verdi; önceki yalnız tanı sınırı artık tarihsel kayıttır.
 Yeni test SeriesAliasContractTest.kt mevcut V83 kodunda “Confirmed S1 alias is missing” ile beklenen şekilde başarısız oldu. İlk derleme denemesinde test Log stub'ı eksikti; stub eklenip gerçek assertion hatası görüldü. Koruma betiğine yalnız bu yeni test yolu eklendi. Runtime değişmedi.
 Geri alma: yalnızca bu yeni test/izin listesi/doküman commit'ini yeni dalda revert et. Sonraki aşama doğrulanmış kimlikle sınırlı alternatif başlık düzeltmesi. Yeni test paketi için ayrı Android kullanıcı profili + aynı profilde başka EA-FB olmaması zorunlu olacak; ana profil ve birlikte kurulum fail-closed engellenecek. UI dosyaları korunacak.
+
+## 13 — Doğrulanmış sezon alternatifi ve kaynak kimliği kontrolleri
+- Önceki SHA: 732d4613854042587a9fd0526cfd11163f6451c4; yeni SHA bu aşamanın commit’i.
+- Dosyalar: SourceSearchTitles.kt, BronzeApiAdapter.kt search, DiziYouAdapter.kt search/episodeOffers, DiziBoxAdapter.kt searchTitle; SeriesNameDiagnosisTest.kt, SeriesAliasContractTest.kt, yeni test runner/workflow ve dar kaynak koruması; üç kayıt dosyası
+- Gerekçe / etki: Kullanıcı düzeltmeye devam yetkisi verdi. Yalnız TV 320754 / 2026 / S1 E1..8 için doğrulanmış tam alternatif aday eklendi. Diğer dizi/film adayları aynı. Yeni HTML kabullerinde TVSeries+başlık+yıl+sayfa URL’si doğrulanıyor; yanlış/eksik metadata ve belirsiz sayfalar reddediliyor. Bronze yeni alias için TV türü, pozitif yıl ve tek tam episode payload istiyor. UI/film/extractor/resolve kodu korunuyor. Paket henüz yok; ayrı profil koruması sonraki aşamada.
+- Test / sonuç: Yeni alias sözleşmesi PASS; düzeltilmiş 59 replay assertion PASS; 12 eski Kotlin programı ve 7 bağımsız paket testi PASS; iki koruma testi PASS. Kaynak koruması: 308 V83 dosyası aynı, dört değişmiş dosyada tam hash ve izinli search metot sınırları doğrulandı. Eski V83 scope testi korunarak baseline arşivinde çalıştırılacak; yeni runtime için eski kapsam testi gevşetilmedi.
+- Geri alma: yalnızca bu commit’i yeni test dalında git revert; V83/main/arşivlere dokunma.

@@ -4,6 +4,8 @@ on:
   push:
     branches: [test/ea-fb-series-name-codex-20261019]
     paths:
+      - 'EA-FB/**'
+      - 'core-tests/clean/SeriesAlias*Test.kt'
       - core-tests/clean/SeriesNameDiagnosisTest.kt
       - scripts/test-series-name-codex.sh
       - scripts/verify-series-v83-baseline.py
@@ -55,10 +57,13 @@ jobs:
           mkdir -p build/series-diagnostics
           bash scripts/test-bronze-nl-land.sh 2>&1 | tee build/series-diagnostics/v83-regressions.log
           bash scripts/test-series-name-codex.sh 2>&1 | tee build/series-diagnostics/title-diagnosis.log
-          PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p 'test_v83*.py' -v
+          baseline_dir="$(mktemp -d)"
+          git archive 16396702470eb1f81cc6dac4360e6b0ff84927d1 | tar -x -C "$baseline_dir"
+          (cd "$baseline_dir" && GIT_DIR="$GITHUB_WORKSPACE/.git" GIT_WORK_TREE="$baseline_dir" PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p 'test_v83*.py' -v)
+          rm -rf "$baseline_dir"
       - name: Install required Android tools
         run: '"$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-35" "build-tools;34.0.0" "build-tools;35.0.0"'
-      - name: Compile unchanged V83 runtime - no staging or publication
+      - name: Compile isolated series runtime - no staging or publication
         shell: bash
         run: |
           set -euo pipefail

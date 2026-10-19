@@ -43,7 +43,7 @@ class DiziYouAdapter(private val origin: String = "https://www.diziyou.one") : M
                 if (Identity.normalize(found) != wanted) null
                 else siteUrl(anchors.firstOrNull()?.attr("href").orEmpty())
             }.distinct().take(5)
-            val ajaxOffers = episodeOffers(query, matches)
+            val ajaxOffers = episodeOffers(query, matches, ConfirmedSeriesAlias.matches(query, title))
             if (ajaxOffers.isNotEmpty()) return ajaxOffers
             // Bronze v27's GET search is the fallback when AJAX returns no usable episode.
             val html = try { app.get("$base/?s=" + URLEncoder.encode(title, "UTF-8")).text }
@@ -57,13 +57,13 @@ class DiziYouAdapter(private val origin: String = "https://www.diziyou.one") : M
                     if (names.none { it.isNotBlank() && Identity.normalize(it) == wanted }) null
                     else siteUrl(anchor.attr("href"))
                 }.distinct().take(5)
-            val offers = episodeOffers(query, links)
+            val offers = episodeOffers(query, links, ConfirmedSeriesAlias.matches(query, title))
             if (offers.isNotEmpty()) return offers
         }
         return emptyList()
     }
 
-    private suspend fun episodeOffers(query: MediaQuery, matches: List<String>): List<MediaOffer> {
+    private suspend fun episodeOffers(query: MediaQuery, matches: List<String>, confirmedAlias: Boolean): List<MediaOffer> {
         val season = query.season ?: return emptyList()
         val episode = query.episode ?: return emptyList()
         val found = mutableListOf<MediaOffer>()
@@ -71,15 +71,24 @@ class DiziYouAdapter(private val origin: String = "https://www.diziyou.one") : M
             val doc = try { app.get(seriesUrl).document }
                 catch (cancel: CancellationException) { throw cancel }
                 catch (_: Exception) { continue }
-            val epUrl = doc.select("div.bolumust").firstNotNullOfOrNull { card ->
-                val heading = card.selectFirst("div.baslik")?.ownText()?.trim() ?: return@firstNotNullOfOrNull null
-                if (!DiziYouEpisodeParser.exactEpisode(heading, season, episode)) return@firstNotNullOfOrNull null
+            if (confirmedAlias && !ConfirmedSeriesAlias.confirmedPage(query,
+                doc.selectFirst("h1")?.text().orEmpty(),
+                doc.select("script[type=application/ld+json]").map { it.data() }, seriesUrl)) {
+                trace("search-reject", "tmdb=${query.tmdbId} season=$season episode=$episode reason=series-identity")
+                continue
+            }
+            val episodeUrls = doc.select("div.bolumust").mapNotNull { card ->
+                val heading = card.selectFirst("div.baslik")?.ownText()?.trim() ?: return@mapNotNull null
+                if (!DiziYouEpisodeParser.exactEpisode(heading, season, episode)) return@mapNotNull null
                 siteUrl(card.closest("a")?.attr("href") ?: "")
-            } ?: continue
+            }.distinct()
+            if (confirmedAlias && episodeUrls.size != 1) continue
+            val epUrl = episodeUrls.firstOrNull() ?: continue
             found += MediaOffer(id, "DiziYou", query.title, query.year, query.kind, epUrl,
                 query.tmdbId, season, episode)
         }
-        return found.distinctBy { it.pageUrl }
+        val offers = found.distinctBy { it.pageUrl }
+        return if (confirmedAlias && offers.size > 1) emptyList() else offers
     }
 
     private suspend fun playlistInfo(url: String): HlsPlaylistInfo = try {

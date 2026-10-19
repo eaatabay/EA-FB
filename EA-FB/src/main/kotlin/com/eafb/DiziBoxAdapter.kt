@@ -144,7 +144,27 @@ class DiziBoxAdapter(private val origin: String = "https://www.dizibox.live") : 
             urls.addAll(directSeries(title, wanted))
             trace("search-direct", "matches=${urls.size}")
         }
-        return urls.take(5).map { seriesUrl ->
+        val selected = if (ConfirmedSeriesAlias.matches(query, title)) {
+            val verified = mutableListOf<String>()
+            for (url in urls.take(50)) {
+                val page = fetch(url, site = true) ?: continue
+                val doc = Jsoup.parse(page.text, url)
+                if (!ConfirmedSeriesAlias.confirmedPage(query, doc.selectFirst("div.tv-overview h1 a, div.tv-overview h1")?.text().orEmpty(),
+                    doc.select("script[type=application/ld+json]").map { it.data() }, url)) continue
+                val requestedSeason = query.season ?: continue
+                val requestedEpisode = query.episode ?: continue
+                val episodeUrl = findEpisodeUrl(url, doc, requestedSeason, requestedEpisode) ?: continue
+                val episodeId = parseEpisodeUrl(episodeUrl) ?: continue
+                if (episodeId.slug != cleanSlug(url) || episodeId.season != requestedSeason || episodeId.episode != requestedEpisode) continue
+                verified += url
+                if (verified.size > 1) {
+                    trace("search-reject", "tmdb=${query.tmdbId} season=$requestedSeason episode=$requestedEpisode reason=ambiguous-pages")
+                    return emptyList()
+                }
+            }
+            verified
+        } else urls.take(5)
+        return selected.map { seriesUrl ->
             MediaOffer(id, "DiziBox", query.title, query.year, query.kind,
                 seriesUrl, query.tmdbId, query.season, query.episode)
         }

@@ -62,18 +62,18 @@ fun main() = runBlocking {
         "Actual catalogue distinguishes the season subtitle from the series title")
     val observedSource = JSONObject(File("docs/series-name-codex/DIZIYOU-GOZLEM.json").readText())
     val actualSourceTitles = observedSource.getJSONArray("searchCards")
-    verify(actualSourceTitles.length() > 0 && (0 until actualSourceTitles.length()).none { index ->
+    verify(actualSourceTitles.length() > 0 && (0 until actualSourceTitles.length()).any { index ->
         Identity.normalize(actualSourceTitles.getJSONObject(index).getString("title")) in
             SourceSearchTitles.candidates(query).map(Identity::normalize)
-    }, "Observed DiziYou titles fail the unchanged V83 title gate with actual catalogue names")
+    }, "Confirmed DiziYou title now matches the narrowly expanded catalogue candidates")
     verify((0 until actualSourceTitles.length()).any { index ->
         Identity.normalize(actualSourceTitles.getJSONObject(index).getString("title")) in
             SourceSearchTitles.candidates(query.copy(alternateTitles = listOf(LONG))).map(Identity::normalize)
     }, "An explicitly supplied verified long title can match the observed result without fuzzy names")
     val parsedSeries = PlaybackQuery.fromData("ea-fb:episode:320754:1:8", SHORT, 2026, listOf(SHORT))!!
     verify(parsedSeries == query, "Playback identity retains the candidate TV ID, year and S1E8")
-    verify(SourceSearchTitles.candidates(query) == listOf(SHORT),
-        "Diagnosis: V83 does not invent the confirmed season/alternative name")
+    verify(SourceSearchTitles.candidates(query) == listOf(SHORT, LONG),
+        "Only the confirmed identity gains its verified season alternative")
     for ((id, _) in EXCLUDED_MOVIES) {
         val actualSearch = recorded.getJSONArray("search")
         val movie = (0 until actualSearch.length()).map(actualSearch::getJSONObject).single { it.getInt("id") == id }
@@ -94,9 +94,9 @@ fun main() = runBlocking {
             return (if (land) BronzeLandAdapter { fixture } else BronzeNlAdapter { fixture }) to fixture
         }
         val (shortSource, shortFixture) = source(SeriesPage(LONG))
-        verify(shortSource.search(query).isEmpty(), "V83 must reject unprovided long alias")
-        verify(shortFixture.searches == 1 && shortFixture.loads == 0,
-            "Synthetic result exists but V83 rejects search title BEFORE load/episode/extractor")
+        verify(shortSource.search(query).size == 1, "Confirmed long alias must now resolve a series offer")
+        verify(shortFixture.searches == 1 && shortFixture.loads == 1,
+            "Confirmed source result reaches load and exact episode validation")
         val exact = source(SeriesPage(SHORT)).first.search(query).single()
         verify(exact.season == 1 && exact.episode == 8 && exact.tmdbId == CONFIRMED_TMDB,
             "Exact title must preserve catalogue/episode identity")
@@ -113,7 +113,7 @@ fun main() = runBlocking {
             verify(source(page).first.search(query).isEmpty(), "Wrong identity must be rejected: $page")
         }
         verify(shortFixture.resolves == 0, "No extractor was invoked")
-        println("PASS diagnosis ${shortSource.id}: synthetic short/long mismatch is search-title rejection; supplied alias works")
+        println("PASS diagnosis ${shortSource.id}: confirmed short/long series identity accepted; exact episode retained")
     }
 
     for (box in listOf(false, true)) {
@@ -132,8 +132,11 @@ fun main() = runBlocking {
                     "<div id='searchelement'><a href='$seriesPath'>Image</a><a>$sourceName</a></div>"
                 req.url == "$base$seriesPath" -> {
                     seriesLoads++
-                    if (box) "<article class='grid-box'><a href='/fixture-$season-sezon-$episode-bolum-izle/'>$season. Sezon $episode. Bölüm</a></article>"
-                    else "<a href='/fixture-episode/'><div class='bolumust'><div class='baslik'>$season. Sezon $episode. Bölüm</div></div></a>"
+                    val identity = "<h1>$sourceName</h1><script type='application/ld+json'>" +
+                        JSONObject().put("@type", "TVSeries").put("name", sourceName).put("startDate", "2026")
+                            .put("url", "$base$seriesPath").toString() + "</script>"
+                    if (box) "<div class='tv-overview'>$identity</div><article class='grid-box'><a href='/fixture-$season-sezon-$episode-bolum-izle/'>$season. Sezon $episode. Bölüm</a></article>"
+                    else identity + "<a href='/fixture-episode/'><div class='bolumust'><div class='baslik'>$season. Sezon $episode. Bölüm</div></div></a>"
                 }
                 else -> ""
             }
@@ -141,8 +144,8 @@ fun main() = runBlocking {
         }
         FixtureExtractor.handler = { _, _, _, _ -> extractorCalls++; false }
         val source: MediaSourceAdapter = if (box) DiziBoxAdapter() else DiziYouAdapter()
-        verify(source.search(query).isEmpty(), "V83 short query must reject unprovided long alias")
-        verify(seriesLoads == 0, "Rejection precedes series page and extractor")
+        verify(source.search(query).size == 1, "Confirmed short query now finds verified long series page")
+        verify(seriesLoads > 0, "New alias is corroborated on the series page before returning an offer")
         verify(source.search(query.copy(alternateTitles = listOf(LONG))).single().tmdbId == CONFIRMED_TMDB,
             "Supplied exact alias works without source code changes")
         sourceName = "Organize Isler"
@@ -166,7 +169,7 @@ fun main() = runBlocking {
         sourceName = "Organize İşler: Sazan Sarmalı"
         verify(source.search(query).isEmpty(), "Different suffix must not be accepted by substring")
         verify(extractorCalls == 0, "Diagnostic fixtures produce no stream links")
-        println("PASS diagnosis ${source.id}: title gate isolated; supplied alias and existing normalization preserved")
+        println("PASS diagnosis ${source.id}: confirmed alias validates TV/year/page identity; existing normalization preserved")
     }
     println("PASS: $assertions V83 diagnostic assertions; recorded live catalogue/source metadata, synthetic adapter responses; no stream or device validation")
 }
