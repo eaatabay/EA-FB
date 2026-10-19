@@ -1,0 +1,38 @@
+name: Series catalogue identity - read-only staging diagnosis
+
+on:
+  push:
+    branches: [test/ea-fb-series-name-codex-20261019]
+    paths:
+      - .github/workflows/series-name-catalog-diagnosis.yml
+      - scripts/diagnose-series-catalog.py
+      - tests/test_series_catalog_diagnosis.py
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  catalogue-identity:
+    if: github.repository == 'eaatabay/EA-FB' && github.ref == 'refs/heads/test/ea-fb-series-name-codex-20261019'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Validate V83 preservation and diagnostic negative controls
+        run: |
+          PYTHONDONTWRITEBYTECODE=1 python3 scripts/verify-series-v83-baseline.py
+          PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p test_series_catalog_diagnosis.py -v
+      - name: Read approved staging catalogue identity - GET only
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: PYTHONDONTWRITEBYTECODE=1 python3 scripts/diagnose-series-catalog.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: series-catalogue-identity
+          path: build/series-diagnostics/catalog-identity.json
+          if-no-files-found: warn
+# No deployment, source modification, production host, publishing or push.

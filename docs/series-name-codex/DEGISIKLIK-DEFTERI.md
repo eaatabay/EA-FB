@@ -108,3 +108,25 @@ Son mantıksal test commit'i: efb5fe86b2e0c0edfcc0f6140356d35fa004a7b4. Kimlik t
 - `efb5fe86b2e0c0edfcc0f6140356d35fa004a7b4` — test(series): track researched TV identity separately from films — https://github.com/eaatabay/EA-FB/commit/efb5fe86b2e0c0edfcc0f6140356d35fa004a7b4
 
 Bu doküman kayıt commit'inin SHA'sı git log -1 -- docs/series-name-codex ile bulunur; sonraki aşamada envantere eklenir.
+
+## 8 — Katalog engelini ayıran salt okunur CI tanısı
+- Önceki SHA: 63782dbd89fc52d4382a973c82fac67ca442ad75. Yeni SHA: bu aşamanın commit'i, sonraki kayıt kesinleştirir.
+- Dosyalar: scripts/diagnose-series-catalog.py, tests/test_series_catalog_diagnosis.py, .github/workflows/series-name-catalog-diagnosis.yml, yeni üç yolu açıkça tanıyan mevcut tanı koruma betiği; bu klasörde CI incelemesi, DiziYou gözlemi ve üç kayıt dosyası.
+- Gerekçe: yerel relay CONNECT 403 sorununu GitHub runner üzerinden ayırmak; EA-FB'nin gerçekten kullandığı config/JSON'u ölçmek.
+- Kapsam: yalnızca GET; GitHub contents:read token'ı sadece sabit GitHub config API adresine gider. Relay yalnızca sabit onaylı staging origin. Yönlendirme izlenmez. TV ayrıntısı, external_ids, sezon 1 ve ad araması; video/oynatma isteği yok. Başka Worker/D1/production host veya yazma/deploy işlemi yok.
+- Üç negatif/kapsam testi PASS: yanlış film/IMDb, yanlış sezon veya bölüm kümesi reddi; ilgisiz credential/playback alanlarının rapordan çıkarılması. 312 V83 dosya koruması PASS. Mevcut UI/adapter/SourceSearchTitles/ayar kodu değişmedi.
+- Yeni workflow sadece bu dal ve kendi dosya yollarında; contents:read; yalnızca güvenli JSON artifact'i üretir. Otomatik paket/yayın yok.
+- CI 39309504108 log arşivi alternatif desteklenen API ile indirildi ve ayrıntılı okundu. Testler ve derleme PASS; D8 Kotlin metadata rewrite uyarıları CI-39309504108-INCELEME.json içinde kayıtlı. Önceki log erişim engeli bu yöntemle aşıldı; gizli URL/ham log repoya konmadı.
+- Canlı DiziYou POST data_fetch/keyword=Organize İşler yanıtı HTTP 200 ve yalnız uzun başlığı döndürdü. Gerçek seri sayfasında TVSeries/startDate=2026 ve S1 E1..8 etiketleri görüldü. DIZIYOU-GOZLEM.json yalnızca güvenli başlık/episode etiketlerini içerir; iframe/çerez/nonce/player verisi yok. Gerçek stream veya cihaz testi yapılmadı.
+- Geri alma: yalnızca yeni tanı workflow/script/test ve yeni dokümanları yeni daldan kaldır/revert et; eski V83 dalına veya UI'ya işlem yok.
+
+### Güncel bütün SHA kayıtları
+- `45956ae74fdc512fa838ed6e99112a41baba9187` — docs(series): record V83 baseline and rollback boundaries — https://github.com/eaatabay/EA-FB/commit/45956ae74fdc512fa838ed6e99112a41baba9187
+- `069824f8433792f8f5dee2b7079390ee1f9e0374` — test(series): isolate V83 title rejection across four adapters — https://github.com/eaatabay/EA-FB/commit/069824f8433792f8f5dee2b7079390ee1f9e0374
+- `36a4820a4a3c2a43e83b87e5b4b1ef0d217f56b6` — test(series): enforce byte-level V83 baseline preservation — https://github.com/eaatabay/EA-FB/commit/36a4820a4a3c2a43e83b87e5b4b1ef0d217f56b6
+- `fb16e9ced070f1fe0c6d6cf93aaa863f79745099` — ci(series): add branch-scoped diagnostics without publication — https://github.com/eaatabay/EA-FB/commit/fb16e9ced070f1fe0c6d6cf93aaa863f79745099
+- `87344068c46877c720e8f1afa53084cc06400fab` — docs(series): record verified season alias and obsolete branch cleanup — https://github.com/eaatabay/EA-FB/commit/87344068c46877c720e8f1afa53084cc06400fab
+- `efb5fe86b2e0c0edfcc0f6140356d35fa004a7b4` — test(series): track researched TV identity separately from films — https://github.com/eaatabay/EA-FB/commit/efb5fe86b2e0c0edfcc0f6140356d35fa004a7b4
+- `63782dbd89fc52d4382a973c82fac67ca442ad75` — docs(series): audit V83 UI hooks and preserve diagnostic handoff — https://github.com/eaatabay/EA-FB/commit/63782dbd89fc52d4382a973c82fac67ca442ad75
+
+Kayıt commit'i kendi SHA'sını içeremez; güncel SHA için git log -1 -- docs/series-name-codex. Sonraki kayıt bu SHA'yı ekler.

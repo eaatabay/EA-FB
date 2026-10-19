@@ -10,6 +10,9 @@ PACKAGE = "dist-v83-test/EA-FB-V83-TEST.cs3"
 PACKAGE_SHA256 = "40fd24acb41dc69fa869ceb69ee6661e5136c1dff39434eb8bd3227f955f3b66"
 # Exact new paths only. Future implementation requires a reviewed, narrow guard update.
 ALLOWED_NEW = {
+    "scripts/diagnose-series-catalog.py",
+    "tests/test_series_catalog_diagnosis.py",
+    ".github/workflows/series-name-catalog-diagnosis.yml",
     "core-tests/clean/SeriesNameDiagnosisTest.kt",
     "scripts/test-series-name-codex.sh",
     "scripts/verify-series-v83-baseline.py",

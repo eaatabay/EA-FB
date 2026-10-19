@@ -1,0 +1,26 @@
+{
+  "schema": {
+    "name": "Organize İşler: Karun Hazinesi",
+    "type": "TVSeries",
+    "startDate": "2026"
+  },
+  "searchEndpoint": "https://www.diziyou.one/wp-admin/admin-ajax.php",
+  "searchCards": [{"title": "Organize İşler: Karun Hazinesi"}],
+  "seriesPage": "https://www.diziyou.one/organize-isler-karun-hazinesi2/",
+  "heading": "Organize İşler: Karun Hazinesi",
+  "observedAt": "2026-10-19 Europe/Istanbul",
+  "searchHttpStatus": 200,
+  "searchAction": "data_fetch",
+  "searchKeyword": "Organize İşler",
+  "episodeHeadings": [
+    "1. Sezon 1. Bölüm",
+    "1. Sezon 2. Bölüm",
+    "1. Sezon 3. Bölüm",
+    "1. Sezon 4. Bölüm",
+    "1. Sezon 5. Bölüm",
+    "1. Sezon 6. Bölüm",
+    "1. Sezon 7. Bölüm",
+    "1. Sezon 8. Bölüm"
+  ],
+  "limits": "Observed source title/schema/episode labels only. Raw HTML, scripts, cookies, player data and playback URLs excluded. No stream/extractor/device playback test. EA-FB catalogue response pending."
+}
