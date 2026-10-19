@@ -1,0 +1,12 @@
+{
+  "sourceCommit": "934ca5764ad3e4032cf5c753b89b9ac189fc5834",
+  "baseline": "16396702470eb1f81cc6dac4360e6b0ff84927d1",
+  "branch": "test/ea-fb-series-name-codex-20261019",
+  "version": 8502,
+  "protectedV83RuntimeMethods": 2028,
+  "dexSha256": "ec4b0abede5f439ad3342fc180d5c313bb81740c197853883d60471c2d2a2686",
+  "packageSha256": "92fbfd0dd39028b5d4d6110ae305418f718ec98c4c4d0f1d910ea1103efa83bf",
+  "primaryProfileBlockedWithoutVerifiedAppIsolation": true,
+  "miBoxIsolationVerified": false,
+  "miBoxPlaybackVerified": false
+}

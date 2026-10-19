@@ -1,7 +1,7 @@
 <!--CURRENT-SERIES-STATUS-->
 ## Güncel uygulama aşaması
-Son incelemede 8501'den kalan primaryProfileBlocked alanı ve repo açıklaması düzeltildi. Doğru alan primaryProfileBlockedWithoutVerifiedAppIsolation=true; miBoxIsolationVerified=false ve miBoxPlaybackVerified=false. Yalnız rapor/metaveri; runtime değişmedi. Önceki build/ADB commit SHA 49a11b4a8813cc406402bcb5d072323239dd71d2.
-Önceki tam SHA: 49a11b4a8813cc406402bcb5d072323239dd71d2
+Final CI 39323892158 kaynak 934ca5764ad3e4032cf5c753b89b9ac189fc5834 için başarılı. CI log CS3 hash'i yerel 92fbfd0dd39028b5d4d6110ae305418f718ec98c4c4d0f1d910ea1103efa83bf ile aynı. 39323639089 daha yeni metadata commit'iyle otomatik iptal edildi. Yalnız dist-series-codex-8502-test ve belgeler yayımlanır; cihaz testi bekliyor.
+Önceki tam SHA: 934ca5764ad3e4032cf5c753b89b9ac189fc5834
 Son kayıt commit’inin kendi SHA’sı `git log -1` ile bulunur; sonraki kayıt envantere ekler.
 
 | SHA | İşlem | Bağlantı |
@@ -28,7 +28,9 @@ Son kayıt commit’inin kendi SHA’sı `git log -1` ile bulunur; sonraki kayı
 | `58a067b57a485dd126865664a818ce81da5f13f5` | docs(series-test): finalize report commit references | [commit](https://github.com/eaatabay/EA-FB/commit/58a067b57a485dd126865664a818ce81da5f13f5) |
 | `ea1e7aa2b461552b3f42dafa87f239ce83276772` | fix(series-test): require verified app isolation for primary-profile 8502 | [commit](https://github.com/eaatabay/EA-FB/commit/ea1e7aa2b461552b3f42dafa87f239ce83276772) |
 | `49a11b4a8813cc406402bcb5d072323239dd71d2` | build(series-test): verify blue app opt-in and protect 8502 runtime gates | [commit](https://github.com/eaatabay/EA-FB/commit/49a11b4a8813cc406402bcb5d072323239dd71d2) |
+| `934ca5764ad3e4032cf5c753b89b9ac189fc5834` | fix(series-test): report conditional primary-profile policy accurately | [commit](https://github.com/eaatabay/EA-FB/commit/934ca5764ad3e4032cf5c753b89b9ac189fc5834) |
 <!--END-CURRENT-SERIES-STATUS-->
+
 
 
 
@@ -331,4 +333,11 @@ Nihai yayın/geri alma raporu GitHub commit’i: [b0e18e62adb3a101daef65ae5235f8
 - Dosyalar: package-series-codex.py, TEST-KURULUMU.md, üç kayıt belgesi
 - Gerekçe / etki: Son incelemede 8501'den kalan primaryProfileBlocked alanı ve repo açıklaması düzeltildi. Doğru alan primaryProfileBlockedWithoutVerifiedAppIsolation=true; miBoxIsolationVerified=false ve miBoxPlaybackVerified=false. Yalnız rapor/metaveri; runtime değişmedi. Önceki build/ADB commit SHA 49a11b4a8813cc406402bcb5d072323239dd71d2.
 - Test / sonuç: Yerel Android derlemesi ve DEX korumaları geçti. CI 39323639089 ara çalışması; final metadata commit'i için yeni CI beklenecek. Cihaz testine başarı iddiası yok.
+- Geri alma: yalnızca bu commit’i yeni test dalında git revert; V83/main/arşivlere dokunma.
+
+## 8502 / final CI ve yeni test yayını
+- Önceki SHA: 934ca5764ad3e4032cf5c753b89b9ac189fc5834; yeni SHA bu aşamanın commit’i.
+- Dosyalar: dist-series-codex-8502-test altındaki altı dosya; CI-8502-SONUC.json, MAVI-8502-KANIT.json, kurulum/rollback/devir/risk/sonuç belgeleri
+- Gerekçe / etki: Final CI 39323892158 kaynak 934ca5764ad3e4032cf5c753b89b9ac189fc5834 için başarılı. CI log CS3 hash'i yerel 92fbfd0dd39028b5d4d6110ae305418f718ec98c4c4d0f1d910ea1103efa83bf ile aynı. 39323639089 daha yeni metadata commit'iyle otomatik iptal edildi. Yalnız dist-series-codex-8502-test ve belgeler yayımlanır; cihaz testi bekliyor.
+- Test / sonuç: Final CI tüm adımları başarılı; 53 izolasyon +36 alias safety+59 teşhis, dört kaynak/settings/provider regresyonları, 7 eski V83 ve yeni guard/paket/ADB negatif testleri; 2028+250 metot koruma; 23 korunan uzak dal değişmedi. Fiziksel Mi Box doğrulanmadı.
 - Geri alma: yalnızca bu commit’i yeni test dalında git revert; V83/main/arşivlere dokunma.

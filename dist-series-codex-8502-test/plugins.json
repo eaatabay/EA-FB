@@ -1,0 +1,23 @@
+[
+  {
+    "fileHash": "sha256-92fbfd0dd39028b5d4d6110ae305418f718ec98c4c4d0f1d910ea1103efa83bf",
+    "fileSize": 334898,
+    "apiVersion": 1,
+    "repositoryUrl": "https://github.com/eaatabay/EA-FB",
+    "status": 3,
+    "language": "tr",
+    "authors": [
+      "EA-FB"
+    ],
+    "tvTypes": [
+      "Movie",
+      "TvSeries",
+      "Live"
+    ],
+    "version": 8502,
+    "internalName": "EA-FB-SERIES-CODEX-8502-TEST",
+    "name": "EA-FB SERIES CODEX 8502 TEST",
+    "description": "Confirmed season alias test; separate profile or ADB-verified separate application required; no Mi Box playback claim.",
+    "url": "https://raw.githubusercontent.com/eaatabay/EA-FB/test/ea-fb-series-name-codex-20261019/dist-series-codex-8502-test/EA-FB-SERIES-CODEX-8502-TEST.cs3"
+  }
+]

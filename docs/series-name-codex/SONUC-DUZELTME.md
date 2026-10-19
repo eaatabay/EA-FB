@@ -1,3 +1,9 @@
+# Güncel ek: MAVİ CloudStream / 8502
+
+8501 raporu aşağıda tarihsel kayıttır. Kullanıcı düzeltmesiyle mavi uygulamanın eski Bunny sürümü içerdiği anlaşıldı; V83 diğer kurulumda korunur. 8502 ayrı paket/UID/dataDir/süreç OS kontrolü ve açık ADB izin kaydıyla primary kullanıcıda koşullu test yolunu ekler. Kayıtsız veya eksik bilgili ana profil engellidir. Aynı hostta başka EA-FB yüklenmez. TEST-KURULUMU.md ve MAVI-8502-IZOLASYON.md güncel talimatlardır; 8501 ayrı-kullanıcı talimatını 8502'ye uygulamayın. Cihaz izolasyonu/UI/oynatma henüz doğrulanmadı. Nihai CI ve yayın hash kanıtları CI-8502-SONUC.json ve YAYIN-8502-DOGRULAMA.json dosyalarında tutulacaktır.
+
+---
+
 # Dizi isim eşleştirmesi — 8501 düzeltme raporu
 
 ## Kanıt ve kapsam

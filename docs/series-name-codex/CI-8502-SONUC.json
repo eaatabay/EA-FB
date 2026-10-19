@@ -1,0 +1,98 @@
+{
+  "runId": 39323892158,
+  "url": "https://github.com/eaatabay/EA-FB/actions/runs/39323892158",
+  "sourceCommit": "934ca5764ad3e4032cf5c753b89b9ac189fc5834",
+  "conclusion": "success",
+  "packageSha256": "92fbfd0dd39028b5d4d6110ae305418f718ec98c4c4d0f1d910ea1103efa83bf",
+  "localPackageSha256": "92fbfd0dd39028b5d4d6110ae305418f718ec98c4c4d0f1d910ea1103efa83bf",
+  "hashComparison": "CI final log SHA256 equals local CS3 bytes; published raw bytes verified separately",
+  "ciArtifactBinaryDownloaded": false,
+  "logsZipSha256": "93870778b9e167078332b2cc05f3a0482a142fc57b23d47341a911eb69853a7a",
+  "nonfatalMetadataRewritingWarnings": 0,
+  "jobs": [
+    {
+      "name": "diagnose",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-java@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run gradle/actions/setup-gradle@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Install checksum-verified Kotlin test compiler",
+          "conclusion": "success"
+        },
+        {
+          "name": "Preserve V83 sources, UI, old workflows and packages",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run film regressions and confirmed series safety checks",
+          "conclusion": "success"
+        },
+        {
+          "name": "Install required Android tools",
+          "conclusion": "success"
+        },
+        {
+          "name": "Compile isolated series runtime - no staging or publication",
+          "conclusion": "success"
+        },
+        {
+          "name": "Package isolated profile-guarded CS3 and verify V83 DEX protection",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/upload-artifact@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/upload-artifact@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run gradle/actions/setup-gradle@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/setup-java@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    }
+  ],
+  "artifacts": [
+    {
+      "id": 12221468124,
+      "name": "series-name-diagnostic-logs",
+      "sizeInBytes": 53358
+    },
+    {
+      "id": 12221458229,
+      "name": "EA-FB-SERIES-CODEX-8502-TEST",
+      "sizeInBytes": 348995
+    }
+  ],
+  "miBoxIsolationVerified": false,
+  "miBoxPlaybackVerified": false
+}

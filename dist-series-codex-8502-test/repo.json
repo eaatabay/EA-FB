@@ -1,0 +1,8 @@
+{
+  "name": "EA-FB SERIES CODEX 8502 TEST",
+  "description": "Verified separate-app or secondary-profile test; only EA-FB in this host",
+  "manifestVersion": 1,
+  "pluginLists": [
+    "https://raw.githubusercontent.com/eaatabay/EA-FB/test/ea-fb-series-name-codex-20261019/dist-series-codex-8502-test/plugins.json"
+  ]
+}

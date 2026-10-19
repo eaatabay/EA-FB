@@ -1,24 +1,11 @@
-# UI hook / iki eklenti risk incelemesi — yayın engeli
+# UI hook / iki EA-FB: güncel 8502 koruması
 
-## Doğrudan görülen kanıt
-Korunan V83 CS3 SHA-256 40fd24acb41dc69fa869ceb69ee6661e5136c1dff39434eb8bd3227f955f3b66. classes.dex içindeki gerçek metot çağrıları UI-HOOK-INCELEMESI.json dosyasına yalnızca güvenli metot referanslarıyla çıkarıldı.
+V83 CS3 SHA256: 40fd24acb41dc69fa869ceb69ee6661e5136c1dff39434eb8bd3227f955f3b66. UI-HOOK-INCELEMESI.json değişmemiş V83 DEX kanıtıdır: FilmSeriesRail, DetailMetaRow, EpisodeUpcomingStyle ve EpisodeTitleStyle Application lifecycle callback kaydeder; API/provider render kapıları vardır; dört sınıfta unregister çağrısı görülmedi. Marker sabitleri sürümlere göre ayrılmamıştır. Bunlar geçmiş arızanın kesin nedeni olarak sunulmaz.
 
-- FilmSeriesRail.install, DetailMetaRow.install, EpisodeUpcomingStyle.install ve EpisodeTitleStyle.install, Application.registerActivityLifecycleCallbacks çağırıyor.
-- Render metotlarında apiName/provider kapıları var. Bu korumalar göz ardı edilmedi; hook'ların diğer provider ekranlarını mutlaka bozacağı iddia edilmiyor.
-- Bu dört sınıfta unregisterActivityLifecycleCallbacks çağrısı görülmedi. EAPlugin kaynakta unload override tanımlamıyor. Uninstall sonrası host'un classloader/handler/listener temizliği ayrıca incelenmeli.
-- Marker sabitleri ea-fb-film-series-row / ea-fb-detail-meta-* gibi sürüme göre ayrılmamış adlar taşıyor.
-- Şu an yeni test kimliği üretilmedi: yerel derleme hâlâ V83 adı, STORE ve sınıf kimliklerini taşır. Bu dosyayı ikinci eklenti olarak yüklemek uygun değildir.
+8502 çözümü UI'ı yeniden yazmak değildir. Yalnız bir EA-FB içeren ayrı Android uygulama/UID/data/süreç veya ayrı Android kullanıcı şarttır. EAPlugin.load ilk işlemi saved online+local envanter ve manifest kontrolüdür. V83 önce/sonra envanter sırası, eski EA-FB, renamed entrypoint, iki own kayıt, eksik own kayıt reddedilir. Ana profilde ayrıca açık ADB marker ve Android PackageManager/UID/dataDir/process kontrolü gerekir. Native UID engeli tek başına kaldırılmadı. Ayrı UID ve süreçte Application callback, classloader belleği ve provider registry paylaşılmaz; ayrı dataDir ve 8502 namespace ayar verisini ayırır. Upstream PluginManager online dosyaları context.filesDir altında, local kopyaları app-specific external files altında tutar; bu kaynak incelemesi kurulu Mi Box host sürümünü kanıtlamaz.
 
-Bu bulgular V84 arızasının kesin nedeni değildir. Ayrı CS3/internalName veya yalnızca farklı SharedPreferences alanı yeterli izolasyon kanıtı sayılmaz. Mevcut V83 ve UI kodları byte düzeyinde korundu.
+Derlenmiş DEX kontrolü gate'in tüm ayar/UI/provider işlemlerinden önce olduğunu doğrular; 2028 korunan V83 metodu +250 özgün Bronze metodu korunur. Gerçek UI talimatı mutasyonu ve OS kimliği kontrol referansı mutasyonları testte reddedilir. UI/EAProvider/EASettings kaynak dosyaları değiştirilmedi. Fixture testleri dört kaynak ve tek provider/ayar davranışını kontrol eder; Android UI instrumentation testi değildir.
 
-## Yayın öncesi gerekli kanıtlar (henüz çalıştırılmadı)
-1. Ayrı runtime/package/provider/tercih kimliği; mevcut V83 tercihlerinin yazılmadığı ve otomatik taşınmadığı instrumentation testi.
-2. Aynı Android uygulamasında iki yükleme sırası için provider kayıtlarının ve classloader çözümlemesinin doğrulanması.
-3. Her dört UI hook'unun yalnızca kendi provider ekranını etkilediği, marker/view/focus/handler durumlarının karışmadığı testi.
-4. Test eklentisi kaldırıldığında listener/handler referansları ile provider kaydının temizlenmesi; host restart öncesi ve sonrasında V83 rafları, detay, puanlar, sezon/bölüm, kaynak/oynatıcı ayarlarının korunması.
-5. Mi Box'ta menü ve sezon/bölüm davranışı, ardından gerçek bölüm oynatması; bunlar ayrı sonuçlar olarak kaydedilmeli.
+İşletim şartları: eski Bunny yalnız maviden kaldırılmalı, yalnız mavi süreç tamamen durdurulup yeniden başlatılmalı; 8502 testinde aynı uygulamaya başka EA-FB sonradan da kurulmaz. Yükleme kapısı başka bir eklentinin gelecekte kurulmasını sürekli izleyen host yöneticisi değildir. Aynı uygulamada iki EA-FB birlikte çalışması desteklenmez ve kanıtlanmış gibi sunulmaz. Eski hook'ların kaldırma anında temizlendiği varsayılmaz; soğuk başlangıç zorunludur. Yeni paket kurulduktan sonra da soğuk başlangıçla tek provider/hook görünümü kontrol edilir.
 
-Ayrı Android kullanıcı profili/uygulama veri alanı olası bir izolasyon seçeneğidir, fakat bu cihazda kullanılabilirliği doğrulanmadı; güvenli kurulum yöntemi diye sunulmuyor.
-
-## Karar
-Kullanıcının son talimatıyla yalnızca test ve teşhis sürüyor. UI kodunda değişiklik yok. Risk çözülüp kanıtlanana kadar paket/staging manifesti yayımlanmayacak ve Mi Box kurulumu önerilmeyecek.
+Mi Box kabulü BEKLİYOR: script foreground mavi paketini, iki ayrı UID/dataDir ve canlı süreci cihazda ölçmeli; eklenti kendi OS ölçümünü tekrar yapmalı. Android paket görünürlüğü engelinde test fail-closed olur; kayıt tek başına geçiş sağlamaz. Gerçek UI/focus/lifecycle, kaynak erişimi ve oynatma henüz doğrulanmadı. TEST-KURULUMU.md bunu adım adım ayırır. Koşullu test paketi yayımlanabilir; cihaz başarılı ilan edilemez. V83/diğer CloudStream/production'a hiçbir müdahale yok.

@@ -1,0 +1,38 @@
+{
+  "version": 8502,
+  "sourceCommit": "934ca5764ad3e4032cf5c753b89b9ac189fc5834",
+  "runtimeCommit": "ea1e7aa2b461552b3f42dafa87f239ce83276772",
+  "deviceIsolationVerified": false,
+  "devicePlaybackVerified": false,
+  "deviceAvailableInEnvironment": false,
+  "uiSourcesChanged": false,
+  "providerSourceChanged": false,
+  "settingsSourceChanged": false,
+  "guards": [
+    "explicit per-host 8502 opt-in",
+    "foreground blue package checked by read-only ADB",
+    "two distinct application UIDs, no shared UID",
+    "package-specific separate dataDirs and default process names",
+    "runtime PackageManager and /proc/self/cmdline recheck",
+    "exactly one own plugin, no other EA-FB manifest/name",
+    "before all preferences, UI hooks and provider registration"
+  ],
+  "failurePolicy": "fail closed; do not bypass PackageManager visibility restrictions",
+  "tests": {
+    "isolationAssertions": 53,
+    "aliasSafetyAssertions": 36,
+    "titleDiagnosisAssertions": 59,
+    "adbVerifierPythonTests": 3,
+    "packagePythonTests": 4,
+    "baselineGuardPythonTests": 2,
+    "immutableV83PackageTests": 7,
+    "protectedRuntimeMethods": 2028,
+    "originalBronzeMethods": 250
+  },
+  "upstreamBuildGradle": {
+    "url": "https://raw.githubusercontent.com/recloudstream/cloudstream/master/app/build.gradle.kts",
+    "sha256": "456a1de4a5f7b430d6d9faa1d66df39014b4dc92ada8b1e92132c928e4d73d79",
+    "installedMiBoxHostVersionVerified": false
+  },
+  "packageSha256": "92fbfd0dd39028b5d4d6110ae305418f718ec98c4c4d0f1d910ea1103efa83bf"
+}
