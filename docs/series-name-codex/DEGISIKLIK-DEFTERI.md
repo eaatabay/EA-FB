@@ -214,3 +214,8 @@ GitHub API ve HTTPS Git erişimi yeniden çalışıyor. Yerelde kalan **1aa79597
 | `1aa79597420845beb18afa58849c917a9499beab` | docs(series): finalize confirmed diagnosis and authentication handoff | [commit](https://github.com/eaatabay/EA-FB/commit/1aa79597420845beb18afa58849c917a9499beab) |
 
 Bu kayıt commit’i kendi SHA’sını içeremez; güncel kayıt SHA’sı git log -1 ile bulunur ve sohbet sonucunda verilir.
+
+## Kullanıcının devam talimatı — düzeltme aşaması başladı
+Önceki SHA f0abf3b1d800b344984167a5ffd77d6cc65fcb99. Kullanıcı düzeltme/derleme/sonuç raporu için devam yetkisi verdi; önceki yalnız tanı sınırı artık tarihsel kayıttır.
+Yeni test SeriesAliasContractTest.kt mevcut V83 kodunda “Confirmed S1 alias is missing” ile beklenen şekilde başarısız oldu. İlk derleme denemesinde test Log stub'ı eksikti; stub eklenip gerçek assertion hatası görüldü. Koruma betiğine yalnız bu yeni test yolu eklendi. Runtime değişmedi.
+Geri alma: yalnızca bu yeni test/izin listesi/doküman commit'ini yeni dalda revert et. Sonraki aşama doğrulanmış kimlikle sınırlı alternatif başlık düzeltmesi. Yeni test paketi için ayrı Android kullanıcı profili + aynı profilde başka EA-FB olmaması zorunlu olacak; ana profil ve birlikte kurulum fail-closed engellenecek. UI dosyaları korunacak.
