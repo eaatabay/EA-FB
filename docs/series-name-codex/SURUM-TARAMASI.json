@@ -1,0 +1,122 @@
+[
+  {
+    "ref": "refs/remotes/origin/archive/frozen-v44-20261002",
+    "sha": "56afc2a7972d9fb2a95370c857e0f47e38e27c97",
+    "version": 6
+  },
+  {
+    "ref": "refs/remotes/origin/archive/frozen-v45-20261002",
+    "sha": "7c39bc3f590c69f7a20e042ec48f6f0e933597d2",
+    "version": 6
+  },
+  {
+    "ref": "refs/remotes/origin/archive/frozen-v46-20261001",
+    "sha": "252e8126bce68829e5cac7e8fadca2a27e4d3a03",
+    "version": 6
+  },
+  {
+    "ref": "refs/remotes/origin/archive/frozen-v47-20261002",
+    "sha": "9eedba60cdfbf82d2fd3aadb894fc9193c7bbe3b",
+    "version": 6
+  },
+  {
+    "ref": "refs/remotes/origin/archive/frozen-v49-20261002",
+    "sha": "c3544d1d9dd346ac8737d0fcf21c67e3cd1da13a",
+    "version": 49
+  },
+  {
+    "ref": "refs/remotes/origin/archive/frozen-v62-mibox-20261005",
+    "sha": "6e000453be03d1e5bed79acd5cd17a8d5e3e85d2",
+    "version": 62
+  },
+  {
+    "ref": "refs/remotes/origin/archive/frozen-v63-mibox-20261006",
+    "sha": "006d4782a864224f25c8bdc69b312994841c00f5",
+    "version": 63
+  },
+  {
+    "ref": "refs/remotes/origin/archive/frozen-v64-complete-20261009",
+    "sha": "4730b9717a76c5810607e59b28600e274fb7b875",
+    "version": 64
+  },
+  {
+    "ref": "refs/remotes/origin/archive/frozen-v81-mibox-working-20261009",
+    "sha": "88d7966fedf5150c38e4c898da86c482f1284b70",
+    "version": 81
+  },
+  {
+    "ref": "refs/remotes/origin/archive/recovery-v63-complete-20261008",
+    "sha": "ff7615d17fad2a818f569e5e46d8efdf1011ed5e",
+    "version": 63
+  },
+  {
+    "ref": "refs/remotes/origin/develop/post-v49",
+    "sha": "7cc8658f3c592722362ed6ab6ffaf65fca8763e7",
+    "version": 49
+  },
+  {
+    "ref": "refs/remotes/origin/docs/cleanup-report-20261010",
+    "sha": "1f68b3152556b03ecb03a77bb746324c1722d31e",
+    "version": 5
+  },
+  {
+    "ref": "refs/remotes/origin/feature/detail-dual-ratings-v6",
+    "sha": "e5f0501b75e9f0957a6e2d63911f460204e73c35",
+    "version": 6
+  },
+  {
+    "ref": "refs/remotes/origin/fix/season-title-refresh-v48",
+    "sha": "c3544d1d9dd346ac8737d0fcf21c67e3cd1da13a",
+    "version": 49
+  },
+  {
+    "ref": "refs/remotes/origin/main",
+    "sha": "d7de664092a9236da477783f4cc35b5f7bf895d3",
+    "version": 5
+  },
+  {
+    "ref": "refs/remotes/origin/test/bronze-direct-integration-v79",
+    "sha": "4658aaaa12e54ef5b02e3e91f5d36c5b3f41e514",
+    "version": 80
+  },
+  {
+    "ref": "refs/remotes/origin/test/clean-codex-bronze-nl-land-20261009",
+    "sha": "88d7966fedf5150c38e4c898da86c482f1284b70",
+    "version": 81
+  },
+  {
+    "ref": "refs/remotes/origin/test/clean-codex-fix-20261009",
+    "sha": "649a45cdc50c86a86d4134ffb1668838275b19e8",
+    "version": 66
+  },
+  {
+    "ref": "refs/remotes/origin/test/dizibox-king-mibox",
+    "sha": "3b10881e293391e06b9bf33e08e84549af5e4090",
+    "version": 74
+  },
+  {
+    "ref": "refs/remotes/origin/test/ea-fb-series-name-codex-20261019",
+    "sha": "1ac4de36b50b28c5313ea3c3d71e2b802f7e051a",
+    "version": 83
+  },
+  {
+    "ref": "refs/remotes/origin/test/ea-fb-v82-name-cleanup",
+    "sha": "79d17e9c4157bbf176a0e996cb843fc5c3db822b",
+    "version": 82
+  },
+  {
+    "ref": "refs/remotes/origin/test/ea-fb-v83-bronze-search-fix",
+    "sha": "16396702470eb1f81cc6dac4360e6b0ff84927d1",
+    "version": 83
+  },
+  {
+    "ref": "refs/remotes/origin/test/land-fastplay-isolated-20261009",
+    "sha": "2eaf679c7bcc1dbefcb9230d7f4f127311cb435f",
+    "version": 65
+  },
+  {
+    "ref": "refs/remotes/origin/test/v63-bronze-cleanroom-20261008",
+    "sha": "c53ee48c7bbca37aa1bec85ca47668c13bcdd899",
+    "version": 64
+  }
+]

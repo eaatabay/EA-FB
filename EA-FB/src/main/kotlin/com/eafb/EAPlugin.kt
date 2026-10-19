@@ -8,6 +8,7 @@ import com.lagradost.cloudstream3.plugins.Plugin
 @CloudstreamPlugin
 class EAPlugin : Plugin() {
     override fun load(context: Context) {
+        SeriesTestIsolation.requireSafe()
         EASettings.initialize(context)
         FilmSeriesRail.install(context)
         DetailMetaRow.install(context)

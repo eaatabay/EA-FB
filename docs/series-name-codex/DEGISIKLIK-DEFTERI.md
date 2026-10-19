@@ -1,7 +1,7 @@
 <!--CURRENT-SERIES-STATUS-->
 ## Güncel uygulama aşaması
-Dört kaynak için yeni alias kabulüne özel 36 pozitif/negatif kontrol eklendi. Eksik/yanlış yıl, Movie türü, yanlış sezon/bölüm, ilgisiz ad, iki uygun sayfa ve iki farklı episode payload reddediliyor. Mevcut film ve normal dizi araması korunuyor; UI/oynatma zinciri değişmedi.
-Önceki tam SHA: 1ac4de36b50b28c5313ea3c3d71e2b802f7e051a
+Bilinen 24 dal ucu tarandı; 8501 kullanılmıyor (en büyük mevcut sürüm 83). Yeni internalName EA-FB-SERIES-CODEX-8501-TEST, provider adı EA-FB SERIES CODEX 8501 TEST, store ea_fb_series_codex_8501_test; V83/V82’den tercih aktarımı yok (ayrı boş seed alanı). EAPlugin.load ilk iş olarak UID ve kurulu eklenti envanterini doğrular; ana Android profili, aynı profilde başka EA-FB, bilinmeyen veya çift kendi kaydı reddedilir. Kontrol preferences/UI callbacks/provider kayıtlarından önce. UI dosyaları hiç değişmedi. Bu sürüm normal ana Mi Box profiline kurulmaz; ayrı profil yeteneği cihazda henüz doğrulanmadı.
+Önceki tam SHA: 9846add14a62fd118ccbfb874131d46fd6eb4c70
 Son kayıt commit’inin kendi SHA’sı `git log -1` ile bulunur; sonraki kayıt envantere ekler.
 
 | SHA | İşlem | Bağlantı |
@@ -19,7 +19,9 @@ Son kayıt commit’inin kendi SHA’sı `git log -1` ile bulunur; sonraki kayı
 | `f0abf3b1d800b344984167a5ffd77d6cc65fcb99` | docs(series): confirm restored access and successful final CI | [commit](https://github.com/eaatabay/EA-FB/commit/f0abf3b1d800b344984167a5ffd77d6cc65fcb99) |
 | `732d4613854042587a9fd0526cfd11163f6451c4` | test(series): reproduce missing confirmed season alias before correction | [commit](https://github.com/eaatabay/EA-FB/commit/732d4613854042587a9fd0526cfd11163f6451c4) |
 | `1ac4de36b50b28c5313ea3c3d71e2b802f7e051a` | fix(series): add corroborated alias only for confirmed Organize Isler season | [commit](https://github.com/eaatabay/EA-FB/commit/1ac4de36b50b28c5313ea3c3d71e2b802f7e051a) |
+| `9846add14a62fd118ccbfb874131d46fd6eb4c70` | test(series): reject ambiguous or uncorroborated alias source pages | [commit](https://github.com/eaatabay/EA-FB/commit/9846add14a62fd118ccbfb874131d46fd6eb4c70) |
 <!--END-CURRENT-SERIES-STATUS-->
+
 
 
 # Değişiklik defteri
@@ -256,4 +258,11 @@ Geri alma: yalnızca bu yeni test/izin listesi/doküman commit'ini yeni dalda re
 - Dosyalar: core-tests/clean/SeriesAliasSafetyTest.kt, yeni test runner ve dar yeni dosya izin listesi; üç kayıt dosyası
 - Gerekçe / etki: Dört kaynak için yeni alias kabulüne özel 36 pozitif/negatif kontrol eklendi. Eksik/yanlış yıl, Movie türü, yanlış sezon/bölüm, ilgisiz ad, iki uygun sayfa ve iki farklı episode payload reddediliyor. Mevcut film ve normal dizi araması korunuyor; UI/oynatma zinciri değişmedi.
 - Test / sonuç: 36/36 yeni güvenlik assertion’ı PASS; 59/59 replay assertion ve alias kimlik sözleşmesi PASS. Korunan V83 arşivinde eski 7 paket/scope testi değişmeden PASS; baseline testi gevşetilmedi.
+- Geri alma: yalnızca bu commit’i yeni test dalında git revert; V83/main/arşivlere dokunma.
+
+## 15 — Bağımsız 8501 kimliği ve ana profil koruması
+- Önceki SHA: 9846add14a62fd118ccbfb874131d46fd6eb4c70; yeni SHA bu aşamanın commit’i.
+- Dosyalar: CleanTestIdentity.kt ve yeni saf SeriesTestIsolationPolicy, EAPlugin.kt tek giriş kapısı, yeni SeriesTestIsolation.kt, EA-FB/build.gradle.kts=8501; SeriesIsolationTest.kt, yeni test runner/koruma, SURUM-TARAMASI.json ve üç takip belgesi
+- Gerekçe / etki: Bilinen 24 dal ucu tarandı; 8501 kullanılmıyor (en büyük mevcut sürüm 83). Yeni internalName EA-FB-SERIES-CODEX-8501-TEST, provider adı EA-FB SERIES CODEX 8501 TEST, store ea_fb_series_codex_8501_test; V83/V82’den tercih aktarımı yok (ayrı boş seed alanı). EAPlugin.load ilk iş olarak UID ve kurulu eklenti envanterini doğrular; ana Android profili, aynı profilde başka EA-FB, bilinmeyen veya çift kendi kaydı reddedilir. Kontrol preferences/UI callbacks/provider kayıtlarından önce. UI dosyaları hiç değişmedi. Bu sürüm normal ana Mi Box profiline kurulmaz; ayrı profil yeteneği cihazda henüz doğrulanmadı.
+- Test / sonuç: 33/33 profil/kurulum envanteri kontrolü PASS (V83 iki sıra için ret); 36/36 kaynak güvenliği, 59/59 replay, dar alias sözleşmesi PASS. Android :EA-FB:make BUILD SUCCESSFUL (41s). 305 temel dosya birebir aynı; yedi tam kaynak hash’i/izinli metot bölgesi ve yeni runtime helper hash’i doğrulandı. V83 paket hash’i değişmedi.
 - Geri alma: yalnızca bu commit’i yeni test dalında git revert; V83/main/arşivlere dokunma.
