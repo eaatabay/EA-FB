@@ -1,41 +1,57 @@
-# Devam notları — 2026-10-19
+# Devam notları — 2026-10-19 (Europe/Istanbul)
 
-Dal: **test/ea-fb-series-name-codex-20261019**. Temel / ilk HEAD: **16396702470eb1f81cc6dac4360e6b0ff84927d1**.
-Son kaydedilmiş test aşaması: 22922df2f887c6c14cf687bb63bd13118476bb22. Bu kayıt gerçek metadata replay testini ekliyor; commit SHA'sı sonraki kayıt ile kesinleştirilecek.
+**Kapsam: yalnızca yeni dalda test ve teşhis. Uygulama / UI değişikliği ve yayın yok.**
 
-## Güncel sonuç
-EA-FB JSON'u CI runner üzerinden doğrulandı: TV 320754, IMDb tt38732131, name/original_name Organize İşler, 2026-10-16, sezon 1 Karun Hazinesi, 8 bölüm. Aynı aramada iki film ayrı movie kimlikleri: 30634 (2005) ve 577990 (2019). EA-FB-KATALOG-GOZLEM.json ve SONUC-TESHIS.md gerçek kanıtı içerir. Yerel proxy 403 sürse de bu artık katalog kimliği için engel değil; salt okunur CI probe'u kullanılabiliyor.
-V83 aynı name/original_name'i tek kısa ad adayına düşürüyor. Canlı DiziYou sonucu uzun adı döndürüyor. Gerçek adlardan oluşan mevcut tam eşleşme kapısı reddi tanı testinde üretildi. DiziYou sayfasında sekiz bölüm etiketi var. Gerçek video, extractor veya Mi Box doğrulanmadı.
+- Dal: `test/ea-fb-series-name-codex-20261019`.
+- V83 temel ve yeni dal ilk HEAD: `16396702470eb1f81cc6dac4360e6b0ff84927d1`.
+- Son başarılı kod/test commit'i ve GitHub push: **6433b1fcf5a88de40412bbe852112eb15bd90950**.
+- Bu nihai kayıt commit'i için `git log -1 --format=%H`; bağlantı yenilenene kadar yerel olabilir.
 
-## Testler ve CI
-- Yerel son tanı: **59/59 PASS**; gerçek kaydedilmiş güvenli metadata + sentetik adapter yanıtları.
-- V83 12 Kotlin programı / 14 Python testi PASS; yeni Python tanı/koruma testleri 5/5 PASS.
-- 39309504108 success, loglar okundu; 45 tanı / Android derleme. D8 metadata uyarıları raporda.
-- 39310538425 success, loglar okundu; 53 tanı / Android derleme.
-- 39311300009 success, loglar okundu; EA-FB katalog kimliği doğrulaması.
-- 39311299938: son sorguda Android derlemesi sürüyordu; sonucu tekrar kontrol et, başarı varsayma.
-Yeni test commit'i kendi tanı workflow'unu tetikler; run ID son kayıtta eklenecek.
+## Tanı sonucu
+EA-FB'nin gerçek config ve staging katalog yanıtı salt okunur CI ile doğrulandı: TV **320754**, IMDb **tt38732131**, name/original_name **Organize İşler**, ilk yayın **2026-10-16**, sezon 1 **Karun Hazinesi**, **8 bölüm**. Aynı aramada filmler **30634 / movie / 2005** ve **577990 / movie / 2019** olarak ayrı. Kanıt: EA-FB-KATALOG-GOZLEM.json ve BASLIK-KANITI.json.
+V83 aday üretimi aynı name/original_name'i tek kısa ada indiriyor; doğrulanmış uzun alternatif ad iletilmiyor. Canlı DiziYou araması uzun adı döndürüyor; gerçek adlarla mevcut normalize kapısında ret üretildi. DiziYou sayfasında S1 E1..8 etiketleri var. Dört adapter fixture'ında uzun ad açıkça verildiğinde mevcut arama yolu teklif üretiyor. Hiçbir runtime alias kuralı eklenmedi.
+Gerçek DiziBox/Bronze araması, extractor/stream ve Mi Box oynatması doğrulanmadı. DiziYou adı uyuşmazlığı somut; bütün cihaz hatalarının tek nedeni denmiyor.
 
-## Kesin kapsam / yayın engeli
-Kullanıcının son talimatı **yalnızca yeni dalda test ve teşhis**. Uygulama/UI/SourceSearchTitles/adapter/oynatıcı/ayar/kimlik değişmedi. 312 V83 dosyası byte-identical; V83 CS3 hash'i 40fd24acb41dc69fa869ceb69ee6661e5136c1dff39434eb8bd3227f955f3b66.
-Yeni sürüm/paket/tercih alanı ve staging manifesti henüz yok. UI-HOOK-RISKI.md: dört application callback ve provider kapısı var; iki eklenti/unload/marker/ayar izolasyonu cihazda kanıtlanmadı. Risk çözülmüş sayılmaz; yayın ve Mi Box kurulum önerisi yok.
-Sonraki kod düzeltmesi ancak kullanıcının sonraki kapsamı içinde; kanıtsız genel contains/substring veya dizi-film eşleştirmesi üretme.
+## Test durumu
+- Son replay tanısı: **59/59 yerel PASS**; gerçek güvenli metadata + sentetik adapter yanıtları.
+- İlgili V83 regresyonları: 12 Kotlin programı / 14 Python testi PASS.
+- Yeni Python tanı/koruma: **5/5 PASS**; dokuz simüle korunan dosya mutasyonu reddediliyor.
+- **312 V83 dosyası byte-identical**; paket SHA-256 **40fd24acb41dc69fa869ceb69ee6661e5136c1dff39434eb8bd3227f955f3b66**.
+- CI **39309504108 success**: ilk 45 tanı / kaynak koruma / Android derleme; tam log arşivi okundu, 206 D8 Kotlin metadata rewrite uyarısı ayrıca kaydedildi.
+- CI **39310538425 success**: 53 tanı / Android derleme; tam loglar okundu.
+- CI **39311300009 success**: gerçek EA-FB katalog kimliği; tam loglar okundu, güvenli JSON kaydedildi.
+- CI **39311299938** son sorguda in_progress; test/koruma/SDK adımları geçmişti, Android sonucu henüz doğrulanmadı.
+- Son 6433b1f test commit'inin run ID/sonucu auth kesilmesinden sonra alınamadı; önceki yeşil CI bu commit'in CI sonucu diye sunulamaz.
+
+## Somut dış engel ve sonraki işlem
+Son başarılı push'tan hemen sonra GitHub API **401 Bad credentials**, native Git okuması da kimlik doğrulama hatası verdi. Bu ağ 403 sorunundan ayrıdır. Platformdaki mevcut GitHub bağlantısı yenilenmeli; sohbetten token/parola isteme.
+Bağlantı düzeldiğinde:
+1. `git ls-remote --heads origin` ile korunan dal uçlarını ve yeni dalı kontrol et. Kullanıcının/başka aracın yeni değişikliğini ezme; force-push yapma.
+2. Bu yerel nihai kayıt commit'ini yalnızca yeni dala normal push et.
+3. 39311299938 ve 6433b1f için workflow run ID/sonuç/loglarını oku; üç kalıcı kayda kesin durumları ekle.
+4. `PYTHONDONTWRITEBYTECODE=1 python3 scripts/verify-series-v83-baseline.py` çalıştır; yalnızca yeni test/doküman dosyaları fark etmeli.
+5. Kullanıcının şu anki test/teşhis kapsamını koru. Kod düzeltmesi veya paket yayınına kendiliğinden geçme.
+
+## UI / iki eklenti ve yayın engeli
+UI-HOOK-INCELEMESI.json gerçek V83 DEX'inden dört Application callback ve apiName render kapısını kaydeder. İki eklenti/classloader/provider/marker/ayar ve unload izolasyonu kanıtlanmadı; UI-HOOK-RISKI.md kapıları geçilmeden yayın yok. Yeni sürüm/paket/tercih alanı/staging manifesti oluşturulmadı. Yerel EA-FB/build/EA-FB.cs3 V83 kimlikli eski temel derlemesidir, ikinci eklenti olarak kurulmaz.
 
 ## Yeni workflow'lar
-- .github/workflows/series-name-diagnostics.yml: yalnız yeni dal; test / kaynak koruması / değişmemiş runtime Android derlemesi; log artifact'i; yayın yok.
-- .github/workflows/series-name-catalog-diagnosis.yml: yalnız yeni dal; GET ile sabit staging metadata tanısı; contents:read; güvenli JSON artifact'i; Worker/D1 yazması, üretim hostu veya yayın yok.
+- `.github/workflows/series-name-diagnostics.yml`: sadece yeni dal; regresyon/koruma/Android derleme; log artifact'i; yayın yok.
+- `.github/workflows/series-name-catalog-diagnosis.yml`: sadece yeni dal; onaylı staging'e GET; contents:read; güvenli JSON artifact'i; Worker/D1/production yazması veya yayın yok.
 
-## Geri dönüş ve uzak dallar
-Eski başarısız test/organize-isler-season-title-20261019 dalı kullanıcı talebiyle silindi; silmeden HEAD=V83 ve açık PR head/base yokluğu doğrulandı. Diğer 23 mevcut uzak dal HEAD'i değişmedi. Yeni test dalı kaldırılınca V83 üzerinde reset/force-push/cherry-pick gerekmez. GERI-ALMA-PLANI.md güncel.
+Eski başarısız `test/organize-isler-season-title-20261019` dalı aynı V83 HEAD'i ve açık PR head/base bağımlılığı olmadığı doğrulanarak kullanıcı talebiyle silindi. Son tam uzak karşılaştırmada diğer **23** mevcut dalın HEAD'i aynıydı. Bu çalışmada V83/main/V81/arşiv ref'leri değiştirilmedi. Geri alma planı güncel.
 
-## Bütün kaydedilmiş SHA'lar
-- `45956ae74fdc512fa838ed6e99112a41baba9187` — docs(series): record V83 baseline and rollback boundaries — https://github.com/eaatabay/EA-FB/commit/45956ae74fdc512fa838ed6e99112a41baba9187
-- `069824f8433792f8f5dee2b7079390ee1f9e0374` — test(series): isolate V83 title rejection across four adapters — https://github.com/eaatabay/EA-FB/commit/069824f8433792f8f5dee2b7079390ee1f9e0374
-- `36a4820a4a3c2a43e83b87e5b4b1ef0d217f56b6` — test(series): enforce byte-level V83 baseline preservation — https://github.com/eaatabay/EA-FB/commit/36a4820a4a3c2a43e83b87e5b4b1ef0d217f56b6
-- `fb16e9ced070f1fe0c6d6cf93aaa863f79745099` — ci(series): add branch-scoped diagnostics without publication — https://github.com/eaatabay/EA-FB/commit/fb16e9ced070f1fe0c6d6cf93aaa863f79745099
-- `87344068c46877c720e8f1afa53084cc06400fab` — docs(series): record verified season alias and obsolete branch cleanup — https://github.com/eaatabay/EA-FB/commit/87344068c46877c720e8f1afa53084cc06400fab
-- `efb5fe86b2e0c0edfcc0f6140356d35fa004a7b4` — test(series): track researched TV identity separately from films — https://github.com/eaatabay/EA-FB/commit/efb5fe86b2e0c0edfcc0f6140356d35fa004a7b4
-- `63782dbd89fc52d4382a973c82fac67ca442ad75` — docs(series): audit V83 UI hooks and preserve diagnostic handoff — https://github.com/eaatabay/EA-FB/commit/63782dbd89fc52d4382a973c82fac67ca442ad75
-- `22922df2f887c6c14cf687bb63bd13118476bb22` — test(series): probe approved catalogue identity from read-only CI — https://github.com/eaatabay/EA-FB/commit/22922df2f887c6c14cf687bb63bd13118476bb22
+## Bütün başarılı uzak commit SHA'ları
+| Tam SHA | İşlem | GitHub |
+|---|---|---|
+| `45956ae74fdc512fa838ed6e99112a41baba9187` | docs(series): record V83 baseline and rollback boundaries | [commit](https://github.com/eaatabay/EA-FB/commit/45956ae74fdc512fa838ed6e99112a41baba9187) |
+| `069824f8433792f8f5dee2b7079390ee1f9e0374` | test(series): isolate V83 title rejection across four adapters | [commit](https://github.com/eaatabay/EA-FB/commit/069824f8433792f8f5dee2b7079390ee1f9e0374) |
+| `36a4820a4a3c2a43e83b87e5b4b1ef0d217f56b6` | test(series): enforce byte-level V83 baseline preservation | [commit](https://github.com/eaatabay/EA-FB/commit/36a4820a4a3c2a43e83b87e5b4b1ef0d217f56b6) |
+| `fb16e9ced070f1fe0c6d6cf93aaa863f79745099` | ci(series): add branch-scoped diagnostics without publication | [commit](https://github.com/eaatabay/EA-FB/commit/fb16e9ced070f1fe0c6d6cf93aaa863f79745099) |
+| `87344068c46877c720e8f1afa53084cc06400fab` | docs(series): record verified season alias and obsolete branch cleanup | [commit](https://github.com/eaatabay/EA-FB/commit/87344068c46877c720e8f1afa53084cc06400fab) |
+| `efb5fe86b2e0c0edfcc0f6140356d35fa004a7b4` | test(series): track researched TV identity separately from films | [commit](https://github.com/eaatabay/EA-FB/commit/efb5fe86b2e0c0edfcc0f6140356d35fa004a7b4) |
+| `63782dbd89fc52d4382a973c82fac67ca442ad75` | docs(series): audit V83 UI hooks and preserve diagnostic handoff | [commit](https://github.com/eaatabay/EA-FB/commit/63782dbd89fc52d4382a973c82fac67ca442ad75) |
+| `22922df2f887c6c14cf687bb63bd13118476bb22` | test(series): probe approved catalogue identity from read-only CI | [commit](https://github.com/eaatabay/EA-FB/commit/22922df2f887c6c14cf687bb63bd13118476bb22) |
+| `6433b1fcf5a88de40412bbe852112eb15bd90950` | test(series): replay confirmed catalogue identity through V83 title gates | [commit](https://github.com/eaatabay/EA-FB/commit/6433b1fcf5a88de40412bbe852112eb15bd90950) |
 
-Bu belge kayıt commit'i kendi SHA'sını içeremez; `git log -1 -- docs/series-name-codex` güncel kayıt SHA'sını verir, sonraki kayıt envantere ekler.
+Bu belgeyi kaydeden son commit kendi SHA'sını içeremez; `git log -1 -- docs/series-name-codex` ile belirle. Sonraki kayıt bu tam SHA'yı ekler.

@@ -1,0 +1,17 @@
+{
+  "branch": "test/ea-fb-series-name-codex-20261019",
+  "base": "16396702470eb1f81cc6dac4360e6b0ff84927d1",
+  "lastSuccessfulPush": "6433b1fcf5a88de40412bbe852112eb15bd90950",
+  "apiAfterPush": 401,
+  "nativeGitAfterPush": "authentication-unavailable",
+  "confirmedCiRuns": [
+    39309504108,
+    39310538425,
+    39311300009
+  ],
+  "lastObservedInProgressRun": 39311299938,
+  "latest59AssertionRun": "run ID not retrieved after authentication failure",
+  "runtimeChanges": false,
+  "packagePublished": false,
+  "uiCoInstallationVerified": false
+}

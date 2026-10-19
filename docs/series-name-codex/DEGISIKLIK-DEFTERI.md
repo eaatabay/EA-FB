@@ -150,3 +150,33 @@ Kayıt commit'i kendi SHA'sını içeremez; güncel SHA için git log -1 -- docs
 - `efb5fe86b2e0c0edfcc0f6140356d35fa004a7b4` — test(series): track researched TV identity separately from films — https://github.com/eaatabay/EA-FB/commit/efb5fe86b2e0c0edfcc0f6140356d35fa004a7b4
 - `63782dbd89fc52d4382a973c82fac67ca442ad75` — docs(series): audit V83 UI hooks and preserve diagnostic handoff — https://github.com/eaatabay/EA-FB/commit/63782dbd89fc52d4382a973c82fac67ca442ad75
 - `22922df2f887c6c14cf687bb63bd13118476bb22` — test(series): probe approved catalogue identity from read-only CI — https://github.com/eaatabay/EA-FB/commit/22922df2f887c6c14cf687bb63bd13118476bb22
+
+## 9 — Kesin test commit'i ve GitHub gönderimi
+- Önceki: 22922df2f887c6c14cf687bb63bd13118476bb22. Yeni: **6433b1fcf5a88de40412bbe852112eb15bd90950**.
+- https://github.com/eaatabay/EA-FB/commit/6433b1fcf5a88de40412bbe852112eb15bd90950
+- Git push başarılı: sunucu 22922df..6433b1f güncellemesini doğruladı. Yerel 59/59 tanı, 5/5 Python tanı/koruma PASS; uygulama kodu değişmedi.
+
+## 10 — Nihai tanı kaydı / kimlik doğrulama engeli
+- Önceki SHA: 6433b1fcf5a88de40412bbe852112eb15bd90950. Yeni SHA: bu kayıt commit'i (git log -1).
+- Dosyalar: bu üç kalıcı kayıt, SON-DURUM.json ve varsa son test/kanıt özetlerinin doküman güncellemesi.
+- Gerekçe: son başarılı push'u kesin SHA ile kaydetmek, yeni CI'yi geçmiş başarılarla karıştırmamak.
+- GitHub API aynı koşullarda 401 Bad credentials vermeye başladı; mevcut native Git yolu da kullanıcı adı/kimlik doğrulama hatası verdi. Daha önce verilen erişimle tekrar denendi, yeni bir secret/token istenmedi. Bağlantının platformda yenilenmesi gerekiyor.
+- Sonuç: ilk iki test/derleme CI'si ve katalog CI'si başarılı ve logları incelendi. 39311299938 son gözlemde in_progress; 6433b1f için yeni run ID/sonuç erişim kesildikten sonra doğrulanamadı. Nihai kayıt commit'i bağlantı yenilenene kadar yerelde kalır; push edildi denmiyor.
+- Etki: yalnızca doküman; kaynak/UI/ayar/korunan dosyalar aynı.
+- Test: kaynak koruması ve ilgili son kontroller yeniden doğrulanacak; sonuç CLI çıktısında ve devam notlarında.
+- Geri alma: bu belge commit'ini yalnızca yeni dalda git revert; V83'e işlem yok.
+
+## Bütün başarılı uzak commit'ler / tam SHA envanteri
+| Tam SHA | İşlem | GitHub |
+|---|---|---|
+| `45956ae74fdc512fa838ed6e99112a41baba9187` | docs(series): record V83 baseline and rollback boundaries | [commit](https://github.com/eaatabay/EA-FB/commit/45956ae74fdc512fa838ed6e99112a41baba9187) |
+| `069824f8433792f8f5dee2b7079390ee1f9e0374` | test(series): isolate V83 title rejection across four adapters | [commit](https://github.com/eaatabay/EA-FB/commit/069824f8433792f8f5dee2b7079390ee1f9e0374) |
+| `36a4820a4a3c2a43e83b87e5b4b1ef0d217f56b6` | test(series): enforce byte-level V83 baseline preservation | [commit](https://github.com/eaatabay/EA-FB/commit/36a4820a4a3c2a43e83b87e5b4b1ef0d217f56b6) |
+| `fb16e9ced070f1fe0c6d6cf93aaa863f79745099` | ci(series): add branch-scoped diagnostics without publication | [commit](https://github.com/eaatabay/EA-FB/commit/fb16e9ced070f1fe0c6d6cf93aaa863f79745099) |
+| `87344068c46877c720e8f1afa53084cc06400fab` | docs(series): record verified season alias and obsolete branch cleanup | [commit](https://github.com/eaatabay/EA-FB/commit/87344068c46877c720e8f1afa53084cc06400fab) |
+| `efb5fe86b2e0c0edfcc0f6140356d35fa004a7b4` | test(series): track researched TV identity separately from films | [commit](https://github.com/eaatabay/EA-FB/commit/efb5fe86b2e0c0edfcc0f6140356d35fa004a7b4) |
+| `63782dbd89fc52d4382a973c82fac67ca442ad75` | docs(series): audit V83 UI hooks and preserve diagnostic handoff | [commit](https://github.com/eaatabay/EA-FB/commit/63782dbd89fc52d4382a973c82fac67ca442ad75) |
+| `22922df2f887c6c14cf687bb63bd13118476bb22` | test(series): probe approved catalogue identity from read-only CI | [commit](https://github.com/eaatabay/EA-FB/commit/22922df2f887c6c14cf687bb63bd13118476bb22) |
+| `6433b1fcf5a88de40412bbe852112eb15bd90950` | test(series): replay confirmed catalogue identity through V83 title gates | [commit](https://github.com/eaatabay/EA-FB/commit/6433b1fcf5a88de40412bbe852112eb15bd90950) |
+
+Bu son kayıt commit'inin SHA'sı kendi içeriğine gömülemez. `git log -1 --format=%H` mevcut kayıt commit'ini verir; sonraki aşamada tam SHA buraya eklenir. Son kayıt uzak GitHub'da değilse sadece yerel olduğu açıkça belirtilir.

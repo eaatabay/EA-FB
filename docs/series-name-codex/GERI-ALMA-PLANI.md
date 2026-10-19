@@ -75,3 +75,24 @@ Paket/tercih alanı/staging manifesti hâlâ yok; Mi Box'a hiçbir test yüklenm
 - `22922df2f887c6c14cf687bb63bd13118476bb22` — test(series): probe approved catalogue identity from read-only CI — https://github.com/eaatabay/EA-FB/commit/22922df2f887c6c14cf687bb63bd13118476bb22
 
 Bu kayıt commit'i için git log -1 -- docs/series-name-codex; sonraki aşama tam SHA'yı ekler.
+
+## Son durum — 59 assertion / nihai kayıt
+Son başarılı uzak test commit'i: **6433b1fcf5a88de40412bbe852112eb15bd90950**. GitHub kimlik doğrulaması bundan hemen sonra 401 verdiği için nihai kayıt commit'i yerelde kalabilir; mevcut SHA `git log -1` ile okunur. Bağlantı yenilenmeden push/son CI sonucu doğrulanmış sayılmaz.
+Katalog doğrulaması 39311300009 success; ilk iki test/derleme CI'si 39309504108 ve 39310538425 success, loglar incelendi. 39311299938 ve son test commit'inin CI sonucu henüz kesinleştirilmedi. Yerel son tanı 59/59 ve Python 5/5 PASS.
+Yeni çalışma dosyalarının tam listesi `git diff --name-only 16396702470eb1f81cc6dac4360e6b0ff84927d1..HEAD` ile alınır; 312 V83 dosyasının hiçbirinde fark olmamalı. SON-DURUM.json bu son durumu içerir.
+Geri alma hâlâ yalnızca yeni dal ve yeni tanı dosyalarıyla sınırlı; Mi Box'ta yeni paket kurulu değil. Paket, yeni tercih alanı veya staging manifesti yok. V83'e reset/force-push/cherry-pick/düzeltme commit'i gerekmez.
+
+### Bütün başarılı uzak commit SHA'ları
+| Tam SHA | İşlem | GitHub |
+|---|---|---|
+| `45956ae74fdc512fa838ed6e99112a41baba9187` | docs(series): record V83 baseline and rollback boundaries | [commit](https://github.com/eaatabay/EA-FB/commit/45956ae74fdc512fa838ed6e99112a41baba9187) |
+| `069824f8433792f8f5dee2b7079390ee1f9e0374` | test(series): isolate V83 title rejection across four adapters | [commit](https://github.com/eaatabay/EA-FB/commit/069824f8433792f8f5dee2b7079390ee1f9e0374) |
+| `36a4820a4a3c2a43e83b87e5b4b1ef0d217f56b6` | test(series): enforce byte-level V83 baseline preservation | [commit](https://github.com/eaatabay/EA-FB/commit/36a4820a4a3c2a43e83b87e5b4b1ef0d217f56b6) |
+| `fb16e9ced070f1fe0c6d6cf93aaa863f79745099` | ci(series): add branch-scoped diagnostics without publication | [commit](https://github.com/eaatabay/EA-FB/commit/fb16e9ced070f1fe0c6d6cf93aaa863f79745099) |
+| `87344068c46877c720e8f1afa53084cc06400fab` | docs(series): record verified season alias and obsolete branch cleanup | [commit](https://github.com/eaatabay/EA-FB/commit/87344068c46877c720e8f1afa53084cc06400fab) |
+| `efb5fe86b2e0c0edfcc0f6140356d35fa004a7b4` | test(series): track researched TV identity separately from films | [commit](https://github.com/eaatabay/EA-FB/commit/efb5fe86b2e0c0edfcc0f6140356d35fa004a7b4) |
+| `63782dbd89fc52d4382a973c82fac67ca442ad75` | docs(series): audit V83 UI hooks and preserve diagnostic handoff | [commit](https://github.com/eaatabay/EA-FB/commit/63782dbd89fc52d4382a973c82fac67ca442ad75) |
+| `22922df2f887c6c14cf687bb63bd13118476bb22` | test(series): probe approved catalogue identity from read-only CI | [commit](https://github.com/eaatabay/EA-FB/commit/22922df2f887c6c14cf687bb63bd13118476bb22) |
+| `6433b1fcf5a88de40412bbe852112eb15bd90950` | test(series): replay confirmed catalogue identity through V83 title gates | [commit](https://github.com/eaatabay/EA-FB/commit/6433b1fcf5a88de40412bbe852112eb15bd90950) |
+
+Bu son yerel kayıt commit'ini kendi SHA'sıyla geri almak gerekirse `git log -1 --format=%H` kullan. Sonraki aşamada bu SHA da kalıcı envantere eklenir.
