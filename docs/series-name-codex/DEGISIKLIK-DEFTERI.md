@@ -11,3 +11,17 @@ Her mantıksal aşama ayrı commit olur. Bir commit kendi SHA'sını kendi için
 - Sonuç: V83 HEAD ve paket hash'i kullanıcı referansıyla aynı. PR/API erişimi Forbidden; eski dal temizliği bekliyor.
 - Geri alma: yalnızca bu yeni daldaki commit'i git revert ile geri al; V83'e hiçbir işlem uygulama.
 - GitHub bağlantısı: push doğrulandıktan sonra tam SHA ile sonraki kayıtta yer alacak.
+
+## 1 — Kesin commit kaydı
+- Yeni SHA: 45956ae (tam SHA için git rev-parse 45956ae). GitHub push doğrulandı.
+- Bağlantı: https://github.com/eaatabay/EA-FB/commit/45956ae
+- Koruma planı, başlangıç ve geri alma belgeleri kalıcı.
+
+## 2 — Değiştirilmemiş V83 üzerinde tanı fixture'ları
+- Önceki SHA: 45956ae. Yeni SHA: bu aşamayı oluşturan commit; sonraki kayıt tam SHA'yı ekler.
+- Dosyalar: core-tests/clean/SeriesNameDiagnosisTest.kt, scripts/test-series-name-codex.sh, bu defter ve DEVAM-NOTLARI.md.
+- Gerekçe: gerçek adaptörlerde kısa/uzun ad kapısının hangi aşamada durduğunu ölçmek; bilinmeyen bir dizi kimliği tahmin edilmez.
+- Etki: yalnızca test ve doküman; Android uygulama kaynakları, film yolu, UI ve paket kimliği değişmedi.
+- Test: mevcut 12 Kotlin programı + 14 Python testi geçti; yeni tanı programı ayrıca çalıştırılır. Fixture gerçek site/cihaz kanıtı değildir.
+- Geri alma: yalnızca yeni daldaki bu commit'e git revert; V83'e işlem yok.
+- Yeni test sonucu: dört adaptörde **45/45 tanı assertion'ı PASS**. Bu, V83 davranışının ölçümüdür; yeni isim düzeltmesinin veya gerçek Organize İşler oynatmasının testi değildir.
