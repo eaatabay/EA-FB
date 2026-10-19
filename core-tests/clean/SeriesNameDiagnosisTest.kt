@@ -3,14 +3,16 @@ package com.eafb
 import com.lagradost.cloudstream3.*
 import com.lagradost.cloudstream3.utils.FixtureExtractor
 import kotlinx.coroutines.runBlocking
+import org.json.JSONObject
+import java.io.File
 
 /**
- * Synthetic responses against unchanged V83. The identity is a researched candidate,
- * not proof of an EA-FB catalogue response. No runtime alias registry is created.
+ * Replay of safe fields from observed EA-FB catalogue/source metadata against V83.
+ * Adapter responses remain synthetic; no runtime alias registry is created.
  */
 private const val SHORT = "Organize İşler"
 private const val LONG = "Organize İşler: Karun Hazinesi"
-private const val CATALOG_CANDIDATE_TMDB = 320754
+private const val CONFIRMED_TMDB = 320754
 private const val REPORTED_IMDB = "tt38732131"
 private const val REPORTED_NETFLIX = "https://www.netflix.com/tr/title/82047949"
 private val EXCLUDED_MOVIES = listOf(30634 to "Organize İşler", 577990 to "Organize İşler: Sazan Sarmalı")
@@ -39,17 +41,45 @@ private class SeriesFixture(private val host: String, private val page: SeriesPa
 }
 
 fun main() = runBlocking {
-    val query = MediaQuery(SHORT, 2026, MediaKind.SERIES, CATALOG_CANDIDATE_TMDB, 1, 8)
+    // Replay only safe metadata fields captured from real read-only EA-FB catalogue CI.
+    // Adapter network responses below remain synthetic and are labelled separately.
+    val recorded = JSONObject(File("docs/series-name-codex/EA-FB-KATALOG-GOZLEM.json").readText())
+    val metadata = recorded.getJSONObject("tv")
+    val query = PlaybackQuery.fromData(
+        "ea-fb:episode:" + metadata.getInt("id") + ":1:8",
+        metadata.getString("name"), metadata.getString("first_air_date").take(4).toInt(),
+        listOf(metadata.getString("original_name"))
+    )!!
     var assertions = 0
     fun verify(value: Boolean, message: String) { check(value) { message }; assertions++ }
     // User-supplied identity references are kept explicit; a name alone is never an ID.
-    println("IDENTITY CONTEXT (catalogue pending): tv=$CATALOG_CANDIDATE_TMDB imdb=$REPORTED_IMDB netflix=$REPORTED_NETFLIX")
-    val parsedSeries = PlaybackQuery.fromData("ea-fb:episode:320754:1:8", SHORT, 2026)!!
+    println("IDENTITY CONTEXT (catalogue CI 39311300009 confirmed): tv=$CONFIRMED_TMDB imdb=$REPORTED_IMDB netflix=$REPORTED_NETFLIX")
+    verify(recorded.getJSONObject("external").getString("imdb_id") == REPORTED_IMDB,
+        "Actual EA-FB external_ids must confirm the researched IMDb identity")
+    val actualSeason = recorded.getJSONObject("season")
+    verify(actualSeason.getInt("season_number") == 1 && actualSeason.getString("name") == "Karun Hazinesi" &&
+        actualSeason.getJSONArray("episodes").length() == 8,
+        "Actual catalogue distinguishes the season subtitle from the series title")
+    val observedSource = JSONObject(File("docs/series-name-codex/DIZIYOU-GOZLEM.json").readText())
+    val actualSourceTitles = observedSource.getJSONArray("searchCards")
+    verify(actualSourceTitles.length() > 0 && (0 until actualSourceTitles.length()).none { index ->
+        Identity.normalize(actualSourceTitles.getJSONObject(index).getString("title")) in
+            SourceSearchTitles.candidates(query).map(Identity::normalize)
+    }, "Observed DiziYou titles fail the unchanged V83 title gate with actual catalogue names")
+    verify((0 until actualSourceTitles.length()).any { index ->
+        Identity.normalize(actualSourceTitles.getJSONObject(index).getString("title")) in
+            SourceSearchTitles.candidates(query.copy(alternateTitles = listOf(LONG))).map(Identity::normalize)
+    }, "An explicitly supplied verified long title can match the observed result without fuzzy names")
+    val parsedSeries = PlaybackQuery.fromData("ea-fb:episode:320754:1:8", SHORT, 2026, listOf(SHORT))!!
     verify(parsedSeries == query, "Playback identity retains the candidate TV ID, year and S1E8")
     verify(SourceSearchTitles.candidates(query) == listOf(SHORT),
         "Diagnosis: V83 does not invent the confirmed season/alternative name")
-    for ((id, title) in EXCLUDED_MOVIES) {
-        val film = PlaybackQuery.fromData("ea-fb:movie:$id", title, if (id == 30634) 2005 else 2019)!!
+    for ((id, _) in EXCLUDED_MOVIES) {
+        val actualSearch = recorded.getJSONArray("search")
+        val movie = (0 until actualSearch.length()).map(actualSearch::getJSONObject).single { it.getInt("id") == id }
+        verify(movie.getString("media_type") == "movie", "Observed catalogue film $id must not be a TV result")
+        val film = PlaybackQuery.fromData("ea-fb:movie:$id", movie.getString("title"),
+            movie.getString("release_date").take(4).toInt())!!
         verify(film.kind == MediaKind.MOVIE && film.tmdbId == id && film.season == null && film.episode == null,
             "Film $id must retain movie identity, not candidate TV 320754")
         verify(LONG !in SourceSearchTitles.candidates(film), "No automatic series alias for film $id")
@@ -68,7 +98,7 @@ fun main() = runBlocking {
         verify(shortFixture.searches == 1 && shortFixture.loads == 0,
             "Synthetic result exists but V83 rejects search title BEFORE load/episode/extractor")
         val exact = source(SeriesPage(SHORT)).first.search(query).single()
-        verify(exact.season == 1 && exact.episode == 8 && exact.tmdbId == CATALOG_CANDIDATE_TMDB,
+        verify(exact.season == 1 && exact.episode == 8 && exact.tmdbId == CONFIRMED_TMDB,
             "Exact title must preserve catalogue/episode identity")
         verify(source(SeriesPage("Organize Isler")).first.search(query).size == 1,
             "Existing Turkish normalization must work")
@@ -113,7 +143,7 @@ fun main() = runBlocking {
         val source: MediaSourceAdapter = if (box) DiziBoxAdapter() else DiziYouAdapter()
         verify(source.search(query).isEmpty(), "V83 short query must reject unprovided long alias")
         verify(seriesLoads == 0, "Rejection precedes series page and extractor")
-        verify(source.search(query.copy(alternateTitles = listOf(LONG))).single().tmdbId == CATALOG_CANDIDATE_TMDB,
+        verify(source.search(query.copy(alternateTitles = listOf(LONG))).single().tmdbId == CONFIRMED_TMDB,
             "Supplied exact alias works without source code changes")
         sourceName = "Organize Isler"
         verify(source.search(query).size == 1, "Existing Turkish normalization preserved")
@@ -138,5 +168,5 @@ fun main() = runBlocking {
         verify(extractorCalls == 0, "Diagnostic fixtures produce no stream links")
         println("PASS diagnosis ${source.id}: title gate isolated; supplied alias and existing normalization preserved")
     }
-    println("PASS: $assertions V83 diagnostic assertions; synthetic responses only, no live TMDb/source/device validation")
+    println("PASS: $assertions V83 diagnostic assertions; recorded live catalogue/source metadata, synthetic adapter responses; no stream or device validation")
 }

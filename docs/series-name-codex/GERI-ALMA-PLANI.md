@@ -59,3 +59,19 @@ CI 39309504108 tam log arşivi indirildi ve incelendi; eski log erişim engeli �
 - `63782dbd89fc52d4382a973c82fac67ca442ad75` — docs(series): audit V83 UI hooks and preserve diagnostic handoff — https://github.com/eaatabay/EA-FB/commit/63782dbd89fc52d4382a973c82fac67ca442ad75
 
 Kayıt commit'i kendi SHA'sını içeremez; güncel SHA için git log -1 -- docs/series-name-codex. Sonraki kayıt bu SHA'yı ekler.
+
+## Aşama 9 — güncel ekler
+EA-FB katalog doğrulaması 39311300009 ile success; 39310538425 de success ve tam logları okundu. Güncel tanı 59/59 yerel PASS, yalnızca test/doküman değişikliği.
+Yeni güvenli kanıt dosyaları EA-FB-KATALOG-GOZLEM.json, DIZIYOU-GOZLEM.json, CI-39309504108-INCELEME.json, SONUC-TESHIS.md bu test klasörüne aittir. Yeni script/test ve her iki workflow da yalnızca bu yeni çalışma kapsamında kaldırılabilir.
+Paket/tercih alanı/staging manifesti hâlâ yok; Mi Box'a hiçbir test yüklenmedi. UI çakışması çözülmeden yayın yapılmayacak.
+### Güncel bütün commit SHA'ları
+- `45956ae74fdc512fa838ed6e99112a41baba9187` — docs(series): record V83 baseline and rollback boundaries — https://github.com/eaatabay/EA-FB/commit/45956ae74fdc512fa838ed6e99112a41baba9187
+- `069824f8433792f8f5dee2b7079390ee1f9e0374` — test(series): isolate V83 title rejection across four adapters — https://github.com/eaatabay/EA-FB/commit/069824f8433792f8f5dee2b7079390ee1f9e0374
+- `36a4820a4a3c2a43e83b87e5b4b1ef0d217f56b6` — test(series): enforce byte-level V83 baseline preservation — https://github.com/eaatabay/EA-FB/commit/36a4820a4a3c2a43e83b87e5b4b1ef0d217f56b6
+- `fb16e9ced070f1fe0c6d6cf93aaa863f79745099` — ci(series): add branch-scoped diagnostics without publication — https://github.com/eaatabay/EA-FB/commit/fb16e9ced070f1fe0c6d6cf93aaa863f79745099
+- `87344068c46877c720e8f1afa53084cc06400fab` — docs(series): record verified season alias and obsolete branch cleanup — https://github.com/eaatabay/EA-FB/commit/87344068c46877c720e8f1afa53084cc06400fab
+- `efb5fe86b2e0c0edfcc0f6140356d35fa004a7b4` — test(series): track researched TV identity separately from films — https://github.com/eaatabay/EA-FB/commit/efb5fe86b2e0c0edfcc0f6140356d35fa004a7b4
+- `63782dbd89fc52d4382a973c82fac67ca442ad75` — docs(series): audit V83 UI hooks and preserve diagnostic handoff — https://github.com/eaatabay/EA-FB/commit/63782dbd89fc52d4382a973c82fac67ca442ad75
+- `22922df2f887c6c14cf687bb63bd13118476bb22` — test(series): probe approved catalogue identity from read-only CI — https://github.com/eaatabay/EA-FB/commit/22922df2f887c6c14cf687bb63bd13118476bb22
+
+Bu kayıt commit'i için git log -1 -- docs/series-name-codex; sonraki aşama tam SHA'yı ekler.

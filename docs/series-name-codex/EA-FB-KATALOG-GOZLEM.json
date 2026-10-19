@@ -1,0 +1,169 @@
+{
+  "scope": "read-only staging catalogue; no playback or runtime alias changes",
+  "tv_candidate": 320754,
+  "reported_imdb": "tt38732131",
+  "config_status": {
+    "status": 200
+  },
+  "approved_origin": "https://ea-fb-catalog-v6-staging.eaatabay.workers.dev",
+  "requests": {
+    "tv": {
+      "status": 200
+    },
+    "external": {
+      "status": 200
+    },
+    "season": {
+      "status": 200
+    },
+    "search": {
+      "status": 200
+    }
+  },
+  "tv": {
+    "id": 320754,
+    "name": "Organize İşler",
+    "original_name": "Organize İşler",
+    "first_air_date": "2026-10-16",
+    "number_of_seasons": 1,
+    "number_of_episodes": 8,
+    "imdb_id": null,
+    "seasons": [
+      {
+        "id": 513005,
+        "name": "Karun Hazinesi",
+        "season_number": 1,
+        "episode_count": 8,
+        "air_date": "2026-10-16"
+      }
+    ]
+  },
+  "external": {
+    "id": 320754,
+    "name": "Organize İşler",
+    "original_name": "Organize İşler",
+    "first_air_date": "2026-10-16",
+    "number_of_seasons": 1,
+    "number_of_episodes": 8,
+    "imdb_id": "tt38732131",
+    "seasons": [
+      {
+        "id": 513005,
+        "name": "Karun Hazinesi",
+        "season_number": 1,
+        "episode_count": 8,
+        "air_date": "2026-10-16"
+      }
+    ]
+  },
+  "season": {
+    "id": 513005,
+    "name": "Karun Hazinesi",
+    "season_number": 1,
+    "air_date": "2026-10-16",
+    "episodes": [
+      {
+        "id": 7190408,
+        "name": "1. Bölüm",
+        "season_number": 1,
+        "episode_number": 1,
+        "air_date": "2026-10-16"
+      },
+      {
+        "id": 7843644,
+        "name": "2. Bölüm",
+        "season_number": 1,
+        "episode_number": 2,
+        "air_date": "2026-10-16"
+      },
+      {
+        "id": 7843645,
+        "name": "3. Bölüm",
+        "season_number": 1,
+        "episode_number": 3,
+        "air_date": "2026-10-16"
+      },
+      {
+        "id": 7843646,
+        "name": "4. Bölüm",
+        "season_number": 1,
+        "episode_number": 4,
+        "air_date": "2026-10-16"
+      },
+      {
+        "id": 7843648,
+        "name": "5. Bölüm",
+        "season_number": 1,
+        "episode_number": 5,
+        "air_date": "2026-10-16"
+      },
+      {
+        "id": 7843649,
+        "name": "6. Bölüm",
+        "season_number": 1,
+        "episode_number": 6,
+        "air_date": "2026-10-16"
+      },
+      {
+        "id": 7843650,
+        "name": "7. Bölüm",
+        "season_number": 1,
+        "episode_number": 7,
+        "air_date": "2026-10-16"
+      },
+      {
+        "id": 7843652,
+        "name": "8. Bölüm",
+        "season_number": 1,
+        "episode_number": 8,
+        "air_date": "2026-10-16"
+      }
+    ]
+  },
+  "search": [
+    {
+      "id": 320754,
+      "media_type": "tv",
+      "name": "Organize İşler",
+      "original_name": "Organize İşler",
+      "title": null,
+      "original_title": null,
+      "first_air_date": "2026-10-16",
+      "release_date": null
+    },
+    {
+      "id": 577990,
+      "media_type": "movie",
+      "name": null,
+      "original_name": null,
+      "title": "Organize İşler: Sazan Sarmalı",
+      "original_title": "Organize İşler: Sazan Sarmalı",
+      "first_air_date": null,
+      "release_date": "2019-02-01"
+    },
+    {
+      "id": 30634,
+      "media_type": "movie",
+      "name": null,
+      "original_name": null,
+      "title": "Organize İşler",
+      "original_title": "Organize İşler",
+      "first_air_date": null,
+      "release_date": "2005-12-22"
+    }
+  ],
+  "checks": {
+    "tv_id": true,
+    "tv_name": true,
+    "tv_year": true,
+    "imdb": true,
+    "season": true,
+    "eight_exact_episodes": true,
+    "search_tv_identity": true,
+    "movies_not_tv": true
+  },
+  "result": "catalogue-identity-confirmed",
+  "ciRunId": 39311300009,
+  "sourceCommit": "22922df2f887c6c14cf687bb63bd13118476bb22",
+  "ciUrl": "https://github.com/eaatabay/EA-FB/actions/runs/39311300009"
+}

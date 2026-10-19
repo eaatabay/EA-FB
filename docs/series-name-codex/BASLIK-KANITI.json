@@ -52,12 +52,23 @@
     "source": "user research; public Netflix/IMDb GET currently HTTP 403"
   },
   "eaFbCatalogueVerification": {
-    "status": "blocked",
-    "configUrl": "https://raw.githubusercontent.com/eaatabay/EA-FB/feature/detail-dual-ratings-v6/config/backend.v6-staging.json",
+    "status": "confirmed-through-read-only-CI",
+    "localProxy": "CONNECT 403 persists; runner GETs succeeded",
+    "ciRunId": 39311300009,
+    "ciUrl": "https://github.com/eaatabay/EA-FB/actions/runs/39311300009",
+    "sourceCommit": "22922df2f887c6c14cf687bb63bd13118476bb22",
     "approvedOrigin": "https://ea-fb-catalog-v6-staging.eaatabay.workers.dev",
-    "requestPath": "/v1/tv/320754?language=tr-TR",
-    "observed": "proxy CONNECT 403; no catalogue JSON received",
-    "idStatus": "320754 verified on TMDb web, pending confirmation from EA-FB response",
-    "namesStatus": "EA-FB name/original_name not observed; no runtime alias rule created"
+    "confirmed": {
+      "id": 320754,
+      "name": "Organize İşler",
+      "original_name": "Organize İşler",
+      "first_air_date": "2026-10-16",
+      "imdb_id": "tt38732131",
+      "season": 1,
+      "season_name": "Karun Hazinesi",
+      "episodes": 8
+    },
+    "evidence": "EA-FB-KATALOG-GOZLEM.json",
+    "runtimeAliasRuleCreated": false
   }
 }
