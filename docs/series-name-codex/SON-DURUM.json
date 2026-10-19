@@ -1,17 +1,22 @@
 {
   "branch": "test/ea-fb-series-name-codex-20261019",
   "base": "16396702470eb1f81cc6dac4360e6b0ff84927d1",
-  "lastSuccessfulPush": "6433b1fcf5a88de40412bbe852112eb15bd90950",
+  "lastSuccessfulPush": "1aa79597420845beb18afa58849c917a9499beab",
   "apiAfterPush": 401,
   "nativeGitAfterPush": "authentication-unavailable",
   "confirmedCiRuns": [
     39309504108,
     39310538425,
-    39311300009
+    39311299938,
+    39311300009,
+    39311839830
   ],
-  "lastObservedInProgressRun": 39311299938,
-  "latest59AssertionRun": "run ID not retrieved after authentication failure",
+  "lastObservedInProgressRun": null,
+  "latest59AssertionRun": 39311839830,
   "runtimeChanges": false,
   "packagePublished": false,
-  "uiCoInstallationVerified": false
+  "uiCoInstallationVerified": false,
+  "apiAfterRefresh": "working",
+  "nativeGitAfterRefresh": "working",
+  "logReview": "latest two complete archives reviewed; 59 assertions and Android build successful; 206 D8 metadata warnings recorded"
 }

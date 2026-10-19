@@ -1,3 +1,36 @@
+# Güncel devam notları
+
+## Bağlantı yenilendikten sonraki kesin durum
+
+GitHub API ve HTTPS Git erişimi yeniden çalışıyor. Yerelde kalan **1aa79597420845beb18afa58849c917a9499beab** yalnızca yeni test dalına normal push ile gönderildi. Önceki 401 engeli giderildi.
+
+- **39311299938: success**, tam log arşivi incelendi; 53 assertion, Android BUILD SUCCESSFUL ve 312 dosya koruması PASS.
+- **39311839830: success**, tam log arşivi incelendi; son **59 assertion**, Android BUILD SUCCESSFUL ve 312 dosya koruması PASS. Kaynak commit: **6433b1fcf5a88de40412bbe852112eb15bd90950**.
+- Her iki derlemede 206 D8 Kotlin metadata rewrite uyarısı var; bunlar gizlenmedi, cihaz başarısı sayılmadı. Ayrıntılar SON-CI-INCELEMESI.json içinde.
+- Güncel uzak dal kontrolünde V83/main/V81 ve diğer korunan HEAD'ler başlangıçla aynı; eski başarısız dal silinmiş durumda.
+- Yalnızca test ve teşhis yapıldı. UI/runtime/eşleştirme kuralı değiştirilmedi, paket veya staging manifesti yayımlanmadı. UI/iki eklenti izolasyonu hâlâ kanıtlanmadı; yayın engeli sürüyor.
+
+Sonraki adım: kullanıcının sonraki kapsamını bekle. Şimdiki yetki yalnızca test/teşhis; kod düzeltmesi veya yayın başlatma. Gerçek EA-FB kimliği ve DiziYou başlık kapısı tanısı SONUC-TESHIS.md içinde.
+
+### Bütün gönderilmiş önceki commit SHA’ları
+| Tam SHA | İşlem | Bağlantı |
+|---|---|---|
+| `45956ae74fdc512fa838ed6e99112a41baba9187` | docs(series): record V83 baseline and rollback boundaries | [commit](https://github.com/eaatabay/EA-FB/commit/45956ae74fdc512fa838ed6e99112a41baba9187) |
+| `069824f8433792f8f5dee2b7079390ee1f9e0374` | test(series): isolate V83 title rejection across four adapters | [commit](https://github.com/eaatabay/EA-FB/commit/069824f8433792f8f5dee2b7079390ee1f9e0374) |
+| `36a4820a4a3c2a43e83b87e5b4b1ef0d217f56b6` | test(series): enforce byte-level V83 baseline preservation | [commit](https://github.com/eaatabay/EA-FB/commit/36a4820a4a3c2a43e83b87e5b4b1ef0d217f56b6) |
+| `fb16e9ced070f1fe0c6d6cf93aaa863f79745099` | ci(series): add branch-scoped diagnostics without publication | [commit](https://github.com/eaatabay/EA-FB/commit/fb16e9ced070f1fe0c6d6cf93aaa863f79745099) |
+| `87344068c46877c720e8f1afa53084cc06400fab` | docs(series): record verified season alias and obsolete branch cleanup | [commit](https://github.com/eaatabay/EA-FB/commit/87344068c46877c720e8f1afa53084cc06400fab) |
+| `efb5fe86b2e0c0edfcc0f6140356d35fa004a7b4` | test(series): track researched TV identity separately from films | [commit](https://github.com/eaatabay/EA-FB/commit/efb5fe86b2e0c0edfcc0f6140356d35fa004a7b4) |
+| `63782dbd89fc52d4382a973c82fac67ca442ad75` | docs(series): audit V83 UI hooks and preserve diagnostic handoff | [commit](https://github.com/eaatabay/EA-FB/commit/63782dbd89fc52d4382a973c82fac67ca442ad75) |
+| `22922df2f887c6c14cf687bb63bd13118476bb22` | test(series): probe approved catalogue identity from read-only CI | [commit](https://github.com/eaatabay/EA-FB/commit/22922df2f887c6c14cf687bb63bd13118476bb22) |
+| `6433b1fcf5a88de40412bbe852112eb15bd90950` | test(series): replay confirmed catalogue identity through V83 title gates | [commit](https://github.com/eaatabay/EA-FB/commit/6433b1fcf5a88de40412bbe852112eb15bd90950) |
+| `1aa79597420845beb18afa58849c917a9499beab` | docs(series): finalize confirmed diagnosis and authentication handoff | [commit](https://github.com/eaatabay/EA-FB/commit/1aa79597420845beb18afa58849c917a9499beab) |
+
+Bu güncelleme commit’inin SHA’sı git log -1 ile bulunur.
+
+---
+Aşağıdaki önceki kayıt tarihsel durumu içerir; yukarıdaki kesin durum geçerlidir.
+
 # Devam notları — 2026-10-19 (Europe/Istanbul)
 
 **Kapsam: yalnızca yeni dalda test ve teşhis. Uygulama / UI değişikliği ve yayın yok.**

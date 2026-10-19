@@ -1,0 +1,26 @@
+[
+  {
+    "runId": 39311299938,
+    "logReviewed": true,
+    "evidence": [
+      "2026-10-19T19:29:00.7512309Z PASS: 312 V83 tracked files byte-identical; V83 CS3 SHA-256 40fd24acb41dc69fa869ceb69ee6661e5136c1dff39434eb8bd3227f955f3b66",
+      "2026-10-19T19:29:02.1994011Z PASS: 312 V83 tracked files byte-identical; V83 CS3 SHA-256 40fd24acb41dc69fa869ceb69ee6661e5136c1dff39434eb8bd3227f955f3b66",
+      "2026-10-19T19:29:36.9951230Z PASS: 53 V83 diagnostic assertions; synthetic responses only, no live TMDb/source/device validation",
+      "2026-10-19T19:32:26.9918949Z BUILD SUCCESSFUL in 2m 42s",
+      "2026-10-19T19:32:27.0221062Z PASS: 312 V83 tracked files byte-identical; V83 CS3 SHA-256 40fd24acb41dc69fa869ceb69ee6661e5136c1dff39434eb8bd3227f955f3b66"
+    ],
+    "d8MetadataWarnings": 206
+  },
+  {
+    "runId": 39311839830,
+    "logReviewed": true,
+    "evidence": [
+      "2026-10-19T19:32:48.9682159Z PASS: 312 V83 tracked files byte-identical; V83 CS3 SHA-256 40fd24acb41dc69fa869ceb69ee6661e5136c1dff39434eb8bd3227f955f3b66",
+      "2026-10-19T19:32:50.3701123Z PASS: 312 V83 tracked files byte-identical; V83 CS3 SHA-256 40fd24acb41dc69fa869ceb69ee6661e5136c1dff39434eb8bd3227f955f3b66",
+      "2026-10-19T19:33:25.4904375Z PASS: 59 V83 diagnostic assertions; recorded live catalogue/source metadata, synthetic adapter responses; no stream or device validation",
+      "2026-10-19T19:36:09.9059191Z BUILD SUCCESSFUL in 2m 39s",
+      "2026-10-19T19:36:09.9059678Z PASS: 312 V83 tracked files byte-identical; V83 CS3 SHA-256 40fd24acb41dc69fa869ceb69ee6661e5136c1dff39434eb8bd3227f955f3b66"
+    ],
+    "d8MetadataWarnings": 206
+  }
+]
