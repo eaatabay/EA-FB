@@ -25,3 +25,16 @@ Her mantıksal aşama ayrı commit olur. Bir commit kendi SHA'sını kendi için
 - Test: mevcut 12 Kotlin programı + 14 Python testi geçti; yeni tanı programı ayrıca çalıştırılır. Fixture gerçek site/cihaz kanıtı değildir.
 - Geri alma: yalnızca yeni daldaki bu commit'e git revert; V83'e işlem yok.
 - Yeni test sonucu: dört adaptörde **45/45 tanı assertion'ı PASS**. Bu, V83 davranışının ölçümüdür; yeni isim düzeltmesinin veya gerçek Organize İşler oynatmasının testi değildir.
+
+## 2 — Kesin commit kaydı
+- Önceki: 45956ae74fdc512fa838ed6e99112a41baba9187. Yeni: 069824f8433792f8f5dee2b7079390ee1f9e0374.
+- https://github.com/eaatabay/EA-FB/commit/069824f8433792f8f5dee2b7079390ee1f9e0374
+- Push başarıyla doğrulandı. Test sonucu: 45/45 tanı assertion'ı; çalışma davranışında değişiklik yok.
+
+## 3 — V83 dosya ve paket koruması
+- Önceki SHA: 069824f8433792f8f5dee2b7079390ee1f9e0374. Yeni SHA: bu aşamanın commit'i, sonraki kayıt kesinleştirir.
+- Dosyalar: scripts/verify-series-v83-baseline.py, tests/test_series_v83_baseline.py ve bu defter.
+- Gerekçe: dar izin listesiyle yalnızca yeni tanı/test/doküman dosyalarına izin vermek. Mevcut 312 dosyanın **tamamı** byte düzeyinde V83 ile aynı olmalı. Hiçbir UI/adapter/runtime metodu istisna tutulmadı.
+- Test: koruma betiği PASS; iki Python testi PASS; dokuz ayrı simüle UI/ayar/adapter/workflow/manifest/CS3 mutasyonu beklendiği gibi reddedildi. Gerçek dosyalara mutasyon yazılmadı.
+- Etki: uygulama ve korunan dağıtım değişmedi.
+- Geri alma: yalnızca yeni daldaki bu aşamayı git revert ile geri al. V83 dalına dokunma.
