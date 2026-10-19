@@ -13,10 +13,10 @@ from bronze_dex import Dex
 ROOT = Path(__file__).resolve().parents[1]
 BASELINE = "16396702470eb1f81cc6dac4360e6b0ff84927d1"
 BRANCH = "test/ea-fb-series-name-codex-20261019"
-DIST = "dist-series-codex-8501-test"
-ID = "EA-FB-SERIES-CODEX-8501-TEST"
-NAME = "EA-FB SERIES CODEX 8501 TEST"
-VERSION = 8501
+DIST = "dist-series-codex-8502-test"
+ID = "EA-FB-SERIES-CODEX-8502-TEST"
+NAME = "EA-FB SERIES CODEX 8502 TEST"
+VERSION = 8502
 FILE = ID + ".cs3"
 BASE_URL = f"https://raw.githubusercontent.com/eaatabay/EA-FB/{BRANCH}/{DIST}/"
 
@@ -52,14 +52,14 @@ IDENTITY_METHODS = {
     "Lcom/eafb/FilmSeriesRail;.renderFragment(Landroidx/fragment/app/Fragment;)V",
     "Lcom/eafb/FilmSeriesRail;.makeRail$lambda$3$0$1(Landroidx/fragment/app/FragmentActivity;Lcom/eafb/FilmSeriesRail$Card;Landroid/view/View;)V",
 }
-NEW_CLASSES = ("Lcom/eafb/ConfirmedSeriesAlias;", "Lcom/eafb/SeriesTestIsolation;", "Lcom/eafb/SeriesTestIsolationPolicy;")
+NEW_CLASSES = ("Lcom/eafb/ConfirmedSeriesAlias;", "Lcom/eafb/SeriesTestIsolation;", "Lcom/eafb/SeriesTestIsolationPolicy;", "Lcom/eafb/SeriesTestIsolationPolicy$", "Lcom/eafb/SeriesTestIsolation$requireSafe$")
 ENTRY = "Lcom/eafb/EAPlugin;.load(Landroid/content/Context;)V"
 
 def normalized(dex, index, name):
     rows = [list(row) for row in v83.instruction_fingerprint(dex, index)]
     replacements = {"EA-FB V83 TEST": NAME} if name in IDENTITY_METHODS else {}
     if name == "Lcom/eafb/EASettings;.initialize(Landroid/content/Context;)V":
-        replacements = {"ea_fb_v83_test": "ea_fb_series_codex_8501_test", "ea_fb_v82_test": "ea_fb_series_codex_8501_seed"}
+        replacements = {"ea_fb_v83_test": "ea_fb_series_codex_8502_test", "ea_fb_v82_test": "ea_fb_series_codex_8502_seed"}
     for row in rows:
         if row[1] in [0x1a, 0x1b]:
             for old, new in replacements.items():
@@ -71,14 +71,18 @@ def normalized(dex, index, name):
 def verify_gate(dex):
     by_name = {dex.methods[i]: i for i in dex.code}
     calls = [ann for _, _, ann, _ in dex.instructions(by_name[ENTRY]) if ann.startswith("invoke ")]
-    gate = next(i for i, ann in enumerate(calls) if "SeriesTestIsolation;.requireSafe()V" in ann)
+    gate = next(i for i, ann in enumerate(calls) if "SeriesTestIsolation;.requireSafe(Landroid/content/Context;)V" in ann)
     for marker in ["EASettings;.initialize", "FilmSeriesRail;.install", "DetailMetaRow;.install", "EpisodeUpcomingStyle;.install", "EpisodeTitleStyle;.install", ".registerMainAPI"]:
         target = next(i for i, ann in enumerate(calls) if marker in ann)
         if gate >= target:
             raise ValueError("Isolation gate is too late: " + marker)
-    code = [ann for _, _, ann, _ in dex.instructions(by_name["Lcom/eafb/SeriesTestIsolation;.requireSafe()V"])]
-    if not all(any(marker in line for line in code) for marker in ["Process;.myUid()I", "PluginManager;.getPluginsOnline", "PluginManager;.getPluginsLocal", "SeriesTestIsolationPolicy;.canLoad", "ZipFile;.<init>", "SeriesTestIsolationPolicy;.inventoryName"]):
+    code = [ann for _, _, ann, _ in dex.instructions(by_name["Lcom/eafb/SeriesTestIsolation;.requireSafe(Landroid/content/Context;)V"])]
+    if not all(any(marker in line for line in code) for marker in ["Process;.myUid()I", "PluginManager;.getPluginsOnline", "PluginManager;.getPluginsLocal", "SeriesTestIsolationPolicy;.canLoad", "ZipFile;.<init>", "SeriesTestIsolationPolicy;.inventoryName", "SeriesTestIsolation;.verifiedSeparateApp"]):
         raise ValueError("Compiled isolation bridge missing UID or saved inventory check")
+    bridge = [ann for name, idx in by_name.items() if name.startswith("Lcom/eafb/SeriesTestIsolation;.") for _, _, ann, _ in dex.instructions(idx)]
+    for marker in ["getApplicationInfo", "getPackagesForUid", "getExternalFilesDir", "SeriesTestIsolationPolicy;.separateApps", "/proc/self/cmdline", "ea-fb-blue-isolation-8502.json"]:
+        if not any(marker in line for line in bridge):
+            raise ValueError("Missing OS identity / explicit device proof check: " + marker)
     print("PASS: compiled isolation gate precedes all preferences/UI/provider side effects")
 
 def verify_runtime(raw):
@@ -106,7 +110,7 @@ def entry(data):
                 apiVersion=1, repositoryUrl="https://github.com/eaatabay/EA-FB", status=3,
                 language="tr", authors=["EA-FB"], tvTypes=["Movie", "TvSeries", "Live"],
                 version=VERSION, internalName=ID, name=NAME,
-                description="Confirmed season alias test; separate Android user profile required. Primary profile blocked; no Mi Box playback claim.",
+                description="Confirmed season alias test; separate profile or ADB-verified separate application required; no Mi Box playback claim.",
                 url=BASE_URL+FILE)
 
 def verify_metadata(data, manifest, feed):
@@ -142,7 +146,7 @@ def package(source):
     subprocess.run(['git','diff','--exit-code','HEAD','--','EA-FB'],cwd=ROOT,check=True)
     out = ROOT/DIST
     out.mkdir(exist_ok=True)
-    notice = (ROOT/'docs/v83/SOURCE-NOTICE.txt').read_text() + '\nThis derivative: '+NAME+'; '+BRANCH+'. Separate profile only; primary profile blocked.\n'
+    notice = (ROOT/'docs/v83/SOURCE-NOTICE.txt').read_text() + '\nThis derivative: '+NAME+'; '+BRANCH+'. Separate profile or explicit OS-verified separate-app isolation required.\n'
     (out/'SOURCE-NOTICE.txt').write_text(notice)
     (out/'SOURCE-LICENSE').write_bytes((ROOT/'docs/v83/SOURCE-LICENSE').read_bytes())
     with zipfile.ZipFile(source) as z:

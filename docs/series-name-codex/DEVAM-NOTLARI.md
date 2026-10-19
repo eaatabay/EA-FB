@@ -1,7 +1,7 @@
 <!--CURRENT-SERIES-STATUS-->
 ## Güncel uygulama aşaması
-Yeni kullanıcı düzeltmesi: mavi CloudStream V83 içermiyor; eski Bunny sürümü kaldırılacak. Primary UID engeli yalnız açık yerel kayıt ve OS paket/UID/private data/process kontrolleriyle aşılabilir. Cihaz davranışı doğrulanmadı. UI kaynakları değişmedi, eski 8501 yayınları hash ile donduruldu.
-Önceki tam SHA: 58a067b57a485dd126865664a818ce81da5f13f5
+verify-blue-isolation.py varsayılan salt okunur; açık --arm yalnız foreground mavi uygulamada marker yazar. OS kontrolü tekrar runtime içinde zorunlu. CI 8502 artifact üretir; production deployment yok. Runtime commit ea1e7aa2b461552b3f42dafa87f239ce83276772.
+Önceki tam SHA: ea1e7aa2b461552b3f42dafa87f239ce83276772
 Son kayıt commit’inin kendi SHA’sı `git log -1` ile bulunur; sonraki kayıt envantere ekler.
 
 | SHA | İşlem | Bağlantı |
@@ -26,7 +26,9 @@ Son kayıt commit’inin kendi SHA’sı `git log -1` ile bulunur; sonraki kayı
 | `eba59a87802695772750582c505b5fe0abf6d0c6` | release(series-test): stage verified isolated 8501 package | [commit](https://github.com/eaatabay/EA-FB/commit/eba59a87802695772750582c505b5fe0abf6d0c6) |
 | `b0e18e62adb3a101daef65ae5235f8047e918325` | docs(series-test): record verified release and complete rollback handoff | [commit](https://github.com/eaatabay/EA-FB/commit/b0e18e62adb3a101daef65ae5235f8047e918325) |
 | `58a067b57a485dd126865664a818ce81da5f13f5` | docs(series-test): finalize report commit references | [commit](https://github.com/eaatabay/EA-FB/commit/58a067b57a485dd126865664a818ce81da5f13f5) |
+| `ea1e7aa2b461552b3f42dafa87f239ce83276772` | fix(series-test): require verified app isolation for primary-profile 8502 | [commit](https://github.com/eaatabay/EA-FB/commit/ea1e7aa2b461552b3f42dafa87f239ce83276772) |
 <!--END-CURRENT-SERIES-STATUS-->
+
 
 # Devam notları — tamamlanan 8501 test sürümü
 

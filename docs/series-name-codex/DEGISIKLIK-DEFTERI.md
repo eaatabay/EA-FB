@@ -1,7 +1,7 @@
 <!--CURRENT-SERIES-STATUS-->
 ## Güncel uygulama aşaması
-Yeni kullanıcı düzeltmesi: mavi CloudStream V83 içermiyor; eski Bunny sürümü kaldırılacak. Primary UID engeli yalnız açık yerel kayıt ve OS paket/UID/private data/process kontrolleriyle aşılabilir. Cihaz davranışı doğrulanmadı. UI kaynakları değişmedi, eski 8501 yayınları hash ile donduruldu.
-Önceki tam SHA: 58a067b57a485dd126865664a818ce81da5f13f5
+verify-blue-isolation.py varsayılan salt okunur; açık --arm yalnız foreground mavi uygulamada marker yazar. OS kontrolü tekrar runtime içinde zorunlu. CI 8502 artifact üretir; production deployment yok. Runtime commit ea1e7aa2b461552b3f42dafa87f239ce83276772.
+Önceki tam SHA: ea1e7aa2b461552b3f42dafa87f239ce83276772
 Son kayıt commit’inin kendi SHA’sı `git log -1` ile bulunur; sonraki kayıt envantere ekler.
 
 | SHA | İşlem | Bağlantı |
@@ -26,7 +26,9 @@ Son kayıt commit’inin kendi SHA’sı `git log -1` ile bulunur; sonraki kayı
 | `eba59a87802695772750582c505b5fe0abf6d0c6` | release(series-test): stage verified isolated 8501 package | [commit](https://github.com/eaatabay/EA-FB/commit/eba59a87802695772750582c505b5fe0abf6d0c6) |
 | `b0e18e62adb3a101daef65ae5235f8047e918325` | docs(series-test): record verified release and complete rollback handoff | [commit](https://github.com/eaatabay/EA-FB/commit/b0e18e62adb3a101daef65ae5235f8047e918325) |
 | `58a067b57a485dd126865664a818ce81da5f13f5` | docs(series-test): finalize report commit references | [commit](https://github.com/eaatabay/EA-FB/commit/58a067b57a485dd126865664a818ce81da5f13f5) |
+| `ea1e7aa2b461552b3f42dafa87f239ce83276772` | fix(series-test): require verified app isolation for primary-profile 8502 | [commit](https://github.com/eaatabay/EA-FB/commit/ea1e7aa2b461552b3f42dafa87f239ce83276772) |
 <!--END-CURRENT-SERIES-STATUS-->
+
 
 
 
@@ -313,4 +315,11 @@ Nihai yayın/geri alma raporu GitHub commit’i: [b0e18e62adb3a101daef65ae5235f8
 - Dosyalar: CleanTestIdentity.kt, SeriesTestIsolation.kt, EAPlugin.kt (yalnız Context argümanı), build.gradle.kts (8502), SeriesIsolationTest.kt, verify-series-v83-baseline.py, MAVI-8502-IZOLASYON.md
 - Gerekçe / etki: Yeni kullanıcı düzeltmesi: mavi CloudStream V83 içermiyor; eski Bunny sürümü kaldırılacak. Primary UID engeli yalnız açık yerel kayıt ve OS paket/UID/private data/process kontrolleriyle aşılabilir. Cihaz davranışı doğrulanmadı. UI kaynakları değişmedi, eski 8501 yayınları hash ile donduruldu.
 - Test / sonuç: 53 izolasyon, 36 alias safety, 59 teşhis ve film/four-source/settings regresyonları geçti; Android derlemesi sürüyor. V83 305 dosya ve paket SHA korundu.
+- Geri alma: yalnızca bu commit’i yeni test dalında git revert; V83/main/arşivlere dokunma.
+
+## 8502 / salt okunur ADB doğrulayıcı ve derlenmiş kapı denetimi
+- Önceki SHA: ea1e7aa2b461552b3f42dafa87f239ce83276772; yeni SHA bu aşamanın commit’i.
+- Dosyalar: verify-blue-isolation.py, test_blue_isolation.py, package-series-codex.py, test_series_package.py, yalnız yeni series-name-diagnostics.yml
+- Gerekçe / etki: verify-blue-isolation.py varsayılan salt okunur; açık --arm yalnız foreground mavi uygulamada marker yazar. OS kontrolü tekrar runtime içinde zorunlu. CI 8502 artifact üretir; production deployment yok. Runtime commit ea1e7aa2b461552b3f42dafa87f239ce83276772.
+- Test / sonuç: Android build başarılı; paket DEX 2028 V83 + 250 Bronze metodu koruyor. 53 izolasyon +36 alias+59 teşhis. OS kimliği ve UI kodu değiştirilmiş DEX negatif testleri uygulanır. Fiziksel Mi Box bekliyor.
 - Geri alma: yalnızca bu commit’i yeni test dalında git revert; V83/main/arşivlere dokunma.
