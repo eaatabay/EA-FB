@@ -52,3 +52,17 @@ Her mantıksal aşama ayrı commit olur. Bir commit kendi SHA'sını kendi için
 - Test: yerel kullanılan komutlar fixture ve kaynak korumasında geçti. Workflow GitHub'da henüz çalıştı/başarılı denmiyor; API erişimi Forbidden.
 - Geri alma: bu yeni workflow'u yalnızca yeni daldan sil veya bu aşamayı revert et. V83/production'a işlem yok.
 - Workflow: https://github.com/eaatabay/EA-FB/actions/workflows/series-name-diagnostics.yml?query=branch%3Atest%2Fea-fb-series-name-codex-20261019
+
+## 4 — Kesin commit kaydı
+- Önceki: 36a4820a4a3c2a43e83b87e5b4b1ef0d217f56b6. Yeni: fb16e9ced070f1fe0c6d6cf93aaa863f79745099.
+- https://github.com/eaatabay/EA-FB/commit/fb16e9ced070f1fe0c6d6cf93aaa863f79745099
+- Gerçek ilk CI: https://github.com/eaatabay/EA-FB/actions/runs/39309504108 (son sorguda in_progress, başarı iddiası yok).
+
+## 5 — Resmî başlık kanıtı ve eski başarısız dal temizliği
+- Önceki: fb16e9ced070f1fe0c6d6cf93aaa863f79745099. Yeni: bu belge commit'i.
+- Dosyalar: BASLIK-KANITI.json ve bu defter; uygulama değişmedi.
+- Ağ değişikliği sonrası GitHub API/TMDb/DiziYou erişimi yeniden denendi ve çalıştı. TMDb TV 320754 için uzun ad resmî alternatif başlıklar sayfasında season 1 olarak kayıtlı; sezon sayfası Karun Hazinesi, 2026 ve 8 bölüm ile doğrulandı. DiziYou TVSeries JSON-LD adı ve startDate=2026 aynı uzun adı doğruluyor. DiziBox HTTP 403, Bronze canlı arama henüz denenmedi.
+- Bu kanıt, yalnızca TMDb 320754 / SERIES / 2026 / S1 / E1..8 için hedefli alternatif aday eklemeye yeterlidir. Diğer dizilerde genel ad gevşetmesi gerekmez.
+- Eski test/organize-isler-season-title-20261019 HEAD'i tekrar 16396702470eb1f81cc6dac4360e6b0ff84927d1 olarak doğrulandı. Açık PR'larda head/base bağımlılığı bulunmadı. V83 ile aynı tree/history; korunacak özgün commit yok. Yalnızca bu eski dal, tam beklenen SHA koşullu silme ile silindi. Son git ls-remote sorgusunda eski dal yok, V83 HEAD değişmedi.
+- Geri alma (eski dal temizliği): kullanıcı gerek görürse yalnızca eski adı V83 SHA'sına yeniden oluştur; V83 dalını değiştirme. Kod değişikliği yok.
+- Android ortamı: gerekli build-tools 34.0.0 resmî sdkmanager ile kuruldu; gradle :EA-FB:make yerelde BUILD SUCCESSFUL (1m17s). Bu hâlâ V83 kimlikli yerel derlemedir, yeni paket değildir ve yayımlanmadı.

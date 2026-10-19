@@ -1,0 +1,44 @@
+{
+  "observedAt": "2026-10-19 Europe/Istanbul",
+  "tmdbId": 320754,
+  "kind": "tv",
+  "year": 2026,
+  "season": 1,
+  "episodes": 8,
+  "catalogTitle": "Organize İşler",
+  "confirmedSeasonTitle": "Karun Hazinesi",
+  "confirmedAlternativeTitle": "Organize İşler: Karun Hazinesi",
+  "sources": [
+    {
+      "url": "https://www.themoviedb.org/tv/320754-organize-isler?language=tr-TR",
+      "observed": "Organize İşler (TV Series 2026); season 1 Karun Hazinesi, 8 Episodes"
+    },
+    {
+      "url": "https://www.themoviedb.org/tv/320754-organize-isler/titles",
+      "observed": "Organize İşler: Karun Hazinesi — season 1"
+    },
+    {
+      "url": "https://www.themoviedb.org/tv/320754-organize-isler/season/1?language=tr-TR",
+      "observed": "Organize İşler: Karun Hazinesi (2026); season Karun Hazinesi"
+    },
+    {
+      "url": "https://www.diziyou.one/organize-isler-karun-hazinesi2/",
+      "observed": {
+        "@type": "TVSeries",
+        "name": "Organize İşler: Karun Hazinesi",
+        "startDate": "2026"
+      }
+    }
+  ],
+  "excludedMovies": {
+    "30634": "Organize İşler",
+    "577990": "Organize İşler: Sazan Sarmalı"
+  },
+  "limits": [
+    "Web page evidence; no extra production Worker/D1 call or change",
+    "No real playback/stream tested",
+    "DiziBox response HTTP 403; current source catalogue unverified",
+    "Device metadata and original_name not yet observed",
+    "Site HTML, cookies, scripts, signed URLs and player data not stored in git"
+  ]
+}
