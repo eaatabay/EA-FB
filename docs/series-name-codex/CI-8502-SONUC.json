@@ -8,7 +8,7 @@
   "hashComparison": "CI final log SHA256 equals local CS3 bytes; published raw bytes verified separately",
   "ciArtifactBinaryDownloaded": false,
   "logsZipSha256": "93870778b9e167078332b2cc05f3a0482a142fc57b23d47341a911eb69853a7a",
-  "nonfatalMetadataRewritingWarnings": 0,
+  "nonfatalMetadataRewritingWarnings": 210,
   "jobs": [
     {
       "name": "diagnose",
@@ -94,5 +94,6 @@
     }
   ],
   "miBoxIsolationVerified": false,
-  "miBoxPlaybackVerified": false
+  "miBoxPlaybackVerified": false,
+  "metadataWarningNote": "Pinned Kotlin/D8 emits metadata warnings; verification not disabled. Compiled methods and gate pass; Mi Box execution remains unverified."
 }

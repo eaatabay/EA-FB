@@ -11,5 +11,9 @@
   "protectedV83RuntimeMethods": 2028,
   "originalBronzeMethods": 250,
   "productionTouched": false,
-  "uiSourcesChanged": false
+  "uiSourcesChanged": false,
+  "releaseCommit": "f435587065da49e83e4feae21de5c23f3759dd69",
+  "publishedRawFilesVerified": 6,
+  "publishedBytesMatchCIAndLocal": true,
+  "repoUrl": "https://raw.githubusercontent.com/eaatabay/EA-FB/test/ea-fb-series-name-codex-20261019/dist-series-codex-8502-test/repo.json"
 }

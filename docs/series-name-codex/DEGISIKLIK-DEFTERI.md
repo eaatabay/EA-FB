@@ -1,7 +1,7 @@
 <!--CURRENT-SERIES-STATUS-->
 ## Güncel uygulama aşaması
-Final CI 39323892158 kaynak 934ca5764ad3e4032cf5c753b89b9ac189fc5834 için başarılı. CI log CS3 hash'i yerel 92fbfd0dd39028b5d4d6110ae305418f718ec98c4c4d0f1d910ea1103efa83bf ile aynı. 39323639089 daha yeni metadata commit'iyle otomatik iptal edildi. Yalnız dist-series-codex-8502-test ve belgeler yayımlanır; cihaz testi bekliyor.
-Önceki tam SHA: 934ca5764ad3e4032cf5c753b89b9ac189fc5834
+Yayın commit f435587065da49e83e4feae21de5c23f3759dd69. Altı raw dosya yeniden indirildi ve yerel dosyalarla birebir eşleşti; CS3 hash 92fbfd0dd39028b5d4d6110ae305418f718ec98c4c4d0f1d910ea1103efa83bf CI loguyla da aynı. Depo linki dist-series-codex-8502-test/repo.json. Yazılım ve test yayını tamamlandı; Mi Box izolasyon/UI/oynatma kabulü BEKLİYOR.
+Önceki tam SHA: f435587065da49e83e4feae21de5c23f3759dd69
 Son kayıt commit’inin kendi SHA’sı `git log -1` ile bulunur; sonraki kayıt envantere ekler.
 
 | SHA | İşlem | Bağlantı |
@@ -29,7 +29,9 @@ Son kayıt commit’inin kendi SHA’sı `git log -1` ile bulunur; sonraki kayı
 | `ea1e7aa2b461552b3f42dafa87f239ce83276772` | fix(series-test): require verified app isolation for primary-profile 8502 | [commit](https://github.com/eaatabay/EA-FB/commit/ea1e7aa2b461552b3f42dafa87f239ce83276772) |
 | `49a11b4a8813cc406402bcb5d072323239dd71d2` | build(series-test): verify blue app opt-in and protect 8502 runtime gates | [commit](https://github.com/eaatabay/EA-FB/commit/49a11b4a8813cc406402bcb5d072323239dd71d2) |
 | `934ca5764ad3e4032cf5c753b89b9ac189fc5834` | fix(series-test): report conditional primary-profile policy accurately | [commit](https://github.com/eaatabay/EA-FB/commit/934ca5764ad3e4032cf5c753b89b9ac189fc5834) |
+| `f435587065da49e83e4feae21de5c23f3759dd69` | release(series-test): publish CI-verified app-isolated 8502 test package | [commit](https://github.com/eaatabay/EA-FB/commit/f435587065da49e83e4feae21de5c23f3759dd69) |
 <!--END-CURRENT-SERIES-STATUS-->
+
 
 
 
@@ -340,4 +342,11 @@ Nihai yayın/geri alma raporu GitHub commit’i: [b0e18e62adb3a101daef65ae5235f8
 - Dosyalar: dist-series-codex-8502-test altındaki altı dosya; CI-8502-SONUC.json, MAVI-8502-KANIT.json, kurulum/rollback/devir/risk/sonuç belgeleri
 - Gerekçe / etki: Final CI 39323892158 kaynak 934ca5764ad3e4032cf5c753b89b9ac189fc5834 için başarılı. CI log CS3 hash'i yerel 92fbfd0dd39028b5d4d6110ae305418f718ec98c4c4d0f1d910ea1103efa83bf ile aynı. 39323639089 daha yeni metadata commit'iyle otomatik iptal edildi. Yalnız dist-series-codex-8502-test ve belgeler yayımlanır; cihaz testi bekliyor.
 - Test / sonuç: Final CI tüm adımları başarılı; 53 izolasyon +36 alias safety+59 teşhis, dört kaynak/settings/provider regresyonları, 7 eski V83 ve yeni guard/paket/ADB negatif testleri; 2028+250 metot koruma; 23 korunan uzak dal değişmedi. Fiziksel Mi Box doğrulanmadı.
+- Geri alma: yalnızca bu commit’i yeni test dalında git revert; V83/main/arşivlere dokunma.
+
+## 8502 / yayımlanan raw dosyaları ve son devir kaydı
+- Önceki SHA: f435587065da49e83e4feae21de5c23f3759dd69; yeni SHA bu aşamanın commit’i.
+- Dosyalar: YAYIN-8502-DOGRULAMA.json, CI-8502-SONUC.json, SON-DURUM.json, DEGISIKLIK-DEFTERI.md, DEVAM-NOTLARI.md, GERI-ALMA-PLANI.md, SONUC-DUZELTME.md
+- Gerekçe / etki: Yayın commit f435587065da49e83e4feae21de5c23f3759dd69. Altı raw dosya yeniden indirildi ve yerel dosyalarla birebir eşleşti; CS3 hash 92fbfd0dd39028b5d4d6110ae305418f718ec98c4c4d0f1d910ea1103efa83bf CI loguyla da aynı. Depo linki dist-series-codex-8502-test/repo.json. Yazılım ve test yayını tamamlandı; Mi Box izolasyon/UI/oynatma kabulü BEKLİYOR.
+- Test / sonuç: İndirilen gerçek yayın üzerinden CRC/manifest/feed/SHA/DEX gate ve 2028 V83 metot koruması PASS. 23 korunan uzak dal HEAD aynı. D8 metadata uyarıları kayda alındı, bastırılmadı; cihaz sonucu doğrulanmadı. V83/diğer uygulama/production değişmedi.
 - Geri alma: yalnızca bu commit’i yeni test dalında git revert; V83/main/arşivlere dokunma.

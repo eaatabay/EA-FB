@@ -1,0 +1,37 @@
+{
+  "releaseCommit": "f435587065da49e83e4feae21de5c23f3759dd69",
+  "sourceCommit": "934ca5764ad3e4032cf5c753b89b9ac189fc5834",
+  "ciRun": 39323892158,
+  "repoUrl": "https://raw.githubusercontent.com/eaatabay/EA-FB/test/ea-fb-series-name-codex-20261019/dist-series-codex-8502-test/repo.json",
+  "files": {
+    "EA-FB-SERIES-CODEX-8502-TEST.cs3": {
+      "sha256": "92fbfd0dd39028b5d4d6110ae305418f718ec98c4c4d0f1d910ea1103efa83bf",
+      "size": 334898
+    },
+    "SOURCE-LICENSE": {
+      "sha256": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986",
+      "size": 35149
+    },
+    "SOURCE-NOTICE.txt": {
+      "sha256": "2e6eee279152705195011a247df3a9da01eb4364330e599943a17265539d9d91",
+      "size": 1524
+    },
+    "build-info.json": {
+      "sha256": "b82f12b3d7a45e40d6d4a1dace27480833cd09d70e9060b40a1705133fe58bc3",
+      "size": 532
+    },
+    "plugins.json": {
+      "sha256": "45916b69da8e5d5b16a24f7055fcf302a4cc3d8671d5096b727abc2c641c933c",
+      "size": 772
+    },
+    "repo.json": {
+      "sha256": "4c150b74a2ba5de0d69b1473b08eac07be37a0cc09dfb3c65e4939f059fa2cbb",
+      "size": 320
+    }
+  },
+  "downloadedPublishedBytesMatchLocal": true,
+  "ciLogPackageSha256": "92fbfd0dd39028b5d4d6110ae305418f718ec98c4c4d0f1d910ea1103efa83bf",
+  "protectedRemoteHeadsUnchanged": 23,
+  "miBoxIsolationVerified": false,
+  "miBoxPlaybackVerified": false
+}
