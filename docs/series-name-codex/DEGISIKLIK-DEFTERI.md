@@ -38,3 +38,17 @@ Her mantıksal aşama ayrı commit olur. Bir commit kendi SHA'sını kendi için
 - Test: koruma betiği PASS; iki Python testi PASS; dokuz ayrı simüle UI/ayar/adapter/workflow/manifest/CS3 mutasyonu beklendiği gibi reddedildi. Gerçek dosyalara mutasyon yazılmadı.
 - Etki: uygulama ve korunan dağıtım değişmedi.
 - Geri alma: yalnızca yeni daldaki bu aşamayı git revert ile geri al. V83 dalına dokunma.
+
+## 3 — Kesin commit kaydı
+- Önceki: 069824f8433792f8f5dee2b7079390ee1f9e0374. Yeni: 36a4820 (tam SHA git rev-parse 36a4820 ile).
+- https://github.com/eaatabay/EA-FB/commit/36a4820
+- 312 korunan dosya ve paket hash'i PASS; iki test / dokuz negatif mutasyon PASS.
+
+## 4 — Yayınsız, yalnızca yeni dala ait CI
+- Önceki: 36a4820. Yeni SHA: bu aşamanın commit'i; sonraki kesin kayıtta yer alır.
+- Dosyalar: .github/workflows/series-name-diagnostics.yml ve bu defter.
+- Gerekçe: dört adaptörün tanı fixture'larını, V83 regresyonlarını, kaynak korumasını ve Android derlemesini aynı GitHub kaydında çalıştırmak.
+- Etki: yeni dala dar ref/path filtresi; contents:read. Eski workflow'lar değiştirilmedi. Otomatik paketleme/yayın/push yok; yalnızca log artifact'i var.
+- Test: yerel kullanılan komutlar fixture ve kaynak korumasında geçti. Workflow GitHub'da henüz çalıştı/başarılı denmiyor; API erişimi Forbidden.
+- Geri alma: bu yeni workflow'u yalnızca yeni daldan sil veya bu aşamayı revert et. V83/production'a işlem yok.
+- Workflow: https://github.com/eaatabay/EA-FB/actions/workflows/series-name-diagnostics.yml?query=branch%3Atest%2Fea-fb-series-name-codex-20261019

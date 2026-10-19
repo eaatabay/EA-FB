@@ -1,0 +1,74 @@
+name: Series name diagnostics - protected V83
+
+on:
+  push:
+    branches: [test/ea-fb-series-name-codex-20261019]
+    paths:
+      - core-tests/clean/SeriesNameDiagnosisTest.kt
+      - scripts/test-series-name-codex.sh
+      - scripts/verify-series-v83-baseline.py
+      - tests/test_series_v83_baseline.py
+      - .github/workflows/series-name-diagnostics.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ea-fb-series-name-codex-20261019-diagnostics
+  cancel-in-progress: false
+
+jobs:
+  diagnose:
+    if: github.repository == 'eaatabay/EA-FB' && github.ref == 'refs/heads/test/ea-fb-series-name-codex-20261019'
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.12'
+      - name: Install checksum-verified Kotlin test compiler
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fLsS --retry 2 https://github.com/JetBrains/kotlin/releases/download/v2.4.0/kotlin-compiler-2.4.0.zip -o "$RUNNER_TEMP/series-kotlin.zip"
+          printf '%s  %s\n' ba1b9e6eb6ddc3275079224f2e9ea4a2b02eef7d59ce2d38404f04b22613c20a "$RUNNER_TEMP/series-kotlin.zip" | sha256sum -c -
+          unzip -q "$RUNNER_TEMP/series-kotlin.zip" -d "$RUNNER_TEMP/series-kotlin"
+          echo "$RUNNER_TEMP/series-kotlin/kotlinc/bin" >> "$GITHUB_PATH"
+      - name: Preserve V83 sources, UI, old workflows and packages
+        run: |
+          PYTHONDONTWRITEBYTECODE=1 python3 scripts/verify-series-v83-baseline.py
+          PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p 'test_series_v83_baseline.py' -v
+      - name: Run V83 regressions and synthetic title diagnosis
+        shell: bash
+        env:
+          CLEAN_TEST_CACHE: ${{ runner.temp }}/series-test-libs
+        run: |
+          set -euo pipefail
+          mkdir -p build/series-diagnostics
+          bash scripts/test-bronze-nl-land.sh 2>&1 | tee build/series-diagnostics/v83-regressions.log
+          bash scripts/test-series-name-codex.sh 2>&1 | tee build/series-diagnostics/title-diagnosis.log
+          PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p 'test_v83*.py' -v
+      - name: Install required Android tools
+        run: '"$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-35" "build-tools;34.0.0" "build-tools;35.0.0"'
+      - name: Compile unchanged V83 runtime - no staging or publication
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash scripts/prepare-cloudstream-gradle.sh
+          gradle :EA-FB:make --no-daemon --max-workers=2 --console=plain 2>&1 | tee build/series-diagnostics/android-build.log
+          PYTHONDONTWRITEBYTECODE=1 python3 scripts/verify-series-v83-baseline.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: series-name-diagnostic-logs
+          path: build/series-diagnostics/*.log
+          if-no-files-found: warn
+# Deliberately no deployment, package staging, write token or git push.
