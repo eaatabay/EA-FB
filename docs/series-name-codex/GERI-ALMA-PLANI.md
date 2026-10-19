@@ -1,7 +1,7 @@
 <!--CURRENT-SERIES-STATUS-->
 ## Güncel uygulama aşaması
-Profil kapısı yalnız eklenti görünen adına güvenmiyor: host envanterindeki CS3 manifest entry point’i de okunuyor. com.eafb girişli başka bir eklenti yeniden adlandırılsa bile çakışma sayılıyor. UID/kurulum doğrulaması hâlâ UI/preferences/provider öncesinde; ayrı Android profili zorunlu. Gerçek DiziYou araması dört HTTP isteğiyle doğrulanmış tek S1E8 teklifi döndürdü; extractor/video isteği yapılmadı.
-Önceki tam SHA: b0094da7a3daab69c45894ad2da4776678fd75eb
+Yeni package-series-codex.py yalnız yeni test dizinine yazar; commit/push/deploy yapmaz. Paketleme ile yayın ayrıldı. 250 özgün Bronze ve 2028 korunan V83 metodunun komut dizileri doğrulanıyor; istisnalar yalnız onaylı arama metotları/state machine’leri ve giriş kapısı. UI metotlarında yalnız tam yeni kimlik sabitleri normalize ediliyor. Derlenmiş gate UID, saved inventory ve manifest entry point okumasını doğrular; UI/ayar/provider kayıtlarından önce gelir. Yeni CI paket artifact’i üretir, manifesti GitHub’a yazmaz. Sadece aynı yeni dala ait eski ara CI’ler otomatik iptal edilebilir, son commit tam test edilir.
+Önceki tam SHA: bb0dc17706c29ac3e3ac037253983553036d6493
 Son kayıt commit’inin kendi SHA’sı `git log -1` ile bulunur; sonraki kayıt envantere ekler.
 
 | SHA | İşlem | Bağlantı |
@@ -21,7 +21,9 @@ Son kayıt commit’inin kendi SHA’sı `git log -1` ile bulunur; sonraki kayı
 | `1ac4de36b50b28c5313ea3c3d71e2b802f7e051a` | fix(series): add corroborated alias only for confirmed Organize Isler season | [commit](https://github.com/eaatabay/EA-FB/commit/1ac4de36b50b28c5313ea3c3d71e2b802f7e051a) |
 | `9846add14a62fd118ccbfb874131d46fd6eb4c70` | test(series): reject ambiguous or uncorroborated alias source pages | [commit](https://github.com/eaatabay/EA-FB/commit/9846add14a62fd118ccbfb874131d46fd6eb4c70) |
 | `b0094da7a3daab69c45894ad2da4776678fd75eb` | feat(series-test): isolate version 8501 and reject primary-profile loading | [commit](https://github.com/eaatabay/EA-FB/commit/b0094da7a3daab69c45894ad2da4776678fd75eb) |
+| `bb0dc17706c29ac3e3ac037253983553036d6493` | fix(series-test): detect renamed EA-FB plugins before initialization | [commit](https://github.com/eaatabay/EA-FB/commit/bb0dc17706c29ac3e3ac037253983553036d6493) |
 <!--END-CURRENT-SERIES-STATUS-->
+
 
 
 

@@ -7,6 +7,8 @@ on:
       - 'EA-FB/**'
       - 'core-tests/clean/SeriesAlias*Test.kt'
       - core-tests/clean/SeriesNameDiagnosisTest.kt
+      - scripts/package-series-codex.py
+      - tests/test_series_package.py
       - scripts/test-series-name-codex.sh
       - scripts/verify-series-v83-baseline.py
       - tests/test_series_v83_baseline.py
@@ -18,7 +20,7 @@ permissions:
 
 concurrency:
   group: ea-fb-series-name-codex-20261019-diagnostics
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   diagnose:
@@ -48,7 +50,7 @@ jobs:
         run: |
           PYTHONDONTWRITEBYTECODE=1 python3 scripts/verify-series-v83-baseline.py
           PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p 'test_series_v83_baseline.py' -v
-      - name: Run V83 regressions and synthetic title diagnosis
+      - name: Run film regressions and confirmed series safety checks
         shell: bash
         env:
           CLEAN_TEST_CACHE: ${{ runner.temp }}/series-test-libs
@@ -70,6 +72,16 @@ jobs:
           bash scripts/prepare-cloudstream-gradle.sh
           gradle :EA-FB:make --no-daemon --max-workers=2 --console=plain 2>&1 | tee build/series-diagnostics/android-build.log
           PYTHONDONTWRITEBYTECODE=1 python3 scripts/verify-series-v83-baseline.py
+      - name: Package isolated profile-guarded CS3 and verify V83 DEX protection
+        run: |
+          PYTHONDONTWRITEBYTECODE=1 python3 scripts/package-series-codex.py EA-FB/build/EA-FB.cs3
+          PYTHONDONTWRITEBYTECODE=1 python3 scripts/package-series-codex.py --verify
+          PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p test_series_package.py -v
+      - uses: actions/upload-artifact@v4
+        with:
+          name: EA-FB-SERIES-CODEX-8501-TEST
+          path: dist-series-codex-8501-test/
+          if-no-files-found: error
       - uses: actions/upload-artifact@v4
         if: always()
         with:
