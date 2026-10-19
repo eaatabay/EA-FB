@@ -1,0 +1,13 @@
+# Mavi CloudStream: 8502 izolasyon tasarımı
+
+Bu belge 8501'in ayrı Android kullanıcı şartına eklenen, açıkça etkinleştirilen ayrı uygulama yolunu anlatır. Mi Box'a bu ortamdan erişim yok; cihaz sonucu BEKLİYOR. Renkten paket kimliği çıkartılmaz. Resmî upstream app/build.gradle.kts stable=com.lagradost.cloudstream3, prerelease=.prerelease, debug=.debug varyantlarını tanımlar; bu liste cihazda hangisinin mavi olduğunu kanıtlamaz.
+
+8502 primary-user izni: ADB raporunda iki uygulama ayrı paket, ayrı primary UID, başka paketle paylaşılmayan UID, paket adına ait ayrı private dataDir ve iki ayrı canlı süreç göstermeli. Mavi uygulama ekranda açık olmalı; --blue bu resumed activity ile eşleşmeli. Varsayılan script salt okunur. --arm yalnız seçilmiş mavi uygulamanın external files alanına ea-fb-blue-isolation-8502.json yazar. Diğer uygulama, private veriler, eklentiler ve ayarlar değiştirilmez. Bu kayıt kriptografik cihaz tasdiki değil, açık yerel test onayı ve ölçüm kaydıdır.
+
+Eklenti kendi Context/PackageManager bilgilerini, Process.myUid(), /proc/self/cmdline, iki uygulamanın UID/dataDir/processName/getPackagesForUid bilgilerini tekrar kontrol eder. Kayıt UID ve dataDir ile eşleşmeli. Bilinmeyen paket, ortak UID, başka dataDir/process, eksik/silinmiş/bozuk kayıt veya Android paket görünürlüğü kısıtı: kapalı. Android API erişimi sağlanamazsa izin kuralı gevşetilmez. Secondary Android user yolu mevcut korumasını sürdürür; test paketi primary uygulamada kayıt olmadan çalışmaz.
+
+Online+local eklenti envanterindeki manifest pluginClassName ve internalName birlikte okunur. Kendi paketinden tam bir tane; başka EA-FB/EAFB adı veya com.eafb.* entrypoint sıfır tane gerekir. Adı değiştirilmiş EA-FB ve iki farklı sırada V83 da reddedilir. Eksik/bozuk manifest yüklemeyi keser. Kapı ayar başlatma, dört UI hook ve provider kaydından önce çalışır. Ayarlar yeni 8502 private namespace kullanır; 8501/V83 ayarları okunmaz.
+
+Eski Bunny EA-FB'yi kullanıcı yalnız MAVİ uygulamadan kaldırmalı; sonra yalnız MAVİ uygulamayı tamamen kapatıp yeniden açmalıdır. Kaldırma, eski lifecycle callback'lerini çalışan süreçten otomatik temizlediği varsayımı değildir. Soğuk başlangıç gereklidir. Eski eklenti başka adla kalırsa manifest kontrolü reddeder. UI kaynakları değiştirilmedi; farklı UID ve süreç, mavi uygulamadaki callback/provider/ayar belleğini diğer uygulamadan OS düzeyinde ayırır. Gerçek Mi Box lifecycle/oynatma kabulü ayrıca kullanıcı testini gerektirir.
+
+Geri alma: yalnız mavi uygulamada 8502'yi kaldır; yalnız mavi süreci kapat; mavi uygulamanın marker dosyasını sil. Diğer CloudStream, V83 ve production'a dokunma. 8501 arşiv dosyaları değişmez; primary profil için 8501'e dönme (tasarım gereği engeller).

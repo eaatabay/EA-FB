@@ -1,7 +1,7 @@
 <!--CURRENT-SERIES-STATUS-->
 ## Güncel uygulama aşaması
-Yayın commit’i eba59a87802695772750582c505b5fe0abf6d0c6. GitHub raw üzerinden CS3, repo/plugins/build-info ve iki atıf dosyası indirildi. Paket/manifest/DEX tekrar doğrulandı; 332876 byte ve SHA-256 f2b2d28a8a6adf5fbdfe8eae91fb70f36c346f658c3dbf7bcc91aae55fe12a3b CI ile aynı. Diğer 23 uzak dal HEAD’i aynı, V83 dalı/CS3 korunuyor. Kod, test, bağımsız paketleme ve kontrollü test yayını tamamlandı. Yalnız ayrı Android profili desteklenir; ana profil engellenir. Mi Box profil desteği ve gerçek video/menü davranışı kullanıcı cihazında doğrulanmadı; aynı profilde iki EA-FB’nin güvenle birlikte çalıştığı iddia edilmiyor.
-Önceki tam SHA: eba59a87802695772750582c505b5fe0abf6d0c6
+Yeni kullanıcı düzeltmesi: mavi CloudStream V83 içermiyor; eski Bunny sürümü kaldırılacak. Primary UID engeli yalnız açık yerel kayıt ve OS paket/UID/private data/process kontrolleriyle aşılabilir. Cihaz davranışı doğrulanmadı. UI kaynakları değişmedi, eski 8501 yayınları hash ile donduruldu.
+Önceki tam SHA: 58a067b57a485dd126865664a818ce81da5f13f5
 Son kayıt commit’inin kendi SHA’sı `git log -1` ile bulunur; sonraki kayıt envantere ekler.
 
 | SHA | İşlem | Bağlantı |
@@ -24,7 +24,10 @@ Son kayıt commit’inin kendi SHA’sı `git log -1` ile bulunur; sonraki kayı
 | `bb0dc17706c29ac3e3ac037253983553036d6493` | fix(series-test): detect renamed EA-FB plugins before initialization | [commit](https://github.com/eaatabay/EA-FB/commit/bb0dc17706c29ac3e3ac037253983553036d6493) |
 | `9aa829f1b494498762e02c16e5e6ad0f6c7de297` | build(series-test): verify isolated CS3 bytes and protected V83 DEX | [commit](https://github.com/eaatabay/EA-FB/commit/9aa829f1b494498762e02c16e5e6ad0f6c7de297) |
 | `eba59a87802695772750582c505b5fe0abf6d0c6` | release(series-test): stage verified isolated 8501 package | [commit](https://github.com/eaatabay/EA-FB/commit/eba59a87802695772750582c505b5fe0abf6d0c6) |
+| `b0e18e62adb3a101daef65ae5235f8047e918325` | docs(series-test): record verified release and complete rollback handoff | [commit](https://github.com/eaatabay/EA-FB/commit/b0e18e62adb3a101daef65ae5235f8047e918325) |
+| `58a067b57a485dd126865664a818ce81da5f13f5` | docs(series-test): finalize report commit references | [commit](https://github.com/eaatabay/EA-FB/commit/58a067b57a485dd126865664a818ce81da5f13f5) |
 <!--END-CURRENT-SERIES-STATUS-->
+
 
 
 
@@ -304,3 +307,10 @@ Geri alma: yalnızca bu yeni test/izin listesi/doküman commit'ini yeni dalda re
 - Geri alma: yalnızca bu commit’i yeni test dalında git revert; V83/main/arşivlere dokunma.
 
 Nihai yayın/geri alma raporu GitHub commit’i: [b0e18e62adb3a101daef65ae5235f8047e918325](https://github.com/eaatabay/EA-FB/commit/b0e18e62adb3a101daef65ae5235f8047e918325). Bu son belge biçim düzeltmesi uygulama veya paket içeriğini değiştirmez.
+
+## 8502 / ayrı uygulama için dar runtime kapısı
+- Önceki SHA: 58a067b57a485dd126865664a818ce81da5f13f5; yeni SHA bu aşamanın commit’i.
+- Dosyalar: CleanTestIdentity.kt, SeriesTestIsolation.kt, EAPlugin.kt (yalnız Context argümanı), build.gradle.kts (8502), SeriesIsolationTest.kt, verify-series-v83-baseline.py, MAVI-8502-IZOLASYON.md
+- Gerekçe / etki: Yeni kullanıcı düzeltmesi: mavi CloudStream V83 içermiyor; eski Bunny sürümü kaldırılacak. Primary UID engeli yalnız açık yerel kayıt ve OS paket/UID/private data/process kontrolleriyle aşılabilir. Cihaz davranışı doğrulanmadı. UI kaynakları değişmedi, eski 8501 yayınları hash ile donduruldu.
+- Test / sonuç: 53 izolasyon, 36 alias safety, 59 teşhis ve film/four-source/settings regresyonları geçti; Android derlemesi sürüyor. V83 305 dosya ve paket SHA korundu.
+- Geri alma: yalnızca bu commit’i yeni test dalında git revert; V83/main/arşivlere dokunma.
