@@ -1,0 +1,21 @@
+{
+  "officialHostSource": "https://raw.githubusercontent.com/recloudstream/cloudstream/master/app/src/main/java/com/lagradost/cloudstream3/plugins/PluginManager.kt",
+  "retrievedSourceSha256": "1ef9c8b26d39096e61c1660e7625d01063651977cb15748e0487a84f19802302",
+  "observed": [
+    "PathClassLoader(filePath, context.classLoader) creates a plugin loader with application loader as parent",
+    "setPluginData(data.copy(version=version)) occurs before pluginInstance.load(context)",
+    "Public saved online/local inventory includes internalName and filePath; entry point read from local CS3 manifest",
+    "Test gate uses kernel Process.myUid and manifest-normalized saved inventory before any settings/UI/provider initialization"
+  ],
+  "proofs": [
+    "37 profile/inventory policy assertions including renamed com.eafb entry point",
+    "Final DEX gate invocation order and manifest inventory calls verified",
+    "2028 protected V83 methods and 250 original Bronze methods compared"
+  ],
+  "limits": [
+    "No claim of safe two-EA-FB coexistence in one profile",
+    "Primary profile is rejected; separate Android user profile required",
+    "Mi Box profile availability and device playback unverified",
+    "Current CloudStream SDK compiled successfully; actual Mi Box host build not inspected"
+  ]
+}

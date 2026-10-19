@@ -1,0 +1,8 @@
+{
+  "name": "EA-FB SERIES CODEX 8501 TEST",
+  "description": "Secondary-profile isolated series test; no simultaneous V83 installation",
+  "manifestVersion": 1,
+  "pluginLists": [
+    "https://raw.githubusercontent.com/eaatabay/EA-FB/test/ea-fb-series-name-codex-20261019/dist-series-codex-8501-test/plugins.json"
+  ]
+}

@@ -1,7 +1,7 @@
 <!--CURRENT-SERIES-STATUS-->
 ## Güncel uygulama aşaması
-Yeni package-series-codex.py yalnız yeni test dizinine yazar; commit/push/deploy yapmaz. Paketleme ile yayın ayrıldı. 250 özgün Bronze ve 2028 korunan V83 metodunun komut dizileri doğrulanıyor; istisnalar yalnız onaylı arama metotları/state machine’leri ve giriş kapısı. UI metotlarında yalnız tam yeni kimlik sabitleri normalize ediliyor. Derlenmiş gate UID, saved inventory ve manifest entry point okumasını doğrular; UI/ayar/provider kayıtlarından önce gelir. Yeni CI paket artifact’i üretir, manifesti GitHub’a yazmaz. Sadece aynı yeni dala ait eski ara CI’ler otomatik iptal edilebilir, son commit tam test edilir.
-Önceki tam SHA: bb0dc17706c29ac3e3ac037253983553036d6493
+Son CI 39316844187 (source 9aa829f1b494498762e02c16e5e6ad0f6c7de297) test/derleme/paketleme/koruma adımlarının tamamında success. Tam log arşivi incelendi. Artifact ikili indirme yönlendirmesi Azure blob hostunda engellendi; güvenli alternatif olarak yerel yeniden üretilen paket CI logundaki iki bağımsız SHA-256 satırıyla eşleştirildi. CS3 332876 byte, SHA f2b2d28a8a6adf5fbdfe8eae91fb70f36c346f658c3dbf7bcc91aae55fe12a3b. Yeni dist-series-codex-8501-test dağıtımı yalnız yeni dala kaydediliyor. Ana Android profilinde çalışmaz; ayrı profil test paketi, Mi Box oynatması doğrulanmadı.
+Önceki tam SHA: 9aa829f1b494498762e02c16e5e6ad0f6c7de297
 Son kayıt commit’inin kendi SHA’sı `git log -1` ile bulunur; sonraki kayıt envantere ekler.
 
 | SHA | İşlem | Bağlantı |
@@ -22,7 +22,9 @@ Son kayıt commit’inin kendi SHA’sı `git log -1` ile bulunur; sonraki kayı
 | `9846add14a62fd118ccbfb874131d46fd6eb4c70` | test(series): reject ambiguous or uncorroborated alias source pages | [commit](https://github.com/eaatabay/EA-FB/commit/9846add14a62fd118ccbfb874131d46fd6eb4c70) |
 | `b0094da7a3daab69c45894ad2da4776678fd75eb` | feat(series-test): isolate version 8501 and reject primary-profile loading | [commit](https://github.com/eaatabay/EA-FB/commit/b0094da7a3daab69c45894ad2da4776678fd75eb) |
 | `bb0dc17706c29ac3e3ac037253983553036d6493` | fix(series-test): detect renamed EA-FB plugins before initialization | [commit](https://github.com/eaatabay/EA-FB/commit/bb0dc17706c29ac3e3ac037253983553036d6493) |
+| `9aa829f1b494498762e02c16e5e6ad0f6c7de297` | build(series-test): verify isolated CS3 bytes and protected V83 DEX | [commit](https://github.com/eaatabay/EA-FB/commit/9aa829f1b494498762e02c16e5e6ad0f6c7de297) |
 <!--END-CURRENT-SERIES-STATUS-->
+
 
 
 
