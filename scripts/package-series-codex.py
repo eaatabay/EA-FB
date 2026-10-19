@@ -134,6 +134,8 @@ def verify(out):
     info = json.loads((out/'build-info.json').read_text())
     if info.get('packageSha256') != hashlib.sha256(data).hexdigest() or info.get('dexSha256') != hashlib.sha256(raw).hexdigest():
         raise ValueError('Build-info hash mismatch')
+    if info.get('primaryProfileBlockedWithoutVerifiedAppIsolation') is not True or info.get('miBoxIsolationVerified') is not False or info.get('miBoxPlaybackVerified') is not False:
+        raise ValueError('Wrong isolation policy or unsupported device success claim')
     subprocess.run(['git','diff','--exit-code',info['sourceCommit'],'HEAD','--','EA-FB'],cwd=ROOT,check=True)
     repo = json.loads((out/'repo.json').read_text())
     if repo.get('pluginLists') != [BASE_URL+'plugins.json']: raise ValueError('Wrong repository manifest URL')
@@ -165,11 +167,11 @@ def package(source):
                 w.writestr(info,(out/name).read_bytes())
     data=(out/FILE).read_bytes()
     (out/'plugins.json').write_text(json.dumps([entry(data)],ensure_ascii=False,indent=2)+'\n')
-    (out/'repo.json').write_text(json.dumps(dict(name=NAME,description='Secondary-profile isolated series test; no simultaneous V83 installation',manifestVersion=1,pluginLists=[BASE_URL+'plugins.json']),indent=2)+'\n')
+    (out/'repo.json').write_text(json.dumps(dict(name=NAME,description='Verified separate-app or secondary-profile test; only EA-FB in this host',manifestVersion=1,pluginLists=[BASE_URL+'plugins.json']),indent=2)+'\n')
     info=dict(sourceCommit=subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip(),
               baseline=BASELINE,branch=BRANCH,version=VERSION,protectedV83RuntimeMethods=count,
               dexSha256=hashlib.sha256(raw).hexdigest(),packageSha256=hashlib.sha256(data).hexdigest(),
-              primaryProfileBlocked=True,miBoxPlaybackVerified=False)
+              primaryProfileBlockedWithoutVerifiedAppIsolation=True,miBoxIsolationVerified=False,miBoxPlaybackVerified=False)
     (out/'build-info.json').write_text(json.dumps(info,indent=2)+'\n')
     print('PASS isolated package SHA-256:',verify(out))
 
