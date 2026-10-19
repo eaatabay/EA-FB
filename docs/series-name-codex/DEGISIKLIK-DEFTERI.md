@@ -66,3 +66,23 @@ Her mantıksal aşama ayrı commit olur. Bir commit kendi SHA'sını kendi için
 - Eski test/organize-isler-season-title-20261019 HEAD'i tekrar 16396702470eb1f81cc6dac4360e6b0ff84927d1 olarak doğrulandı. Açık PR'larda head/base bağımlılığı bulunmadı. V83 ile aynı tree/history; korunacak özgün commit yok. Yalnızca bu eski dal, tam beklenen SHA koşullu silme ile silindi. Son git ls-remote sorgusunda eski dal yok, V83 HEAD değişmedi.
 - Geri alma (eski dal temizliği): kullanıcı gerek görürse yalnızca eski adı V83 SHA'sına yeniden oluştur; V83 dalını değiştirme. Kod değişikliği yok.
 - Android ortamı: gerekli build-tools 34.0.0 resmî sdkmanager ile kuruldu; gradle :EA-FB:make yerelde BUILD SUCCESSFUL (1m17s). Bu hâlâ V83 kimlikli yerel derlemedir, yeni paket değildir ve yayımlanmadı.
+
+## 6 — Kullanıcının yeni kimlik bilgileri: yalnızca tanı testi
+- Önceki SHA: 87344068c46877c720e8f1afa53084cc06400fab. Yeni SHA: bu aşamanın test commit'i; sonraki kayıt kesinleştirir.
+- Dosyalar: SeriesNameDiagnosisTest.kt ve bu klasördeki üç kayıt dosyası ile BASLIK-KANITI.json.
+- IMDb tt38732131 / Netflix 82047949 bağlam olarak eklendi; otomatik eşleştirme kuralı oluşturulmadı. TV adayı 320754, iki ayrı film kimliğinden (30634 ve 577990) PlaybackQuery üzerinden ayrılıyor. Bilinen uzun ad V83'te otomatik türetilmiyor.
+- EAProvider'ın güncel config URL'si okunup CatalogRelayPolicy.approvedOrigin ile birebir eşleştirildi. Kullanıcının talep ettiği salt okunur katalog kontrolü staging relay'de CONNECT 403 ile engellendi; hiçbir Worker/D1 yazması veya deploy yok.
+- CI 39309504108 tamamlandı: success; SHA fb16e9ced070f1fe0c6d6cf93aaa863f79745099. API'de tüm adımlar success: dosya koruması, regresyonlar/tanı, SDK, Android derleme ve log artifact'i. Log indirmenin yönlendirildiği sonuç sunucusu Forbidden; ayrıntılı log içeriği henüz okunamadı. Artifact 12215167805 (series-name-diagnostic-logs), 52184 byte, expired=false.
+- İlk genişletilmiş test koşusunda sezon 0'ı geçersiz sayan yeni test beklentisi hatalıydı; V83 sezon 0'ı özel bölümler için destekliyor. Yalnızca test beklentisi negatif sezon olarak düzeltildi; uygulama değiştirilmedi.
+- UI/kimlik/ayar/adapter/SourceSearchTitles/oynatıcı kodu değişmedi. Yeni paket, staging manifest veya yayın yok. Geri alma: yalnızca yeni daldaki bu test commit'ini revert et.
+
+## Tam commit envanteri (bu kayıt commit'inden önce)
+- `45956ae74fdc512fa838ed6e99112a41baba9187` — docs(series): record V83 baseline and rollback boundaries — https://github.com/eaatabay/EA-FB/commit/45956ae74fdc512fa838ed6e99112a41baba9187
+- `069824f8433792f8f5dee2b7079390ee1f9e0374` — test(series): isolate V83 title rejection across four adapters — https://github.com/eaatabay/EA-FB/commit/069824f8433792f8f5dee2b7079390ee1f9e0374
+- `36a4820a4a3c2a43e83b87e5b4b1ef0d217f56b6` — test(series): enforce byte-level V83 baseline preservation — https://github.com/eaatabay/EA-FB/commit/36a4820a4a3c2a43e83b87e5b4b1ef0d217f56b6
+- `fb16e9ced070f1fe0c6d6cf93aaa863f79745099` — ci(series): add branch-scoped diagnostics without publication — https://github.com/eaatabay/EA-FB/commit/fb16e9ced070f1fe0c6d6cf93aaa863f79745099
+- `87344068c46877c720e8f1afa53084cc06400fab` — docs(series): record verified season alias and obsolete branch cleanup — https://github.com/eaatabay/EA-FB/commit/87344068c46877c720e8f1afa53084cc06400fab
+
+Bu envanteri güncelleyen commit kendi SHA'sını dosya içinde içeremez; `git log -1 -- docs/series-name-codex` güncel kayıt commit'ini verir. Sonraki aşamada bu commit de tam SHA ile envantere eklenir. GitHub dal geçmişi kesin kaynaktır.
+
+Güncel yerel kimlik tanısı: **53/53 PASS**, dört adaptör; 312 korunan V83 dosyası byte-identical. UI/iki eklenti izolasyonu henüz kanıtlanmadı; yayın yok.

@@ -40,5 +40,24 @@
     "DiziBox response HTTP 403; current source catalogue unverified",
     "Device metadata and original_name not yet observed",
     "Site HTML, cookies, scripts, signed URLs and player data not stored in git"
-  ]
+  ],
+  "userResearch": {
+    "title": "Organize İşler",
+    "year": 2026,
+    "episodes": 8,
+    "imdbId": "tt38732131",
+    "imdbUrl": "https://www.imdb.com/title/tt38732131/",
+    "netflixUrl": "https://www.netflix.com/tr/title/82047949",
+    "netflixOfficialTitle": "Organize İşler",
+    "source": "user research; public Netflix/IMDb GET currently HTTP 403"
+  },
+  "eaFbCatalogueVerification": {
+    "status": "blocked",
+    "configUrl": "https://raw.githubusercontent.com/eaatabay/EA-FB/feature/detail-dual-ratings-v6/config/backend.v6-staging.json",
+    "approvedOrigin": "https://ea-fb-catalog-v6-staging.eaatabay.workers.dev",
+    "requestPath": "/v1/tv/320754?language=tr-TR",
+    "observed": "proxy CONNECT 403; no catalogue JSON received",
+    "idStatus": "320754 verified on TMDb web, pending confirmation from EA-FB response",
+    "namesStatus": "EA-FB name/original_name not observed; no runtime alias rule created"
+  }
 }

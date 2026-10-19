@@ -1,19 +1,29 @@
-# Geri alma planı
+# Geri alma planı — güncel test/teşhis aşaması
 
-- Yeni dal: `test/ea-fb-series-name-codex-20261019`.
-- Temel V83 commit: `16396702470eb1f81cc6dac4360e6b0ff84927d1`.
-- Yeni commitler: bu dalda `git log --reverse 16396702470eb1f81cc6dac4360e6b0ff84927d1..HEAD`; tamamlanan aşamalar DEGISIKLIK-DEFTERI.md içinde.
-- Yeni iş akışı: henüz yok. Paket kimliği / ayrı tercih deposu: henüz atanmadı.
-- Staging manifest / CS3: henüz oluşturulmadı veya yayımlanmadı.
-- Silinebilir çalışma alanı: yalnızca docs/series-name-codex ve ileride bu defterde açıkça belirtilen yeni test dosyaları; korunan klasörleri silme.
-- Korunan V83: dist-v83-test/ tamamı, tüm V83 commitleri ve uzak dal; main/Blue V5, V81/arşivler, production Worker/D1, manifest/kısa kodlar, mevcut workflow'lar ve kullanıcı ayarları.
+- Yeni dal: test/ea-fb-series-name-codex-20261019.
+- Temel V83: 16396702470eb1f81cc6dac4360e6b0ff84927d1.
+- Yeni workflow: .github/workflows/series-name-diagnostics.yml; yalnızca bu dal; contents:read; yayın/paketleme/push adımı yok.
+- CI: 39309504108 success (fb16e9ced070f1fe0c6d6cf93aaa863f79745099); https://github.com/eaatabay/EA-FB/actions/runs/39309504108
+- Yeni paket kimliği/sürüm, ayrı tercih deposu, staging manifesti ve CS3: **henüz oluşturulmadı**. Yerel EA-FB/build/EA-FB.cs3 değişmemiş V83 kimlikli derlemedir, kurulum/yayın için verilmedi.
+- Mi Box'a hiçbir test kurulmadı; kullanıcı ayarlarına dokunulmadı.
 
-## Kullanıcı denemeyi kaldırmak isterse
+## Yalnızca yeni çalışmayı kaldırma
+1. Kurulu yeni test olmadığından V83'ü kaldırma veya uygulama verisini temizleme. İleride paket oluşturulursa kaldırma yönergesi ancak ayrı kimlik/tercih alanı ve UI izolasyonu doğrulandıktan sonra eklenir.
+2. Yeni staging adresi yok; V83 depo adresini olduğu gibi bırak.
+3. Gerekirse yeni dalı arşivle; sadece `git push origin --delete test/ea-fb-series-name-codex-20261019` çalıştır. V83'e reset/force-push/cherry-pick/revert gerekmez.
+4. Yerelde yalnızca yeni eklenen .github/workflows/series-name-diagnostics.yml, core-tests/clean/SeriesNameDiagnosisTest.kt, scripts/test-series-name-codex.sh, scripts/verify-series-v83-baseline.py, tests/test_series_v83_baseline.py ve docs/series-name-codex/ dosyaları bu çalışmaya aittir. Var olan dosyaları, vendor/caches veya V83 dağıtımını gelişigüzel silme.
+5. git ls-remote ile başlangıç envanterini karşılaştır: yeni dal ve kullanıcı tarafından silinmesi istenen eski başarısız dal dışında uzak ref değişmemeli. V83 HEAD 16396702470eb1f81cc6dac4360e6b0ff84927d1; CS3 SHA-256 40fd24acb41dc69fa869ceb69ee6661e5136c1dff39434eb8bd3227f955f3b66.
+6. main/Blue V5, V81/arşivler, dist-v83-test/, production Worker/D1, mevcut manifestler/kısa kodlar/workflow'lar ve kullanıcı tercihleri korunur.
 
-1. Mi Box'a henüz hiçbir test yüklenmedi. İleride paket verilirse yalnızca ayrı test kimliğini eklenti yöneticisinden kaldır; V83'ü kaldırma, uygulama verisini temizleme. Aynı uygulama içinde iki EA-FB'nin birlikte güvenli çalışması doğrulanmadığı için kurulum önerilmeyecek.
-2. Test deposunun URL'sini test yapılan ayrı uygulama/profilden kaldır. V83 depo URL'sine dokunma.
-3. Yeni daldaki ilerlemeyi gerekiyorsa arşivle; yalnızca bu tam dal adını sil: `git push origin --delete test/ea-fb-series-name-codex-20261019`. V83 üzerinde reset/force-push/cherry-pick/revert çalıştırma.
-4. `git ls-remote --heads origin` sonuçlarını UZAK-DALLAR-BASLANGIC.tsv ile karşılaştır. Bu yeni dal ve kullanıcı tarafından silinmesi istenen eski başarısız dal dışında hiçbir HEAD değişmemeli.
-5. V83 paket hash'inin 40fd24acb41dc69fa869ceb69ee6661e5136c1dff39434eb8bd3227f955f3b66 ve V83 HEAD'in 16396702470eb1f81cc6dac4360e6b0ff84927d1 kaldığını doğrula.
+Eski başarısız dal test/organize-isler-season-title-20261019, aynı V83 HEAD'i ve açık PR bağımlılığı olmadığı doğrulanarak silindi. Bu temizliği geri almak gerekirse yalnızca eski adı 16396702470eb1f81cc6dac4360e6b0ff84927d1 üzerine yeniden oluştur; V83'ü değiştirme.
 
-Eski başarısız test/organize-isler-season-title-20261019 dalı ancak V83 ile aynı HEAD ve korunacak bağlı iş bulunmadığı doğrulandıktan sonra tek başına silinir. API erişimi şu anda engelli olduğundan bu adım bekliyor.
+## Tüm yeni commitler (bu kayıt commit'inden önce)
+- `45956ae74fdc512fa838ed6e99112a41baba9187` — docs(series): record V83 baseline and rollback boundaries — https://github.com/eaatabay/EA-FB/commit/45956ae74fdc512fa838ed6e99112a41baba9187
+- `069824f8433792f8f5dee2b7079390ee1f9e0374` — test(series): isolate V83 title rejection across four adapters — https://github.com/eaatabay/EA-FB/commit/069824f8433792f8f5dee2b7079390ee1f9e0374
+- `36a4820a4a3c2a43e83b87e5b4b1ef0d217f56b6` — test(series): enforce byte-level V83 baseline preservation — https://github.com/eaatabay/EA-FB/commit/36a4820a4a3c2a43e83b87e5b4b1ef0d217f56b6
+- `fb16e9ced070f1fe0c6d6cf93aaa863f79745099` — ci(series): add branch-scoped diagnostics without publication — https://github.com/eaatabay/EA-FB/commit/fb16e9ced070f1fe0c6d6cf93aaa863f79745099
+- `87344068c46877c720e8f1afa53084cc06400fab` — docs(series): record verified season alias and obsolete branch cleanup — https://github.com/eaatabay/EA-FB/commit/87344068c46877c720e8f1afa53084cc06400fab
+
+Bu kayıt commit'inin kendi SHA'sı git log -1 -- docs/series-name-codex ile bulunur; sonraki aşama tam SHA'yı ekler.
+
+Güncel yerel kimlik tanısı: **53/53 PASS**, dört adaptör; 312 korunan V83 dosyası byte-identical. UI/iki eklenti izolasyonu henüz kanıtlanmadı; yayın yok.
