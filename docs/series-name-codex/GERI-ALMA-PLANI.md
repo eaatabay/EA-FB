@@ -1,7 +1,7 @@
 <!--CURRENT-SERIES-STATUS-->
 ## Güncel uygulama aşaması
-Yayın commit f435587065da49e83e4feae21de5c23f3759dd69. Altı raw dosya yeniden indirildi ve yerel dosyalarla birebir eşleşti; CS3 hash 92fbfd0dd39028b5d4d6110ae305418f718ec98c4c4d0f1d910ea1103efa83bf CI loguyla da aynı. Depo linki dist-series-codex-8502-test/repo.json. Yazılım ve test yayını tamamlandı; Mi Box izolasyon/UI/oynatma kabulü BEKLİYOR.
-Önceki tam SHA: f435587065da49e83e4feae21de5c23f3759dd69
+SeriesTestIsolation, policy, ADB/Python doğrulayıcı, --arm, UID/process/dataDir/profil/marker şartları kaldırıldı. Normal EAPlugin.load geri getirildi. Yeni 8503 identity/store; 8502 dağıtımı korunur. Hedef yalnız eski Bunny kaldırılmış mavi STABLE; kırmızı BETA V83 değişmez.
+Önceki tam SHA: 259e5b186fd4b3ef9be24a7c971f2210117aa58d
 Son kayıt commit’inin kendi SHA’sı `git log -1` ile bulunur; sonraki kayıt envantere ekler.
 
 | SHA | İşlem | Bağlantı |
@@ -30,45 +30,13 @@ Son kayıt commit’inin kendi SHA’sı `git log -1` ile bulunur; sonraki kayı
 | `49a11b4a8813cc406402bcb5d072323239dd71d2` | build(series-test): verify blue app opt-in and protect 8502 runtime gates | [commit](https://github.com/eaatabay/EA-FB/commit/49a11b4a8813cc406402bcb5d072323239dd71d2) |
 | `934ca5764ad3e4032cf5c753b89b9ac189fc5834` | fix(series-test): report conditional primary-profile policy accurately | [commit](https://github.com/eaatabay/EA-FB/commit/934ca5764ad3e4032cf5c753b89b9ac189fc5834) |
 | `f435587065da49e83e4feae21de5c23f3759dd69` | release(series-test): publish CI-verified app-isolated 8502 test package | [commit](https://github.com/eaatabay/EA-FB/commit/f435587065da49e83e4feae21de5c23f3759dd69) |
+| `259e5b186fd4b3ef9be24a7c971f2210117aa58d` | docs(series-test): record published 8502 hashes and pending Mi Box acceptance | [commit](https://github.com/eaatabay/EA-FB/commit/259e5b186fd4b3ef9be24a7c971f2210117aa58d) |
 <!--END-CURRENT-SERIES-STATUS-->
 
-# Geri alma: yalnız MAVİ 8502 testi
+# Güncel geri alma: 8503
 
-V83, diğer CloudStream, main/arşiv dalları ve production geri alma hedefi değildir; değiştirilmediler. Korumalı 23 uzak dal SHA’sı değişmedi. Eski 8501 yayın dosyaları ayrıca SHA ile donduruldu.
+Cihazda geri alma: yalnız mavi CloudStream STABLE'daki EA-FB SERIES CODEX 8503 TEST eklentisini kaldır.
 
-1. Yalnız mavi CloudStream içinde EA-FB SERIES CODEX 8502 TEST eklentisini ve yeni 8502 deposunu kaldır.
-2. Android Ayarları'nda yalnız mavi uygulamayı Zorla durdur; private uygulama verilerini silme. Eski lifecycle hook'larını çalışan süreçten temizlediği varsayımıyla yalnız plugin kaldırmaya güvenme.
-3. Önceden ölçülmüş MAVI_PAKET ve SERI değerleriyle yalnız mavi external marker dosyasını sil: `adb -s SERI shell rm /sdcard/Android/data/MAVI_PAKET/files/ea-fb-blue-isolation-8502.json`.
-4. Diğer CloudStream/V83'e eklenti, dosya, veri veya ayar işlemi uygulama. Maviye V83 kurma. 8501 primary kullanıcıda tasarım gereği engellidir; aynı ana profile geri dönüş çözümü sayılmaz.
-5. Kod geri alma yalnız test/ea-fb-series-name-codex-20261019 dalında ilgili aşağıdaki commit için git revert ile yapılır; koruma/CI tekrar çalıştırılmadan paket yayımlama. Birden fazla commit geri alınacaksa bağımlılıkların tersi sıra kullanılır. Yeni test yayınına ait exact dosyalar dışında dist/ veya eski dağıtımlara dokunulmaz.
+Kırmızı CloudStream BETA, çalışan V83, diğer uygulamalar, uygulama verileri ve production'a hiçbir işlem uygulanmaz. Bilgisayar, ADB, Python, profil veya marker temizliği istenmez. 8503 eski marker dosyasını kullanmaz. Önceki 8502 dağıtımı byte/hash olarak korunur; yeni sürüm ayrı dist-series-codex-8503-test altında yayımlanır.
 
-Runtime kapısı ea1e7aa2b461552b3f42dafa87f239ce83276772; ADB/DEX/CI paketi 49a11b4a8813cc406402bcb5d072323239dd71d2; metadata düzeltmesi 934ca5764ad3e4032cf5c753b89b9ac189fc5834. Bunlar ayrı mantıksal commit'lerdir. Her biri geri alınırken kendi guard/runtime/paket bağımlılığı korunmalı; guard gevşetilmez. Cihaz davranışına başarı iddiası yok.
-
-Son kayıt/yayın commit kendi SHA’sını içeremez; sonraki kayıt önceki SHA’yı ekler. En son SHA: `git rev-parse HEAD`. Önceki tam HEAD: 934ca5764ad3e4032cf5c753b89b9ac189fc5834.
-
-
-| SHA | İşlem |
-|---|---|
-| `45956ae74fdc512fa838ed6e99112a41baba9187` | docs(series): record V83 baseline and rollback boundaries |
-| `069824f8433792f8f5dee2b7079390ee1f9e0374` | test(series): isolate V83 title rejection across four adapters |
-| `36a4820a4a3c2a43e83b87e5b4b1ef0d217f56b6` | test(series): enforce byte-level V83 baseline preservation |
-| `fb16e9ced070f1fe0c6d6cf93aaa863f79745099` | ci(series): add branch-scoped diagnostics without publication |
-| `87344068c46877c720e8f1afa53084cc06400fab` | docs(series): record verified season alias and obsolete branch cleanup |
-| `efb5fe86b2e0c0edfcc0f6140356d35fa004a7b4` | test(series): track researched TV identity separately from films |
-| `63782dbd89fc52d4382a973c82fac67ca442ad75` | docs(series): audit V83 UI hooks and preserve diagnostic handoff |
-| `22922df2f887c6c14cf687bb63bd13118476bb22` | test(series): probe approved catalogue identity from read-only CI |
-| `6433b1fcf5a88de40412bbe852112eb15bd90950` | test(series): replay confirmed catalogue identity through V83 title gates |
-| `1aa79597420845beb18afa58849c917a9499beab` | docs(series): finalize confirmed diagnosis and authentication handoff |
-| `f0abf3b1d800b344984167a5ffd77d6cc65fcb99` | docs(series): confirm restored access and successful final CI |
-| `732d4613854042587a9fd0526cfd11163f6451c4` | test(series): reproduce missing confirmed season alias before correction |
-| `1ac4de36b50b28c5313ea3c3d71e2b802f7e051a` | fix(series): add corroborated alias only for confirmed Organize Isler season |
-| `9846add14a62fd118ccbfb874131d46fd6eb4c70` | test(series): reject ambiguous or uncorroborated alias source pages |
-| `b0094da7a3daab69c45894ad2da4776678fd75eb` | feat(series-test): isolate version 8501 and reject primary-profile loading |
-| `bb0dc17706c29ac3e3ac037253983553036d6493` | fix(series-test): detect renamed EA-FB plugins before initialization |
-| `9aa829f1b494498762e02c16e5e6ad0f6c7de297` | build(series-test): verify isolated CS3 bytes and protected V83 DEX |
-| `eba59a87802695772750582c505b5fe0abf6d0c6` | release(series-test): stage verified isolated 8501 package |
-| `b0e18e62adb3a101daef65ae5235f8047e918325` | docs(series-test): record verified release and complete rollback handoff |
-| `58a067b57a485dd126865664a818ce81da5f13f5` | docs(series-test): finalize report commit references |
-| `ea1e7aa2b461552b3f42dafa87f239ce83276772` | fix(series-test): require verified app isolation for primary-profile 8502 |
-| `49a11b4a8813cc406402bcb5d072323239dd71d2` | build(series-test): verify blue app opt-in and protect 8502 runtime gates |
-| `934ca5764ad3e4032cf5c753b89b9ac189fc5834` | fix(series-test): report conditional primary-profile policy accurately |
+Kod geri alma gerekirse yalnız mevcut test dalındaki ilgili commit'ler bağımlılıkların ters sırasıyla git revert edilir; V83/main/production dallarına işlem yapılmaz. 8502'nin eski zorunluluklarını cihazda yeniden uygulamak geri alma adımı değildir.
