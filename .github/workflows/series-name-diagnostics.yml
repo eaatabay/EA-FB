@@ -7,9 +7,6 @@ on:
       - 'EA-FB/**'
       - 'core-tests/clean/SeriesAlias*Test.kt'
       - core-tests/clean/SeriesNameDiagnosisTest.kt
-      - core-tests/clean/SeriesIsolationTest.kt
-      - scripts/verify-blue-isolation.py
-      - tests/test_blue_isolation.py
       - scripts/package-series-codex.py
       - tests/test_series_package.py
       - scripts/test-series-name-codex.sh
@@ -62,29 +59,28 @@ jobs:
           mkdir -p build/series-diagnostics
           bash scripts/test-bronze-nl-land.sh 2>&1 | tee build/series-diagnostics/v83-regressions.log
           bash scripts/test-series-name-codex.sh 2>&1 | tee build/series-diagnostics/title-diagnosis.log
-          PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p test_blue_isolation.py -v
           baseline_dir="$(mktemp -d)"
           git archive 16396702470eb1f81cc6dac4360e6b0ff84927d1 | tar -x -C "$baseline_dir"
           (cd "$baseline_dir" && GIT_DIR="$GITHUB_WORKSPACE/.git" GIT_WORK_TREE="$baseline_dir" PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p 'test_v83*.py' -v)
           rm -rf "$baseline_dir"
       - name: Install required Android tools
         run: '"$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-35" "build-tools;34.0.0" "build-tools;35.0.0"'
-      - name: Compile isolated series runtime - no staging or publication
+      - name: Compile series test runtime - no staging or publication
         shell: bash
         run: |
           set -euo pipefail
           bash scripts/prepare-cloudstream-gradle.sh
           gradle :EA-FB:make --no-daemon --max-workers=2 --console=plain 2>&1 | tee build/series-diagnostics/android-build.log
           PYTHONDONTWRITEBYTECODE=1 python3 scripts/verify-series-v83-baseline.py
-      - name: Package isolated profile-guarded CS3 and verify V83 DEX protection
+      - name: Package standard test CS3 and verify V83 DEX protection
         run: |
           PYTHONDONTWRITEBYTECODE=1 python3 scripts/package-series-codex.py EA-FB/build/EA-FB.cs3
           PYTHONDONTWRITEBYTECODE=1 python3 scripts/package-series-codex.py --verify
           PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p test_series_package.py -v
       - uses: actions/upload-artifact@v4
         with:
-          name: EA-FB-SERIES-CODEX-8502-TEST
-          path: dist-series-codex-8502-test/
+          name: EA-FB-SERIES-CODEX-8503-TEST
+          path: dist-series-codex-8503-test/
           if-no-files-found: error
       - uses: actions/upload-artifact@v4
         if: always()

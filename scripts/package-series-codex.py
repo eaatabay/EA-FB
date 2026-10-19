@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build/verify isolated test bytes. Never commits, pushes, or deploys."""
+"""Build/verify versioned test bytes. Never commits, pushes, or deploys."""
 import argparse
 import hashlib
 import importlib.util
@@ -13,10 +13,10 @@ from bronze_dex import Dex
 ROOT = Path(__file__).resolve().parents[1]
 BASELINE = "16396702470eb1f81cc6dac4360e6b0ff84927d1"
 BRANCH = "test/ea-fb-series-name-codex-20261019"
-DIST = "dist-series-codex-8502-test"
-ID = "EA-FB-SERIES-CODEX-8502-TEST"
-NAME = "EA-FB SERIES CODEX 8502 TEST"
-VERSION = 8502
+DIST = "dist-series-codex-8503-test"
+ID = "EA-FB-SERIES-CODEX-8503-TEST"
+NAME = "EA-FB SERIES CODEX 8503 TEST"
+VERSION = 8503
 FILE = ID + ".cs3"
 BASE_URL = f"https://raw.githubusercontent.com/eaatabay/EA-FB/{BRANCH}/{DIST}/"
 
@@ -52,14 +52,13 @@ IDENTITY_METHODS = {
     "Lcom/eafb/FilmSeriesRail;.renderFragment(Landroidx/fragment/app/Fragment;)V",
     "Lcom/eafb/FilmSeriesRail;.makeRail$lambda$3$0$1(Landroidx/fragment/app/FragmentActivity;Lcom/eafb/FilmSeriesRail$Card;Landroid/view/View;)V",
 }
-NEW_CLASSES = ("Lcom/eafb/ConfirmedSeriesAlias;", "Lcom/eafb/SeriesTestIsolation;", "Lcom/eafb/SeriesTestIsolationPolicy;", "Lcom/eafb/SeriesTestIsolationPolicy$", "Lcom/eafb/SeriesTestIsolation$requireSafe$")
-ENTRY = "Lcom/eafb/EAPlugin;.load(Landroid/content/Context;)V"
+NEW_CLASSES = ("Lcom/eafb/ConfirmedSeriesAlias;",)
 
 def normalized(dex, index, name):
     rows = [list(row) for row in v83.instruction_fingerprint(dex, index)]
     replacements = {"EA-FB V83 TEST": NAME} if name in IDENTITY_METHODS else {}
     if name == "Lcom/eafb/EASettings;.initialize(Landroid/content/Context;)V":
-        replacements = {"ea_fb_v83_test": "ea_fb_series_codex_8502_test", "ea_fb_v82_test": "ea_fb_series_codex_8502_seed"}
+        replacements = {"ea_fb_v83_test": "ea_fb_series_codex_8503_test", "ea_fb_v82_test": "ea_fb_series_codex_8503_seed"}
     for row in rows:
         if row[1] in [0x1a, 0x1b]:
             for old, new in replacements.items():
@@ -67,23 +66,6 @@ def normalized(dex, index, name):
                     row[2] = row[2].replace(repr(old), repr(new))
                     break
     return rows
-
-def verify_gate(dex):
-    by_name = {dex.methods[i]: i for i in dex.code}
-    calls = [ann for _, _, ann, _ in dex.instructions(by_name[ENTRY]) if ann.startswith("invoke ")]
-    gate = next(i for i, ann in enumerate(calls) if "SeriesTestIsolation;.requireSafe(Landroid/content/Context;)V" in ann)
-    for marker in ["EASettings;.initialize", "FilmSeriesRail;.install", "DetailMetaRow;.install", "EpisodeUpcomingStyle;.install", "EpisodeTitleStyle;.install", ".registerMainAPI"]:
-        target = next(i for i, ann in enumerate(calls) if marker in ann)
-        if gate >= target:
-            raise ValueError("Isolation gate is too late: " + marker)
-    code = [ann for _, _, ann, _ in dex.instructions(by_name["Lcom/eafb/SeriesTestIsolation;.requireSafe(Landroid/content/Context;)V"])]
-    if not all(any(marker in line for line in code) for marker in ["Process;.myUid()I", "PluginManager;.getPluginsOnline", "PluginManager;.getPluginsLocal", "SeriesTestIsolationPolicy;.canLoad", "ZipFile;.<init>", "SeriesTestIsolationPolicy;.inventoryName", "SeriesTestIsolation;.verifiedSeparateApp"]):
-        raise ValueError("Compiled isolation bridge missing UID or saved inventory check")
-    bridge = [ann for name, idx in by_name.items() if name.startswith("Lcom/eafb/SeriesTestIsolation;.") for _, _, ann, _ in dex.instructions(idx)]
-    for marker in ["getApplicationInfo", "getPackagesForUid", "getExternalFilesDir", "SeriesTestIsolationPolicy;.separateApps", "/proc/self/cmdline", "ea-fb-blue-isolation-8502.json"]:
-        if not any(marker in line for line in bridge):
-            raise ValueError("Missing OS identity / explicit device proof check: " + marker)
-    print("PASS: compiled isolation gate precedes all preferences/UI/provider side effects")
 
 def verify_runtime(raw):
     blob = subprocess.check_output(["git", "show", BASELINE + ":dist-v83-test/EA-FB-V83-TEST.cs3"], cwd=ROOT)
@@ -93,7 +75,7 @@ def verify_runtime(raw):
     current = {new.methods[i]: i for i in new.code}
     checked = 0
     for name, index in previous.items():
-        if search_method(name) or name == ENTRY:
+        if search_method(name):
             continue
         if name not in current or normalized(old, index, name) != normalized(new, current[name], name):
             raise ValueError("Protected V83 runtime method changed: " + name)
@@ -101,7 +83,6 @@ def verify_runtime(raw):
     for name in current.keys() - previous.keys():
         if not search_method(name) and not name.startswith(NEW_CLASSES):
             raise ValueError("Unapproved runtime method added: " + name)
-    verify_gate(new)
     print(f"PASS: {checked} V83 runtime methods preserved; UI, film search and resolver algorithms retained")
     return checked
 
@@ -110,12 +91,12 @@ def entry(data):
                 apiVersion=1, repositoryUrl="https://github.com/eaatabay/EA-FB", status=3,
                 language="tr", authors=["EA-FB"], tvTypes=["Movie", "TvSeries", "Live"],
                 version=VERSION, internalName=ID, name=NAME,
-                description="Confirmed season alias test; separate profile or ADB-verified separate application required; no Mi Box playback claim.",
+                description="Confirmed season alias test; Blue CloudStream STABLE test; remove old EA-FB first. Mi Box playback unverified.",
                 url=BASE_URL+FILE)
 
 def verify_metadata(data, manifest, feed):
     if manifest.get("version") != VERSION or manifest.get("name") != NAME or manifest.get("internalName") != ID or manifest.get("pluginClassName") != "com.eafb.EAPlugin":
-        raise ValueError("Wrong isolated identity/version")
+        raise ValueError("Wrong test identity/version")
     if feed != [entry(data)]:
         raise ValueError("Feed hash, size, identity or update URL mismatch")
 
@@ -134,8 +115,8 @@ def verify(out):
     info = json.loads((out/'build-info.json').read_text())
     if info.get('packageSha256') != hashlib.sha256(data).hexdigest() or info.get('dexSha256') != hashlib.sha256(raw).hexdigest():
         raise ValueError('Build-info hash mismatch')
-    if info.get('primaryProfileBlockedWithoutVerifiedAppIsolation') is not True or info.get('miBoxIsolationVerified') is not False or info.get('miBoxPlaybackVerified') is not False:
-        raise ValueError('Wrong isolation policy or unsupported device success claim')
+    if info.get('loadingMode') != 'standard-cloudstream-plugin' or info.get('miBoxPlaybackVerified') is not False:
+        raise ValueError('Wrong loading mode or unsupported device success claim')
     subprocess.run(['git','diff','--exit-code',info['sourceCommit'],'HEAD','--','EA-FB'],cwd=ROOT,check=True)
     repo = json.loads((out/'repo.json').read_text())
     if repo.get('pluginLists') != [BASE_URL+'plugins.json']: raise ValueError('Wrong repository manifest URL')
@@ -148,7 +129,7 @@ def package(source):
     subprocess.run(['git','diff','--exit-code','HEAD','--','EA-FB'],cwd=ROOT,check=True)
     out = ROOT/DIST
     out.mkdir(exist_ok=True)
-    notice = (ROOT/'docs/v83/SOURCE-NOTICE.txt').read_text() + '\nThis derivative: '+NAME+'; '+BRANCH+'. Separate profile or explicit OS-verified separate-app isolation required.\n'
+    notice = (ROOT/'docs/v83/SOURCE-NOTICE.txt').read_text() + '\nThis derivative: '+NAME+'; '+BRANCH+'. Standard plugin loading; blue STABLE test only.\n'
     (out/'SOURCE-NOTICE.txt').write_text(notice)
     (out/'SOURCE-LICENSE').write_bytes((ROOT/'docs/v83/SOURCE-LICENSE').read_bytes())
     with zipfile.ZipFile(source) as z:
@@ -167,13 +148,13 @@ def package(source):
                 w.writestr(info,(out/name).read_bytes())
     data=(out/FILE).read_bytes()
     (out/'plugins.json').write_text(json.dumps([entry(data)],ensure_ascii=False,indent=2)+'\n')
-    (out/'repo.json').write_text(json.dumps(dict(name=NAME,description='Verified separate-app or secondary-profile test; only EA-FB in this host',manifestVersion=1,pluginLists=[BASE_URL+'plugins.json']),indent=2)+'\n')
+    (out/'repo.json').write_text(json.dumps(dict(name=NAME,description='Blue CloudStream STABLE test; replace the old Bunny EA-FB plugin',manifestVersion=1,pluginLists=[BASE_URL+'plugins.json']),indent=2)+'\n')
     info=dict(sourceCommit=subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip(),
               baseline=BASELINE,branch=BRANCH,version=VERSION,protectedV83RuntimeMethods=count,
               dexSha256=hashlib.sha256(raw).hexdigest(),packageSha256=hashlib.sha256(data).hexdigest(),
-              primaryProfileBlockedWithoutVerifiedAppIsolation=True,miBoxIsolationVerified=False,miBoxPlaybackVerified=False)
+              loadingMode='standard-cloudstream-plugin',miBoxPlaybackVerified=False)
     (out/'build-info.json').write_text(json.dumps(info,indent=2)+'\n')
-    print('PASS isolated package SHA-256:',verify(out))
+    print('PASS test package SHA-256:',verify(out))
 
 if __name__=='__main__':
     parser=argparse.ArgumentParser();parser.add_argument('source',nargs='?',type=Path);parser.add_argument('--verify',action='store_true')

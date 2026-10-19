@@ -1,7 +1,7 @@
 <!--CURRENT-SERIES-STATUS-->
 ## Güncel uygulama aşaması
-SeriesTestIsolation, policy, ADB/Python doğrulayıcı, --arm, UID/process/dataDir/profil/marker şartları kaldırıldı. Normal EAPlugin.load geri getirildi. Yeni 8503 identity/store; 8502 dağıtımı korunur. Hedef yalnız eski Bunny kaldırılmış mavi STABLE; kırmızı BETA V83 değişmez.
-Önceki tam SHA: 259e5b186fd4b3ef9be24a7c971f2210117aa58d
+CI'den silinen ADB/profil testleri çıkarıldı, paketleyicide runtime gate istisnası kaldırıldı: EAPlugin.load da özgün V83 talimatlarıyla karşılaştırılır. 8503 manifest/update path/ayar kimliği ayrıdır. Runtime kaldırma commit'i bir önceki tam SHA ile kaydedildi.
+Önceki tam SHA: 267322d9a5e66d30b571581e9c441821d5b2622a
 Son kayıt commit’inin kendi SHA’sı `git log -1` ile bulunur; sonraki kayıt envantere ekler.
 
 | SHA | İşlem | Bağlantı |
@@ -31,7 +31,9 @@ Son kayıt commit’inin kendi SHA’sı `git log -1` ile bulunur; sonraki kayı
 | `934ca5764ad3e4032cf5c753b89b9ac189fc5834` | fix(series-test): report conditional primary-profile policy accurately | [commit](https://github.com/eaatabay/EA-FB/commit/934ca5764ad3e4032cf5c753b89b9ac189fc5834) |
 | `f435587065da49e83e4feae21de5c23f3759dd69` | release(series-test): publish CI-verified app-isolated 8502 test package | [commit](https://github.com/eaatabay/EA-FB/commit/f435587065da49e83e4feae21de5c23f3759dd69) |
 | `259e5b186fd4b3ef9be24a7c971f2210117aa58d` | docs(series-test): record published 8502 hashes and pending Mi Box acceptance | [commit](https://github.com/eaatabay/EA-FB/commit/259e5b186fd4b3ef9be24a7c971f2210117aa58d) |
+| `267322d9a5e66d30b571581e9c441821d5b2622a` | fix(series-test): remove device verification gates for standard 8503 loading | [commit](https://github.com/eaatabay/EA-FB/commit/267322d9a5e66d30b571581e9c441821d5b2622a) |
 <!--END-CURRENT-SERIES-STATUS-->
+
 
 
 
@@ -358,4 +360,11 @@ Nihai yayın/geri alma raporu GitHub commit’i: [b0e18e62adb3a101daef65ae5235f8
 - Dosyalar: EAPlugin.kt, CleanTestIdentity.kt, build.gradle.kts; SeriesTestIsolation.kt/SeriesIsolationTest.kt/verify-blue-isolation.py/test_blue_isolation.py silindi; test runner, offline V83 guard ve güncel kurulum/devir/geri alma belgeleri
 - Gerekçe / etki: SeriesTestIsolation, policy, ADB/Python doğrulayıcı, --arm, UID/process/dataDir/profil/marker şartları kaldırıldı. Normal EAPlugin.load geri getirildi. Yeni 8503 identity/store; 8502 dağıtımı korunur. Hedef yalnız eski Bunny kaldırılmış mavi STABLE; kırmızı BETA V83 değişmez.
 - Test / sonuç: 36 alias safety +59 teşhis geçti; 306 V83 dosyası birebir ve 6 onaylı runtime hash aynı. Android build ve film/four-source/settings regresyonları sürüyor. Mi Box oynatması doğrulanmadı.
+- Geri alma: yalnızca bu commit’i yeni test dalında git revert; V83/main/arşivlere dokunma.
+
+## 8503 / paketleme ve CI'yi normal yükleme ile güncelle
+- Önceki SHA: 267322d9a5e66d30b571581e9c441821d5b2622a; yeni SHA bu aşamanın commit’i.
+- Dosyalar: scripts/package-series-codex.py, tests/test_series_package.py, yalnız yeni series-name-diagnostics.yml ve üç kayıt belgesi
+- Gerekçe / etki: CI'den silinen ADB/profil testleri çıkarıldı, paketleyicide runtime gate istisnası kaldırıldı: EAPlugin.load da özgün V83 talimatlarıyla karşılaştırılır. 8503 manifest/update path/ayar kimliği ayrıdır. Runtime kaldırma commit'i bir önceki tam SHA ile kaydedildi.
+- Test / sonuç: Metadata testleri geçti; gerçek DEX mutasyon testi paket üretiminden sonra CI'da zorunlu çalışacak. Yerel alias/film/four-source/settings testleri geçti; Android build sürüyor. Yeni yükleme şartı eklenmedi; Mi Box oynatması bekliyor.
 - Geri alma: yalnızca bu commit’i yeni test dalında git revert; V83/main/arşivlere dokunma.
