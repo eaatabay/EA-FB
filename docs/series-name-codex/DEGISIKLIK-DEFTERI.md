@@ -1,7 +1,7 @@
 <!--CURRENT-SERIES-STATUS-->
 ## Güncel uygulama aşaması
-Final CI 39326027642 kaynak 1129fc0939888e4cf86a7c414103f487948e4712 için başarılı. CI paket hash'i bac0424172d77a182ddd19ff3c4dae671012182369f28c0a5d714fac23acde77 yerel dosyayla aynı. Yalnız yeni 8503 dağıtımı ve belgeler yayımlanır. 8502 ve kırmızı BETA V83 değişmedi. Mi Box oynatması kullanıcı testini bekler.
-Önceki tam SHA: 1129fc0939888e4cf86a7c414103f487948e4712
+Yayın commit b3f0cfdc1c58015f5616cca046cd00b1b8df632e. Altı raw dosya yeniden indirildi; yerel ve CI hash'i bac0424172d77a182ddd19ff3c4dae671012182369f28c0a5d714fac23acde77 ile aynı. Manifest yeni dist-series-codex-8503-test/repo.json. ADB/Python/profil/marker/UID/process/dataDir yükleme şartı yok; normal plugin. Mi Box oynatması kullanıcı testine kadar doğrulanmadı.
+Önceki tam SHA: b3f0cfdc1c58015f5616cca046cd00b1b8df632e
 Son kayıt commit’inin kendi SHA’sı `git log -1` ile bulunur; sonraki kayıt envantere ekler.
 
 | SHA | İşlem | Bağlantı |
@@ -33,7 +33,9 @@ Son kayıt commit’inin kendi SHA’sı `git log -1` ile bulunur; sonraki kayı
 | `259e5b186fd4b3ef9be24a7c971f2210117aa58d` | docs(series-test): record published 8502 hashes and pending Mi Box acceptance | [commit](https://github.com/eaatabay/EA-FB/commit/259e5b186fd4b3ef9be24a7c971f2210117aa58d) |
 | `267322d9a5e66d30b571581e9c441821d5b2622a` | fix(series-test): remove device verification gates for standard 8503 loading | [commit](https://github.com/eaatabay/EA-FB/commit/267322d9a5e66d30b571581e9c441821d5b2622a) |
 | `1129fc0939888e4cf86a7c414103f487948e4712` | build(series-test): package standard 8503 plugin and retain regression coverage | [commit](https://github.com/eaatabay/EA-FB/commit/1129fc0939888e4cf86a7c414103f487948e4712) |
+| `b3f0cfdc1c58015f5616cca046cd00b1b8df632e` | release(series-test): publish CI-verified standard 8503 plugin | [commit](https://github.com/eaatabay/EA-FB/commit/b3f0cfdc1c58015f5616cca046cd00b1b8df632e) |
 <!--END-CURRENT-SERIES-STATUS-->
+
 
 
 
@@ -376,4 +378,11 @@ Nihai yayın/geri alma raporu GitHub commit’i: [b0e18e62adb3a101daef65ae5235f8
 - Dosyalar: dist-series-codex-8503-test altındaki altı dosya; CI-8503-SONUC.json ve güncel kayıt/sonuç/devir belgeleri
 - Gerekçe / etki: Final CI 39326027642 kaynak 1129fc0939888e4cf86a7c414103f487948e4712 için başarılı. CI paket hash'i bac0424172d77a182ddd19ff3c4dae671012182369f28c0a5d714fac23acde77 yerel dosyayla aynı. Yalnız yeni 8503 dağıtımı ve belgeler yayımlanır. 8502 ve kırmızı BETA V83 değişmedi. Mi Box oynatması kullanıcı testini bekler.
 - Test / sonuç: CI tüm adımları başarılı; Organize İşler 36 alias safety +59 teşhis ve dört kaynak/film/settings/provider regresyonları; 7 özgün V83 paket testi; gerçek UI DEX mutasyon testi dahil 3 paket testi. 2029 V83 ve 250 Bronze metodu aynı. Device gate sınıfları/scriptleri artık yok.
+- Geri alma: yalnızca bu commit’i yeni test dalında git revert; V83/main/arşivlere dokunma.
+
+## 8503 / yayın dosyası ve nihai kayıt doğrulaması
+- Önceki SHA: b3f0cfdc1c58015f5616cca046cd00b1b8df632e; yeni SHA bu aşamanın commit’i.
+- Dosyalar: YAYIN-8503-DOGRULAMA.json, SON-DURUM.json, DEGISIKLIK-DEFTERI.md, DEVAM-NOTLARI.md, GERI-ALMA-PLANI.md
+- Gerekçe / etki: Yayın commit b3f0cfdc1c58015f5616cca046cd00b1b8df632e. Altı raw dosya yeniden indirildi; yerel ve CI hash'i bac0424172d77a182ddd19ff3c4dae671012182369f28c0a5d714fac23acde77 ile aynı. Manifest yeni dist-series-codex-8503-test/repo.json. ADB/Python/profil/marker/UID/process/dataDir yükleme şartı yok; normal plugin. Mi Box oynatması kullanıcı testine kadar doğrulanmadı.
+- Test / sonuç: İndirilen yayın üzerinden CRC/manifest/feed/hash/DEX kontrolü geçti. CI 39326027642 success; 2029 V83 +250 Bronze metodu korunur. 23 diğer uzak dal aynı. 8502 dağıtımı ve V83 byte/hash değişmedi; arayüz/oynatma/production değiştirilmedi. Geri alma yalnız mavideki test eklentisini kaldırmaktır.
 - Geri alma: yalnızca bu commit’i yeni test dalında git revert; V83/main/arşivlere dokunma.

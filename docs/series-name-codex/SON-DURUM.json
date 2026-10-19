@@ -11,5 +11,9 @@
   "miBoxPlaybackVerified": false,
   "uiSourcesChanged": false,
   "productionTouched": false,
-  "repoUrl": "https://raw.githubusercontent.com/eaatabay/EA-FB/test/ea-fb-series-name-codex-20261019/dist-series-codex-8503-test/repo.json"
+  "repoUrl": "https://raw.githubusercontent.com/eaatabay/EA-FB/test/ea-fb-series-name-codex-20261019/dist-series-codex-8503-test/repo.json",
+  "releaseCommit": "b3f0cfdc1c58015f5616cca046cd00b1b8df632e",
+  "publishedRawFilesVerified": 6,
+  "publishedBytesMatchCIAndLocal": true,
+  "protectedRemoteHeadsUnchanged": 23
 }
