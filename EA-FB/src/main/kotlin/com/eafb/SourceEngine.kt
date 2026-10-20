@@ -21,7 +21,8 @@ data class MediaOffer(
     val tmdbId: Int? = null,
     val season: Int? = null,
     val episode: Int? = null,
-    val playbackData: String? = null
+    val playbackData: String? = null,
+    val sourceIdentity: SourceIdentity? = null
 ) {
     init { require((season == null && episode == null) ||
         (kind == MediaKind.SERIES && season != null && season >= 0 &&
@@ -35,7 +36,8 @@ data class MediaQuery(
     val tmdbId: Int? = null,
     val season: Int? = null,
     val episode: Int? = null,
-    val alternateTitles: List<String> = emptyList()
+    val alternateTitles: List<String> = emptyList(),
+    val seasonTitle: String? = null
 ) {
     init { require((season == null && episode == null) ||
         (kind == MediaKind.SERIES && season != null && season >= 0 &&
@@ -188,6 +190,12 @@ class MultiSourceEngine(
     }
 
     private fun sameContent(query: MediaQuery, offer: MediaOffer): Boolean {
+        offer.sourceIdentity?.let {
+            if (query.kind != offer.kind || (query.season != null &&
+                (query.season != offer.season || query.episode != offer.episode)) ||
+                (query.tmdbId != null && offer.tmdbId != null && query.tmdbId != offer.tmdbId)) return false
+            return SourceTitleMatcher.assess(query, it).accepted
+        }
         if (query.kind != offer.kind) return false
         if (query.season != null &&
             (query.season != offer.season || query.episode != offer.episode)) return false

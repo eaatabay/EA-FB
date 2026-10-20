@@ -91,9 +91,10 @@ object PlaybackLinkBridge {
         title: String,
         year: Int?,
         nowMillis: Long,
-        alternateTitles: List<String> = emptyList()
+        alternateTitles: List<String> = emptyList(),
+        seasonTitle: String? = null
     ): List<SourceLink> {
-        val query = PlaybackQuery.fromData(data, title, year, alternateTitles) ?: return emptyList()
+        val query = PlaybackQuery.fromData(data, title, year, alternateTitles, seasonTitle) ?: return emptyList()
         val enabled = enabledAdapters()
         if (enabled.isEmpty()) return emptyList()
         val engine = MultiSourceEngine(enabled)
@@ -115,7 +116,8 @@ object PlaybackLinkBridge {
         title: String,
         year: Int?,
         nowMillis: Long,
-        alternateTitles: List<String> = emptyList()
+        alternateTitles: List<String> = emptyList(),
+        seasonTitle: String? = null
     ): List<PlaybackSourceList.Entry> =
-        PlaybackSourceList.group(alternatives(data, title, year, nowMillis, alternateTitles), nowMillis)
+        PlaybackSourceList.group(alternatives(data, title, year, nowMillis, alternateTitles, seasonTitle), nowMillis)
 }

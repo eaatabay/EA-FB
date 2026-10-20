@@ -34,16 +34,21 @@ open class BronzeApiAdapter(
         if (query.kind == MediaKind.LIVE) return emptyList()
         if (query.kind == MediaKind.MOVIE) return searchMovie(query)
         val titles = SourceSearchTitles.candidates(query)
-        val wanted = titles.map(::nameKey).toSet()
         val offers = mutableListOf<MediaOffer>()
         val visited = mutableSetOf<String>()
         try {
             for (title in titles) {
-                for (result in api.search(title).orEmpty().take(50)) {
-                    if (nameKey(result.name) !in wanted || !sourceUrl(result.url) || !visited.add(result.url)) continue
+                for (result in api.search(title).orEmpty().take(SourceTitleMatcher.MAX_PAGES)) {
+                    if (SourceTitleMatcher.titleLevel(query, result.name) == null || !sourceUrl(result.url) || !visited.add(result.url)) continue
                     val loaded = api.load(result.url) ?: continue
-                    if (nameKey(loaded.name) !in wanted ||
-                        (query.year != null && loaded.year != null && query.year != loaded.year)) continue
+                    val observed = SourceIdentity(loaded.name, when (loaded) {
+                        is TvSeriesLoadResponse -> MediaKind.SERIES
+                        is MovieLoadResponse -> MediaKind.MOVIE
+                        else -> null
+                    }, loaded.year, season = query.season, episode = query.episode)
+                    val decision = SourceTitleMatcher.assess(query, observed)
+                    Log.i("EA-FB-Match", "provider=$id decision=${decision.level} reason=${decision.reason}")
+                    if (!decision.accepted) continue
                     val payloads = when (loaded) {
                         is MovieLoadResponse -> if (query.kind == MediaKind.MOVIE) listOf(loaded.dataUrl) else emptyList()
                         is TvSeriesLoadResponse -> if (query.kind == MediaKind.SERIES && query.season != null && query.episode != null)
@@ -51,11 +56,13 @@ open class BronzeApiAdapter(
                             else emptyList()
                         else -> emptyList()
                     }
-                    for (data in payloads.distinct().filter { it.isNotBlank() }) {
-                        offers += MediaOffer(id, label, query.title, loaded.year ?: query.year, query.kind,
-                            result.url, query.tmdbId, query.season, query.episode, data)
+                    val uniquePayloads = payloads.distinct().filter { it.isNotBlank() }
+                    if (uniquePayloads.size > 1) return emptyList()
+                    for (data in uniquePayloads) {
+                        offers += MediaOffer(id, label, query.title, loaded.year, query.kind,
+                            result.url, query.tmdbId, query.season, query.episode, data, observed)
                     }
-                    if (offers.size >= 5) break
+                    if (offers.size > 1) return emptyList()
                 }
                 if (offers.isNotEmpty()) break
             }
@@ -75,7 +82,7 @@ open class BronzeApiAdapter(
             Log.i("EA-FB-Bronze", "movie reject provider=$id tmdb=${query.tmdbId} reason=$reason expectedYear=${query.year} actualYear=$actualYear")
         }
         for (title in titles) {
-            val results = try { api.search(title).orEmpty().take(50) }
+            val results = try { api.search(title).orEmpty().take(SourceTitleMatcher.MAX_PAGES) }
             catch (cancel: CancellationException) { throw cancel }
             catch (error: Exception) { traceFailure("search", error); continue }
             catch (error: LinkageError) { traceFailure("runtime", error); continue }
@@ -102,8 +109,12 @@ open class BronzeApiAdapter(
                     reject("variant-needs-year", loaded.year); continue
                 }
                 if (loaded.dataUrl.isBlank()) { reject("empty-data", loaded.year); continue }
-                offers += MediaOffer(id, label, query.title, loaded.year ?: query.year, query.kind,
-                    result.url, query.tmdbId, playbackData = loaded.dataUrl)
+                val observed = SourceIdentity(loaded.name, MediaKind.MOVIE, loaded.year)
+                val decision = SourceTitleMatcher.assess(query, observed)
+                Log.i("EA-FB-Match", "provider=$id decision=${decision.level} reason=${decision.reason}")
+                if (!decision.accepted) { reject(decision.reason, loaded.year); continue }
+                offers += MediaOffer(id, label, query.title, loaded.year, query.kind,
+                    result.url, query.tmdbId, playbackData = loaded.dataUrl, sourceIdentity = observed)
                 // Two distinct plausible pages are ambiguous; never choose by result order.
                 if (offers.size > 1) { reject("ambiguous-pages"); return emptyList() }
             }

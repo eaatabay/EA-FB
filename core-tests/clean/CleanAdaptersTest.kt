@@ -11,7 +11,7 @@ import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
     val query = MediaQuery("Türkçe Ad", 2026, MediaKind.SERIES, 42, 1, 2, listOf("Original Show"))
-    check(SourceSearchTitles.candidates(query.copy(alternateTitles = listOf("Türkçe Ad", "", "Original Show"))) == listOf("Türkçe Ad", "Original Show"))
+    check(SourceSearchTitles.candidates(query.copy(alternateTitles = listOf("Türkçe Ad", "", "Original Show")))  .take(2) == listOf("Türkçe Ad", "Original Show"))
     val master = "#EXTM3U\n#EXT-X-STREAM-INF:BANDWIDTH=1,RESOLUTION=1920x1080\n1080.m3u8\n#EXT-X-STREAM-INF:BANDWIDTH=2,RESOLUTION=3840x2160\n2160.m3u8"
     check(HlsPlaylistInfo.parse(master) == HlsPlaylistInfo(2160, true))
     check(!HlsPlaylistInfo.parse("#EXTM3U\n#EXTINF:5,\nseg.ts").adaptive)
@@ -22,7 +22,7 @@ fun main() = runBlocking {
         val body = when {
             req.method == "POST" -> "<div>unusable AJAX</div>"
             req.url == "$you/?s=Original+Show" -> "<div id='list-series-main'><div class='cat-title-main'><a href='/original/' title='Original Show'>Original Show</a></div><a href='/wrong/'>Different Show</a></div>"
-            req.url == "$you/original/" -> "<a href='/wrong-season/'><div class='bolumust'><div class='baslik'>2. Sezon 2. Bölüm</div></div></a><a href='/right-episode/'><div class='bolumust'><div class='baslik'>1. Sezon 2. Bölüm</div></div></a>"
+            req.url == "$you/original/" -> "<h1>Original Show</h1><div class='tv-overview'>Yapım Yılı: 2026</div><a href='/wrong-season/'><div class='bolumust'><div class='baslik'>2. Sezon 2. Bölüm</div></div></a><a href='/right-episode/'><div class='bolumust'><div class='baslik'>1. Sezon 2. Bölüm</div></div></a>"
             req.url == "$you/right-episode/" -> "<iframe id='diziyouPlayer' src='https://player.diziyou.one/abc.html'></iframe><span class='diziyouOption' id='turkceAltyazili'></span><span class='diziyouOption' id='ingilizceAltyazili'></span><span class='diziyouOption' id='turkceDublaj'></span>"
             req.url.startsWith("https://storage.diziyou.one/episodes/") -> master
             else -> ""
@@ -53,7 +53,7 @@ fun main() = runBlocking {
     app.handler = { req ->
         if (req.url == "$box/slow-alt/") delay(500)
         val body = when {
-            req.url == "$box/diziler/show/" -> "<article class='grid-box'><a href='/show-1-sezon-2-bolum-izle/'>1. Sezon 2. Bölüm</a></article>"
+            req.url == "$box/diziler/show/" -> "<h1>Original Show</h1><div class='tv-overview'>Yapım Yılı: 2026</div><article class='grid-box'><a href='/show-1-sezon-2-bolum-izle/'>1. Sezon 2. Bölüm</a></article>"
             req.url == "$box/show-1-sezon-2-bolum-izle/" -> "<div id='video-area'><iframe src='$box/player/king/king.php?v=test'></iframe></div><div class='video-toolbar'><select><option value='$box/slow-alt/'>Alternative</option></select></div>"
             req.url.contains("/player/king/king.php?") -> "<div id='Player'><iframe src='https://extractor.example/embed'></iframe></div>"
             else -> ""
@@ -76,7 +76,7 @@ fun main() = runBlocking {
     check(app.requests.any { it.url == "$box/slow-alt/" })
     // DiziBox keeps catalog identity even when the original title finds the source.
     app.handler = { req ->
-        val body = if (req.url.contains("action=dwls_search") && req.url.contains("Original+Show"))
+        val body = if (req.url == "$box/diziler/show/") "<h1>Original Show</h1><div class='tv-overview'>Yapım Yılı: 2026</div><article class='grid-box'><a href='/show-1-sezon-2-bolum-izle/'>1. Sezon 2. Bölüm</a></article>" else if (req.url.contains("action=dwls_search") && req.url.contains("Original+Show"))
             "{\"results\":[{\"post_title\":\"Original Show\",\"permalink\":\"$box/diziler/show/\"}]}" else ""
         FixtureResponse(body, req.url)
     }
@@ -92,7 +92,7 @@ fun main() = runBlocking {
             }
             val encodedFrame = java.util.Base64.getEncoder().encodeToString("<iframe src='https://molystream.org/embed/test'></iframe>".toByteArray())
             val body = when {
-                req.url == "$box/diziler/show/" -> "<article class='grid-box'><a href='/show-1-sezon-2-bolum-izle/'>1. Sezon 2. Bölüm</a></article>"
+                req.url == "$box/diziler/show/" -> "<h1>Original Show</h1><div class='tv-overview'>Yapım Yılı: 2026</div><article class='grid-box'><a href='/show-1-sezon-2-bolum-izle/'>1. Sezon 2. Bölüm</a></article>"
                 req.url == "$box/show-1-sezon-2-bolum-izle/" -> "<div id='video-area'><iframe src='$player'></iframe></div>"
                 req.url.contains("/player/king/") -> "<iframe src='https://molystream.org/embed/test'></iframe>"
                 req.url.contains("/player/moly/") -> "<script>unescape(\"$encodedFrame\")</script>"

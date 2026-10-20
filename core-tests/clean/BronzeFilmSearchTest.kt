@@ -49,8 +49,8 @@ fun main() = runBlocking {
         accepts("Spider-Man: No Way Home", 2021, FilmPage("Home No Way Spider Man", "Spider-Man: No Way Home", 2021))
         accepts("Spider-Man: Brand New Day", 2026, FilmPage("Brand New Day Spider Man", "Spider-Man: Brand New Day", 2026))
         accepts("Çağrı", 2020, FilmPage("Cagri", "Çağrı", 2020))
-        // Original exact-name behaviour with unknown years remains available.
-        accepts("Exact Film", null, FilmPage("Exact Film", "Exact Film", null))
+        // Intentional safety change: title alone with unknown years is ambiguous.
+        rejects("Exact Film", null, listOf(FilmPage("Exact Film", "Exact Film", null)))
         rejects("The Odyssey", 2026, listOf(FilmPage("Odyssey - The Odyssey", "Odyssey - The Odyssey", 2025)))
         rejects("The Odyssey", 2026, listOf(FilmPage("Odyssey - The Odyssey", "Odyssey - The Odyssey", null)))
         rejects("The Odyssey", null, listOf(FilmPage("Odyssey - The Odyssey", "Odyssey - The Odyssey", 2026)))

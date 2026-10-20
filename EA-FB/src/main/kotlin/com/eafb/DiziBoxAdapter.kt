@@ -100,6 +100,7 @@ class DiziBoxAdapter(private val origin: String = "https://www.dizibox.live") : 
     // ------------------------------------------------------------------ search
 
     override suspend fun search(query: MediaQuery): List<MediaOffer> {
+        if (query.kind != MediaKind.SERIES || query.season == null || query.episode == null) return emptyList()
         for (title in SourceSearchTitles.candidates(query)) {
             val offers = searchTitle(query, title)
             if (offers.isNotEmpty()) return offers
@@ -127,7 +128,7 @@ class DiziBoxAdapter(private val origin: String = "https://www.dizibox.live") : 
             val results = org.json.JSONObject(text).optJSONArray("results") ?: org.json.JSONArray()
             for (index in 0 until results.length()) {
                 val item = results.optJSONObject(index) ?: continue
-                if (Identity.normalize(item.optString("post_title")) != wanted) continue
+                if (SourceTitleMatcher.titleLevel(query, item.optString("post_title")) == null) continue
                 siteUrl(item.optString("permalink"))?.let { urls.add(it) }
             }
         }
@@ -144,10 +145,33 @@ class DiziBoxAdapter(private val origin: String = "https://www.dizibox.live") : 
             urls.addAll(directSeries(title, wanted))
             trace("search-direct", "matches=${urls.size}")
         }
-        return urls.take(5).map { seriesUrl ->
-            MediaOffer(id, "DiziBox", query.title, query.year, query.kind,
-                seriesUrl, query.tmdbId, query.season, query.episode)
+        val found = mutableListOf<MediaOffer>()
+        for (seriesUrl in urls.take(5)) {
+            val page = fetch(seriesUrl, site = true) ?: continue
+            val doc = Jsoup.parse(page.text, seriesUrl)
+            val observed = SourcePageIdentity.read(doc, MediaKind.SERIES)
+                .copy(season = query.season, episode = query.episode)
+            val decision = SourceTitleMatcher.assess(query, observed)
+            trace("match", "decision=${decision.level} reason=${decision.reason}")
+            if (!decision.accepted) continue
+            val cards = doc.select("article.grid-box a[href]").mapNotNull { siteUrl(it.attr("href")) }
+                .filter { url -> parseEpisodeUrl(url)?.let {
+                    it.season == query.season && it.episode == query.episode && it.slug == cleanSlug(seriesUrl)
+                } == true }.distinct()
+            if (cards.size > 1) return emptyList()
+            val epUrl = cards.singleOrNull() ?: findEpisodeUrl(seriesUrl, doc, query.season ?: continue, query.episode ?: continue) ?: continue
+            val identity = parseEpisodeUrl(epUrl) ?: continue
+            if (identity.season != query.season || identity.episode != query.episode || identity.slug != cleanSlug(seriesUrl)) continue
+            if (cards.isEmpty()) {
+                val episodePage = fetch(epUrl, site = true) ?: continue
+                val epDoc = Jsoup.parse(episodePage.text, epUrl)
+                val canonical = epDoc.selectFirst("link[rel=canonical]")?.attr("href")?.let(::siteUrl)?.let(::parseEpisodeUrl) ?: continue
+                if (canonical.season != query.season || canonical.episode != query.episode || canonical.slug != identity.slug) continue
+            }
+            found += MediaOffer(id, "DiziBox", query.title, observed.year, query.kind,
+                seriesUrl, query.tmdbId, query.season, query.episode, sourceIdentity = observed)
         }
+        return SourceTitleMatcher.unique(found)
     }
 
     private suspend fun searchHtml(wanted: String, encoded: String): List<String> {

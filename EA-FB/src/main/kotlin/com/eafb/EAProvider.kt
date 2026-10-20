@@ -931,11 +931,21 @@ class EAProvider : MainAPI() {
                 if (identity is PlaybackData.Movie) "title" else "name"
             ).trim()
             if (title.isBlank()) return false
-            val year = mediaYear(metadata,
-                if (identity is PlaybackData.Movie) MediaKind.MOVIE else MediaKind.SERIES)
+            val year = metadata.optString(if (identity is PlaybackData.Movie) "release_date" else "first_air_date")
+                .take(4).toIntOrNull()?.takeIf { it in 1888..2100 }
+            val seasonTitle = if (identity is PlaybackData.Episode) {
+                if (CatalogMatchMetadata.hasSeason(metadata, identity.season))
+                    CatalogMatchMetadata.seasonName(metadata, identity.season)
+                else kotlinx.coroutines.withTimeoutOrNull(4_000) {
+                    getJson("/tv/$id/season/${identity.season}")?.let { season ->
+                        if (season.optInt("season_number", -1) == identity.season)
+                            SourceTitleMatcher.meaningfulSeason(season.optString("name")) else null
+                    }
+                }
+            } else null
             val groups = PlaybackLinkBridge.sourceGroups(
                 data, title, year, System.currentTimeMillis(),
-                listOf(metadata.optString(if (identity is PlaybackData.Movie) "original_title" else "original_name"))
+                CatalogMatchMetadata.alternatives(metadata, identity is PlaybackData.Movie), seasonTitle
             )
             var emittedLinks = 0
             groups.forEach { group ->
