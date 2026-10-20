@@ -1,0 +1,15 @@
+{
+  "version": 8601,
+  "branch": "test/ea-fb-universal-matcher-v83-20261020",
+  "base": "16396702470eb1f81cc6dac4360e6b0ff84927d1",
+  "sourceCommit": "9d56ba95a86c93097e9761958fa406841d87ddb1",
+  "ciRun": 39348099263,
+  "ciConclusion": "success",
+  "packageSha256": "bf6b92ddf83392a52a92593a00d98e60e902e4451492b2baf56ecaafcab551d1",
+  "loadingMode": "standard-cloudstream-plugin",
+  "miBoxPlaybackVerified": false,
+  "sourceLookupOnlyVerified": "DiziYou current HTTP capture replay",
+  "diziBoxLiveStatus": 403,
+  "alternativeTitlesGatewayStatus": 400,
+  "productionTouched": false
+}

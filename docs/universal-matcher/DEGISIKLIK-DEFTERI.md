@@ -36,3 +36,16 @@ Yeni offline source/DEX guard, özel yapım koşulu taraması, ayrı test paketi
 | 4784668e6a42d9ea246e238bc3f0ae9b4c3e275c | fix(universal): retain existing media offer constructor ABI |
 | 097cf50fee2addef6124b385d647fc3b9c73a071 | fix(universal): report ambiguous page and episode decisions without URLs |
 | 14754e50262ef89af1250ef7797665ad76e83679 | fix(universal): distinguish series premiere evidence from season year |
+
+## Başarılı CI ve 8601 test yayını
+Kaynak SHA: 9d56ba95a86c93097e9761958fa406841d87ddb1; CI 39348099263 success. Paket SHA256 bf6b92ddf83392a52a92593a00d98e60e902e4451492b2baf56ecaafcab551d1. Yalnız yeni dalın dist-universal-8601-test dosyaları yayımlanır; V83/main/8503/arşivler ve production değişmez. Mi Box oynatması doğrulanmadı.
+
+| Tam SHA | İşlem |
+|---|---|
+| 1e8a9668a85fceb18351616e964e123807b78e26 | docs(universal): record clean V83 baseline and general matching design |
+| 998d4cc668debbf69349b4370c2b00a0b41dc193 | feat(universal): match metadata-derived titles and source identity across four adapters |
+| 4c5a26b0ea1bab7f6a1290c29edb94eeb9b8ce11 | fix(universal): preserve playback query call compatibility |
+| 4784668e6a42d9ea246e238bc3f0ae9b4c3e275c | fix(universal): retain existing media offer constructor ABI |
+| 097cf50fee2addef6124b385d647fc3b9c73a071 | fix(universal): report ambiguous page and episode decisions without URLs |
+| 14754e50262ef89af1250ef7797665ad76e83679 | fix(universal): distinguish series premiere evidence from season year |
+| 9d56ba95a86c93097e9761958fa406841d87ddb1 | build(universal): verify baseline, compare regressions and package 8601 in CI |

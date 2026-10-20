@@ -1,6 +1,6 @@
 # Temiz başlangıç / V83 referansı
 
-GitHub V83 dalı fetch edilerek gerçek SourceSearchTitles kaynakları okundu. FETCH_HEAD=16396702470eb1f81cc6dac4360e6b0ff84927d1 doğrulandı; yeni test/ea-fb-universal-matcher-v83-20261020 dalı doğrudan bu commit'ten açıldı. Worktree kullanılmadı. 8503 dalından kaynak/commit taşınmadı; raporları karşılaştırma içindir. Başlangıç çalışma ağacı temizdi. Korunan uzak ref envanteri çalışma ortamında saklandı; yayın sonunda karşılaştırılacak.
+GitHub V83 dalı fetch edilerek gerçek SourceSearchTitles kaynakları okundu. FETCH_HEAD=16396702470eb1f81cc6dac4360e6b0ff84927d1 doğrulandı; yeni test/ea-fb-universal-matcher-v83-20261020 dalı doğrudan bu commit'ten açıldı. Worktree kullanılmadı. 8503 runtime eşleştirme kodu/commit’i taşınmadı; rapor ve testleri karşılaştırma içindir. Daha önce doğrulanmış offline paket/DEX test altyapısı yeni dal/sürüm için uyarlandı. Başlangıç çalışma ağacı temizdi. Korunan uzak ref envanteri çalışma ortamında saklandı; yayın sonunda karşılaştırılacak.
 
 ## Kaynaktan görülen akış
 

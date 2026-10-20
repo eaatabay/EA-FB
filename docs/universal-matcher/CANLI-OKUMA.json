@@ -27,6 +27,14 @@
     {
       "service": "DiziBox AJAX search",
       "status": 403
+    },
+    {
+      "service": "DiziBox AJAX with existing adapter headers/cookies",
+      "status": 403
+    },
+    {
+      "service": "approved staging alternative_titles append",
+      "status": 400
     }
   ],
   "captureSha256": {

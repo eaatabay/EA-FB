@@ -1,0 +1,82 @@
+{
+  "runId": 39348099263,
+  "url": "https://github.com/eaatabay/EA-FB/actions/runs/39348099263",
+  "sourceCommit": "9d56ba95a86c93097e9761958fa406841d87ddb1",
+  "conclusion": "success",
+  "packageSha256": "bf6b92ddf83392a52a92593a00d98e60e902e4451492b2baf56ecaafcab551d1",
+  "ciLogHashMatchesLocal": true,
+  "ciArtifactBinaryDownloaded": false,
+  "logsZipSha256": "a1ebaab3fbbc615cfbf60de963c0dda2ce99be223debd7b58e385a70fe6e691a",
+  "nonfatalD8MetadataWarnings": 216,
+  "miBoxPlaybackVerified": false,
+  "liveReplayExecutedInCI": false,
+  "localLiveCaptureReplayVerified": true,
+  "jobs": [
+    {
+      "name": "validate",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-java@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run gradle/actions/setup-gradle@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Install checksum-verified Kotlin compiler",
+          "conclusion": "success"
+        },
+        {
+          "name": "Protect baseline and reject work-specific exceptions",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run matcher and original resolver regressions; compare immutable V83",
+          "conclusion": "success"
+        },
+        {
+          "name": "Install pinned Android tools",
+          "conclusion": "success"
+        },
+        {
+          "name": "Build and verify test CS3; never deploy",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/upload-artifact@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/upload-artifact@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run gradle/actions/setup-gradle@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/setup-java@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    }
+  ]
+}

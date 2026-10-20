@@ -1,0 +1,23 @@
+[
+  {
+    "fileHash": "sha256-bf6b92ddf83392a52a92593a00d98e60e902e4451492b2baf56ecaafcab551d1",
+    "fileSize": 342728,
+    "apiVersion": 1,
+    "repositoryUrl": "https://github.com/eaatabay/EA-FB",
+    "status": 3,
+    "language": "tr",
+    "authors": [
+      "EA-FB"
+    ],
+    "tvTypes": [
+      "Movie",
+      "TvSeries",
+      "Live"
+    ],
+    "version": 8601,
+    "internalName": "EA-FB-UNIVERSAL-8601-TEST",
+    "name": "EA-FB UNIVERSAL 8601 TEST",
+    "description": "General metadata-based title matcher; Blue CloudStream STABLE test; remove old EA-FB first. Mi Box playback unverified.",
+    "url": "https://raw.githubusercontent.com/eaatabay/EA-FB/test/ea-fb-universal-matcher-v83-20261020/dist-universal-8601-test/EA-FB-UNIVERSAL-8601-TEST.cs3"
+  }
+]
