@@ -14,3 +14,5 @@ Canlı salt okunur: izinli staging katalog TV metadata'sı sezon adını doğrul
 ## Binary çağrı uyumluluğu
 
 Ortak motor commit'i: 998d4cc (tam SHA sonraki envanterde). İlk paket DEX koruması, yeni optional seasonTitle parametresinin değiştirilmemiş PlaybackResolution çağrısının derlenmiş descriptor'ını etkilediğini yakaladı. PlaybackResolution/player dosyasını değiştirmek veya korumayı gevşetmek yerine eski PlaybackQuery.fromData imzası overload ile korundu. Yeni metadata çağrısı açık beş parametreli overload kullanır. Paket koruması tekrar çalıştırılacaktır. Bu bir local guard başarısızlığıydı; erken CI/yayın yapılmadı.
+
+DEX guard ikinci incelemede MediaOffer'a eklenen evidence alanının kurulmamış DiziMom adaptörünün constructor çağrısını da etkilediğini gösterdi. DiziMom koduna dokunmak veya test kapsamını açmak yerine MediaOffer eski constructor descriptor'ları secondary constructor ile korundu. DTO kopyaları hâlâ evidence alanını taşır. Player ve ek kaynak algoritmaları koruma dışında bırakılmadı.

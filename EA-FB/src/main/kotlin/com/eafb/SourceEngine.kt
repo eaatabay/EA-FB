@@ -22,8 +22,13 @@ data class MediaOffer(
     val season: Int? = null,
     val episode: Int? = null,
     val playbackData: String? = null,
-    val sourceIdentity: SourceIdentity? = null
+    val sourceIdentity: SourceIdentity?
 ) {
+    // Preserve existing constructor descriptors for untouched, inactive adapters.
+    constructor(providerId: String, providerTitle: String, title: String, year: Int?, kind: MediaKind,
+        pageUrl: String, tmdbId: Int? = null, season: Int? = null, episode: Int? = null,
+        playbackData: String? = null) : this(providerId, providerTitle, title, year, kind,
+            pageUrl, tmdbId, season, episode, playbackData, null)
     init { require((season == null && episode == null) ||
         (kind == MediaKind.SERIES && season != null && season >= 0 &&
             episode != null && episode > 0)) }
