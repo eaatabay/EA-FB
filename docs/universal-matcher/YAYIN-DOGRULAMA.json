@@ -1,0 +1,37 @@
+{
+  "releaseCommit": "ed63dcdb5cf6d6ddf67b62d1777bd71d650171ff",
+  "sourceCommit": "9d56ba95a86c93097e9761958fa406841d87ddb1",
+  "ciRun": 39348099263,
+  "repoUrl": "https://raw.githubusercontent.com/eaatabay/EA-FB/test/ea-fb-universal-matcher-v83-20261020/dist-universal-8601-test/repo.json",
+  "files": {
+    "EA-FB-UNIVERSAL-8601-TEST.cs3": {
+      "sha256": "bf6b92ddf83392a52a92593a00d98e60e902e4451492b2baf56ecaafcab551d1",
+      "size": 342728
+    },
+    "SOURCE-LICENSE": {
+      "sha256": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986",
+      "size": 35149
+    },
+    "SOURCE-NOTICE.txt": {
+      "sha256": "7835d3e076602f081013e116d8f2f1bbdcde367f060900da93512b81a53b26e9",
+      "size": 1499
+    },
+    "build-info.json": {
+      "sha256": "a5cb886a32eebd2cd35f1497118916ae3766595c68e616ab52e4eac826c8b77a",
+      "size": 489
+    },
+    "plugins.json": {
+      "sha256": "18c5e6589919af9e290b0a7143a4ba3c25d1d94d268d6e1f374f7cab0f7ce9d8",
+      "size": 765
+    },
+    "repo.json": {
+      "sha256": "8b94f8d1b978c423897df1e2d1cc3f0e2ac4fa63774af8b0cdd097c64211cd6b",
+      "size": 310
+    }
+  },
+  "publishedBytesMatchLocal": true,
+  "publishedPackageShaMatchesCILog": true,
+  "protectedRemoteHeadsUnchanged": 24,
+  "loadingMode": "standard-cloudstream-plugin",
+  "miBoxPlaybackVerified": false
+}

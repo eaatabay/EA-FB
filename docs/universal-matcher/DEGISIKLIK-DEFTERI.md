@@ -49,3 +49,6 @@ Kaynak SHA: 9d56ba95a86c93097e9761958fa406841d87ddb1; CI 39348099263 success. Pa
 | 097cf50fee2addef6124b385d647fc3b9c73a071 | fix(universal): report ambiguous page and episode decisions without URLs |
 | 14754e50262ef89af1250ef7797665ad76e83679 | fix(universal): distinguish series premiere evidence from season year |
 | 9d56ba95a86c93097e9761958fa406841d87ddb1 | build(universal): verify baseline, compare regressions and package 8601 in CI |
+
+## Yayımlanan dosyaların doğrulanması / nihai kayıt
+Yayın SHA ed63dcdb5cf6d6ddf67b62d1777bd71d650171ff; kaynak SHA 9d56ba95a86c93097e9761958fa406841d87ddb1. Altı raw dosya yeniden indirildi, yerel ve CI hash eşleşti. CS3 SHA256 bf6b92ddf83392a52a92593a00d98e60e902e4451492b2baf56ecaafcab551d1. Korunan 24 uzak dal HEAD değişmedi. Gerçek Mi Box 8601 oynatması doğrulanmadı. Geri alma yalnız mavide yeni eklentiyi kaldırmaktır. Tam dosya/SHA listesi DOSYA-VE-COMMIT-ENVANTERI.md; son kayıt SHA’sı git log -1 ve final raporda.

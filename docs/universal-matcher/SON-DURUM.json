@@ -11,5 +11,8 @@
   "sourceLookupOnlyVerified": "DiziYou current HTTP capture replay",
   "diziBoxLiveStatus": 403,
   "alternativeTitlesGatewayStatus": 400,
-  "productionTouched": false
+  "productionTouched": false,
+  "releaseCommit": "ed63dcdb5cf6d6ddf67b62d1777bd71d650171ff",
+  "publishedRawFilesVerified": 6,
+  "protectedRemoteHeadsUnchanged": 24
 }
