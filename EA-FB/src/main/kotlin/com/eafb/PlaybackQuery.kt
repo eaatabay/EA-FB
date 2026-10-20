@@ -7,7 +7,11 @@ package com.eafb
  * separate playback paths.
  */
 object PlaybackQuery {
-    fun fromData(data: String, title: String, year: Int?, alternateTitles: List<String> = emptyList(), seasonTitle: String? = null): MediaQuery? {
+    // Keep the existing call signature for the untouched playback handoff and source gate.
+    fun fromData(data: String, title: String, year: Int?, alternateTitles: List<String> = emptyList()): MediaQuery? =
+        fromData(data, title, year, alternateTitles, null)
+
+    fun fromData(data: String, title: String, year: Int?, alternateTitles: List<String>, seasonTitle: String?): MediaQuery? {
         if (title.isBlank()) return null
         return when (val identity = PlaybackData.parse(data)) {
             is PlaybackData.Movie -> MediaQuery(
