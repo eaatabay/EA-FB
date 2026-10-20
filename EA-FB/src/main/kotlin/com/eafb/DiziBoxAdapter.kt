@@ -158,7 +158,7 @@ class DiziBoxAdapter(private val origin: String = "https://www.dizibox.live") : 
                 .filter { url -> parseEpisodeUrl(url)?.let {
                     it.season == query.season && it.episode == query.episode && it.slug == cleanSlug(seriesUrl)
                 } == true }.distinct()
-            if (cards.size > 1) return emptyList()
+            if (cards.size > 1) { trace("match", "decision=AMBIGUOUS reason=multiple-episodes"); return emptyList() }
             val epUrl = cards.singleOrNull() ?: findEpisodeUrl(seriesUrl, doc, query.season ?: continue, query.episode ?: continue) ?: continue
             val identity = parseEpisodeUrl(epUrl) ?: continue
             if (identity.season != query.season || identity.episode != query.episode || identity.slug != cleanSlug(seriesUrl)) continue
@@ -171,7 +171,9 @@ class DiziBoxAdapter(private val origin: String = "https://www.dizibox.live") : 
             found += MediaOffer(id, "DiziBox", query.title, observed.year, query.kind,
                 seriesUrl, query.tmdbId, query.season, query.episode, sourceIdentity = observed)
         }
-        return SourceTitleMatcher.unique(found)
+        val unique = SourceTitleMatcher.unique(found)
+        if (found.size > 1 && unique.isEmpty()) trace("match", "decision=AMBIGUOUS reason=multiple-pages")
+        return unique
     }
 
     private suspend fun searchHtml(wanted: String, encoded: String): List<String> {

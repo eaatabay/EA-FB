@@ -79,12 +79,14 @@ class DiziYouAdapter(private val origin: String = "https://www.diziyou.one") : M
                 if (!DiziYouEpisodeParser.exactEpisode(heading, season, episode)) return@mapNotNull null
                 siteUrl(card.closest("a")?.attr("href") ?: "")
             }.distinct()
-            if (episodes.size > 1) return emptyList()
+            if (episodes.size > 1) { trace("match", "decision=AMBIGUOUS reason=multiple-episodes"); return emptyList() }
             val epUrl = episodes.singleOrNull() ?: continue
             found += MediaOffer(id, "DiziYou", query.title, observed.year, query.kind, epUrl,
                 query.tmdbId, season, episode, sourceIdentity = observed)
         }
-        return SourceTitleMatcher.unique(found)
+        val unique = SourceTitleMatcher.unique(found)
+        if (found.size > 1 && unique.isEmpty()) trace("match", "decision=AMBIGUOUS reason=multiple-pages")
+        return unique
     }
 
     private suspend fun playlistInfo(url: String): HlsPlaylistInfo = try {

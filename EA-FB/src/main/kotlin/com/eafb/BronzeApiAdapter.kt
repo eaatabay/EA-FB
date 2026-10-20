@@ -57,12 +57,12 @@ open class BronzeApiAdapter(
                         else -> emptyList()
                     }
                     val uniquePayloads = payloads.distinct().filter { it.isNotBlank() }
-                    if (uniquePayloads.size > 1) return emptyList()
+                    if (uniquePayloads.size > 1) { Log.i("EA-FB-Match", "provider=$id decision=AMBIGUOUS reason=multiple-episodes"); return emptyList() }
                     for (data in uniquePayloads) {
                         offers += MediaOffer(id, label, query.title, loaded.year, query.kind,
                             result.url, query.tmdbId, query.season, query.episode, data, observed)
                     }
-                    if (offers.size > 1) return emptyList()
+                    if (offers.size > 1) { Log.i("EA-FB-Match", "provider=$id decision=AMBIGUOUS reason=multiple-pages"); return emptyList() }
                 }
                 if (offers.isNotEmpty()) break
             }
