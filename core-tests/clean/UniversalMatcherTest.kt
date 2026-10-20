@@ -54,6 +54,17 @@ fun main() = runBlocking {
     verify(accept(ted, SourcePageIdentity.read(schema, null).copy(season = 1, episode = 2)))
     val conflict = Jsoup.parse("""<h1>Ted Lasso</h1><script type='application/ld+json'>{"@type":"Movie","name":"Different Film","datePublished":"2005"}</script><div class='tv-overview'>Yapım Yılı: 2020</div>""")
     verify(!accept(ted, SourcePageIdentity.read(conflict, MediaKind.SERIES).copy(season = 1, episode = 2)))
+    val laterSeason = Jsoup.parse("""<h1>Ted Lasso</h1><script type='application/ld+json'>{"@type":"TVSeries","name":"Ted Lasso","startDate":"2020"}</script><div class='tv-overview'><span class='year'>2026</span></div>""")
+    verify(accept(ted, SourcePageIdentity.read(laterSeason, MediaKind.SERIES).copy(season = 1, episode = 2)))
+    verify(SourceTitleMatcher.assess(ted, direct).level == MatchLevel.EXACT)
+    verify(SourceTitleMatcher.assess(film, SourceIdentity("Örümcek Adam Eve Dönüş", MediaKind.MOVIE, 2017)).level == MatchLevel.VERIFIED_ALIAS)
+    verify(SourceTitleMatcher.assess(organized, SourceIdentity("Organize İşler: Karun Hazinesi", MediaKind.SERIES, 2026, season = 1, episode = 8)).level == MatchLevel.CORROBORATED)
+    verify(accept(second, SourceIdentity("Ted Lasso: Second Chapter", MediaKind.SERIES, 2020, season = 2, episode = 2)))
+    verify(!accept(second, SourceIdentity("Ted Lasso: Second Chapter", MediaKind.SERIES, 2026, season = 2, episode = 2)))
+    for (title in listOf("未知の映画 2", "새로운 시리즈 3", "Yeni Film İzle")) {
+        val q = MediaQuery(title, 2020, MediaKind.MOVIE)
+        verify(accept(q, SourceIdentity(title, MediaKind.MOVIE, 2020)))
+    }
     val noYear = Jsoup.parse("<h1>Ted Lasso</h1><article>Episode aired 2025</article><footer>2026</footer>")
     verify(SourcePageIdentity.read(noYear, MediaKind.SERIES).year == null)
     val metadata = JSONObject("""{"original_name":"Original","first_air_date":"2000","seasons":[{"season_number":1,"name":"First"},{"season_number":2,"name":"Second"}],"alternative_titles":{"results":[{"title":"Alias"}]}}""")

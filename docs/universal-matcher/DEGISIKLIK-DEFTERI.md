@@ -20,3 +20,7 @@ DEX guard ikinci incelemede MediaOffer'a eklenen evidence alanının kurulmamı�
 ## Belirsizlik nedenlerinin loglanması
 
 Birden fazla sayfa/bölüm retlerine AMBIGUOUS ve sabit neden kodları eklendi; URL/cookie/opaque payload loglanmaz. Arama dışındaki kod değişmedi. DTO ABI düzeltmeleri sonrası korunan mevcut runtime metotları DEX karşılaştırmasından geçti; yeni SourceIdentity boolean hashCode'u için D8'in ürettiği synthetic backport ayrıca yeni sınıf ailesi olarak doğrulanacaktır.
+
+## İlk yayın yılı / sezon yılı ayrımı
+
+TVSeries startDate mevcutsa belirsiz görünür .year alanının sezon yılı olması onu geçersiz kılmıyor; açık ilk-yayın etiketleri yine çelişki kontrolüne katılır. Şema yokken görünür yayın metadata'sı yolu korunur. Türkçe/orijinal alternatif sınıfları, farklı sezon adı, sezon yılı çelişkisi ve daha önce görülmemiş Latin dışı başlıklar için ek assertion'lar eklendi. Genel içeriklerin sabit TMDb/title dispatch'i olmadığını test eden tarama genişletildi.

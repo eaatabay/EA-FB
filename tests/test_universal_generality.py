@@ -15,6 +15,8 @@ class GeneralityTests(unittest.TestCase):
                 self.assertFalse(any(name.lower() in s.lower() for s in literals),(p.name,name))
             self.assertNotRegex(text,r'\b(?:320754|97546|315635|30634|577990)\b')
             self.assertNotRegex(text,r'\.tmdbId\s*(?:==|!=|in)\s*\d')
+            self.assertNotRegex(text,r'when\s*\(\s*(?:query|source)\.tmdbId\s*\)')
+            self.assertNotRegex(text,r'(?:query|source)\.title\s*(?:==|!=)\s*"[A-Za-zÇĞİÖŞÜçğıöşü]')
             self.assertNotIn('ConfirmedSeriesAlias',text)
     def test_base_and_branch_are_from_v83(self):
         import subprocess
