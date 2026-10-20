@@ -13,7 +13,7 @@ import sys
 p=Path(sys.argv[1])/'scripts/test-bronze-nl-land.sh'
 s=p.read_text().replace('  core-tests/clean/Clean*Test.kt','  core-tests/clean/UniversalAdaptersTest.kt core-tests/clean/Clean*Test.kt')
 a=s.index('for suite in ');b=s.index('; do',a)
-s=s[:a]+'for suite in UniversalAdaptersTest'+s[b:]
+s=s[:a]+'for suite in UniversalAdaptersTest DomainTest SourceEngineTest PlaybackDataTest PlaybackQueryTest DiziYouEpisodeParserTest PlaybackSourceHealthTest CleanSettingsTest CleanEngineTest CleanAdaptersTest BronzeAdaptersTest BronzeFilmSearchTest BronzeBridgeTest'+s[b:]
 s=s.replace('java -cp ', 'java -Duniversal.baseline=true -cp ')
 p.write_text(s)
 PY

@@ -1,0 +1,85 @@
+{
+  "fixtureOnly": true,
+  "rows": [
+    {
+      "mode": "V83",
+      "provider": "dizibox",
+      "truePositive": 1,
+      "falseAccept": 5,
+      "calls": 14,
+      "fixtureMs": 93,
+      "positiveCases": 3,
+      "negativeCases": 5
+    },
+    {
+      "mode": "V83",
+      "provider": "diziyou",
+      "truePositive": 1,
+      "falseAccept": 4,
+      "calls": 18,
+      "fixtureMs": 23,
+      "positiveCases": 3,
+      "negativeCases": 5
+    },
+    {
+      "mode": "V83",
+      "provider": "hdfilmcehennemi-nl",
+      "truePositive": 1,
+      "falseAccept": 2,
+      "calls": 15,
+      "fixtureMs": 3,
+      "positiveCases": 3,
+      "negativeCases": 5
+    },
+    {
+      "mode": "V83",
+      "provider": "hdfilmcehennemi-land",
+      "truePositive": 1,
+      "falseAccept": 2,
+      "calls": 15,
+      "fixtureMs": 0,
+      "positiveCases": 3,
+      "negativeCases": 5
+    },
+    {
+      "mode": "universal",
+      "provider": "dizibox",
+      "truePositive": 3,
+      "falseAccept": 0,
+      "calls": 20,
+      "fixtureMs": 131,
+      "positiveCases": 3,
+      "negativeCases": 5
+    },
+    {
+      "mode": "universal",
+      "provider": "diziyou",
+      "truePositive": 3,
+      "falseAccept": 0,
+      "calls": 22,
+      "fixtureMs": 21,
+      "positiveCases": 3,
+      "negativeCases": 5
+    },
+    {
+      "mode": "universal",
+      "provider": "hdfilmcehennemi-nl",
+      "truePositive": 3,
+      "falseAccept": 0,
+      "calls": 17,
+      "fixtureMs": 6,
+      "positiveCases": 3,
+      "negativeCases": 5
+    },
+    {
+      "mode": "universal",
+      "provider": "hdfilmcehennemi-land",
+      "truePositive": 3,
+      "falseAccept": 0,
+      "calls": 17,
+      "fixtureMs": 3,
+      "positiveCases": 3,
+      "negativeCases": 5
+    }
+  ]
+}

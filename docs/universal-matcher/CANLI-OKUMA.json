@@ -1,0 +1,49 @@
+{
+  "catalog": {
+    "id": 320754,
+    "name": "Organize İşler",
+    "originalName": "Organize İşler",
+    "firstAirDate": "2026-10-16",
+    "seasonNames": [
+      {
+        "number": 1,
+        "name": "Karun Hazinesi"
+      }
+    ]
+  },
+  "requests": [
+    {
+      "service": "approved staging catalog",
+      "status": 200
+    },
+    {
+      "service": "DiziYou AJAX search",
+      "status": 200
+    },
+    {
+      "service": "DiziYou result page",
+      "status": 200
+    },
+    {
+      "service": "DiziBox AJAX search",
+      "status": 403
+    }
+  ],
+  "captureSha256": {
+    "catalog.json": "4646b3e75f45eb9a8012b98ed2dd821569adf02dfa431a041825a3618fdf24e4",
+    "you-search.html": "038552f97a433ea03c4695f1f9ab4e60e981c3deafe45576d4604329bfea84cf",
+    "you.html": "ce875484a895a7a887f35dade9a30ac36fcbbeb119d9a2bc3456114877304720"
+  },
+  "realAdapterReplay": {
+    "provider": "diziyou",
+    "offers": 1,
+    "requests": 2,
+    "season": 1,
+    "episode": 8,
+    "resolverCalled": false,
+    "extractorCalled": false,
+    "playerCalled": false
+  },
+  "bronzeLiveTested": false,
+  "miBoxPlaybackVerified": false
+}

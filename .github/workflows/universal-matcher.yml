@@ -1,0 +1,67 @@
+name: Universal matcher - V83 regression and test package
+on:
+  push:
+    branches: [test/ea-fb-universal-matcher-v83-20261020]
+    paths: ['EA-FB/**', 'core-tests/**', 'scripts/*universal*', 'scripts/test-bronze-nl-land.sh', 'tests/test_universal*', '.github/workflows/universal-matcher.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ea-fb-universal-matcher-v83-test
+  cancel-in-progress: true
+jobs:
+  validate:
+    if: github.repository == 'eaatabay/EA-FB' && github.ref == 'refs/heads/test/ea-fb-universal-matcher-v83-20261020'
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.12'
+      - name: Install checksum-verified Kotlin compiler
+        run: |
+          set -euo pipefail
+          curl -fLsS --retry 2 https://github.com/JetBrains/kotlin/releases/download/v2.4.0/kotlin-compiler-2.4.0.zip -o "$RUNNER_TEMP/kotlin.zip"
+          printf '%s  %s\n' ba1b9e6eb6ddc3275079224f2e9ea4a2b02eef7d59ce2d38404f04b22613c20a "$RUNNER_TEMP/kotlin.zip" | sha256sum -c -
+          unzip -q "$RUNNER_TEMP/kotlin.zip" -d "$RUNNER_TEMP/universal-kotlin"
+          echo "$RUNNER_TEMP/universal-kotlin/kotlinc/bin" >> "$GITHUB_PATH"
+      - name: Protect baseline and reject work-specific exceptions
+        run: |
+          PYTHONDONTWRITEBYTECODE=1 python3 scripts/verify-universal-v83.py
+          PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p test_universal_guard.py -v
+          PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p test_universal_generality.py -v
+      - name: Run matcher and original resolver regressions; compare immutable V83
+        env:
+          CLEAN_TEST_CACHE: ${{ runner.temp }}/universal-test-libs
+        run: |
+          set -euo pipefail
+          mkdir -p build/universal
+          bash scripts/test-universal-matcher.sh 2>&1 | tee build/universal/tests.log
+          bash scripts/compare-universal-v83.sh 2>&1 | tee build/universal/v83-comparison.log
+      - name: Install pinned Android tools
+        run: '"$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-35" "build-tools;34.0.0" "build-tools;35.0.0"'
+      - name: Build and verify test CS3; never deploy
+        run: |
+          set -euo pipefail
+          bash scripts/prepare-cloudstream-gradle.sh
+          gradle :EA-FB:make --no-daemon --max-workers=2 --console=plain 2>&1 | tee build/universal/build.log
+          PYTHONDONTWRITEBYTECODE=1 python3 scripts/package-universal.py EA-FB/build/EA-FB.cs3
+          PYTHONDONTWRITEBYTECODE=1 python3 scripts/package-universal.py --verify
+          PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p test_universal_package.py -v
+      - uses: actions/upload-artifact@v4
+        with:
+          name: EA-FB-UNIVERSAL-8601-TEST
+          path: dist-universal-8601-test/
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: universal-matcher-logs
+          path: build/universal/*.log

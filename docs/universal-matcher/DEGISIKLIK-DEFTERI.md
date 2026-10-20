@@ -24,3 +24,15 @@ Birden fazla sayfa/bölüm retlerine AMBIGUOUS ve sabit neden kodları eklendi; 
 ## İlk yayın yılı / sezon yılı ayrımı
 
 TVSeries startDate mevcutsa belirsiz görünür .year alanının sezon yılı olması onu geçersiz kılmıyor; açık ilk-yayın etiketleri yine çelişki kontrolüne katılır. Şema yokken görünür yayın metadata'sı yolu korunur. Türkçe/orijinal alternatif sınıfları, farklı sezon adı, sezon yılı çelişkisi ve daha önce görülmemiş Latin dışı başlıklar için ek assertion'lar eklendi. Genel içeriklerin sabit TMDb/title dispatch'i olmadığını test eden tarama genişletildi.
+
+## Yerel doğrulama ve CI/paket altyapısı
+Yeni offline source/DEX guard, özel yapım koşulu taraması, ayrı test paketi ve yalnız yeni dal CI workflow eklendi. Son yerel build, 373 assertion, 32 adaptör vakası, 12 Kotlin regresyonu, V83 arşivindeki özgün testler ve UI DEX mutasyonu dahil 3 paket testi PASS. D8 sadece yeni sınıflar için synthetic lambda/backport üretti; yalnız bu yeni sınıf aileleri kaynak hashleriyle onaylandı. Eski resolver/player kodu muaf tutulmadı. Tek CI çalışması bu tamamlanmış kod için başlatılacak.
+
+| Tam SHA | İşlem |
+|---|---|
+| 1e8a9668a85fceb18351616e964e123807b78e26 | docs(universal): record clean V83 baseline and general matching design |
+| 998d4cc668debbf69349b4370c2b00a0b41dc193 | feat(universal): match metadata-derived titles and source identity across four adapters |
+| 4c5a26b0ea1bab7f6a1290c29edb94eeb9b8ce11 | fix(universal): preserve playback query call compatibility |
+| 4784668e6a42d9ea246e238bc3f0ae9b4c3e275c | fix(universal): retain existing media offer constructor ABI |
+| 097cf50fee2addef6124b385d647fc3b9c73a071 | fix(universal): report ambiguous page and episode decisions without URLs |
+| 14754e50262ef89af1250ef7797665ad76e83679 | fix(universal): distinguish series premiere evidence from season year |
